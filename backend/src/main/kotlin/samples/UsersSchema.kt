@@ -1,4 +1,4 @@
-package com.astrais
+package samples
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.Serializable

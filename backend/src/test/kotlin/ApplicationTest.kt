@@ -1,5 +1,6 @@
 package com.astrais
 
+import com.astrais.samples.module
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*

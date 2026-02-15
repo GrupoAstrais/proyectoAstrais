@@ -27,9 +27,17 @@ dependencies {
     implementation(libs.ktor.server.websockets)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.server.content.negotiation)
+
     implementation(libs.exposed.core)
+
+    // Prueba con jdbc
     implementation(libs.exposed.jdbc)
-    implementation(libs.h2)
+    implementation("org.postgresql:postgresql:42.7.8")
+
+    // Prueba con r2dbc
+    //implementation(libs.exposed.r2dbc)
+    //implementation("org.postgresql:r2dbc-postgresql:1.1.1.RELEASE")
+
     implementation(libs.ktor.server.netty)
     implementation(libs.logback.classic)
     implementation(libs.ktor.server.config.yaml)
