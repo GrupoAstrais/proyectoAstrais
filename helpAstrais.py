@@ -404,6 +404,8 @@ class GitCommitHelper:
         top_frame = tk.Frame(self.root)
         top_frame.pack(fill="x", padx=15, pady=5)
 
+        self.status_var = tk.StringVar()
+
         tk.Label(top_frame, text="Ruta del repositorio:", font=("Segoe UI", 9, "bold")).pack(side=tk.LEFT)
         self.path_label = tk.Label(top_frame, text=str(self.repo_path), fg="#1565c0", font=("Consolas", 9))
         self.path_label.pack(side=tk.LEFT, padx=(5, 10))
