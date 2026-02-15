@@ -30,8 +30,18 @@ class GitCommitHelper:
     def __init__(self, root):
         self.root = root
         self.root.title("Astrais Git Helper: add -> commit -> push")
-        self.root.geometry("800x750")
-        self.root.resizable(False, False)
+
+        WINDOW_WIDTH = 800
+        WINDOW_HEIGHT = 900
+        self.root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+
+        x = (screen_width - WINDOW_WIDTH) // 2
+        y = (screen_height - WINDOW_HEIGHT) // 2
+        self.root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{x}+{y}")
+
+        self.root.resizable(True, True)
         self.repo_path = Path.cwd()
         self.validate_git_env()
         self.create_widgets()
@@ -497,23 +507,29 @@ class GitCommitHelper:
         ).pack(side=tk.TOP, pady=(0, 8))
 
         button_row = tk.Frame(btn_frame)
-        button_row.pack()
+        button_row.pack(fill="x", pady=5)
 
         tk.Button(button_row, text="COMMIT + PUSH", command=self.execute_full_flow,
                  bg="#0288d1", fg="white", font=("Segoe UI", 10, "bold"),
-                 padx=15, pady=8, relief="flat", cursor="hand2", width=16).pack(side=tk.LEFT, padx=5)
+                 padx=15, pady=8, relief="flat", cursor="hand2", width=16).grid(row=0, column=0, padx=5, pady=5, sticky="ew")
 
         tk.Button(button_row, text="SOLO COMMIT", command=self.execute_commit_only,
                  bg="#388e3c", fg="white", font=("Segoe UI", 10, "bold"),
-                 padx=15, pady=8, relief="flat", cursor="hand2", width=16).pack(side=tk.LEFT, padx=5)
+                 padx=15, pady=8, relief="flat", cursor="hand2", width=16).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        
+        tk.Button(
+            button_row,text="SOLO PUSH",command=self.execute_push_only,
+            bg="#fbc02d", fg="white",font=("Segoe UI", 10, "bold"),
+            padx=15, pady=8, relief="flat", cursor="hand2", width=16).grid(row=1, column=0, padx=5, pady=5, sticky="ew")
+        
 
         tk.Button(button_row, text="Refresh estado", command=self.refresh_git_status,
                  bg="#6c757d", fg="white", font=("Segoe UI", 9),
-                 padx=12, pady=6, relief="flat").pack(side=tk.LEFT, padx=5)
+                 padx=12, pady=6, relief="flat").grid(row=1, column=1, padx=5, pady=5, sticky="ew")
 
-        tk.Button(button_row, text="Cancelar", command=self.root.quit,
+        tk.Button(btn_frame, text="Cancelar", command=self.root.quit,
                  bg="#d32f2f", fg="white", font=("Segoe UI", 10),
-                 padx=15, pady=6, relief="flat").pack(side=tk.RIGHT, padx=5)
+                 padx=15, pady=6, relief="flat").pack(side=tk.RIGHT, padx=5, pady=(5,0))
              
     def on_scope_selected(self, event=None):
         selected = self.scope_var.get()
@@ -747,6 +763,59 @@ class GitCommitHelper:
         except Exception as e:
             messagebox.showerror("Error inesperado",
                 f"Tipo: {type(e).__name__}\nMensaje: {str(e)}")
+
+    def execute_push_only(self):
+        """Push the current branch to origin without committing."""
+        if not self.current_branch:
+            messagebox.showerror("Error", "No se pudo detectar la rama actual")
+            return
+
+        if not messagebox.askyesno(
+            "Confirmar Push",
+            f"Se ejecutara:\n\n"
+            f"git pull --rebase origin {self.current_branch} (si esta marcado)\n"
+            f"git push origin {self.current_branch}\n\nContinuar?"
+        ):
+            return
+
+        try:
+            if self.pull_before_push.get():
+                self.status_var.set(f"Haciendo pull de origin/{self.current_branch}...")
+                self.root.update()
+                pull_result = subprocess.run(
+                    ["git", "pull", "--rebase", "origin", self.current_branch],
+                    capture_output=True, text=True, cwd=self.repo_path, timeout=20
+                )
+                if pull_result.returncode != 0:
+                    self.handle_git_error(pull_result, "pull")
+                    return
+
+            self.status_var.set(f"Haciendo push a origin/{self.current_branch}...")
+            self.root.update()
+
+            push_result = subprocess.run(
+                ["git", "push", "origin", self.current_branch],
+                capture_output=True, text=True, cwd=self.repo_path, timeout=30
+            )
+            if push_result.returncode != 0:
+                self.handle_git_error(push_result, "push")
+                return
+
+            messagebox.showinfo(
+                "Exito",
+                f"Push completado a origin/{self.current_branch}"
+            )
+            if self.exit_after_action.get():
+                self.root.quit()
+            else:
+                self.refresh_git_status()
+
+        except subprocess.TimeoutExpired:
+            messagebox.showerror("Timeout", "Operacion push tardo demasiado")
+        except Exception as e:
+            messagebox.showerror("Error inesperado",
+                f"Tipo: {type(e).__name__}\nMensaje: {str(e)}")        
+    
     def handle_git_error(self, result, operation):
         stderr = result.stderr.strip()
         stdout = result.stdout.strip()
