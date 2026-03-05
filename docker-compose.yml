@@ -25,5 +25,5 @@ services:
     ports:
       - ${KTOR_PORT}:${KTOR_PORT}
     depends_on:
-      db:
+      database:
         condition: service_healthy
