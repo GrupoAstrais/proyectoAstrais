@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  database:
+    image: "postgres:latest"
+    # Con este comando, se exporta el .env al contenedor segun la guia de docker
+    
+    env_file:
+      - ./.env.test
+
+    ports:
+      - 5432:5432
+    enviroment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
+  
+  backend:
+    build:
+      context: ./docker
+      dockerfile: dockerfile.ktor
+    ports:
+      - ${KTOR_PORT}:${KTOR_PORT}
+    depends_on:
+      db:
+        condition: service_healthy
