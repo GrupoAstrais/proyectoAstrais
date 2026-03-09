@@ -28,15 +28,13 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.server.content.negotiation)
 
-    implementation(libs.exposed.core)
+    // Exposed
+    implementation("org.jetbrains.exposed:exposed-core:1.0.0")
+    implementation("org.jetbrains.exposed:exposed-dao:1.0.0")
+    implementation("org.jetbrains.exposed:exposed-jdbc:1.0.0")
 
-    // Prueba con jdbc
-    implementation(libs.exposed.jdbc)
-    implementation("org.postgresql:postgresql:42.7.8")
-
-    // Prueba con r2dbc
-    //implementation(libs.exposed.r2dbc)
-    //implementation("org.postgresql:r2dbc-postgresql:1.1.1.RELEASE")
+    // Prueba de postgres
+    implementation("org.postgresql:postgresql:42.7.1")
 
     implementation(libs.ktor.server.netty)
     implementation(libs.logback.classic)
