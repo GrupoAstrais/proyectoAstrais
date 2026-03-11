@@ -5,9 +5,9 @@ import io.ktor.server.application.*
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
-const val POSTGRES_DB = "db"
-const val POSTGRES_USER = "root"
-const val POSTGRES_PASSWORD = "root"
+private var dbname : String = ""
+private var dbuser  : String = ""
+private var dbpassword : String = ""
 
 object DatabaseController {
     private var database : Database? = null
@@ -36,14 +36,18 @@ object DatabaseController {
 
     private fun initConnection(){
         database = Database.connect(
-            url = "jdbc:postgresql://localhost:$POSTGRES_PORT/$POSTGRES_DB",
+            url = "jdbc:postgresql://localhost:$POSTGRES_PORT/$dbname",
             driver = "org.postgresql.Driver",
-            user = POSTGRES_USER,
-            password = POSTGRES_PASSWORD
+            user = dbuser,
+            password = dbpassword
         )
     }
 }
 
 fun Application.initDatabase(){
+    dbname = System.getenv("db.dbname")
+    dbuser = System.getenv("db.user")
+    dbpassword = System.getenv("db.password")
+    
     DatabaseController.init()
 }

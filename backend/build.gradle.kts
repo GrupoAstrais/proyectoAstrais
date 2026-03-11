@@ -16,9 +16,11 @@ kotlin {
 }
 
 dependencies {
-    implementation(libs.ktor.server.auth)
     implementation(libs.ktor.server.core)
+
+    implementation(libs.ktor.server.auth)
     implementation(libs.ktor.server.auth.jwt)
+
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.apache)
     implementation(libs.ktor.server.host.common)

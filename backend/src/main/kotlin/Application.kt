@@ -21,4 +21,5 @@ fun initSampleServer(){
 
 fun Application.module() {
     initDatabase()
+    initSecurity()
 }

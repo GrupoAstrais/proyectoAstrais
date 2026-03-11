@@ -19,6 +19,8 @@ services:
       - ./db-data:/var/lib/postgresql/data
   
   backend:
+    env_file:
+      - ./.env.test
     build:
       context: ./docker
       dockerfile: dockerfile.ktor
