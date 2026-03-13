@@ -1,4 +1,4 @@
-package com.astrais
+package com.astrais.auth
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
@@ -6,7 +6,6 @@ import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
-import io.ktor.server.engine.*
 import java.util.Date
 
 // https://ktor.io/docs/server-jwt.html
@@ -28,7 +27,7 @@ public fun generateUserToken(userID : String) : String{
         .withAudience(jwtAudience)
         .withIssuer(jwtIssuer)
         .withClaim("uid", userID)
-        .withExpiresAt(Date(System.currentTimeMillis()+jwtExpiration))
+        .withExpiresAt(Date(System.currentTimeMillis()+ jwtExpiration))
         .sign(jwtAlgorithm)
 }
 
@@ -44,7 +43,7 @@ public fun validateUserToken(cred : JWTCredential) : Boolean{
     return true
 }
 
-public fun Application.initSecurity() {
+public fun Application.initJWT(authenticationConfig: AuthenticationConfig) {
     // Cargado de datos
     val conf = environment.config
     jwtIssuer = conf.property("jwt.issuer").getString()
@@ -54,19 +53,22 @@ public fun Application.initSecurity() {
     jwtAlgorithm = Algorithm.HMAC256(jwtSecret)
 
 
-    install(Authentication) {
-        jwt("auth-jwt") {
-            // Pone verificador de tokens.
-            verifier(createVerifier())
+    authenticationConfig.jwt("auth-jwt") {
+        // Pone verificador de tokens.
+        verifier(createVerifier())
 
-            // Y ahora valida el token
-            validate { cred->
-                if (validateUserToken(cred)){
-                    JWTPrincipal(cred.payload)
-                }else{
-                    null
-                }
+        // Y ahora valida el token
+        validate { cred->
+            if (validateUserToken(cred)){
+                JWTPrincipal(cred.payload)
+            }else{
+                null
             }
+        }
+
+        // Si tiene error, responde con ese texto
+        challenge { _, _ ->
+            call.respond("Invalid/expired token",null)
         }
     }
 }

@@ -24,7 +24,12 @@ object DatabaseController {
     }
 
     public fun isConnected():Boolean{
+        if (database == null){
+            return false
+        }
+
         return try {
+            // Ejecuta una consulta simple para ver si se hace, sino es que la conexion se fue.
             transaction {
                 exec("SELECT 1")
             }

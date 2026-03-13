@@ -2,6 +2,8 @@ package com.astrais.db
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.experimental.suspendedTransactionAsync
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 class DatabaseDAOImpl : DatabaseDAO {
