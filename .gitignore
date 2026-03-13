@@ -44,3 +44,10 @@ out/
 
 ### VS Code ###
 .vscode/
+
+
+### Ignora los .env ###
+## Los ENV no se deben subir al repo por seguridad, se deja el test por tener una base
+.env
+.env*
+!.env.test
