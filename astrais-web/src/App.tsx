@@ -1,4 +1,5 @@
-import './App.css'
+import'./App.css'
+import'./index.css'
 import { Route, Routes } from 'react-router'
 import Home from './pages/Dashboard/Home'
 import Login from './pages/Auth/Login'
