@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router'
-import './Login.css'
+import '../../styles/Login.css'
 
 export default function Login() {
   const [emailOrUsername, setEmailOrUsername] = useState('')

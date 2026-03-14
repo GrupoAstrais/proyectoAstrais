@@ -10,7 +10,7 @@
   display: grid;
   place-items: center;
   overflow: hidden;
-  background-image: url('../../assets/login-bg.jpg');
+  background-image: url('../assets/login-bg.jpg');
   background-position: 0 -20cm;
 }
 
