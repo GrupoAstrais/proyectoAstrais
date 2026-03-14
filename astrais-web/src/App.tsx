@@ -16,9 +16,10 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/" element={<Login />} />
       <Route path="/forgot-password" element={<Placeholder title="Recuperación de contraseña (próximamente)" />} />
       <Route path="/register" element={<Placeholder title="Registro (próximamente)" />} />
-      <Route path="/" element={<Home />} />
+      <Route path="/home" element={<Home />} />
       <Route path="*" element={<Placeholder title="Página no encontrada" />} />
     </Routes>
   )

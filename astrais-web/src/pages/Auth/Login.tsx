@@ -79,7 +79,7 @@ export default function Login() {
           ) : null}
 
           <button className="button button--primary" type="submit">
-            Log in
+            <Link to="/home" className="link-button">Log in</Link>
           </button>
 
           <button className="button button--ghost" type="button">
