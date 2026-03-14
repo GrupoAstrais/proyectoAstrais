@@ -22,7 +22,7 @@ class AuthRepoImpl : AuthRepo{
 
         if (!existeUser){
             val hashContrasenia = hashPassword(registerRequest.passwd)
-            dao.crearUsuario(registerRequest.name, registerRequest.email, hashContrasenia, registerRequest.lang)
+            dao.createUser(registerRequest.name, registerRequest.email, hashContrasenia, registerRequest.lang)
             return true
         }
         return false

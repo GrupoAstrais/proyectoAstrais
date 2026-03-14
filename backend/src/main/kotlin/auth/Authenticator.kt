@@ -18,7 +18,7 @@ data class LoginRequest(val email : String, val passwd : String)
 data class LoginResponse(val jwtAccessToken : String, val jwtRefreshToken : String)
 
 @Serializable
-data class RegisterRequest(val name : String, val email: String, val passwd: String, val lang : String)
+data class RegisterRequest(val name : String, val email: String, val passwd: String, val lang : String, val utcOffset : Float = 0f)
 
 @Serializable
 data class RegenAccessResponse(val newAccessToken : String)

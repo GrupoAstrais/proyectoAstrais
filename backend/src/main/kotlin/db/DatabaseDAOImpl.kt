@@ -1,20 +1,26 @@
 package com.astrais.db
 
-import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 
 class DatabaseDAOImpl : DatabaseDAO {
-    override suspend fun crearUsuario(nombreusu : String, emailusu: String, passwordusu: String, lang : String) : Int{
+    override suspend fun createUser(
+        nombreusu: String,
+        emailusu: String,
+        passwordusu: String,
+        lang: String,
+        utcOffset: Float,
+        role: UserRoles
+    ): Int {
         return suspendTransaction {
             TablaUsuario.insert {
                 it[nombre] = nombreusu
                 it[email] = emailusu
                 it[contrasenia] = passwordusu
                 it[idioma] = lang
+                it[zona_horaria] = utcOffset
             }[TablaUsuario.id].value
         }
     }

@@ -31,9 +31,9 @@ object TablaUsuario : IntIdTable("Users") {
     // El nombre del usuario
     val nombre = varchar("name", USER_NAME_LENGTH)
     // Rol del usuario
-    val role = enumerationByName<UserRoles>("role", 20)
+    val role = enumerationByName<UserRoles>("role", 20).default(UserRoles.NORMAL_USER)
     // Numero de horas de desplazamiento desde UTC+0 (Tiempo universal coordinado) (España seria UTC+1 por referencia)
-    val zona_horaria = integer("utf_offset").default(0)
+    val zona_horaria = float("utc_offset").default(0f)
     // El idioma siguiendo la ISO 639-2/3 (Con 3 caracteres como: ESP, ENG, ITA, FRA, RUS, POR, CHN) (https://es.wikipedia.org/wiki/ISO_639-3)
     val idioma = varchar("language", 3)
     // El nivel actual del usuario
