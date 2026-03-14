@@ -1,27 +1,96 @@
+import { useState } from 'react'
+import type { FormEvent } from 'react'
+import { Link } from 'react-router'
+import './Login.css'
 
 export default function Login() {
+  const [emailOrUsername, setEmailOrUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
+  const [error, setError] = useState('')
+
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    if (!emailOrUsername.trim() || !password.trim()) {
+      setError('Complete user/email and password to continue.')
+      return
+    }
+
+    setError('')
+    console.log({ emailOrUsername, password, rememberMe })
+  }
+
   return (
-    <>
-        <div>
-            <form action="">
-                <h1>LOG INTO YOUR ACCOUNT</h1>
-                <div>
-                    <label>Username/Email</label>
-                    <input type="text" placeholder="Username" required />
-                </div>
-                <div>
-                    <label>Password</label>
-                    <input type="paswword" placeholder="Password" required />
-                    <a>Frogot?</a>
-                </div>
-                <div>
-                    <label><input type="checkbox" />Remember me</label>
-                </div>
-                <button type="submit">Login</button>
-                <button type="submit">Login with Google</button>
-                <p>Don´t have an account? <a>Sign Up</a></p>
-            </form>
-        </div>
-    </>
+    <section className="login-screen">
+      <div className="login-screen__overlay" />
+
+      <article className="login-card" aria-labelledby="login-title">
+        <header className="login-card__header">
+          <p className="login-card__brand">Astrais</p>
+          <h1 id="login-title">Log in</h1>
+          <p>Welcome back let's continue your adventure.</p>
+        </header>
+
+        <form className="login-form" onSubmit={onSubmit} noValidate>
+          <div className="form-group">
+            <label htmlFor="emailOrUsername">Username or email</label>
+            <input
+              id="emailOrUsername"
+              type="text"
+              placeholder="astro_user o user@mail.com"
+              value={emailOrUsername}
+              onChange={(event) => setEmailOrUsername(event.target.value)}
+              autoComplete="username"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              autoComplete="current-password"
+              required
+            />
+          </div>
+
+          <div className="login-row">
+            <label className="remember-me" htmlFor="rememberMe">
+              <input
+                id="rememberMe"
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(event) => setRememberMe(event.target.checked)}
+              />
+              Remember me
+            </label>
+            <Link to="/forgot-password" className="link-button">Forgot you password?</Link>
+          </div>
+
+          {error ? (
+            <p className="form-error" role="status" aria-live="polite">
+              {error}
+            </p>
+          ) : null}
+
+          <button className="button button--primary" type="submit">
+            Log in
+          </button>
+
+          <button className="button button--ghost" type="button">
+            Continue with Google
+          </button>
+
+          <p className="signup-callout">
+            You don't have an account? <Link to="/register">Sing up</Link>
+          </p>
+        </form>
+      </article>
+    </section>
   )
 }
