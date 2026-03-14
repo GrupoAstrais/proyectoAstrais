@@ -51,3 +51,6 @@ out/
 .env
 .env*
 !.env.test
+
+### Ignora la carpeta de datos de BD
+db-data/
