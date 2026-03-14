@@ -3,6 +3,7 @@ package com.astrais.db
 import com.astrais.POSTGRES_PORT
 import io.ktor.server.application.*
 import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 private var dbname : String = ""
@@ -46,6 +47,11 @@ object DatabaseController {
             user = dbuser,
             password = dbpassword
         )
+
+        // Creacion de tablas si no existen
+        transaction {
+            SchemaUtils.create(TablaUsuario, TablaCredencialesAuth, inBatch = true)
+        }
     }
 }
 

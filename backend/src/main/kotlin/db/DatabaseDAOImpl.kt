@@ -1,16 +1,16 @@
 package com.astrais.db
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.v1.jdbc.transactions.experimental.suspendedTransactionAsync
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 
 class DatabaseDAOImpl : DatabaseDAO {
-    override suspend fun test() {
-        withContext(Dispatchers.IO) {
-            transaction {
-                exec("SELECT 1")
+    override suspend fun crearUsuario(nombreusu : String, emailusu: String, passwordusu: String, lang : String){
+        suspendTransaction {
+            TablaUsuario.insert {
+                it[nombre] = nombreusu
+                it[email] = emailusu
+                it[contrasenia] = passwordusu
+                it[idioma] = lang
             }
         }
     }

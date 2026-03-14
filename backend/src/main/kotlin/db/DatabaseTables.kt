@@ -8,12 +8,16 @@ import org.jetbrains.exposed.v1.datetime.date
 const val USER_NAME_LENGTH = 256
 const val USER_MAIL_LENGTH = 128
 
-const val AUTH_PROD_SELF = "Servidor"
-const val AUTH_PROD_GOOGLE = "Google"
-
 const val AWARD_TITLE_LENGTH = 72
-
 const val IMAGE_PATH_SIZE = 48
+
+enum class AuthProvider{
+    SERVIDOR,
+    GOOGLE
+}
+const val LANG_CODE_SPANISH = "ESP"
+const val LANG_CODE_ENGLISH = "ENG"
+const val LANG_CODE_RUSSIAN = "RUS"
 
 object TablaUsuario : IntIdTable("Users") {
     // El nombre del usuario
@@ -49,7 +53,7 @@ object TablaUsuario : IntIdTable("Users") {
 
 object TablaCredencialesAuth : Table("AuthCredentials") {
     val uid = reference("user_id", TablaUsuario, onDelete = ReferenceOption.CASCADE)
-    val provider = varchar("provider", 16).default(AUTH_PROD_SELF)
+    val provider = enumerationByName<AuthProvider>("provider", 16).default(AuthProvider.SERVIDOR)
 
     override val primaryKey = PrimaryKey(arrayOf(uid, provider))
 }
