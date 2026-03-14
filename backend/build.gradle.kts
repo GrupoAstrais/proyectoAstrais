@@ -34,10 +34,12 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
 
     // Exposed
-    implementation("org.jetbrains.exposed:exposed-core:1.0.0")
-    implementation("org.jetbrains.exposed:exposed-dao:1.0.0")
-    implementation("org.jetbrains.exposed:exposed-jdbc:1.0.0")
-    implementation("org.jetbrains.exposed:exposed-kotlin-datetime:1.0.0")
+    val exposed_ver = "1.0.0"
+    implementation("org.jetbrains.exposed:exposed-core:$exposed_ver")
+    implementation("org.jetbrains.exposed:exposed-dao:$exposed_ver")
+    implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_ver")
+    implementation("org.jetbrains.exposed:exposed-kotlin-datetime:$exposed_ver")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
 
     // Prueba de postgres
     implementation("org.postgresql:postgresql:42.7.7")
