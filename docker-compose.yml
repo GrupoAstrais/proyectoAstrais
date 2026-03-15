@@ -32,6 +32,12 @@ services:
       dockerfile: ./docker/dockerfile.ktor
     ports:
       - ${KTOR_PORT}:${KTOR_PORT}
+    
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+
     depends_on:
       database:
         condition: service_healthy
