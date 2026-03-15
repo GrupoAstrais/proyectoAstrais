@@ -22,6 +22,7 @@ class DatabaseDAOImpl : DatabaseDAO {
                 it[idioma] = lang
                 it[zona_horaria] = utcOffset
             }[TablaUsuario.id].value
+
         }
     }
 
@@ -48,4 +49,8 @@ class DatabaseDAOImpl : DatabaseDAO {
             } > 0
         }
     }
+}
+
+suspend fun da(){
+    val get = getDatabaseDaoImpl().getUsuarioByID(0)
 }

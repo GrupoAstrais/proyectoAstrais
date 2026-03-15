@@ -4,6 +4,7 @@ import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.datetime.date
@@ -13,6 +14,8 @@ const val USER_MAIL_LENGTH = 128
 
 const val AWARD_TITLE_LENGTH = 72
 const val IMAGE_PATH_SIZE = 48
+
+const val CONFIRM_CODE_SIZE = 6
 
 enum class AuthProvider{
     SERVIDOR,
@@ -57,6 +60,8 @@ object TablaUsuario : IntIdTable("Users") {
     val email = varchar("email", USER_MAIL_LENGTH).nullable()
     // BCRYPT tiene un limite de 72 bytes
     val contrasenia = varchar("hash_passwd", 72).nullable()
+    // Dice si el mail del usuario esta confirmado. No deberia dejar meterse si no.
+    val esta_confirmado = integer("is_mail_confirmed").default(0)
 
     // TODO: Piezas de avatar
 }
@@ -78,6 +83,15 @@ class EntidadUsuario(id : EntityID<Int>) : IntEntity(id) {
     var ultimo_login             by TablaUsuario.ultimo_login
     var email                    by TablaUsuario.email
     var contrasenia              by TablaUsuario.contrasenia
+    var esta_confirmado          by TablaUsuario.esta_confirmado
+}
+
+
+object TablaConfirmacionUsuario : Table("UserConfirm") {
+    val uid = reference("user_id", TablaUsuario, onDelete = ReferenceOption.CASCADE)
+    val codigo_confirmacion = varchar("confirm_code", CONFIRM_CODE_SIZE)
+
+    override val primaryKey = PrimaryKey(uid)
 }
 
 object TablaCredencialesAuth : Table("AuthCredentials") {

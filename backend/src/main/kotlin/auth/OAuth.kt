@@ -8,7 +8,7 @@ import io.ktor.server.auth.*
 import io.ktor.util.collections.*
 
 fun Application.initOauth(authenticationConfig: AuthenticationConfig){
-    authenticationConfig.oauth("oauth-google") {
+    /*authenticationConfig.oauth("oauth-google") {
 
-    }
+    }*/
 }
