@@ -1,4 +1,6 @@
 package com.mm.astrais_android
 
-class ScreenRoutes {
+sealed class ScreenRoutes(val route: String) {
+    object Login : ScreenRoutes("login")
+    object Home : ScreenRoutes("home")
 }
