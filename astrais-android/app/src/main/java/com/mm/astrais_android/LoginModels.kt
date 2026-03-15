@@ -1,8 +1,10 @@
 package com.mm.astrais_android
 
 data class LoginRequest(
+    val name: String,
     val email: String,
-    val password: String
+    val passwd: String,
+    val lang: String
 )
 
 data class LoginResponse(

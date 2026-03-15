@@ -24,7 +24,7 @@ class LoginViewModel : ViewModel() {
             _uiState.value = LoginUiState.Loading
 
             try {
-                val request = LoginRequest(email, password)
+                val request = LoginRequest(name= "Test", email, password, lang="ESP")
                 val response = RetrofitClient.apiService.login(request)
 
                 if (response.isSuccessful) {
@@ -35,7 +35,7 @@ class LoginViewModel : ViewModel() {
                         _uiState.value = LoginUiState.Error(body?.message ?: "Error desconocido")
                     }
                 } else {
-                    _uiState.value = LoginUiState.Error("Error ${response.code()}: ${response.message()}")
+                    _uiState.value = LoginUiState.Error("Error ${response.code()}: ${response.message()} ${response.raw()}")
                 }
             } catch (e: Exception) {
                 _uiState.value = LoginUiState.Error("Error de conexión: ${e.message}")
