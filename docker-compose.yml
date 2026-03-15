@@ -5,7 +5,6 @@ services:
     
     env_file:
       - ./.env
-      - ./.env.test
 
     ports:
       - 5432:5432
@@ -26,7 +25,7 @@ services:
   backend:
     env_file:
       - ./.env
-      - ./.env.test
+    
     build:
       context: .
       dockerfile: ./docker/dockerfile.ktor
@@ -34,9 +33,14 @@ services:
       - ${KTOR_PORT}:${KTOR_PORT}
     
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      KTOR_PORT: ${KTOR_PORT}
+      JWT_ISSUER: ${JWT_ISSUER}
+      JWT_AUDIENCE: ${JWT_AUDIENCE}
+      JWT_SECRET_ACCESS: ${JWT_SECRET_ACCESS}
+      JWT_SECRET_REFRESH: ${JWT_SECRET_REFRESH}
 
     depends_on:
       database:

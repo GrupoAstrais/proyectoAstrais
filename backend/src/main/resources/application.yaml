@@ -3,7 +3,7 @@ ktor:
         modules:
             - com.astrais.ApplicationKt.module
     deployment:
-        port: ${?KTOR_PORT:-5684}
+        port: ${KTOR_PORT}
 
 jwt:
     issuer: ${JWT_ISSUER}
