@@ -18,10 +18,11 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -80,7 +81,7 @@ fun HomeScreen() {
                 navItems.forEachIndexed { index, item ->
                     if (item.title == "Random pero index") {
                         NavigationBarItem(
-                            icon = { Icon(item.icon, contentDescription = item.title, modifier = Modifier.size(size = 50.dp)) },
+                            icon = { Icon(item.icon, contentDescription = item.title, modifier = Modifier.size(50.dp)) },
                             label = { Text(item.title) },
                             selected = selectedTab == index,
                             onClick = { selectedTab = index }
@@ -119,12 +120,12 @@ data class NavItem(val title: String, val icon: ImageVector)
 @Composable
 fun LoginScreen(
     onNavigateToHome: () -> Unit,
-    viewModel: LoginViewModel = viewModel()
+    viewModel: LoginViewModel = viewModel<LoginViewModel>()
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(uiState) {
         when (uiState) {

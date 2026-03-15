@@ -41,8 +41,12 @@ object DatabaseController {
     }
 
     private fun initConnection(){
+	val url = "jdbc:postgresql://database:$POSTGRES_PORT/$dbname"
+    println(" Connecting to PostgreSQL: $url") // DEBUG LOG
+    println(" User: $dbuser, DB: $dbname")
+		
         database = Database.connect(
-            url = "jdbc:postgresql://localhost:$POSTGRES_PORT/$dbname",
+            url = "jdbc:postgresql://database:$POSTGRES_PORT/$dbname",
             driver = "org.postgresql.Driver",
             user = dbuser,
             password = dbpassword

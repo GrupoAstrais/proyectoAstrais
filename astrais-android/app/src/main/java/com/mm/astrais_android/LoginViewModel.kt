@@ -1,5 +1,6 @@
 package com.mm.astrais_android
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,6 +17,8 @@ sealed class LoginUiState {
 
 class LoginViewModel : ViewModel() {
 
+    private val apiService = ApiService()
+
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
@@ -23,23 +26,17 @@ class LoginViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.value = LoginUiState.Loading
 
-            try {
-                val request = LoginRequest(name= "Test", email, password, lang="ESP")
-                val response = RetrofitClient.apiService.login(request)
+            val request = RegisterRequest(name = "Tets", email = email, passwd = password, lang = "ESP")
+            val result = apiService.register(request)
 
-                if (response.isSuccessful) {
-                    val body = response.body()
-                    if (body?.success == true) {
-                        _uiState.value = LoginUiState.Success(body.token ?: "")
-                    } else {
-                        _uiState.value = LoginUiState.Error(body?.message ?: "Error desconocido")
-                    }
-                } else {
-                    _uiState.value = LoginUiState.Error("Error ${response.code()}: ${response.message()} ${response.raw()}")
+            result
+                .onSuccess { body ->
+                    _uiState.value = LoginUiState.Success("")
                 }
-            } catch (e: Exception) {
-                _uiState.value = LoginUiState.Error("Error de conexión: ${e.message}")
-            }
+                .onFailure { error ->
+                    _uiState.value = LoginUiState.Error(error.message ?: "Error de conexión")
+                    Log.e("LOGIN", "Error: ${error.message}", error)
+                }
         }
     }
 

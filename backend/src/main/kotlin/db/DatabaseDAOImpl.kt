@@ -1,9 +1,11 @@
 package com.astrais.db
 
+import kotlinx.datetime.toKotlinLocalDate
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
+import java.time.LocalDate
 
 class DatabaseDAOImpl : DatabaseDAO {
     override suspend fun createUser(
@@ -21,6 +23,8 @@ class DatabaseDAOImpl : DatabaseDAO {
                 it[contrasenia] = passwordusu
                 it[idioma] = lang
                 it[zona_horaria] = utcOffset
+                it[rol] = role
+                it[ultimo_login] = LocalDate.now().toKotlinLocalDate()
             }[TablaUsuario.id].value
 
         }

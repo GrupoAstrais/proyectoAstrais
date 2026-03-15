@@ -76,9 +76,9 @@ fun Route.authRoutes(){
 
             // Registra al usuario
             if (getAuthRepoImpl().performBasicRegister(request)){
-                call.respond(HttpStatusCode.OK)
+                call.respond(HttpStatusCode.OK, mapOf("Aknowledge" to true))
             }else{
-                call.respond(HttpStatusCode.Conflict)
+                call.respond(HttpStatusCode.Conflict, mapOf("Aknowledge" to false))
             }
 
         } catch (e : BadRequestException){
