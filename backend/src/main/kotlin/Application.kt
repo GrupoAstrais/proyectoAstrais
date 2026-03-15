@@ -11,7 +11,6 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 
-const val APP_PORT = 8759
 const val POSTGRES_PORT = 5432
 
 fun main(args: Array<String>) {
@@ -20,7 +19,7 @@ fun main(args: Array<String>) {
 
 // Inicio un servidor de forma sencilla
 fun initSampleServer(){
-    embeddedServer(Netty, port = APP_PORT) {
+    embeddedServer(Netty, port = System.getenv("ktor.deployment.port").toInt()) {
         module()
     }.start(wait = true)
 }
@@ -33,7 +32,8 @@ fun Application.module() {
     install(ContentNegotiation) {
         json(Json {
             prettyPrint = false
-            
+            isLenient = true
+            ignoreUnknownKeys = true
         })
     }
 

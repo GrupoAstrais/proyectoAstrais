@@ -1,46 +1,79 @@
 package com.astrais.auth
 
+import com.astrais.db.EntidadUsuario
+import com.astrais.db.getDatabaseDaoImpl
 import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
+import io.ktor.server.response.*
 import java.util.Date
 
 // https://ktor.io/docs/server-jwt.html
 
 // El nombre del creador del token, se usa en la validacion
 private lateinit var jwtIssuer : String
-// Para quien es el token. Se podria cambiar
 private lateinit var jwtAudience : String
-// Se usa de 'firma' del token, para autentificar que es bueno
-private lateinit var jwtSecret : String
 // MS hasta que expire el token
-private var jwtExpiration : Long = 0
+private var jwtAccessTokenExpiration : Long = 10_000 // 10 minutos (creo)
+private var jwtRefreshTokenExpiration : Long = 3_600_000
 // Algoritmo ya prehecho con los datos
-private lateinit var jwtAlgorithm : Algorithm
+private lateinit var jwtAlgorithmAccess : Algorithm
+private lateinit var jwtAlgorithmRefresh : Algorithm
 
 
-public fun generateUserToken(userID : String) : String{
+public fun generateAccessToken(user : EntidadUsuario) : String{
     return JWT.create()
         .withAudience(jwtAudience)
         .withIssuer(jwtIssuer)
-        .withClaim("uid", userID)
-        .withExpiresAt(Date(System.currentTimeMillis()+ jwtExpiration))
-        .sign(jwtAlgorithm)
+        .withSubject(user.id.value.toString())
+        .withClaim("refresherToken", false)
+        .withExpiresAt(Date(System.currentTimeMillis()+ jwtAccessTokenExpiration))
+        .sign(jwtAlgorithmAccess)
 }
 
-public fun createVerifier() : JWTVerifier{
-    return JWT.require(jwtAlgorithm)
-        .withIssuer(jwtIssuer)
+public fun generateRefreshToken(user: EntidadUsuario) : String {
+    return JWT.create()
         .withAudience(jwtAudience)
+        .withIssuer(jwtIssuer)
+        .withSubject(user.id.value.toString())
+        .withClaim("refresherToken", true)
+        .withExpiresAt(Date(System.currentTimeMillis()+ jwtRefreshTokenExpiration))
+        .sign(jwtAlgorithmRefresh)
+}
+
+public fun createAccessVerifier() : JWTVerifier{
+    return JWT.require(jwtAlgorithmAccess)
+        .withAudience(jwtAudience)
+        .withIssuer(jwtIssuer)
+        .withClaim("refresherToken", false)
         .build()
 }
 
-public fun validateUserToken(cred : JWTCredential) : Boolean{
-    // TODO: Una validacion real
-    return true
+public fun createRefreshVerifier() : JWTVerifier{
+    return JWT.require(jwtAlgorithmAccess)
+        .withAudience(jwtAudience)
+        .withIssuer(jwtIssuer)
+        .withClaim("refresherToken", true)
+        .build()
+}
+
+public suspend fun validateAccessToken(cred : JWTCredential) : Boolean{
+    try {
+        // Comprueba que el usuario de verdad existe
+        val uid = cred.subject?.toInt() ?: 0
+        return getDatabaseDaoImpl().getUsuarioByID(uid) != null
+    } catch (e : NumberFormatException){
+        return false
+    }
+}
+
+public suspend fun validateRefreshToken(cred : JWTCredential) : Boolean{
+    // Ahora es lo mismo, pero se deberian de meter condicionales adicionales
+    return validateAccessToken(cred)
 }
 
 public fun Application.initJWT(authenticationConfig: AuthenticationConfig) {
@@ -48,18 +81,20 @@ public fun Application.initJWT(authenticationConfig: AuthenticationConfig) {
     val conf = environment.config
     jwtIssuer = conf.property("jwt.issuer").getString()
     jwtAudience = conf.property("jwt.audience").getString()
-    jwtSecret = conf.property("jwt.secret").getString()
-    jwtExpiration = conf.property("jwt.expiration").getString().toLong()
-    jwtAlgorithm = Algorithm.HMAC256(jwtSecret)
 
+    val accessSecret = conf.property("jwt.accessSecret").getString()
+    jwtAlgorithmAccess = Algorithm.HMAC256(accessSecret)
 
-    authenticationConfig.jwt("auth-jwt") {
+    val refreshSecret = conf.property("jwt.refreshSecret").getString()
+    jwtAlgorithmRefresh = Algorithm.HMAC256(refreshSecret)
+
+    authenticationConfig.jwt("access-jwt") {
         // Pone verificador de tokens.
-        verifier(createVerifier())
+        verifier(createAccessVerifier())
 
         // Y ahora valida el token
         validate { cred->
-            if (validateUserToken(cred)){
+            if (validateAccessToken(cred)){
                 JWTPrincipal(cred.payload)
             }else{
                 null
@@ -68,7 +103,24 @@ public fun Application.initJWT(authenticationConfig: AuthenticationConfig) {
 
         // Si tiene error, responde con ese texto
         challenge { _, _ ->
-            call.respond("Invalid/expired token",null)
+            call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid/expired token"))
+        }
+    }
+
+    authenticationConfig.jwt("refresh-jwt") {
+        verifier(createRefreshVerifier())
+
+        validate { cred->
+            if (validateRefreshToken(cred)){
+                JWTPrincipal(cred.payload)
+            }else{
+                null
+            }
+        }
+
+        // Si tiene error, responde con ese texto
+        challenge { _, _ ->
+            call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid/expired token"))
         }
     }
 }
