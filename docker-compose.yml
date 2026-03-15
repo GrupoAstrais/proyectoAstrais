@@ -4,6 +4,7 @@ services:
     # Con este comando, se exporta el .env al contenedor segun la guia de docker
     
     env_file:
+      - ./.env
       - ./.env.test
 
     ports:
@@ -14,7 +15,7 @@ services:
       POSTGRES_DB: ${DB_NAME}
     
     volumes:
-      - ./db-data:/var/lib/postgresql/data
+      - db-data:/var/lib/postgresql/data
 
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
@@ -24,6 +25,7 @@ services:
   
   backend:
     env_file:
+      - ./.env
       - ./.env.test
     build:
       context: .
@@ -33,3 +35,6 @@ services:
     depends_on:
       database:
         condition: service_healthy
+
+volumes:
+  db-data:
