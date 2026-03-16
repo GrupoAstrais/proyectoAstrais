@@ -29,6 +29,8 @@ dependencies {
     implementation(libs.ktor.network.tls)
     implementation(libs.ktor.server.websockets)
 
+    implementation(libs.ktor.server.cors)
+
     // Serializacion por JSON
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)

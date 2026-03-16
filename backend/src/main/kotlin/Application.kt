@@ -3,11 +3,13 @@ package com.astrais
 import com.astrais.auth.authRoutes
 import com.astrais.auth.installAuth
 import com.astrais.db.initDatabase
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 
@@ -35,6 +37,15 @@ fun Application.module() {
             isLenient = true
             ignoreUnknownKeys = true
         })
+    }
+
+    // Instala politica CORS
+    install(CORS) {
+        anyHost()
+        allowCredentials = true
+        allowNonSimpleContentTypes = true
+        allowMethod(HttpMethod.Post)
+        allowMethod(HttpMethod.Get)
     }
 
     routing {
