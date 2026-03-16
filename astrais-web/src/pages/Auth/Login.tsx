@@ -2,7 +2,12 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router'
 import '../../styles/Login.css'
+/*
+import axios from 'axios'
+import API from '../../data/Api.ts'
 
+
+*/
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
