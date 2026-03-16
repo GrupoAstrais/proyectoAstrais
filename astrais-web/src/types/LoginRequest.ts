@@ -1,7 +1,6 @@
 export interface LoginRequest {
     email: string,
-    password: string,
-    rememberMe: boolean
+    password: string
 }
 
 export interface CreateUserRequest {

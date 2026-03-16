@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { LoginRequest } from '../types/LoginRequest';
 
-export const API_BASE_URL = 'http://localhost:5684'
+export const API_BASE_URL = 'http://192.168.56.1:5684'
 
 let jwtToken: string | null = null
 
@@ -36,18 +36,4 @@ export async function performLogin(req: LoginRequest) {
         }
     }
 }
-
-/*
-import API from '../AxiosInstance.ts'
-
-export function CheckUser (email: string, passwd: string) : {response: number} {
-  handleSubmit = async event => {
-    event.preventDefault();
-
-    const response = API.post('/auth/login', email, passwd);
-
-    return response;
-  }
-}
-*/
 

@@ -2,10 +2,21 @@ import Navbar from '../../components/layout/Navbar'
 import '../../styles/Home.css'
 import bgImage from '../../assets/homeScreenBack.jpg'
 import astra from '../../assets/astra.png'
+import type { ITarea } from '../../types/Interfaces';
+import Tarea from '../../components/ui/Tarea';
 
 export default function Home() {
+
+  //temporal 
+
+  const tarea: ITarea = {
+  title: "Estudiar TypeScript",
+  dificultad: "HARD",
+  recompensa: 50
+  };
+
   return (
-    <main style={{ backgroundImage: `url(${bgImage})` }} className="h-screen to-40% bg-no-repeat bg-cover font-['Space_Grotesk'] ">
+    <main style={{ backgroundImage: `url(${bgImage})` }} className="h-screen to-40% bg-cover font-['Space_Grotesk'] ">
       <Navbar />
 
       <section className="flex flex-col justify-center items-center gap-3 text-white" aria-label="Panel principal de Astrais">
@@ -31,17 +42,16 @@ export default function Home() {
         </article>
 
         <div className='flex flex-row gap-3'>
-          <article className="home-card home-card--notifications">
+          <article className="home-card">
             <header>
-              <h2>Notificaciones sin leer</h2>
-              <span className="home-badge">6 nuevas</span>
+              <h2>Tareas Pendientes</h2>
             </header>
-            <ul>
-              <li>📩 Tienes una invitación al grupo “Proyecto IA”.</li>
-              <li>🏆 Lograste un nuevo hito semanal.</li>
-              <li>⏰ Tu tarea “Repasar React” vence en 2 horas.</li>
-              <li>🛍️ Nuevo ítem disponible en la tienda cósmica.</li>
-            </ul>
+            <div className='flex flex-col gap-3'>
+              <Tarea data={tarea} />
+              <Tarea data={tarea} />
+              <Tarea data={tarea} />
+              <Tarea data={tarea} />
+            </div>
           </article>
 
           <div className='flex flex-col gap-3'>
