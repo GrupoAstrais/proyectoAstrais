@@ -1,6 +1,7 @@
 @import './styles/fonts.css';
 @import './styles/typography.css';
 @import './styles/colors.css';
+@import "tailwindcss";
 
 /*
 :root {

@@ -15,6 +15,8 @@ interface DatabaseDAO {
     suspend fun getUsuario(emailusu: String): EntidadUsuario?
     suspend fun getUsuarioByID(id: Int): EntidadUsuario?
     suspend fun deleteUsuario(id: Int) : Boolean
+
+    suspend fun setUserLastLogin(ent : EntidadUsuario)
 }
 
 fun getDatabaseDaoImpl() : DatabaseDAO{

@@ -2,9 +2,14 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router'
 import '../../styles/Login.css'
+/*
+import axios from 'axios'
+import API from '../../data/Api.ts'
 
+
+*/
 export default function Login() {
-  const [emailOrUsername, setEmailOrUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState('')
@@ -12,13 +17,13 @@ export default function Login() {
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    if (!emailOrUsername.trim() || !password.trim()) {
+    if (!email.trim() || !password.trim()) {
       setError('Complete user/email and password to continue.')
       return
     }
 
     setError('')
-    console.log({ emailOrUsername, password, rememberMe })
+    console.log({ email, password, rememberMe })
   }
 
   return (
@@ -34,13 +39,13 @@ export default function Login() {
 
         <form className="login-form" onSubmit={onSubmit} noValidate>
           <div className="form-group">
-            <label htmlFor="emailOrUsername">Username or email</label>
+            <label htmlFor="email">Email</label>
             <input
-              id="emailOrUsername"
+              id="email"
               type="text"
-              placeholder="astro_user o user@mail.com"
-              value={emailOrUsername}
-              onChange={(event) => setEmailOrUsername(event.target.value)}
+              placeholder="user@mail.com"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
               autoComplete="username"
               required
             />
@@ -87,7 +92,7 @@ export default function Login() {
           </button>
 
           <p className="signup-callout">
-            You don't have an account? <Link to="/register">Sing up</Link>
+            You don't have an account? <Link to="/register">Sign up</Link>
           </p>
         </form>
       </article>

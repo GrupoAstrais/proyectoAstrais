@@ -1,39 +1,46 @@
 import { NavLink } from 'react-router'
+import logo from '../../assets/logo.svg'
 
-const navItems = [
+const links = [
+  { to: '/home', label: 'Inicio' },
   { to: '/tasks', label: 'Tareas' },
   { to: '/groups', label: 'Grupos' },
   { to: '/shop', label: 'Tienda' },
-  { to: '/games', label: 'Juegos' },
+  { to: '/games', label: 'Videojuegos' },
   { to: '/achievements', label: 'Logros' },
-  { to: '/profile', label: 'Perfil' },
 ]
-
-const baseLinkStyles =
-  'rounded-lg px-4 py-3 text-sm font-medium transition-colors duration-200'
 
 export default function Navbar() {
   return (
-    <nav className="fixed left-0 top-0 flex h-screen w-60 flex-col gap-3 bg-linear-to-b from-indigo-950 via-indigo-900 to-blue-900 p-4 shadow-2xl">
-      <h2 className="mb-2 px-4 text-xs font-semibold uppercase tracking-[0.2em] text-indigo-200">
-        Astrais
-      </h2>
+    <nav className="flex flex-row w-full justify-between items-center px-2 bg-secondary-500/80 text-white font-['Press_Start_2P'] border-b border-secondary-500/50 mb-2" aria-label="Navegación principal">
+      <div className='flex flex-row items-center'>
+        <div className='items-center justify-center'>
+          <img className='h-20 w-20' src={logo} />
+        </div>
 
-      {navItems.map(({ to, label }) => (
-        <NavLink
-          key={to}
-          to={to}
-          className={({ isActive }) =>
-            `${baseLinkStyles} ${
-              isActive
-                ? 'bg-indigo-400/30 text-blue-100 ring-1 ring-indigo-200/70'
-                : 'text-indigo-100/90 hover:bg-indigo-300/20 hover:text-white'
-            }`
-          }
-        >
-          {label}
-        </NavLink>
-      ))}
+        <div className="">
+          {links.map((link) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              className={({ isActive }) =>
+                `home-sidebar__link ${isActive ? 'home-sidebar__link--active' : ''} font-medium`
+              }
+            >
+              {link.label}
+            </NavLink>
+          ))}
+        </div>
+      </div>
+
+      <NavLink
+        to="/perfil"
+
+      >
+        <div className='bg-black rounded-full py-4 px-6 flex text-center'>
+          <span className='text-white text-2xl'>P</span>
+        </div>
+      </NavLink>
     </nav>
   )
 }

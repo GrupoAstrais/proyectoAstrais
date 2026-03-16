@@ -14,7 +14,7 @@ object DatabaseController {
     private var database : Database? = null
 
     public fun init(){
-        if (isConnected()){
+        if (!isConnected()){
             initConnection()
         }
     }
@@ -41,8 +41,12 @@ object DatabaseController {
     }
 
     private fun initConnection(){
+	val url = "jdbc:postgresql://database:$POSTGRES_PORT/$dbname"
+    println(" Connecting to PostgreSQL: $url") // DEBUG LOG
+    println(" User: $dbuser, DB: $dbname")
+		
         database = Database.connect(
-            url = "jdbc:postgresql://localhost:$POSTGRES_PORT/$dbname",
+            url = "jdbc:postgresql://database:$POSTGRES_PORT/$dbname",
             driver = "org.postgresql.Driver",
             user = dbuser,
             password = dbpassword
@@ -56,9 +60,11 @@ object DatabaseController {
 }
 
 fun Application.initDatabase(){
-    dbname = System.getenv("db.dbname")
-    dbuser = System.getenv("db.user")
-    dbpassword = System.getenv("db.password")
-    
+    dbname = environment.config.propertyOrNull("db.dbname")?.getString() ?: "db"
+    dbuser = environment.config.propertyOrNull("db.user")?.getString() ?: "root"
+    dbpassword = environment.config.propertyOrNull("db.password")?.getString() ?: "root"
+	
+	print(dbname + " " + dbuser + " " + dbpassword)
+	
     DatabaseController.init()
 }

@@ -11,7 +11,7 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 
-const val POSTGRES_PORT = 5432
+const val POSTGRES_PORT = "5432"
 
 fun main(args: Array<String>) {
     initSampleServer()

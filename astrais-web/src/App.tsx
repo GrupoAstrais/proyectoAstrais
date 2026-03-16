@@ -3,6 +3,8 @@ import './index.css'
 import { Route, Routes } from 'react-router'
 import Home from './pages/Dashboard/Home'
 import Login from './pages/Auth/Login'
+import Register from './pages/Auth/Register'
+import Group from './pages/Groups/Group'
 
 function Placeholder({ title }: { title: string }) {
   return (
@@ -18,8 +20,9 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/" element={<Login />} />
       <Route path="/forgot-password" element={<Placeholder title="Recuperación de contraseña (próximamente)" />} />
-      <Route path="/register" element={<Placeholder title="Registro (próximamente)" />} />
+      <Route path="/register" element={<Register/>} />
       <Route path="/home" element={<Home />} />
+      <Route path="/groups" element={<Group />} />
       <Route path="*" element={<Placeholder title="Página no encontrada" />} />
     </Routes>
   )

@@ -21,6 +21,9 @@ data class LoginResponse(val jwtAccessToken : String, val jwtRefreshToken : Stri
 data class RegisterRequest(val name : String, val email: String, val passwd: String, val lang : String, val utcOffset : Float = 0f)
 
 @Serializable
+data class MailVerifierRequest(val email: String, val code : String)
+
+@Serializable
 data class RegenAccessResponse(val newAccessToken : String)
 
 fun Application.installAuth(){
@@ -73,14 +76,18 @@ fun Route.authRoutes(){
 
             // Registra al usuario
             if (getAuthRepoImpl().performBasicRegister(request)){
-                call.respond(HttpStatusCode.OK)
+                call.respond(HttpStatusCode.OK, mapOf("Aknowledge" to true))
             }else{
-                call.respond(HttpStatusCode.Conflict)
+                call.respond(HttpStatusCode.Conflict, mapOf("Aknowledge" to false))
             }
 
         } catch (e : BadRequestException){
             call.respond(HttpStatusCode.BadRequest, mapOf("error" to "The data sent by the client was not in the accepted format"))
         }
+    }
+
+    post("/auth/mailverifier") {
+
     }
 
     // Se protege la ruta requiriendo el refresh token para poder entrar
