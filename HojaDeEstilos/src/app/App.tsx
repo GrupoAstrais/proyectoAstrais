@@ -30,11 +30,10 @@ export default function App() {
                 <Rocket className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="font-['Press_Start_2P'] text-sm text-white">ASTRAIS</h1>
-                <p className="text-xs text-gray-400 font-['Space_Grotesk'] mt-1">Design System Guide</p>
+                <h1 className="font-['Press_Start_2P'] text-sm text-white">ASTRAÏS</h1>
+                <p className="text-xs text-gray-400 font-['Space_Grotesk'] mt-1">Guía de estilos</p>
               </div>
             </div>
-            <div className="text-xs text-gray-400 font-['Space_Grotesk']">v1.0</div>
           </div>
         </div>
       </header>
@@ -77,7 +76,7 @@ export default function App() {
           <section id="intro" className="scroll-mt-32">
             <div className="bg-gradient-to-br from-[#1E1E2E] to-[#2D2D3D] border-4 border-[#FFD700] rounded-2xl p-8 shadow-[8px_8px_0px_0px_rgba(255,215,0,0.3)]">
               <div className="text-center mb-8">
-                <h2 className="font-['Press_Start_2P'] text-2xl text-white mb-4">🪐 ASTRAIS</h2>
+                <h2 className="font-['Press_Start_2P'] text-2xl text-white mb-4">ASTRAIS</h2>
                 <p className="text-lg text-gray-300 font-['Space_Grotesk'] max-w-2xl mx-auto">
                   Una app de tareas que gamifica tu vida con una experiencia motivadora, mágica y progresiva inspirada en el universo.
                 </p>
@@ -85,19 +84,19 @@ export default function App() {
               
               <div className="grid md:grid-cols-3 gap-6 mt-8">
                 <div className="bg-[#0F3547] border-4 border-[#4ECDC4] rounded-lg p-6 text-center">
-                  <div className="text-3xl mb-2">🎮</div>
+
                   <h3 className="font-['Press_Start_2P'] text-xs text-[#4ECDC4] mb-2">Gamificación</h3>
                   <p className="text-sm text-gray-400 font-['Space_Grotesk']">XP, niveles, logros y recompensas cósmicas</p>
                 </div>
                 
                 <div className="bg-[#1E4A63] border-4 border-[#8B5CF6] rounded-lg p-6 text-center">
-                  <div className="text-3xl mb-2">✨</div>
+            
                   <h3 className="font-['Press_Start_2P'] text-xs text-[#8B5CF6] mb-2">Pixel Art</h3>
                   <p className="text-sm text-gray-400 font-['Space_Grotesk']">Estilo retro moderno inspirado en 8-bit/16-bit</p>
                 </div>
                 
                 <div className="bg-[#2D5F7F] border-4 border-[#9FE8C5] rounded-lg p-6 text-center">
-                  <div className="text-3xl mb-2">🌌</div>
+            
                   <h3 className="font-['Press_Start_2P'] text-xs text-[#9FE8C5] mb-2">Espacial</h3>
                   <p className="text-sm text-gray-400 font-['Space_Grotesk']">Universo, estrellas y exploración galáctica</p>
                 </div>
@@ -271,51 +270,6 @@ export default function App() {
                 <h2 className="font-['Press_Start_2P'] text-xl">Iconografía</h2>
               </div>
 
-              {/* Icon Library Strategy */}
-              <div className="mb-8">
-                <h3 className="font-['Press_Start_2P'] text-sm mb-4 text-[#5865F2]">Estrategia de Librerías</h3>
-                <div className="grid md:grid-cols-2 gap-4 mb-6">
-                  <div className="border-4 border-[#5865F2] rounded-lg p-6 bg-gradient-to-br from-[#EEF2FF] to-[#E0E7FF] shadow-[4px_4px_0px_0px_rgba(88,101,242,0.2)]">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-8 h-8 bg-[#5865F2] rounded flex items-center justify-center">
-                        <Check className="w-5 h-5 text-white" />
-                      </div>
-                      <h4 className="font-['Space_Grotesk'] font-bold text-base">Lucide Icons</h4>
-                    </div>
-                    <p className="text-sm text-gray-700 mb-2 font-['Space_Grotesk']"><strong>Librería Base Principal</strong></p>
-                    <ul className="text-xs text-gray-600 font-['Space_Grotesk'] space-y-1">
-                      <li>✓ 1,400+ iconos consistentes</li>
-                      <li>✓ Estilo limpio y moderno</li>
-                      <li>✓ Optimizados para pixel art</li>
-                      <li>✓ Totalmente open source</li>
-                      <li>✓ React-friendly</li>
-                    </ul>
-                  </div>
-                  
-                  <div className="border-4 border-[#8B5CF6] rounded-lg p-6 bg-gradient-to-br from-[#FAF5FF] to-[#F3E8FF]">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-8 h-8 bg-[#8B5CF6] rounded flex items-center justify-center">
-                        <Sparkles className="w-5 h-5 text-white" />
-                      </div>
-                      <h4 className="font-['Space_Grotesk'] font-bold text-base">Phosphor Icons</h4>
-                    </div>
-                    <p className="text-sm text-gray-700 mb-2 font-['Space_Grotesk']"><strong>Librería Complementaria</strong></p>
-                    <ul className="text-xs text-gray-600 font-['Space_Grotesk'] space-y-1">
-                      <li>✓ Para casos especiales</li>
-                      <li>✓ Variantes filled/outline</li>
-                      <li>✓ Iconos gamificación única</li>
-                      <li>✓ 6 pesos de línea</li>
-                    </ul>
-                  </div>
-                </div>
-                
-                <div className="bg-[#FEF3C7] border-2 border-[#F59E0B] rounded-lg p-4">
-                  <p className="text-sm font-['Space_Grotesk'] text-gray-800">
-                    <strong className="text-[#92400E]">Por qué no usar otras:</strong> Heroicons (limitado), Ionicons (estilo iOS inconsistente), Tabler (demasiado minimalista). Lucide + Phosphor cubren el 100% de necesidades con coherencia visual.
-                  </p>
-                </div>
-              </div>
-
               {/* Pixel Art Adaptation */}
               <div className="mb-8">
                 <h3 className="font-['Press_Start_2P'] text-sm mb-4 text-[#8B5CF6]">Adaptación a Pixel Art</h3>
@@ -396,7 +350,7 @@ export default function App() {
 
               {/* Task Icons */}
               <div className="mb-8">
-                <h3 className="font-['Press_Start_2P'] text-sm mb-4 text-[#5865F2]">📋 Iconos de Tareas</h3>
+                <h3 className="font-['Press_Start_2P'] text-sm mb-4 text-[#5865F2]"> Iconos de Tareas</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   <IconShowcase icon={<Plus size={24} strokeWidth={2.5} style={{ shapeRendering: 'crispEdges' }} />} name="Añadir Tarea" token="Icon/Task/Add/24" library="Lucide" size={24} />
                   <IconShowcase icon={<Check size={24} strokeWidth={2.5} style={{ shapeRendering: 'crispEdges' }} />} name="Completar" token="Icon/Task/Complete/24" library="Lucide" size={24} />
@@ -409,7 +363,7 @@ export default function App() {
 
               {/* Gamification Icons */}
               <div className="mb-8">
-                <h3 className="font-['Press_Start_2P'] text-sm mb-4 text-[#8B5CF6]">⭐ Iconos de Gamificación</h3>
+                <h3 className="font-['Press_Start_2P'] text-sm mb-4 text-[#8B5CF6]"> Iconos de Gamificación</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   <IconShowcase icon={<Star size={24} strokeWidth={2.5} fill="currentColor" style={{ shapeRendering: 'crispEdges' }} />} name="Estrella" token="Icon/Gamification/Star/24" library="Lucide" size={24} />
                   <IconShowcase icon={<Zap size={24} strokeWidth={2.5} fill="currentColor" style={{ shapeRendering: 'crispEdges' }} />} name="XP" token="Icon/Gamification/XP/24" library="Lucide" size={24} />
@@ -423,7 +377,7 @@ export default function App() {
 
               {/* Navigation Icons */}
               <div className="mb-8">
-                <h3 className="font-['Press_Start_2P'] text-sm mb-4 text-[#22A39A]">🌌 Iconos de Navegación</h3>
+                <h3 className="font-['Press_Start_2P'] text-sm mb-4 text-[#22A39A]"> Iconos de Navegación</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   <IconShowcase icon={<Home size={24} strokeWidth={2.5} style={{ shapeRendering: 'crispEdges' }} />} name="Home" token="Icon/Navigation/Home/24" library="Lucide" size={24} />
                   <IconShowcase icon={<User size={24} strokeWidth={2.5} style={{ shapeRendering: 'crispEdges' }} />} name="Perfil" token="Icon/Navigation/Profile/24" library="Lucide" size={24} />
@@ -431,41 +385,6 @@ export default function App() {
                   <IconShowcase icon={<Trophy size={24} strokeWidth={2.5} style={{ shapeRendering: 'crispEdges' }} />} name="Recompensas" token="Icon/Navigation/Rewards/24" library="Lucide" size={24} />
                   <IconShowcase icon={<Settings size={24} strokeWidth={2.5} style={{ shapeRendering: 'crispEdges' }} />} name="Ajustes" token="Icon/Navigation/Settings/24" library="Lucide" size={24} />
                   <IconShowcase icon={<Bell size={24} strokeWidth={2.5} style={{ shapeRendering: 'crispEdges' }} />} name="Notificaciones" token="Icon/Navigation/Notifications/24" library="Lucide" size={24} />
-                </div>
-              </div>
-
-              {/* Token Naming */}
-              <div>
-                <h3 className="font-['Press_Start_2P'] text-sm mb-4">Sistema de Tokens</h3>
-                <div className="border-4 border-[#1E1E2E] rounded-lg p-6 bg-gradient-to-br from-[#F9FAFB] to-[#F3F4F6]">
-                  <div className="mb-4">
-                    <h4 className="font-['Space_Grotesk'] font-semibold mb-2">Estructura de Naming</h4>
-                    <code className="block px-4 py-3 bg-[#1E1E2E] text-[#9FE8C5] rounded font-mono text-sm">
-                      Icon/[Category]/[Name]/[Size]
-                    </code>
-                  </div>
-                  
-                  <div className="grid md:grid-cols-2 gap-4 text-sm font-['Space_Grotesk']">
-                    <div>
-                      <h5 className="font-semibold mb-2">Ejemplos:</h5>
-                      <ul className="space-y-1 text-gray-700">
-                        <li><code className="px-1 py-0.5 bg-white border border-gray-300 rounded font-mono text-xs">Icon/Task/Add/24</code></li>
-                        <li><code className="px-1 py-0.5 bg-white border border-gray-300 rounded font-mono text-xs">Icon/Gamification/Star/32</code></li>
-                        <li><code className="px-1 py-0.5 bg-white border border-gray-300 rounded font-mono text-xs">Icon/Navigation/Home/24</code></li>
-                      </ul>
-                    </div>
-                    
-                    <div>
-                      <h5 className="font-semibold mb-2">Categorías:</h5>
-                      <ul className="space-y-1 text-gray-700">
-                        <li>• <strong>Task:</strong> Gestión de tareas</li>
-                        <li>• <strong>Gamification:</strong> XP, logros, recompensas</li>
-                        <li>• <strong>Navigation:</strong> Navegación principal</li>
-                        <li>• <strong>Action:</strong> Acciones generales</li>
-                        <li>• <strong>Status:</strong> Estados y notificaciones</li>
-                      </ul>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -573,25 +492,6 @@ export default function App() {
                   <AchievementCard rarity="legendary" />
                 </div>
               </div>
-
-              {/* Animations */}
-              <div>
-                <h3 className="font-['Press_Start_2P'] text-sm mb-4">Animaciones Sugeridas</h3>
-                <div className="space-y-3">
-                  {[
-                    { title: 'Completar Tarea', desc: 'Confetti de estrellas + pulse scale en la tarjeta + sonido "ding"' },
-                    { title: 'Subir de Nivel', desc: 'Modal con explosión de partículas + texto animado tipo "LEVEL UP!"' },
-                    { title: 'Desbloquear Logro', desc: 'Tarjeta gira en 3D + glow pulsante + shake suave' },
-                    { title: 'Ganar XP', desc: 'Barra se llena con animación fluida + números que incrementan' },
-                    { title: 'Abrir Cofre', desc: 'Cofre se abre con bounce + items aparecen con fade-in stagger' },
-                  ].map((item, i) => (
-                    <div key={i} className="border-2 border-[#E5E7EB] rounded-lg p-4 bg-[#F9FAFB]">
-                      <div className="font-semibold text-sm mb-1 font-['Space_Grotesk']">{item.title}</div>
-                      <div className="text-sm text-gray-600 font-['Space_Grotesk']">{item.desc}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           </section>
 
@@ -665,14 +565,6 @@ export default function App() {
               </div>
             </div>
           </section>
-
-          {/* Footer */}
-          <footer className="text-center py-8">
-            <div className="inline-block bg-[#1E1E2E] border-4 border-[#5865F2] rounded-lg px-6 py-4 shadow-[4px_4px_0px_0px_rgba(88,101,242,0.4)]">
-              <p className="font-['Press_Start_2P'] text-xs text-white mb-2">ASTRAIS DESIGN SYSTEM</p>
-              <p className="font-['Space_Grotesk'] text-sm text-gray-400">Creado para gamificar tu vida con estilo 🚀✨</p>
-            </div>
-          </footer>
 
         </div>
       </main>
