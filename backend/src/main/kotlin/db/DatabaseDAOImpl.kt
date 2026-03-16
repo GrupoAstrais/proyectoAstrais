@@ -53,6 +53,12 @@ class DatabaseDAOImpl : DatabaseDAO {
             } > 0
         }
     }
+
+    override suspend fun setUserLastLogin(ent: EntidadUsuario) {
+        suspendTransaction {
+            ent.ultimo_login = java.time.LocalDate.now().toKotlinLocalDate()
+        }
+    }
 }
 
 suspend fun da(){
