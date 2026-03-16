@@ -2,11 +2,16 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router'
 import '../../styles/Login.css'
+import { createUser } from '../../data/Api.ts'
 
 export default function Login() {
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [passwordVer, setPasswordVer] = useState('')
   const [error, setError] = useState('')
+  const idiomaSistema = 'ENG';
+  //const zonaHoraria = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -14,7 +19,25 @@ export default function Login() {
     if (!email.trim() || !password.trim()) {
       setError('Complete email and password to create you account.')
       return
+    } else {
+      if (password !== passwordVer) {
+        setError('The passwords don\'t match.')
+      return
+      } else {
+        createUser({ name: name, email: email, passwd: password, lang: idiomaSistema }).then(success => {
+        if (!success) {
+            setError('Error creating account. Please try again.')
+        } else {
+            setError('')
+        }
+      })
+      }
+      
     }
+
+    /*
+    Funcion de registro, se llama a la API con los datos del formulario y se maneja la respuesta
+    */
 
     setError('')
     console.log({ email, password })
@@ -33,6 +56,19 @@ export default function Login() {
 
         <form className="login-form" onSubmit={onSubmit} noValidate>
           <div className="form-group">
+            <label htmlFor="name">Name</label>
+            <input
+              id="name"
+              type="text"
+              placeholder="Name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              autoComplete="username"
+              required
+            />
+          </div>
+
+          <div className="form-group">
             <label htmlFor="email">Email</label>
             <input
               id="email"
@@ -40,7 +76,7 @@ export default function Login() {
               placeholder="user@mail.com"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              autoComplete="username"
+              autoComplete="useremail"
               required
             />
           </div>
@@ -54,6 +90,19 @@ export default function Login() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="current-password"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="passwordVer">Confirm your password</label>
+            <input
+              id="passwordVer"
+              type="password"
+              placeholder="••••••••"
+              value={passwordVer}
+              onChange={(event) => setPasswordVer(event.target.value)}
+              autoComplete="current-passwordVer"
               required
             />
           </div>

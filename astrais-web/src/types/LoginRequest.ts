@@ -1,11 +1,12 @@
 export interface LoginRequest {
-    email: string,
-    password: string,
-    rememberMe: boolean
+  email: string,
+  passwd: string
 }
 
-export interface CreateUserRequest {
-    email: string,
-    password: string,
-    rememberMe: boolean
+export interface RegisterRequest {
+  name: string,
+  email: string,
+  passwd: string,
+  lang: string,
+  utcOffset?: number // optional with default 0
 }

@@ -2,28 +2,39 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router'
 import '../../styles/Login.css'
+import { performLogin } from '../../data/Api.ts'
 /*
 import axios from 'axios'
 import API from '../../data/Api.ts'
-
-
 */
 export default function Login() {
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [passwd, setPasswd] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState('')
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    if (!email.trim() || !password.trim()) {
-      setError('Complete user/email and password to continue.')
+    if (!email.trim() || !passwd.trim()) {
+      setError('Complete user/email and passwd to continue.')
       return
     }
 
+    /*
+    Funcion de registro, se llama a la API con los datos del formulario y se maneja la respuesta
+    */
+
+    performLogin({ email, passwd }).then(success => {
+        if (!success) {
+            setError('Invalid email or passwd. Please try again.')
+        } else {
+            setError('')
+        } 
+      })
+
     setError('')
-    console.log({ email, password, rememberMe })
+    console.log({ email, passwd, rememberMe })
   }
 
   return (
@@ -52,14 +63,14 @@ export default function Login() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="passwd">Password</label>
             <input
-              id="password"
+              id="passwd"
               type="password"
               placeholder="••••••••"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete="current-password"
+              value={passwd}
+              onChange={(event) => setPasswd(event.target.value)}
+              autoComplete="current-passwd"
               required
             />
           </div>
@@ -74,7 +85,7 @@ export default function Login() {
               />
               Remember me
             </label>
-            <Link to="/forgot-password" className="link-button">Forgot you password?</Link>
+            <Link to="/forgot-passwd" className="link-button">Forgot you passwd?</Link>
           </div>
 
           {error ? (
