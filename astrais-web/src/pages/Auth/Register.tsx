@@ -6,19 +6,18 @@ import '../../styles/Login.css'
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState('')
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     if (!email.trim() || !password.trim()) {
-      setError('Complete user/email and password to continue.')
+      setError('Complete email and password to create you account.')
       return
     }
 
     setError('')
-    console.log({ email, password, rememberMe })
+    console.log({ email, password })
   }
 
   return (
@@ -28,8 +27,8 @@ export default function Login() {
       <article className="login-card" aria-labelledby="login-title">
         <header className="login-card__header">
           <p className="login-card__brand">Astrais</p>
-          <h1 id="login-title">Log in</h1>
-          <p>Welcome back let's continue your adventure.</p>
+          <h1 id="login-title">Sign Up</h1>
+          <p>Welcome! Let's start your adventure.</p>
         </header>
 
         <form className="login-form" onSubmit={onSubmit} noValidate>
@@ -59,19 +58,6 @@ export default function Login() {
             />
           </div>
 
-          <div className="login-row">
-            <label className="remember-me" htmlFor="rememberMe">
-              <input
-                id="rememberMe"
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(event) => setRememberMe(event.target.checked)}
-              />
-              Remember me
-            </label>
-            <Link to="/forgot-password" className="link-button">Forgot you password?</Link>
-          </div>
-
           {error ? (
             <p className="form-error" role="status" aria-live="polite">
               {error}
@@ -79,15 +65,11 @@ export default function Login() {
           ) : null}
 
           <button className="button button--primary" type="submit">
-            <Link to="/home" className="link-button">Log in</Link>
-          </button>
-
-          <button className="button button--ghost" type="button">
-            Continue with Google
+            <Link to="/home" className="link-button">Sign Up</Link>
           </button>
 
           <p className="signup-callout">
-            You don't have an account? <Link to="/register">Sign up</Link>
+            You already have an account? <Link to="/login">Log In</Link>
           </p>
         </form>
       </article>

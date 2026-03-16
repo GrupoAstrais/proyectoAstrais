@@ -12,6 +12,7 @@
   "dependencies": {
     "@specy/liquid-glass-react": "^1.0.2",
     "@tailwindcss/vite": "^4.2.0",
+    "axios": "^1.13.6",
     "draggabilly": "^3.0.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
