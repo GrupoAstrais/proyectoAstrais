@@ -37,7 +37,7 @@ export default function Navbar() {
         to="/perfil"
 
       >
-        <div className='bg-black rounded-full py-4 px-6 flex text-center'>
+        <div className='bg-black rounded-full py-4 px-5 flex text-center'>
           <span className='text-white text-2xl'>P</span>
         </div>
       </NavLink>

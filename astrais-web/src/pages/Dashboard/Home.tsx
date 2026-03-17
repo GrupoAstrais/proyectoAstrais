@@ -8,6 +8,7 @@ import type { ITarea } from '../../types/Interfaces';
 import Tarea from '../../components/ui/Tarea';
 import React from 'react'
 import Logro from '../../components/ui/Logro'
+import Modal from '../../components/ui/Modal'
 
 export default function Home() {
   const tarea: ITarea = {
@@ -16,13 +17,26 @@ export default function Home() {
     recompensa: 50
   };
 
-  const [notif, setNotif] = React.useState<number>(0);
+  const [notif] = React.useState<number>(0);
+
+  const [isOpen, setIsOpen] = React.useState<boolean>(false);
+/*
+  const confirmarModal = (confirmar: string) =>{
+    if(confirmar == "Cancelar") {
+
+    }
+  } */
 
   return (
     <main 
       style={{ backgroundImage: `url(${bgImage})` }} 
-      className="min-h-screen bg-cover bg-center font-['Space_Grotesk'] text-white"
+      className="relative min-h-screen bg-cover bg-center font-['Space_Grotesk'] text-white"
     >
+      <div className={`${isOpen ? '' : 'hidden'} absolute top-100 left-100 w-full`}>
+        <Modal onPress={function (opcion: string): void {
+          throw new Error('Function not implemented.')
+        } }  />
+      </div>
       <Navbar />
 
       <section className="flex flex-col justify-center items-center gap-4 px-4 py-6 w-full max-w-7xl mx-auto">
@@ -34,7 +48,7 @@ export default function Home() {
             <p className="mt-1">¿Qué te queda por hacer?</p>
           </header>
           <div className="home-actions grid grid-cols-1 sm:grid-cols-2 gap-4 w-2/3">
-            <button className="home-btn home-btn--primary">Crear tarea</button>
+            <button onClick={(e) => setIsOpen(true)} className="home-btn home-btn--primary">Crear tarea</button>
             <button className="home-btn">Unirme a un grupo</button>
             <button className="home-btn">Ver agenda</button>
             <button className="home-btn">Reclamar recompensa</button>
