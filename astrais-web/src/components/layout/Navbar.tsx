@@ -2,7 +2,6 @@ import { NavLink } from 'react-router'
 import logo from '../../assets/logo.svg'
 
 const links = [
-  { to: '/home', label: 'Inicio' },
   { to: '/tasks', label: 'Tareas' },
   { to: '/groups', label: 'Grupos' },
   { to: '/shop', label: 'Tienda' },
@@ -14,9 +13,15 @@ export default function Navbar() {
   return (
     <nav className="flex flex-row w-full justify-between items-center px-2 bg-secondary-500/80 text-white font-['Press_Start_2P'] border-b border-secondary-500/50 mb-2" aria-label="Navegación principal">
       <div className='flex flex-row items-center'>
-        <div className='items-center justify-center'>
-          <img className='h-20 w-20' src={logo} />
-        </div>
+          <NavLink
+              key={'Inicio'}
+              to={'/home'}
+            >
+              <div className='items-center justify-center'>
+                <img className='h-20 w-20' src={logo} />
+              </div>
+        </NavLink>
+      
 
         <div className="">
           {links.map((link) => (

@@ -6,10 +6,10 @@ interface ModalProps {
 
 export default function Modal({onPress} : ModalProps) {
   return (
-    <div className="flex flex-col h-auto w-1/3 bg-secondary-500 rounded-md p-4 gap-3">
-        <h1>Editar tarea</h1>
+    <div className="flex flex-col font-['Space_Grotesk'] h-auto w-1/5 bg-secondary-500 rounded-md p-4 gap-3 border-2 border-accent-beige-300">
+        <h1 className="font-['Press_Start_2P']">Editar tarea</h1>
         <div className="bg-accent-beige-300 rounded-md py-4 px-2">
-            <input id="nombre" placeholder="nombre" />
+            <input className="text-primary-900" id="nombre" placeholder="Nombre" />
         </div>
         <div className="flex flex-row justify-around bg-accent-beige-300  py-4 px-2 rounded-md">
             <Dificultad dificultad={"EASY"} />
@@ -18,14 +18,14 @@ export default function Modal({onPress} : ModalProps) {
         </div>
         <div className="flex flex-row justify-around bg-accent-beige-300  py-4 px-2 rounded-md">
             <div className="bg-state-success text-primary-900 rounded-xs shadow-xs shadow-primary-900 px-2">
-                <p>Hábito</p>
+                <p className="font-bold">Hábito</p>
             </div>
             <div className="bg-state-success text-primary-900 rounded-xs shadow-xs shadow-primary-900 px-2">
-                <p>Diaria</p>
+                <p className="font-bold">Diaria</p>
             </div>
         </div>
         <div className="flex bg-accent-beige-300 rounded-md py-4 px-2">
-            <input id="tags" placeholder="tags"/>
+            <input className="text-primary-900" id="tags" placeholder="Tags"/>
         </div>
         <div className="flex bg-accent-beige-300 rounded-md py-4 px-2">
             <p>contador en desarrollo</p>

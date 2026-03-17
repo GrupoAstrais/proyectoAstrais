@@ -20,22 +20,31 @@ export default function Home() {
   const [notif] = React.useState<number>(0);
 
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
-/*
-  const confirmarModal = (confirmar: string) =>{
-    if(confirmar == "Cancelar") {
 
+  const [checked, setChecked] = React.useState<boolean>(false);
+
+  const checkedHandle = () => {
+    setChecked(!checked);
+  }
+
+  const confirmarModal = (confirmar: string) => {
+    setIsOpen(false);
+
+    if(confirmar == "Confirmar") {
+      {/* add tarea */}
     }
-  } */
+  } 
+
+  
 
   return (
     <main 
       style={{ backgroundImage: `url(${bgImage})` }} 
-      className="relative min-h-screen bg-cover bg-center font-['Space_Grotesk'] text-white"
-    >
-      <div className={`${isOpen ? '' : 'hidden'} absolute top-100 left-100 w-full`}>
-        <Modal onPress={function (opcion: string): void {
-          throw new Error('Function not implemented.')
-        } }  />
+      className="relative min-h-screen bg-cover bg-center font-['Space_Grotesk'] text-white">
+
+      {/* modal */}
+      <div className={`${isOpen ? '' : 'hidden'}  fixed inset-0 z-50 flex items-center justify-center`}>
+        <Modal onPress={confirmarModal}  />
       </div>
       <Navbar />
 
@@ -48,7 +57,7 @@ export default function Home() {
             <p className="mt-1">¿Qué te queda por hacer?</p>
           </header>
           <div className="home-actions grid grid-cols-1 sm:grid-cols-2 gap-4 w-2/3">
-            <button onClick={(e) => setIsOpen(true)} className="home-btn home-btn--primary">Crear tarea</button>
+            <button onClick={() => setIsOpen(true)} className="home-btn home-btn--primary">Crear tarea</button>
             <button className="home-btn">Unirme a un grupo</button>
             <button className="home-btn">Ver agenda</button>
             <button className="home-btn">Reclamar recompensa</button>
@@ -67,10 +76,7 @@ export default function Home() {
               <h2 className="font-['Press_Start_2P'] text-lg">Tareas Pendientes</h2>
             </header>
             <div className="flex flex-col gap-3">
-              <Tarea data={tarea} />
-              <Tarea data={tarea} />
-              <Tarea data={tarea} />
-              <Tarea data={tarea} />
+              <Tarea checked={checked} onChange={checkedHandle} data={tarea} />
             </div>
           </article>
 
@@ -83,7 +89,7 @@ export default function Home() {
                   <h2 className="font-['Press_Start_2P'] text-lg">Tienda</h2>
                 </header>
                 <button className="w-full">
-                  <img src={shop} className="rounded-lg w-full aspect-video object-cover" alt="Tienda" />
+                  <img src={shop} className="rounded-lg max-w-full aspect-video object-cover" alt="Tienda" />
                 </button>
               </article>
 
@@ -119,7 +125,7 @@ export default function Home() {
               <div className="flex flex-col items-center gap-4">
                 <img 
                   src={game} 
-                  className="w-1/2 max-w-48 h-auto rounded-lg" 
+                  className="w-1/2 max-w-30 h-auto rounded-lg" 
                   alt="Juego" 
                 />
                 <button className="home-btn w-full max-w-xs">Jugar ahora</button>
