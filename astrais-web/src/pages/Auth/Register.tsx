@@ -1,17 +1,13 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link } from 'react-router'
-import '../../styles/Login.css'
-import { createUser } from '../../data/Api.ts'
+import { Link, useNavigate } from 'react-router'
+import loginBg from '../../assets/login-bg.jpg'
 
-export default function Login() {
-  const [name, setName] = useState('')
+export default function Register() {
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [passwordVer, setPasswordVer] = useState('')
   const [error, setError] = useState('')
-  const idiomaSistema = 'ENG';
-  //const zonaHoraria = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -19,70 +15,47 @@ export default function Login() {
     if (!email.trim() || !password.trim()) {
       setError('Complete email and password to create you account.')
       return
-    } else {
-      if (password !== passwordVer) {
-        setError('The passwords don\'t match.')
-      return
-      } else {
-        createUser({ name: name, email: email, passwd: password, lang: idiomaSistema }).then(success => {
-        if (!success) {
-            setError('Error creating account. Please try again.')
-        } else {
-            setError('')
-        }
-      })
-      }
-      
     }
-
-    /*
-    Funcion de registro, se llama a la API con los datos del formulario y se maneja la respuesta
-    */
 
     setError('')
     console.log({ email, password })
+    navigate('/home')
   }
 
   return (
-    <section className="login-screen">
-      <div className="login-screen__overlay" />
+    <section
+      style={{ backgroundImage: `url(${loginBg})` }}
+      className="relative grid min-h-screen place-items-center overflow-hidden bg-cover bg-no-repeat px-6 bg-position-[0_-20cm] max-[480px]:px-4"
+    >
+      <div className="pointer-events-none absolute inset-0" />
 
-      <article className="login-card" aria-labelledby="login-title">
-        <header className="login-card__header">
-          <p className="login-card__brand">Astrais</p>
-          <h1 id="login-title">Sign Up</h1>
-          <p>Welcome! Let's start your adventure.</p>
+      <article
+        aria-labelledby="login-title"
+        className="relative z-10 w-full max-w-105 -translate-y-[3vh] rounded-[22px] border border-white/15 bg-[rgba(16,5,33,0.72)] p-8 text-[#f6e8ff] shadow-[0_30px_60px_rgba(9,2,20,0.7)] backdrop-blur-[8px] max-[480px]:-translate-y-[1.5vh] max-[480px]:p-[22px]"
+      >
+        <header className="mb-5.5">
+          <p className="m-0 text-xs tracking-[0.2em] text-[#f5a6ff] uppercase">Astrais</p>
+          <h1 id="login-title" className="my-2 text-[clamp(1.9rem,4vw,2.35rem)] leading-[1.1]">Sign Up</h1>
+          <p className="m-0 text-[rgba(246,232,255,0.9)]">Welcome! Let's start your adventure.</p>
         </header>
 
-        <form className="login-form" onSubmit={onSubmit} noValidate>
-          <div className="form-group">
-            <label htmlFor="name">Name</label>
-            <input
-              id="name"
-              type="text"
-              placeholder="Name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              autoComplete="username"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
+        <form className="grid gap-4" onSubmit={onSubmit} noValidate>
+          <div className="grid gap-2">
+            <label htmlFor="email" className="text-[0.95rem]">Email</label>
             <input
               id="email"
               type="text"
               placeholder="user@mail.com"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              autoComplete="useremail"
+              autoComplete="username"
               required
+              className="rounded-xl border border-white/25 bg-black/25 px-[14px] py-3 text-base text-white placeholder:text-white/65 focus-visible:outline-2 focus-visible:outline-[#ff66dd] focus-visible:outline-offset-1"
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
+          <div className="grid gap-2">
+            <label htmlFor="password" className="text-[0.95rem]">Password</label>
             <input
               id="password"
               type="password"
@@ -91,34 +64,25 @@ export default function Login() {
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="current-password"
               required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="passwordVer">Confirm your password</label>
-            <input
-              id="passwordVer"
-              type="password"
-              placeholder="••••••••"
-              value={passwordVer}
-              onChange={(event) => setPasswordVer(event.target.value)}
-              autoComplete="current-passwordVer"
-              required
+              className="rounded-xl border border-white/25 bg-black/25 px-[14px] py-3 text-base text-white placeholder:text-white/65 focus-visible:outline-2 focus-visible:outline-[#ff66dd] focus-visible:outline-offset-1"
             />
           </div>
 
           {error ? (
-            <p className="form-error" role="status" aria-live="polite">
+            <p className="m-0 rounded-[10px] border border-[rgba(255,132,163,0.55)] bg-[rgba(255,72,119,0.2)] p-[10px] text-[0.9rem]" role="status" aria-live="polite">
               {error}
             </p>
           ) : null}
 
-          <button className="button button--primary" type="submit">
-            <Link to="/home" className="link-button">Sign Up</Link>
+          <button
+            className="cursor-pointer rounded-xl border border-transparent bg-linear-to-r from-[#ff3dcd] to-[#8b49ff] p-3 text-base font-semibold text-white shadow-[0_10px_30px_rgba(141,73,255,0.45)] transition duration-150 ease-in hover:-translate-y-px"
+            type="submit"
+          >
+            Sign Up
           </button>
 
-          <p className="signup-callout">
-            You already have an account? <Link to="/login">Log In</Link>
+          <p className="m-0 text-center text-[0.95rem] text-[rgba(246,232,255,0.92)]">
+            You already have an account? <Link to="/login" className="text-white no-underline hover:underline">Log In</Link>
           </p>
         </form>
       </article>

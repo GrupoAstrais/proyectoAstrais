@@ -2,6 +2,7 @@ import { NavLink } from 'react-router'
 import logo from '../../assets/logo.svg'
 
 const links = [
+  { to: '/home', label: 'Inicio' },
   { to: '/tasks', label: 'Tareas' },
   { to: '/groups', label: 'Grupos' },
   { to: '/shop', label: 'Tienda' },
@@ -11,25 +12,23 @@ const links = [
 
 export default function Navbar() {
   return (
-    <nav className="flex flex-row w-full justify-between items-center px-2 bg-secondary-500/80 text-white font-['Press_Start_2P'] border-b border-secondary-500/50 mb-2" aria-label="Navegación principal">
-      <div className='flex flex-row items-center'>
-          <NavLink
-              key={'Inicio'}
-              to={'/home'}
-            >
-              <div className='items-center justify-center'>
-                <img className='h-20 w-20' src={logo} />
-              </div>
-        </NavLink>
-      
+    <nav className="mb-2 flex w-full flex-row items-center justify-between border-b border-[#8B5CF6]/50 bg-[#8B5CF6]/80 px-2 text-white font-['Press_Start_2P']" aria-label="Navegación principal">
+      <div className="flex flex-row items-center">
+        <div className="items-center justify-center">
+          <img className="h-20 w-20" src={logo} alt="Astrais logo" />
+        </div>
 
-        <div className="">
+        <div>
           {links.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
               className={({ isActive }) =>
-                `home-sidebar__link ${isActive ? 'home-sidebar__link--active' : ''} font-medium`
+                `inline-block rounded-[0.8rem] px-[0.8rem] py-[0.72rem] text-[#e8eaff] no-underline transition duration-200 hover:translate-x-[2px] hover:bg-white/10 ${
+                  isActive
+                    ? 'border border-white/25 bg-[linear-gradient(90deg,rgba(167,139,250,0.45),rgba(96,165,250,0.35))]'
+                    : ''
+                }`
               }
             >
               {link.label}
@@ -38,12 +37,9 @@ export default function Navbar() {
         </div>
       </div>
 
-      <NavLink
-        to="/perfil"
-
-      >
-        <div className='bg-black rounded-full py-4 px-5 flex text-center'>
-          <span className='text-white text-2xl'>P</span>
+      <NavLink to="/perfil">
+        <div className="flex rounded-full bg-black px-6 py-4 text-center">
+          <span className="text-2xl text-white">P</span>
         </div>
       </NavLink>
     </nav>
