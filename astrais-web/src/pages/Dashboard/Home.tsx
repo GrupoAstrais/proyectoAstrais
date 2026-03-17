@@ -1,5 +1,4 @@
 import Navbar from '../../components/layout/Navbar'
-import '../../styles/Home.css'
 import bgImage from '../../assets/homeScreenBack.jpg'
 import astra from '../../assets/astra.png'
 import shop from '../../assets/shop.png'
@@ -33,45 +32,45 @@ export default function Home() {
     if(confirmar == "Confirmar") {
       {/* add tarea */}
     }
-  } 
+  }
 
-  
+
 
   return (
-    <main 
-      style={{ backgroundImage: `url(${bgImage})` }} 
+    <main
+      style={{ backgroundImage: `url(${bgImage})` }}
       className="relative min-h-screen bg-cover bg-center font-['Space_Grotesk'] text-white">
 
       {/* modal */}
-      <div className={`${isOpen ? '' : 'hidden'}  fixed inset-0 z-50 flex items-center justify-center`}>
+      <div className={`${isOpen ? '' : 'hidden'} fixed inset-0 z-50 flex items-center justify-center`}>
         <Modal onPress={confirmarModal}  />
       </div>
       <Navbar />
 
-      <section className="flex flex-col justify-center items-center gap-4 px-4 py-6 w-full max-w-7xl mx-auto">
+      <section className="mx-auto flex w-full max-w-7xl flex-col items-center justify-center gap-4 px-4 py-6">
         {/* dashboard */}
-        <article className="relative home-card flex flex-col gap-6 p-6 w-full max-w-2xl">
+        <article className="relative flex w-full max-w-2xl flex-col gap-6 rounded-2xl border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-6 shadow-[0_15px_32px_#090b1f59]">
           <header>
-            <p className="home-card__eyebrow pb-2">Bienvenido de vuelta</p>
+            <p className="pb-2 text-[0.78rem] uppercase tracking-[0.08em] text-[#c9b7ff]">Bienvenido de vuelta</p>
             <h1 className="font-['Press_Start_2P'] text-xl sm:text-2xl">Hi, Astraïs</h1>
             <p className="mt-1">¿Qué te queda por hacer?</p>
           </header>
-          <div className="home-actions grid grid-cols-1 sm:grid-cols-2 gap-4 w-2/3">
-            <button onClick={() => setIsOpen(true)} className="home-btn home-btn--primary">Crear tarea</button>
-            <button className="home-btn">Unirme a un grupo</button>
-            <button className="home-btn">Ver agenda</button>
-            <button className="home-btn">Reclamar recompensa</button>
+          <div className="grid w-2/3 grid-cols-1 gap-2.5 sm:grid-cols-2">
+            <button onClick={() => setIsOpen(true)} className="cursor-pointer rounded-xl border border-transparent bg-[linear-gradient(90deg,#8b5cf6,#3b82f6)] px-3 py-2 text-[#f8f9ff] transition-colors duration-200">Crear tarea</button>
+            <button className="cursor-pointer rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-[#f8f9ff] transition-colors duration-200 hover:bg-white/20">Unirme a un grupo</button>
+            <button className="cursor-pointer rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-[#f8f9ff] transition-colors duration-200 hover:bg-white/20">Ver agenda</button>
+            <button className="cursor-pointer rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-[#f8f9ff] transition-colors duration-200 hover:bg-white/20">Reclamar recompensa</button>
           </div>
-          <img 
-            className="absolute -right-56 -bottom-7 " 
-            src={astra} 
-            alt="Astraïs" 
+          <img
+            className="absolute -bottom-7 -right-56"
+            src={astra}
+            alt="Astraïs"
           />
         </article>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full">
+        <div className="grid w-full grid-cols-1 gap-4 lg:grid-cols-3">
           {/* Tareas Pendientes */}
-          <article className="home-card p-4">
+          <article className="rounded-2xl border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-4 shadow-[0_15px_32px_#090b1f59]">
             <header className="mb-3">
               <h2 className="font-['Press_Start_2P'] text-lg">Tareas Pendientes</h2>
             </header>
@@ -81,30 +80,30 @@ export default function Home() {
           </article>
 
           {/* Tienda + Notificaciones + Logros */}
-          <div className="lg:col-span-2 flex flex-col gap-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex flex-col gap-4 lg:col-span-2">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/* Tienda */}
-              <article className="home-card p-4">
+              <article className="rounded-2xl border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-4 shadow-[0_15px_32px_#090b1f59]">
                 <header className="mb-3">
                   <h2 className="font-['Press_Start_2P'] text-lg">Tienda</h2>
                 </header>
                 <button className="w-full">
-                  <img src={shop} className="rounded-lg max-w-full aspect-video object-cover" alt="Tienda" />
+                  <img src={shop} className="aspect-video max-w-full rounded-lg object-cover" alt="Tienda" />
                 </button>
               </article>
 
               {/* Notificaciones + Logros */}
               <div className="flex flex-col gap-4">
-                <article className="home-card p-4">
+                <article className="rounded-2xl border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-4 shadow-[0_15px_32px_#090b1f59]">
                   <header className="mb-3">
                     <button className="flex items-center gap-2">
                       <h2 className="font-['Press_Start_2P'] text-lg">Notificaciones</h2>
-                      <span className="bg-state-error text-white rounded-full px-2 py-1 text-xs">{notif}</span>
+                      <span className="rounded-full bg-state-error px-2 py-1 text-xs text-white">{notif}</span>
                     </button>
                   </header>
                 </article>
 
-                <article className="home-card p-4 h-full flex flex-col gap-4">
+                <article className="flex h-full flex-col gap-4 rounded-2xl border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-4 shadow-[0_15px_32px_#090b1f59]">
                   <header className="mb-3">
                     <h2 className="font-['Press_Start_2P'] text-lg">Logros</h2>
                   </header>
@@ -118,17 +117,17 @@ export default function Home() {
             </div>
 
             {/* Minijuegos */}
-            <article className="home-card p-4">
+            <article className="rounded-2xl border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-4 shadow-[0_15px_32px_#090b1f59]">
               <header className="mb-3">
                 <h2 className="font-['Press_Start_2P'] text-lg">Minijuegos</h2>
               </header>
               <div className="flex flex-col items-center gap-4">
-                <img 
-                  src={game} 
-                  className="w-1/2 max-w-30 h-auto rounded-lg" 
-                  alt="Juego" 
+                <img
+                  src={game}
+                  className="h-auto w-1/2 max-w-30 rounded-lg"
+                  alt="Juego"
                 />
-                <button className="home-btn w-full max-w-xs">Jugar ahora</button>
+                <button className="w-full max-w-xs cursor-pointer rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-[#f8f9ff] transition-colors duration-200 hover:bg-white/20">Jugar ahora</button>
               </div>
             </article>
           </div>

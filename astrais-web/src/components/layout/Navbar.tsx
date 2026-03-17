@@ -24,7 +24,7 @@ export default function Navbar() {
               key={link.to}
               to={link.to}
               className={({ isActive }) =>
-                `inline-block rounded-[0.8rem] px-[0.8rem] py-[0.72rem] text-[#e8eaff] no-underline transition duration-200 hover:translate-x-[2px] hover:bg-white/10 ${
+                `inline-block rounded-[0.8rem] px-[0.8rem] py-[0.72rem] text-[#e8eaff] no-underline transition duration-200 hover:translate-x-0.5 hover:bg-white/10 ${
                   isActive
                     ? 'border border-white/25 bg-[linear-gradient(90deg,rgba(167,139,250,0.45),rgba(96,165,250,0.35))]'
                     : ''

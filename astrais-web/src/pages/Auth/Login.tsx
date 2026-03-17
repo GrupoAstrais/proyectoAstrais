@@ -26,15 +26,15 @@ export default function Login() {
   return (
     <section
       style={{ backgroundImage: `url(${loginBg})` }}
-      className="relative grid min-h-screen place-items-center overflow-hidden bg-cover bg-no-repeat px-6 [background-position:0_-20cm] max-[480px]:px-4"
+      className="relative grid min-h-screen place-items-center overflow-hidden bg-cover bg-no-repeat px-6 bg-position-[0_-20cm] max-[480px]:px-4"
     >
       <div className="pointer-events-none absolute inset-0" />
 
       <article
         aria-labelledby="login-title"
-        className="relative z-10 w-full max-w-[420px] -translate-y-[3vh] rounded-[22px] border border-white/15 bg-[rgba(16,5,33,0.72)] p-8 text-[#f6e8ff] shadow-[0_30px_60px_rgba(9,2,20,0.7)] backdrop-blur-[8px] max-[480px]:-translate-y-[1.5vh] max-[480px]:p-[22px]"
+        className="relative z-10 w-full max-w-105 -translate-y-[3vh] rounded-[22px] border border-white/15 bg-[rgba(16,5,33,0.72)] p-8 text-[#f6e8ff] shadow-[0_30px_60px_rgba(9,2,20,0.7)] backdrop-blur-sm max-[480px]:-translate-y-[1.5vh] max-[480px]:p-5.5"
       >
-        <header className="mb-[22px]">
+        <header className="mb-5.5">
           <p className="m-0 text-xs tracking-[0.2em] text-[#f5a6ff] uppercase">Astrais</p>
           <h1 id="login-title" className="my-2 text-[clamp(1.9rem,4vw,2.35rem)] leading-[1.1]">Log in</h1>
           <p className="m-0 text-[rgba(246,232,255,0.9)]">Welcome back let's continue your adventure.</p>
@@ -51,7 +51,7 @@ export default function Login() {
               onChange={(event) => setEmail(event.target.value)}
               autoComplete="username"
               required
-              className="rounded-xl border border-white/25 bg-black/25 px-[14px] py-3 text-base text-white placeholder:text-white/65 focus-visible:outline-2 focus-visible:outline-[#ff66dd] focus-visible:outline-offset-1"
+              className="rounded-xl border border-white/25 bg-black/25 px-3.5 py-3 text-base text-white placeholder:text-white/65 focus-visible:outline-2 focus-visible:outline-[#ff66dd] focus-visible:outline-offset-1"
             />
           </div>
 
@@ -65,7 +65,7 @@ export default function Login() {
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="current-password"
               required
-              className="rounded-xl border border-white/25 bg-black/25 px-[14px] py-3 text-base text-white placeholder:text-white/65 focus-visible:outline-2 focus-visible:outline-[#ff66dd] focus-visible:outline-offset-1"
+              className="rounded-xl border border-white/25 bg-black/25 px-3.5 py-3 text-base text-white placeholder:text-white/65 focus-visible:outline-2 focus-visible:outline-[#ff66dd] focus-visible:outline-offset-1"
             />
           </div>
 
@@ -83,7 +83,7 @@ export default function Login() {
           </div>
 
           {error ? (
-            <p className="m-0 rounded-[10px] border border-[rgba(255,132,163,0.55)] bg-[rgba(255,72,119,0.2)] p-[10px] text-[0.9rem]" role="status" aria-live="polite">
+            <p className="m-0 rounded-[10px] border border-[rgba(255,132,163,0.55)] bg-[rgba(255,72,119,0.2)] p-2.5 text-[0.9rem]" role="status" aria-live="polite">
               {error}
             </p>
           ) : null}
