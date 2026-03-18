@@ -1,15 +1,20 @@
+import React from "react";
 import type { ITarea } from "../../types/Interfaces"
 import Dificultad from "./Dificultad"
 import XP from "./xp"
 
 interface TareaProps {
-    data: ITarea,
-    checked: boolean,
-    onChange: () => void
+    data: ITarea
 }
 
-export default function Tarea({data, checked, onChange}: TareaProps) {
+export default function Tarea({data}: TareaProps) {
 
+
+    const [checked, setChecked] = React.useState<boolean>(false);
+
+    const checkedHandle = () => {
+        setChecked(!checked);
+    }
 
   return (
     <div className={`border border-[#F4E9E9] font-['Space_Grotesk'] ${checked ? 'bg-[#918C84]/55 line-through decoration-primary-900 text-white/50' : 'bg-[#E8DCC4]/35' }  w-full rounded-md flex flex-row justify-between px-2 py-4`}>
@@ -20,7 +25,7 @@ export default function Tarea({data, checked, onChange}: TareaProps) {
                 <XP recompensa={data.recompensa} />
             </div>
         </div>
-        <input id="tareaRealizada" checked={checked} onChange={onChange} type="checkbox" className="accent-primary-700" />
+        <input id="tareaRealizada" checked={checked} onChange={checkedHandle} type="checkbox" className="accent-primary-700" />
     </div>
   )
 }

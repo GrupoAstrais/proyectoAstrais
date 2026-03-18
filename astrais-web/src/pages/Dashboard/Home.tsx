@@ -20,11 +20,6 @@ export default function Home() {
 
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
 
-  const [checked, setChecked] = React.useState<boolean>(false);
-
-  const checkedHandle = () => {
-    setChecked(!checked);
-  }
 
   const confirmarModal = (confirmar: string) => {
     setIsOpen(false);
@@ -75,7 +70,7 @@ export default function Home() {
               <h2 className="font-['Press_Start_2P'] text-lg">Tareas Pendientes</h2>
             </header>
             <div className="flex flex-col gap-3">
-              <Tarea checked={checked} onChange={checkedHandle} data={tarea} />
+              <Tarea data={tarea} />
             </div>
           </article>
 
