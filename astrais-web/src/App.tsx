@@ -3,7 +3,8 @@ import Home from './pages/Dashboard/Home'
 import Login from './pages/Auth/Login'
 import Register from './pages/Auth/Register'
 import Group from './pages/Groups/Group'
-
+import Tasks from './pages/Tasks/Tasks'
+import './styles/colors.css';
 
 function Placeholder({ title }: { title: string }) {
   return (
@@ -22,6 +23,7 @@ export default function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/home" element={<Home />} />
       <Route path="/groups" element={<Group />} />
+      <Route path="/tasks" element={<Tasks />} />
       <Route path="*" element={<Placeholder title="Página no encontrada" />} />
     </Routes>
   )
