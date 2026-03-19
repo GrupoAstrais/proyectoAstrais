@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
+import astra from '../../assets/astra.png'
 
 export default function Calendar({ className = '' }: { className?: string }) {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -44,7 +45,11 @@ export default function Calendar({ className = '' }: { className?: string }) {
 
   return (
     <div>
+      <div className='flex flex-row relative p-5'>
+        <img src={astra} className='w-2/3 absolute -bottom-3 z-50 left-20 sm:left-0'/> 
+      </div>
       <div className={`relative rounded-xl border border-white/15  overflow-hidden font-['Space_Grotesk'] ${className}`}>
+      
 
         <div
           className="absolute inset-0 bg-linear-to-br from-primary-500/80 to-primary-700/85
@@ -53,19 +58,18 @@ export default function Calendar({ className = '' }: { className?: string }) {
 
 
         <div className="relative z-10 p-4">
-
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-white uppercase tracking-wider font-['Press_Start_2P']">
-              {monthNames[month]}
+                  {monthNames[month]}
             </h2>
-          </div>
+        </div>
 
 
-          <div className='grid grid-cols-7 gap-1 mb-2'>
+          <div className='grid grid-cols-7 gap-1 mb-2 border-b border-white'>
             {dayNames.map((day) => (
               <div
                 key={day}
-                className="text-center py-2 text-xs font-medium text-purple-200 uppercase tracking-wide"
+                className="text-center font-['Press_Start_2P'] py-2 text-xs font-medium text-white uppercase tracking-wide"
               >
                 {day}
               </div>

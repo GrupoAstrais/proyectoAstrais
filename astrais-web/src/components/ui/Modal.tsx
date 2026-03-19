@@ -1,4 +1,4 @@
-import Dificultad from "./Dificultad";
+import Dificultad from "./Difficulty";
 
 interface ModalProps {
     onPress: (opcion: string) => void
@@ -6,7 +6,7 @@ interface ModalProps {
 
 export default function Modal({onPress} : ModalProps) {
   return (
-    <div className="flex flex-col font-['Space_Grotesk'] h-auto w-1/5 bg-secondary-500 rounded-md p-4 gap-3 border-2 border-accent-beige-300">
+    <div className="flex flex-col font-['Space_Grotesk'] h-auto w-1/2 lg:w-1/4 bg-secondary-500 rounded-md p-4 gap-3 border-2 border-accent-beige-300">
         <h1 className="font-['Press_Start_2P']">Editar tarea</h1>
         <div className="bg-accent-beige-300 rounded-md py-4 px-2">
             <input className="text-primary-900" id="nombre" placeholder="Nombre" />

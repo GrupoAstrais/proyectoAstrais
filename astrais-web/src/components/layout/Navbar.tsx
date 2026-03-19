@@ -6,13 +6,13 @@ const links = [
   { to: '/tasks', label: 'Tareas' },
   { to: '/groups', label: 'Grupos' },
   { to: '/shop', label: 'Tienda' },
-  { to: '/games', label: 'Videojuegos' },
+  { to: '/games', label: 'Minijuegos' },
   { to: '/achievements', label: 'Logros' },
 ]
 
 export default function Navbar() {
   return (
-    <nav className="mb-2 flex w-full flex-row items-center justify-between border-b border-[#8B5CF6]/50 bg-[#8B5CF6]/80 px-2 text-white font-['Press_Start_2P']" aria-label="Navegación principal">
+    <nav className="mb-2 flex w-full flex-row items-center justify-between border-b border-secondary-500/50 bg-secondary-500/80 px-2 text-white font-['Press_Start_2P']" aria-label="Navegación principal">
       <div className="flex flex-row items-center">
         <div className="items-center justify-center">
           <img className="h-20 w-20" src={logo} alt="Astrais logo" />
@@ -37,9 +37,9 @@ export default function Navbar() {
         </div>
       </div>
 
-      <NavLink to="/perfil">
-        <div className="flex rounded-full bg-black px-6 py-4 text-center">
-          <span className="text-2xl text-white">P</span>
+      <NavLink to="/profile">
+        <div className="flex items-center justify-center rounded-full bg-black w-12 h-12">
+          <span className="text-2xl text-white leading-none">P</span>
         </div>
       </NavLink>
     </nav>

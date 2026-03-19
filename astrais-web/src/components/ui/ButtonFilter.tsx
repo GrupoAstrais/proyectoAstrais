@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 
 interface ButtonProps {
     handleActive : (titulo: string) => void,
@@ -6,7 +6,7 @@ interface ButtonProps {
     esOtroActivo : string
 }
 
-export default function BotonFiltro({handleActive, titulo, esOtroActivo} : ButtonProps) {
+export default function ButtonFilter({handleActive, titulo, esOtroActivo} : ButtonProps) {
 
     const [active, setIsActive] = React.useState<boolean>(false);
 

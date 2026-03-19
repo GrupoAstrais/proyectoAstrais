@@ -4,9 +4,9 @@ import astra from '../../assets/astra.png'
 import shop from '../../assets/shop.png'
 import game from '../../assets/game.png'
 import type { ITarea } from '../../types/Interfaces';
-import Tarea from '../../components/ui/Tarea';
+import Task from '../../components/ui/Task';
 import React from 'react'
-import Logro from '../../components/ui/Logro'
+import Achiv from '../../components/ui/Achiv'
 import Modal from '../../components/ui/Modal'
 
 export default function Home() {
@@ -59,7 +59,7 @@ export default function Home() {
           <img
             className="absolute -bottom-7 -right-56"
             src={astra}
-            alt="Astraïs"
+            alt="Astraïs Astra"
           />
         </article>
 
@@ -70,7 +70,7 @@ export default function Home() {
               <h2 className="font-['Press_Start_2P'] text-lg">Tareas Pendientes</h2>
             </header>
             <div className="flex flex-col gap-3">
-              <Tarea data={tarea} />
+              <Task data={tarea} />
             </div>
           </article>
 
@@ -103,9 +103,9 @@ export default function Home() {
                     <h2 className="font-['Press_Start_2P'] text-lg">Logros</h2>
                   </header>
                   <div className="flex flex-row justify-between">
-                    <Logro />
-                    <Logro />
-                    <Logro />
+                    <Achiv />
+                    <Achiv />
+                    <Achiv />
                   </div>
                 </article>
               </div>

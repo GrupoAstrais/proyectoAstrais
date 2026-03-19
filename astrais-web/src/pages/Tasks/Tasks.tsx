@@ -1,11 +1,12 @@
 import Navbar from "../../components/layout/Navbar";
-import Tarea from "../../components/ui/Tarea";
+import Task from "../../components/ui/Task";
 import bgImage from '../../assets/homeScreenBack.jpg'
 import type { ITarea } from "../../types/Interfaces";
 import Calendar from "../../components/layout/Calendar";
 import React, { useState } from "react";
 import Modal from "../../components/ui/Modal";
-import ButtonFiltro from "../../components/ui/ButtonFiltro";
+import ButtonFilter from "../../components/ui/ButtonFilter";
+import ButtonComplete from "../../components/ui/ButtonComplete";
 
 export default function Tasks() {
       const tarea: ITarea = {
@@ -29,7 +30,6 @@ export default function Tasks() {
 
     const [activeHabitos, setActiveHabitos] = useState<string>("");
 
-    //de momento no sirve
     const handleActiveDiarias = (active: string) => {
         setActiveDiarias(active);
     }
@@ -52,61 +52,63 @@ export default function Tasks() {
         <Navbar />
 
         <div className="flex flex-col gap-6 px-2">
-            <button onClick={() => setIsOpen(true)} className="ml-auto border border-[#F4E9E9] bg-[#E8DCC4]/35 rounded-md px-4 py-2 w-1/5"><span className="font-bold text-2xl">+ Añadir tarea</span></button>
+            <button onClick={() => setIsOpen(true)} className="ml-auto border border-[#F4E9E9] bg-accent-beige-300/25 rounded-md px-4 py-2 w-1/5"><span className="font-bold text-2xl">+ Añadir tarea</span></button>
 
-            <div className="flex flex-row gap-4 px-10 pt-5">
+            <div className="md:flex md:flex-row gap-4 px-10 pt-5 sm:grid sm:grid-cols-2 ">
                 {/* Diarias */}
 
-                <div className="pb-2 w-1/3">
+                <div className="pb-2 md:w-1/3">
                     <h1 className="pb-5 text-3xl">Diarias</h1>
                     <div className="flex flex-col gap-2 justify-center">
                         {/* filtrado */}
                         <div className="flex flex-col gap-2.5">
                             <div className="flex flex-row gap-2.5 justify-center">
-                                <ButtonFiltro esOtroActivo={activeDiarias} handleActive={handleActiveDiarias} titulo={"Today"}/>
-                                <ButtonFiltro esOtroActivo={activeDiarias} handleActive={handleActiveDiarias} titulo={"Tomorrow"}/>
-                                <ButtonFiltro esOtroActivo={activeDiarias} handleActive={handleActiveDiarias} titulo={"All"}/>
+                                <ButtonFilter esOtroActivo={activeDiarias} handleActive={handleActiveDiarias} titulo={"Today"}/>
+                                <ButtonFilter esOtroActivo={activeDiarias} handleActive={handleActiveDiarias} titulo={"Tomorrow"}/>
+                                <ButtonFilter esOtroActivo={activeDiarias} handleActive={handleActiveDiarias} titulo={"All"}/>
                             </div>
                             <div className="flex flex-row gap-2.5 justify-center">
-                                <button className="bg-state-success rounded-md px-4"><span className="text-primary-900 font-bold">Completadas</span></button>
-                                <button className="bg-state-warning rounded-md px-4"><span className="text-primary-900 font-bold">Pendientes</span></button>
+                                <ButtonComplete title="Completadas" />
+                                <ButtonComplete title="Pendientes" />
                             </div>
                         </div>
 
 
-                        <Tarea data={tarea} />
-
-                        <Tarea data={tarea}/>
+                        <Task data={tarea} />
+                        <Task data={tarea}/>
+                    
                     </div>
                 </div>
 
                 {/* Hábito */}
 
-                <div className="pb-2 w-1/3">
+                <div className="pb-2 md:w-1/3">
                     <h1 className="pb-5 text-3xl">Hábitos</h1>
                     <div className="flex flex-col gap-2 justify-center">
                         {/* filtrado */}
                         <div className="flex flex-col gap-2.5">
                             <div className="flex flex-row gap-2.5 justify-center">
-                                <ButtonFiltro esOtroActivo={activeHabitos} handleActive={handleActiveHabitos} titulo={"Today"}/>
-                                <ButtonFiltro esOtroActivo={activeHabitos} handleActive={handleActiveHabitos} titulo={"Tomorrow"}/>
-                                <ButtonFiltro esOtroActivo={activeHabitos} handleActive={handleActiveHabitos} titulo={"All"}/>
+                                <ButtonFilter esOtroActivo={activeHabitos} handleActive={handleActiveHabitos} titulo={"Today"}/>
+                                <ButtonFilter esOtroActivo={activeHabitos} handleActive={handleActiveHabitos} titulo={"Tomorrow"}/>
+                                <ButtonFilter esOtroActivo={activeHabitos} handleActive={handleActiveHabitos} titulo={"All"}/>
                             </div>
                             <div className="flex flex-row gap-2.5 justify-center">
-                                <button className="bg-state-success rounded-md px-4"><span className="text-primary-900 font-bold">Completadas</span></button>
-                                <button className="bg-state-warning rounded-md px-4"><span className="text-primary-900 font-bold">Pendientes</span></button>
+                                <ButtonComplete title="Completadas" />
+                                <ButtonComplete title="Pendientes" />
                             </div>
                         </div>
 
 
-                        <Tarea data={tarea}  />
-
-                        <Tarea data={tarea} />
+                        <Task data={tarea} />
+                        <Task data={tarea} />
+                        <Task data={tarea} />
+                        <Task data={tarea} />
+                        
                     </div>
                 </div>
 
                 {/* Calendario */}
-                <div className="w-1/3">
+               <div className="md:w-1/3 flex flex-col">
                     <Calendar />
                 </div>
             </div>

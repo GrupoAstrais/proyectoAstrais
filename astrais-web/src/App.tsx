@@ -2,9 +2,13 @@ import { Route, Routes } from 'react-router'
 import Home from './pages/Dashboard/Home'
 import Login from './pages/Auth/Login'
 import Register from './pages/Auth/Register'
-import Group from './pages/Groups/Group'
+import Group from './pages/Groups/Groups'
 import Tasks from './pages/Tasks/Tasks'
-import './styles/colors.css';
+import Profile from './pages/User/Profile'
+import Shop from './pages/Shop/Shop'
+import Games from './pages/Games/Games'
+import Achivs from './pages/Achiv/Achivs'
+import './styles/colors.css'
 
 function Placeholder({ title }: { title: string }) {
   return (
@@ -24,6 +28,10 @@ export default function App() {
       <Route path="/home" element={<Home />} />
       <Route path="/groups" element={<Group />} />
       <Route path="/tasks" element={<Tasks />} />
+      <Route path="/profile" element={<Profile />} />
+      <Route path="/shop" element={<Shop />} />
+      <Route path="/games" element={<Games />} />
+      <Route path="/achievements" element={<Achivs />} />
       <Route path="*" element={<Placeholder title="Página no encontrada" />} />
     </Routes>
   )
