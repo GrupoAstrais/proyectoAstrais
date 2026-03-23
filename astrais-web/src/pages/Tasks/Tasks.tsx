@@ -4,7 +4,7 @@ import bgImage from '../../assets/homeScreenBack.jpg'
 import type { ITarea } from "../../types/Interfaces";
 import Calendar from "../../components/layout/Calendar";
 import React, { useState } from "react";
-import Modal from "../../components/ui/Modal";
+import Modal from "../../components/modales/Modal";
 import ButtonFilter from "../../components/ui/ButtonFilter";
 import ButtonComplete from "../../components/ui/ButtonComplete";
 

@@ -1,4 +1,4 @@
-export default function ConfigModal() {
+export default function FriendsModal() {
         return (
         <div>
             

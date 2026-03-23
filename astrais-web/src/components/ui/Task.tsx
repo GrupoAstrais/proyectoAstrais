@@ -9,15 +9,18 @@ interface TareaProps {
 
 export default function Task({data}: TareaProps) {
 
-
     const [checked, setChecked] = React.useState<boolean>(false);
 
     const checkedHandle = () => {
         setChecked(!checked);
     }
 
+    const ClickHandle = () => {
+        setChecked(!checked);
+    }
+
   return (
-    <div className={`border border-[#F4E9E9] font-['Space_Grotesk'] ${checked ? 'bg-[#918C84]/55 line-through decoration-primary-900 text-white/50' : 'bg-accent-beige-300/35' }  w-full rounded-md flex flex-row justify-between px-2 py-4`}>
+    <div onClick={ClickHandle} className={`border border-[#F4E9E9] font-['Space_Grotesk'] ${checked ? 'bg-[#918C84]/55 line-through decoration-primary-900 text-white/50' : 'bg-accent-beige-300/35' }  w-full rounded-md flex flex-row justify-between px-2 py-4`}>
         <div className="flex flex-col gap-2">
             <h3>{data.title}</h3>
             <div className="flex flex-row gap-4 text-primary-900 font-bold">

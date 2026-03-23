@@ -7,7 +7,7 @@ import type { ITarea } from '../../types/Interfaces';
 import Task from '../../components/ui/Task';
 import React from 'react'
 import Achiv from '../../components/ui/Achiv'
-import Modal from '../../components/ui/Modal'
+import Modal from '../../components/modales/Modal'
 
 export default function Home() {
   const tarea: ITarea = {

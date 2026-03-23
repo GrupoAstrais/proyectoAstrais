@@ -1,7 +1,7 @@
 import Navbar from "../../components/layout/Navbar"
 import bgImage from '../../assets/homeScreenBack.jpg'
 import GroupCard from "../../components/ui/GroupCard"
-import GroupModal from "../../components/ui/GroupModal"
+import GroupModal from "../../components/modales/GroupModal"
 import React, { useState } from "react";
 
 export default function Groups() {
@@ -28,7 +28,7 @@ export default function Groups() {
                     <GroupCard onClick={handleActiveGroup} id={1} activeId={activeGroup} />
                     <GroupCard onClick={handleActiveGroup} id={2} activeId={activeGroup} />
                 </div>
-                <div className={`${isOpen ?'' : 'hidden'} w-1/2`}>
+                <div className={`${isOpen ? '' : 'hidden'} w-1/2`}>
                     <GroupModal />
                 </div>
             </div>

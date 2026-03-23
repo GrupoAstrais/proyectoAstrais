@@ -1,8 +1,8 @@
 import type { ITarea } from "../../types/Interfaces";
-import ButtonComplete from "./ButtonComplete";
-import Task from "./Task";
+import ButtonComplete from "../ui/ButtonComplete";
+import Task from "../ui/Task";
 
-export default function XP() {
+export default function GroupModal() {
     const tarea: ITarea = {
         title: "Estudiar TypeScript",
         dificultad: "HARD",

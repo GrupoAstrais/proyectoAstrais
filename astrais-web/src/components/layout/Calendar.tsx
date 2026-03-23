@@ -44,7 +44,7 @@ export default function Calendar({ className = '' }: { className?: string }) {
   };
 
   return (
-    <div>
+    <div >
       <div className='flex flex-row relative p-5'>
         <img src={astra} className='w-2/3 absolute -bottom-3 z-50 left-20 sm:left-0'/> 
       </div>

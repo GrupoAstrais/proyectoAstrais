@@ -1,4 +1,4 @@
-import Dificultad from "./Difficulty";
+import Dificultad from "../ui/Difficulty";
 
 interface ModalProps {
     onPress: (opcion: string) => void
