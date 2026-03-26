@@ -28,7 +28,8 @@ export default function Groups() {
                     <GroupCard onClick={handleActiveGroup} id={1} activeId={activeGroup} />
                     <GroupCard onClick={handleActiveGroup} id={2} activeId={activeGroup} />
                 </div>
-                <div className={`${isOpen ? '' : 'hidden'} w-1/2`}>
+                <div className={`${isOpen ? '' : 'hidden'} flex flex-col gap-2 w-1/2`}>
+                    <button onClick={() => setIsOpen(true)} className="ml-auto border border-[#F4E9E9] bg-accent-beige-300/25 rounded-md px-4 py-2 w-1/5"><span className="font-bold text-2xl">+ Añadir tarea</span></button>
                     <GroupModal />
                 </div>
             </div>
