@@ -1,7 +1,10 @@
 package com.astrais.auth
 
 import at.favre.lib.crypto.bcrypt.BCrypt
+import com.astrais.ErrorCodes
+import com.astrais.Errors
 import com.astrais.db.getDatabaseDaoImpl
+import com.astrais.supportedLanguages
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -11,6 +14,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
+import java.lang.Error
 
 @Serializable
 data class LoginRequest(val email : String, val passwd : String)
@@ -41,19 +45,19 @@ fun Route.authRoutes(){
 
             // Comprobacion si alguno de los campos esta vacio
             if (request.email.isBlank() || request.passwd.isBlank()){
-                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "One of the strings is blank"))
+                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_BLANKVALUE.ordinal, "One of the strings is blank"))
                 return@post
             }
 
             val jwt = getAuthRepoImpl().performBasicLogin(request)
             if (jwt == null){
-                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "The user does not exist"))
+                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "The user does not exist"))
             }else{
                 call.respond(HttpStatusCode.OK, jwt)
             }
 
         } catch (e : BadRequestException){
-            call.respond(HttpStatusCode.BadRequest, mapOf("error" to "The data sent by the client was not in the accepted format"))
+            call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "The data sent by the client was not in the accepted format"))
         }
     }
 
@@ -64,30 +68,30 @@ fun Route.authRoutes(){
 
             // Comprobacion si alguno de los campos esta vacio
             if (request.email.isBlank() || request.name.isBlank() || request.passwd.isBlank() || request.lang.isBlank()){
-                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "One of the strings is blank"))
+                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_BLANKVALUE.ordinal, "One of the strings is blank"))
                 return@post
             }
 
             // Comprueba si el lenguaje es correcto
             if (request.lang.length != 3){
-                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Language is not following ISO 639-2"))
+                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "Language is not following ISO 639-2"))
+                return@post
+            } else if (!supportedLanguages.contains(request.lang)){
+                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_BADVALUE.ordinal, "Language ${request.lang} is not supported"))
                 return@post
             }
 
             // Registra al usuario
             if (getAuthRepoImpl().performBasicRegister(request)){
+                // Se envia eso ya que no me acuerdo en que frontend, pero descartaba los mensajes sin cuerpo.
                 call.respond(HttpStatusCode.OK, mapOf("Aknowledge" to true))
             }else{
-                call.respond(HttpStatusCode.Conflict, mapOf("Aknowledge" to false))
+                call.respond(HttpStatusCode.Conflict, Errors(ErrorCodes.ERR_RESOURCEALREADYEXISTS.ordinal, "User already exists"))
             }
 
         } catch (e : BadRequestException){
-            call.respond(HttpStatusCode.BadRequest, mapOf("error" to "The data sent by the client was not in the accepted format"))
+            call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "The data sent by the client was not in the accepted format"))
         }
-    }
-
-    post("/auth/mailverifier") {
-
     }
 
     // Se protege la ruta requiriendo el refresh token para poder entrar
@@ -98,21 +102,21 @@ fun Route.authRoutes(){
                 val token = call.principal<JWTPrincipal>()
                 if (token == null){
                     // No deberia ser null, pero se hace la comprobacion por si acaso
-                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid/Missing refresh token"))
+                    call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "Invalid/Missing refresh token"))
                     return@post
                 }
 
                 val user = getAuthRepoImpl().regenAccessToken(token.payload.subject.toInt())
                 if (user == null){
-                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Error regenerating the access token!"))
+                    call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "Error regenerating the access token!"))
                 }else{
                     call.respond(HttpStatusCode.OK, RegenAccessResponse(user))
                 }
 
             } catch (e : BadRequestException){
-                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "The data sent by the client was not in the accepted format"))
+                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "The data sent by the client was not in the accepted format"))
             } catch (e : NumberFormatException) {
-                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "The subject of the token is invalid"))
+                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "The subject of the token is invalid"))
             }
         }
     }
@@ -120,7 +124,7 @@ fun Route.authRoutes(){
     post("/auth/google") {
         // Se loguea con google y devuelve su JWT
         // TODO: Implementar Oauth
-        call.respond(HttpStatusCode.BadGateway, mapOf("error" to "The Oauth wasn't implemented yet"))
+        call.respond(HttpStatusCode.BadGateway, Errors(ErrorCodes.ERR_UNIMPLEMENTED.ordinal, "The Oauth wasn't implemented yet"))
     }
 }
 

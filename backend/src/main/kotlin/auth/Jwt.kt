@@ -1,5 +1,7 @@
 package com.astrais.auth
 
+import com.astrais.ErrorCodes
+import com.astrais.Errors
 import com.astrais.db.EntidadUsuario
 import com.astrais.db.getDatabaseDaoImpl
 import com.auth0.jwt.JWT
@@ -103,7 +105,7 @@ public fun Application.initJWT(authenticationConfig: AuthenticationConfig) {
 
         // Si tiene error, responde con ese texto
         challenge { _, _ ->
-            call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid/expired token"))
+            call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "Invalid/expired token"))
         }
     }
 
@@ -120,7 +122,7 @@ public fun Application.initJWT(authenticationConfig: AuthenticationConfig) {
 
         // Si tiene error, responde con ese texto
         challenge { _, _ ->
-            call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid/expired token"))
+            call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "Invalid/expired token"))
         }
     }
 }
