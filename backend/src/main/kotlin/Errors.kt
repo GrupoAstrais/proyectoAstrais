@@ -16,7 +16,9 @@ enum class ErrorCodes {
     /** Alguno de los valores en el JSON esta vacio, y eso no se permite */
     ERR_BLANKVALUE,
     /** El valor no esta vacio, pero no fue aceptado por el backend */
-    ERR_BADVALUE
+    ERR_BADVALUE,
+    /** El recurso no se puede crear */
+    ERR_RESOURCENOTCREATED
 }
 
 @Serializable

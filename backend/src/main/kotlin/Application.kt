@@ -3,6 +3,7 @@ package com.astrais
 import com.astrais.auth.authRoutes
 import com.astrais.auth.installAuth
 import com.astrais.db.initDatabase
+import com.astrais.groups.groupRoutes
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -50,5 +51,6 @@ fun Application.module() {
 
     routing {
         authRoutes()
+        groupRoutes()
     }
 }

@@ -1,13 +1,21 @@
 package com.astrais.db
 
 import kotlinx.datetime.toKotlinLocalDate
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inSubQuery
+import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import java.time.LocalDate
 
 class DatabaseDAOImpl : DatabaseDAO {
+    // https://www.jetbrains.com/help/exposed/dsl-querying-data.html
+
+
     override suspend fun createUser(
         nombreusu: String,
         emailusu: String,
@@ -17,16 +25,15 @@ class DatabaseDAOImpl : DatabaseDAO {
         role: UserRoles
     ): Int {
         return suspendTransaction {
-            TablaUsuario.insert {
-                it[nombre] = nombreusu
-                it[email] = emailusu
-                it[contrasenia] = passwordusu
-                it[idioma] = lang
-                it[zona_horaria] = utcOffset
-                it[rol] = role
-                it[ultimo_login] = LocalDate.now().toKotlinLocalDate()
-            }[TablaUsuario.id].value
-
+            EntidadUsuario.new {
+                nombre = nombreusu
+                email = emailusu
+                contrasenia = passwordusu
+                idioma = lang
+                zona_horaria = utcOffset
+                rol = role
+                ultimo_login = LocalDate.now().toKotlinLocalDate()
+            }.id.value
         }
     }
 
@@ -40,9 +47,7 @@ class DatabaseDAOImpl : DatabaseDAO {
 
     override suspend fun getUsuarioByID(id: Int): EntidadUsuario? {
         return suspendTransaction {
-            EntidadUsuario.find {
-                TablaUsuario.id.eq(id)
-            }.singleOrNull()
+            EntidadUsuario.findById(id)
         }
     }
 
@@ -59,8 +64,65 @@ class DatabaseDAOImpl : DatabaseDAO {
             ent.ultimo_login = java.time.LocalDate.now().toKotlinLocalDate()
         }
     }
+
+    override suspend fun createGroup(grpownerId: Int, grpname: String, grpdescription: String, personal : Boolean): Int {
+        return suspendTransaction {
+            EntidadGrupo.new {
+                es_grupo_personal = personal
+                owner = EntityID(grpownerId, TablaUsuario)
+                nombre = grpname
+                descripcion = grpdescription
+            }.id.value
+        }
+    }
+
+    override suspend fun getGroupById(id: Int): EntidadGrupo? {
+        return suspendTransaction {
+            EntidadGrupo.findById(id)
+        }
+    }
+
+    override suspend fun getGroupsOfUser(idusuario: Int) : List<EntidadGrupo> {
+        return suspendTransaction {
+            val eid = EntityID(idusuario, TablaUsuario)
+            // Subquery en TablaGrupoIntegrantes
+            val subquery = TablaGrupoUsuario
+                .select(TablaGrupoUsuario.gid)
+                .where { return@where TablaGrupoUsuario.uid.eq(eid) }
+
+            // El find
+            EntidadGrupo.find {
+                TablaGrupo.owner.eq(eid).or(TablaGrupo.id.inSubQuery(subquery))
+            }.toList()
+        }
+    }
+
+    override suspend fun getUserRoleOnGroup(idusuario: Int, idgrupo: Int): GroupRoles? {
+        return suspendTransaction {
+            EntidadGrupoUsuario.find{
+                TablaGrupoUsuario.gid.eq(EntityID(idgrupo, TablaGrupo))
+            }.singleOrNull()?.role
+        }
+    }
+
+    override suspend fun addUserToGroup(idusuario: Int, idgrupo: Int): Boolean {
+        return suspendTransaction {
+            // Es hasta divertido hacer queries aqui
+            val tableExists = TablaGrupo.selectAll().where { TablaUsuario.id.eq(idgrupo) }.empty().not()
+
+            if (tableExists){
+                //EntidadGrupoUsuario.new me daba un error raro
+                TablaGrupoUsuario.insert {
+                    it[gid] = EntityID(idgrupo, TablaGrupo)
+                    it[uid] = EntityID(idusuario, TablaUsuario)
+                }.insertedCount > 0
+            }else{
+                false
+            }
+        }
+
+    }
+
+
 }
 
-suspend fun da(){
-    val get = getDatabaseDaoImpl().getUsuarioByID(0)
-}

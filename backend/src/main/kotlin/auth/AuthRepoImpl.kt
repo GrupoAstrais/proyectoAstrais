@@ -12,11 +12,16 @@ class AuthRepoImpl : AuthRepo{
     override suspend fun performBasicLogin(loginRequest: LoginRequest) : LoginResponse?{
         try {
             val user = getDatabaseDaoImpl().getUsuario(loginRequest.email)
+
             if (user?.contrasenia != null && checkPassword(loginRequest.passwd, user.contrasenia!!)){
                 getDatabaseDaoImpl().setUserLastLogin(user)
-                log.debug("Usuario ${user.nombre} conectado, Generando tokens...")
+                log.debug("User ${user.nombre} (${user.id.value}) connected.")
+
                 // Genera JWT
-                return LoginResponse(jwtAccessToken = generateAccessToken(user), jwtRefreshToken = generateRefreshToken(user))
+                val i = LoginResponse(jwtAccessToken = generateAccessToken(user), jwtRefreshToken = generateRefreshToken(user))
+                log.debug("Created tokens for ${user.nombre} (${user.id.value})")
+
+                return i
             }
         } catch (e : ExposedSQLException){
             log.error("Error trying to log user ${loginRequest.email}! Message: ${e.message}")
@@ -31,12 +36,26 @@ class AuthRepoImpl : AuthRepo{
 
             if (!existeUser){
                 val hashContrasenia = hashPassword(registerRequest.passwd)
-                dao.createUser(registerRequest.name, registerRequest.email, hashContrasenia, registerRequest.lang)
-                log.debug("Usuario ${registerRequest.name} registrado")
+                val uid = dao.createUser(registerRequest.name, registerRequest.email, hashContrasenia, registerRequest.lang)
+                log.debug("User ${registerRequest.name} (${uid}) registered")
+
+                // Crea grupo personal
+                dao.createGroup(uid, "${registerRequest.name}", "", true)
+                log.debug("Created the ${registerRequest.name}'s (${uid}) user space")
                 return true
             }
         } catch (e : ExposedSQLException){
             log.error("Error trying to register user ${registerRequest.name} with mail ${registerRequest.email}! Message: ${e.message}")
+        }
+        return false
+    }
+
+    override suspend fun deleteUser(uid: Int): Boolean {
+        try {
+            // TODO: Al implementar SSE, se debera enviar un mensaje de cerrar sesion al borrarlo.
+            return getDatabaseDaoImpl().deleteUsuario(uid)
+        }catch (e : ExposedSQLException){
+            log.error("Error while trying to delete the user with ID $uid")
         }
         return false
     }

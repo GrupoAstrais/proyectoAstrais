@@ -84,7 +84,7 @@ fun Route.authRoutes(){
             // Registra al usuario
             if (getAuthRepoImpl().performBasicRegister(request)){
                 // Se envia eso ya que no me acuerdo en que frontend, pero descartaba los mensajes sin cuerpo.
-                call.respond(HttpStatusCode.OK, mapOf("Aknowledge" to true))
+                call.respond(HttpStatusCode.OK, mapOf("aknowledged" to true))
             }else{
                 call.respond(HttpStatusCode.Conflict, Errors(ErrorCodes.ERR_RESOURCEALREADYEXISTS.ordinal, "User already exists"))
             }
@@ -106,11 +106,35 @@ fun Route.authRoutes(){
                     return@post
                 }
 
-                val user = getAuthRepoImpl().regenAccessToken(token.payload.subject.toInt())
+                val user = getAuthRepoImpl().regenAccessToken(token.subject?.toInt() ?: 0)
                 if (user == null){
                     call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "Error regenerating the access token!"))
                 }else{
                     call.respond(HttpStatusCode.OK, RegenAccessResponse(user))
+                }
+
+            } catch (e : BadRequestException){
+                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "The data sent by the client was not in the accepted format"))
+            } catch (e : NumberFormatException) {
+                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "The subject of the token is invalid"))
+            }
+        }
+    }
+
+    authenticate("access-jwt") {
+        post("/auth/deleteUser") {
+            try {
+                val token = call.principal<JWTPrincipal>()
+                if (token == null){
+                    // No deberia ser null, pero se hace la comprobacion por si acaso
+                    call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "Invalid/Missing refresh token"))
+                    return@post
+                }
+
+                if (getAuthRepoImpl().deleteUser(token.subject?.toInt() ?: 0)){
+                    call.respond(HttpStatusCode.OK, arrayOf("aknowledged" to true))
+                }else{
+                    call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "Couldn't delete the user"))
                 }
 
             } catch (e : BadRequestException){

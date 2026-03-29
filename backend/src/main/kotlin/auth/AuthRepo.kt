@@ -16,6 +16,11 @@ interface AuthRepo {
     suspend fun performBasicRegister(registerRequest: RegisterRequest) : Boolean
 
     /**
+     * Borra un usuario con el ID
+     */
+    suspend fun deleteUser(uid : Int) : Boolean
+
+    /**
      * Intenta regenerar el token de acceso dado un ID de usuario.
      * @param id El ID del usuario a generar el token de acceso
      * @return El token de acceso, NULL si no se pudo
