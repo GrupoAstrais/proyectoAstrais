@@ -54,7 +54,18 @@ object DatabaseController {
 
         // Creacion de tablas si no existen
         transaction {
-            SchemaUtils.create(TablaUsuario, TablaCredencialesAuth, inBatch = true)
+            SchemaUtils.create(
+                TablaUsuario,
+                TablaCredencialesAuth,
+                TablaConfirmacionUsuario,
+                TablaGrupo,
+                TablaGrupoUsuario,
+                TablaTarea,
+                TablaTareaUnica,
+                TablaTareaObjetivo,
+                TablaTareaHabito,
+                inBatch = true
+            )
         }
     }
 }

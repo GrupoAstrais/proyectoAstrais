@@ -146,6 +146,21 @@ fun LoginScreen(
                 }
             }
 
+            Button(
+                onClick = { onNavigateToHome() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(50),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF0D0D0D),
+                    contentColor = Color.White,
+                    disabledContainerColor = Color(0xFF0D0D0D).copy(alpha = 0.5f)
+                )
+            ) {
+
+            }
+
             // Footer
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -164,6 +179,7 @@ fun LoginScreen(
                     modifier = Modifier.clickable { onNavigateToRegister() }
                 )
             }
+
         }
     }
 }

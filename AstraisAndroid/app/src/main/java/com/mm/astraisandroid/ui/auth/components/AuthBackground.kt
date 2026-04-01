@@ -17,32 +17,31 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 
 // boxscope es basicamente un contexto de box para poder usar los modificadores
-@Composable
-fun AuthBackground(content: @Composable BoxScope.() -> Unit) {
-    // crea un degradado para pruebas de arriba hacia abajo con los colores que le pases
-    val gradientBrush = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFF2D0A3F),
-            Color(0xFF8B1A6B),
-            Color(0xFFB5216A),
-            Color(0xFF6A0F5A),
-            Color(0xFF1A0A2E)
-        )
-    )
-    // ocupa toda la pantalla y pinta el degradado de fondo. Lo que este en content aparece encima
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(brush = gradientBrush),
-        content = content
-    )
-}
+//@Composable
+//fun AuthBackground(content: @Composable BoxScope.() -> Unit) {
+//    // crea un degradado para pruebas de arriba hacia abajo con los colores que le pases
+//    val gradientBrush = Brush.verticalGradient(
+//        colors = listOf(
+//            Color(0xFF2D0A3F),
+//            Color(0xFF8B1A6B),
+//            Color(0xFFB5216A),
+//            Color(0xFF6A0F5A),
+//            Color(0xFF1A0A2E)
+//        )
+//    )
+//    // ocupa toda la pantalla y pinta el degradado de fondo. Lo que este en content aparece encima
+//    Box(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .background(brush = gradientBrush),
+//        content = content
+//    )
+//}
 
-/*
-*
-* @Composable
+@Composable
 fun AuthBackground(content: @Composable BoxScope.() -> Unit) {
 
     // transición infinita
@@ -53,7 +52,7 @@ fun AuthBackground(content: @Composable BoxScope.() -> Unit) {
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 4000, easing = LinearEasing),
+            animation = tween(durationMillis =8000, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse // ida y vuelta
         ),
         label = "progress"
@@ -83,6 +82,3 @@ fun AuthBackground(content: @Composable BoxScope.() -> Unit) {
         content = content
     )
 }
-*
-*
-* */

@@ -1,22 +1,15 @@
 package com.mm.astraisandroid
 
 object TokenHolder {
+    private var accessToken:  String? = null
+    private var refreshToken: String? = null
+    private var personalGid:  Int?    = null
 
-    private var accessToken : String = ""
-    private var refreshToken : String = ""
-
-    public fun setRefreshToken(refresh : String){
-        refreshToken = refresh
-
-    }
-    public fun setAccessToken(access : String){
-        accessToken = access
-    }
-
-    public fun getRefreshToken() : String{
-        return refreshToken
-    }
-    public fun getAccessToken() : String{
-        return accessToken
-    }
+    fun setAccessToken(token: String)  { accessToken = token }
+    fun setRefreshToken(token: String) { refreshToken = token }
+    fun setPersonalGid(gid: Int?)      { personalGid = gid }
+    fun getAccessToken()  = accessToken
+    fun getRefreshToken() = refreshToken
+    fun getPersonalGid()  = personalGid
+    fun clear() { accessToken = null; refreshToken = null; personalGid = null }
 }

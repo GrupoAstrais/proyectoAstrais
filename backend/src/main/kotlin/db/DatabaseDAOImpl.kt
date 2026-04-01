@@ -108,7 +108,7 @@ class DatabaseDAOImpl : DatabaseDAO {
     override suspend fun addUserToGroup(idusuario: Int, idgrupo: Int): Boolean {
         return suspendTransaction {
             // Es hasta divertido hacer queries aqui
-            val tableExists = TablaGrupo.selectAll().where { TablaUsuario.id.eq(idgrupo) }.empty().not()
+            val tableExists = TablaGrupo.selectAll().where { TablaGrupo.id.eq(idgrupo) }.empty().not()
 
             if (tableExists){
                 //EntidadGrupoUsuario.new me daba un error raro
@@ -123,6 +123,41 @@ class DatabaseDAOImpl : DatabaseDAO {
 
     }
 
+    override suspend fun createTarea(
+        gid: Int, titulo: String, descripcion: String,
+        tipo: TaskType, prioridad: Int,
+        recompensaXp: Int, recompensaLudion: Int
+    ): Int {
+        return suspendTransaction {
+            EntidadTarea.new {
+                id_grupo         = EntityID(gid, TablaGrupo)
+                this.titulo      = titulo
+                this.descripcion = descripcion
+                this.tipo        = tipo
+                estado           = TaskState.ACTIVE
+                this.prioridad   = prioridad
+                recompensa_xp    = recompensaXp
+                recompensa_ludion = recompensaLudion
+            }.id.value
+        }
+    }
+
+    override suspend fun getTareasByGroup(gid: Int): List<EntidadTarea> {
+        return suspendTransaction {
+            EntidadTarea.find {
+                TablaTarea.id_grupo.eq(EntityID(gid, TablaGrupo))
+            }.toList()
+        }
+    }
+
+    override suspend fun completeTarea(tid: Int): Boolean {
+        return suspendTransaction {
+            val tarea = EntidadTarea.findById(tid) ?: return@suspendTransaction false
+            tarea.estado = TaskState.COMPLETE
+            tarea.fecha_completado = java.time.LocalDate.now().toKotlinLocalDate()
+            true
+        }
+    }
 
 }
 

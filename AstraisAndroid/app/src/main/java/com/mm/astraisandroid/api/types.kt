@@ -18,3 +18,36 @@ data class RegenAccessResponse(val newAccessToken : String)
 
 @Serializable
 data class ServerErrorResponse(val error : String)
+
+@Serializable
+data class CreateTareaRequest(
+    val gid: Int,
+    val titulo: String,
+    val descripcion: String = "",
+    val tipo: String = "UNICO",
+    val prioridad: Int = 0,
+    val recompensaXp: Int = 0,
+    val recompensaLudion: Int = 0
+)
+
+@Serializable
+data class TareaResponse(
+    val id: Int,
+    val titulo: String,
+    val descripcion: String,
+    val tipo: String,
+    val estado: String,
+    val prioridad: Int,
+    val recompensaXp: Int,
+    val recompensaLudion: Int
+)
+
+@Serializable
+data class UserMeResponse(
+    val id: Int,
+    val nombre: String,
+    val nivel: Int,
+    val xpActual: Int,
+    val xpTotal: Int,
+    val personalGid: Int?
+)

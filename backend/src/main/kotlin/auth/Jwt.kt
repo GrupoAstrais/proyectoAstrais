@@ -20,8 +20,8 @@ import java.util.Date
 private lateinit var jwtIssuer : String
 private lateinit var jwtAudience : String
 // MS hasta que expire el token
-private var jwtAccessTokenExpiration : Long = 10_000 // 10 minutos (creo)
-private var jwtRefreshTokenExpiration : Long = 3_600_000
+private var jwtAccessTokenExpiration  : Long = 10 * 60 * 1000 // 10 minutos (creo)
+private var jwtRefreshTokenExpiration : Long = 7 * 24 * 60 * 60 * 1000
 // Algoritmo ya prehecho con los datos
 private lateinit var jwtAlgorithmAccess : Algorithm
 private lateinit var jwtAlgorithmRefresh : Algorithm
@@ -56,7 +56,7 @@ public fun createAccessVerifier() : JWTVerifier{
 }
 
 public fun createRefreshVerifier() : JWTVerifier{
-    return JWT.require(jwtAlgorithmAccess)
+    return JWT.require(jwtAlgorithmRefresh)
         .withAudience(jwtAudience)
         .withIssuer(jwtIssuer)
         .withClaim("refresherToken", true)

@@ -18,7 +18,9 @@ enum class ErrorCodes {
     /** El valor no esta vacio, pero no fue aceptado por el backend */
     ERR_BADVALUE,
     /** El recurso no se puede crear */
-    ERR_RESOURCENOTCREATED
+    ERR_RESOURCENOTCREATED,
+
+    EER_FORBIDDEN
 }
 
 @Serializable

@@ -113,9 +113,10 @@ class EntidadUsuario(id : EntityID<Int>) : IntEntity(id) {
 
 
 object TablaConfirmacionUsuario : IntIdTable("UserConfirm") {
-    val uid = reference("user_id", TablaUsuario, onDelete = ReferenceOption.CASCADE).entityId()
+    val uid                 = reference("user_id", TablaUsuario, onDelete = ReferenceOption.CASCADE)
     val codigo_confirmacion = varchar("confirm_code", CONFIRM_CODE_SIZE)
 }
+
 class EntidadConfirmacionUsuario(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<EntidadConfirmacionUsuario>(TablaConfirmacionUsuario)
 
@@ -124,16 +125,16 @@ class EntidadConfirmacionUsuario(id: EntityID<Int>) : IntEntity(id) {
 }
 
 object TablaCredencialesAuth : CompositeIdTable("AuthCredentials") {
-    val uid = reference("user_id", TablaUsuario, onDelete = ReferenceOption.CASCADE).entityId()
-    val provider = enumerationByName<AuthProvider>("provider", 16).default(AuthProvider.SERVIDOR).entityId()
-
+    val uid      = reference("user_id", TablaUsuario, onDelete = ReferenceOption.CASCADE)
+    val provider = enumerationByName<AuthProvider>("provider", 16).default(AuthProvider.SERVIDOR)
     override val primaryKey = PrimaryKey(uid, provider)
 }
-class EntidadCredencialesAuth(id : EntityID<CompositeID>) : CompositeEntity(id){
+
+class EntidadCredencialesAuth(id: EntityID<CompositeID>) : CompositeEntity(id) {
     companion object : CompositeEntityClass<EntidadCredencialesAuth>(TablaCredencialesAuth)
 
-    val uid         by TablaCredencialesAuth.uid
-    val provider    by TablaCredencialesAuth.provider
+    val uid      by TablaCredencialesAuth.uid
+    val provider by TablaCredencialesAuth.provider
 }
 
 object TableLogro : IntIdTable("Awards") {
@@ -162,19 +163,18 @@ class EntidadGrupo(id : EntityID<Int>) : IntEntity(id){
 }
 
 object TablaGrupoUsuario : CompositeIdTable("RelGroupUser") {
-    val gid = reference("group_id",TablaGrupo, onDelete = ReferenceOption.CASCADE).entityId()
-    val uid = reference("user_id",TablaUsuario, onDelete = ReferenceOption.CASCADE).entityId()
-
+    val gid  = reference("group_id", TablaGrupo, onDelete = ReferenceOption.CASCADE)
+    val uid  = reference("user_id", TablaUsuario, onDelete = ReferenceOption.CASCADE)
     val role = enumerationByName<GroupRoles>("role", 25)
-
     override val primaryKey = PrimaryKey(gid, uid)
 }
-class EntidadGrupoUsuario(id : EntityID<CompositeID>) : CompositeEntity(id){
+
+class EntidadGrupoUsuario(id: EntityID<CompositeID>) : CompositeEntity(id) {
     companion object : CompositeEntityClass<EntidadGrupoUsuario>(TablaGrupoUsuario)
 
-    var gid     by TablaGrupoUsuario.gid
-    var uid     by TablaGrupoUsuario.uid
-    var role    by TablaGrupoUsuario.role
+    var gid  by TablaGrupoUsuario.gid
+    var uid  by TablaGrupoUsuario.uid
+    var role by TablaGrupoUsuario.role
 }
 
 object TablaTarea : IntIdTable("Task"){

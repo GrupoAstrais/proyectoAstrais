@@ -1,8 +1,11 @@
 package com.mm.astraisandroid.api
 
+import android.app.Application
 import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mm.astraisandroid.SessionDataStore
 import com.mm.astraisandroid.TokenHolder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,23 +18,31 @@ sealed class LoginUIState {
     data class LoginError(val message: String) : LoginUIState()
 }
 
-class LoginViewModel : ViewModel() {
+class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
+    private val session = SessionDataStore(application)
     private val _loginState = MutableStateFlow<LoginUIState>(LoginUIState.Idle)
-    val loginState : StateFlow<LoginUIState> = _loginState
+    val loginState: StateFlow<LoginUIState> = _loginState
 
-    fun login(request : LoginRequest){
+    fun login(request: LoginRequest) {
         viewModelScope.launch {
             _loginState.value = LoginUIState.Loading
 
             BackendRepository.performLogin(request)
                 .onSuccess { response ->
-                    TokenHolder.setRefreshToken(response.jwtRefreshToken)
                     TokenHolder.setAccessToken(response.jwtAccessToken)
+                    TokenHolder.setRefreshToken(response.jwtRefreshToken)
+                    session.saveTokens(response.jwtAccessToken, response.jwtRefreshToken)
+
+                    BackendRepository.getMe()
+                        .onSuccess { me ->
+                            TokenHolder.setPersonalGid(me.personalGid)
+                            me.personalGid?.let { session.savePersonalGid(it) }
+                        }
 
                     _loginState.value = LoginUIState.LoginSuccess
                 }
-                .onFailure { d->
+                .onFailure { d ->
                     Log.d("MM", "ktor error: $d")
                     _loginState.value = LoginUIState.LoginError(d.message ?: "Error desconocido")
                 }

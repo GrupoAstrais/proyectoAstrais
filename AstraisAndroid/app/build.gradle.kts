@@ -46,6 +46,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
+    implementation(libs.androidx.animation)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -70,7 +71,11 @@ dependencies {
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVers")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVers")
     implementation("io.ktor:ktor-client-logging:$ktorVers")
+    implementation("io.ktor:ktor-client-auth:$ktorVers")
 
     // ## Corrutina ##
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+
+    // ### JWT ###
+    implementation("androidx.datastore:datastore-preferences:1.2.1")
 }

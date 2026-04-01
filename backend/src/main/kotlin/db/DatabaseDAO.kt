@@ -52,6 +52,20 @@ interface DatabaseDAO {
         idusuario: Int,
         idgrupo: Int
     ) : Boolean
+
+    suspend fun createTarea(
+        gid: Int,
+        titulo: String,
+        descripcion: String = "",
+        tipo: TaskType,
+        prioridad: Int = 0,
+        recompensaXp: Int = 0,
+        recompensaLudion: Int = 0
+    ): Int
+
+    suspend fun getTareasByGroup(gid: Int): List<EntidadTarea>
+
+    suspend fun completeTarea(tid: Int): Boolean
 }
 
 fun getDatabaseDaoImpl() : DatabaseDAO{

@@ -5,6 +5,15 @@ import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -44,8 +53,10 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.mm.astraisandroid.api.BackendRepository
 import com.mm.astraisandroid.api.LoginRequest
@@ -55,18 +66,33 @@ import com.mm.astraisandroid.api.RegisterRequest
 import com.mm.astraisandroid.ui.auth.components.AuthBackground
 import com.mm.astraisandroid.ui.auth.screens.LoginScreen
 import com.mm.astraisandroid.ui.auth.screens.RegisterScreen
+import com.mm.astraisandroid.ui.tabs.GrupoTab
+import com.mm.astraisandroid.ui.tabs.HomeTab
+import com.mm.astraisandroid.ui.tabs.PerfilTab
+import com.mm.astraisandroid.ui.tabs.TasksTab
+import com.mm.astraisandroid.ui.tabs.TiendaTab
+import kotlinx.coroutines.launch
 
 class AuthActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        setContent {
-            MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    AppNavigation()
+        val session = SessionDataStore(this)
 
-                    OcultarBotonesSistema()
+        lifecycleScope.launch {
+            val (access, refresh, gid) = session.loadSession()
+            if (access != null && refresh != null) {
+                TokenHolder.setAccessToken(access)
+                TokenHolder.setRefreshToken(refresh)
+                TokenHolder.setPersonalGid(gid)
+            }
+            setContent {
+                MaterialTheme {
+                    Surface(modifier = Modifier.fillMaxSize()) {
+                        AppNavigation(sessionDataStore = session)
+                        OcultarBotonesSistema()
+                    }
                 }
             }
         }
@@ -74,12 +100,17 @@ class AuthActivity : ComponentActivity() {
 }
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(sessionDataStore: SessionDataStore) {
+    val hasSession = remember {
+        TokenHolder.getAccessToken() != null
+    }
+
     val navController = rememberNavController()
 
     NavHost(
         navController = navController,
-        startDestination = ScreenRoutes.Login.route
+        startDestination = if (hasSession) ScreenRoutes.Home.route
+        else ScreenRoutes.Login.route
     ) {
         composable(ScreenRoutes.Login.route) {
             LoginScreen(
@@ -112,7 +143,15 @@ fun AppNavigation() {
         }
 
         composable(ScreenRoutes.Home.route) {
-            HomeScreen()
+            HomeScreen(
+                onNavigateToProfile = {
+                    navController.navigate(ScreenRoutes.Profile.route)
+                }
+            )
+        }
+
+        composable(ScreenRoutes.Profile.route) {
+            PerfilTab(onBack = { navController.popBackStack() })
         }
     }
 }
@@ -168,24 +207,75 @@ fun HomeScreen() {
 }*/
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(onNavigateToProfile: () -> Unit) {
+    val navController = rememberNavController()
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+
+    val taskViewModel: TaskViewModel = viewModel()
+
     AuthBackground {
         Scaffold(
             containerColor = Color.Transparent,
-            bottomBar = { NavBottomBar() }
+            bottomBar = {
+                NavBottomBar(
+                    selected = when (currentRoute) {
+                        "home_tab"    -> 0
+                        "tasks_tab"   -> 1
+                        "add_tab"     -> 2
+                        "profile_tab" -> 3
+                        "store_tab"   -> 4
+                        else          -> 0
+                    },
+                    onSelect = { index ->
+                        if (index == 2) {
+                            taskViewModel.openCreateDialog()
+                            return@NavBottomBar
+                        }
+                        val route = when (index) {
+                            0 -> "home_tab"
+                            1 -> "tasks_tab"
+                            3 -> "profile_tab"
+                            4 -> "store_tab"
+                            else -> "home_tab"
+                        }
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
+            }
         ) { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = 20.dp, vertical = 24.dp).consumeWindowInsets(PaddingValues(16.dp)),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+            NavHost(
+                navController = navController,
+                startDestination = "home_tab",
+                modifier = Modifier.padding(paddingValues)
             ) {
-                HomeHeader(username = "Astrais")
-                //BentoGrid()
-                //NotificationsBar(count = 8)
+                composable("home_tab") {
+                    HomeTab(onNavigateToProfile = onNavigateToProfile)
+                }
+                composable("tasks_tab") {
+                    TasksTab(viewModel = taskViewModel)
+                }
+                composable("profile_tab") { GrupoTab() }
+                composable("store_tab")   { TiendaTab() }
             }
         }
+    }
+
+    if (taskViewModel.showCreateDialog) {
+        CreateTareaDialog(
+            onDismiss = { taskViewModel.closeCreateDialog() },
+            onCreate  = { titulo, tipo, xp ->
+                taskViewModel.crearTarea(
+                    gid    = 1,
+                    titulo = titulo,
+                    tipo   = tipo,
+                    xp     = xp
+                )
+            }
+        )
     }
 }
 
@@ -226,15 +316,14 @@ fun HomeHeader(username: String) {
 }
 
 @Composable
-fun NavBottomBar() {
+fun NavBottomBar(selected: Int, onSelect: (Int) -> Unit) {
     val items = listOf(
         NavItem("Home", Icons.Filled.Home),
         NavItem("Tasks", Icons.Filled.CheckCircle),
         NavItem("Add", Icons.Filled.AddCircle),
-        NavItem("Store", Icons.Filled.ShoppingCart),
-        NavItem("Profile", Icons.Filled.Person)
+        NavItem("Groups", Icons.Filled.Person),
+        NavItem("Store", Icons.Filled.ShoppingCart)
     )
-    var selected by remember { mutableIntStateOf(0) }
 
     Row(
         modifier = Modifier
@@ -259,19 +348,40 @@ fun NavBottomBar() {
                             else -> Color.Transparent
                         }
                     )
-                    .clickable { selected = index },
+                    .clickable { onSelect(index) },
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = item.icon,
-                    contentDescription = item.title,
-                    tint = when {
-                        isCenter -> Color.Black
-                        isSelected -> Color.White
-                        else -> Color.White.copy(alpha = 0.5f)
+                AnimatedContent(
+                    targetState = isSelected && !isCenter,
+                    transitionSpec = {
+                        scaleIn(initialScale = 0.7f, animationSpec = tween(300)) +
+                                fadeIn(tween(300)) togetherWith
+                                scaleOut(targetScale = 0.7f, animationSpec = tween(300)) +
+                                fadeOut(tween(300))
                     },
-                    modifier = Modifier.size(if (isCenter) 28.dp else 22.dp)
-                )
+                    label = "tab_anim_${item.title}"
+                ) { showText ->
+                    if (showText) {
+                        Text(
+                            text = item.title,
+                            color = Color.White,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace,
+                            letterSpacing = 0.5.sp
+                        )
+                    } else {
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = item.title,
+                            tint = when {
+                                isCenter -> Color.Black
+                                else -> Color.White.copy(alpha = 0.5f)
+                            },
+                            modifier = Modifier.size(if (isCenter) 28.dp else 22.dp)
+                        )
+                    }
+                }
             }
         }
     }

@@ -28,7 +28,7 @@ data class SingleGroupOut(
 data class AllGroupsResponse(
     val groupList : List<SingleGroupOut>
 )
-
+@Serializable
 data class CreateGroupRequest(
     val name : String,
     val desc : String
@@ -36,7 +36,7 @@ data class CreateGroupRequest(
 
 fun Route.groupRoutes(){
     authenticate("access-jwt") {
-        post("/group/userGroups") {
+        get("/group/userGroups") {
             try {
                 val token = call.principal<JWTPrincipal>()
                 val uid = token?.subject?.toInt() ?: -1

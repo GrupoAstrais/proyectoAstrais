@@ -150,6 +150,28 @@ fun Route.authRoutes(){
         // TODO: Implementar Oauth
         call.respond(HttpStatusCode.BadGateway, Errors(ErrorCodes.ERR_UNIMPLEMENTED.ordinal, "The Oauth wasn't implemented yet"))
     }
+
+    authenticate("access-jwt") {
+        get("/auth/me") {
+            val uid = call.principal<JWTPrincipal>()!!.subject?.toInt()
+                ?: return@get call.respond(HttpStatusCode.Unauthorized)
+
+            val user = getDatabaseDaoImpl().getUsuarioByID(uid)
+                ?: return@get call.respond(HttpStatusCode.NotFound)
+
+            val grupos = getDatabaseDaoImpl().getGroupsOfUser(uid)
+            val gidPersonal = grupos.firstOrNull { it.es_grupo_personal }?.id?.value
+
+            call.respond(HttpStatusCode.OK, UserMeResponse(
+                id          = user.id.value,
+                nombre      = user.nombre,
+                nivel       = user.nivel,
+                xpActual    = user.xp_actual,
+                xpTotal     = user.xp_total,
+                personalGid = gidPersonal
+            ))
+        }
+    }
 }
 
 fun hashPassword(passwd : String) : String{
@@ -159,3 +181,13 @@ fun hashPassword(passwd : String) : String{
 fun checkPassword(passwd: String, hash : String) : Boolean {
     return BCrypt.verifyer().verify(passwd.toCharArray(), hash).verified
 }
+
+@Serializable
+data class UserMeResponse(
+    val id: Int,
+    val nombre: String,
+    val nivel: Int,
+    val xpActual: Int,
+    val xpTotal: Int,
+    val personalGid: Int?
+)

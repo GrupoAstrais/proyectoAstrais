@@ -52,5 +52,6 @@ fun Application.module() {
     routing {
         authRoutes()
         groupRoutes()
+        tareaRoutes()
     }
 }
