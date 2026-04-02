@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -34,6 +35,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mm.astraisandroid.api.UserMeResponse
 import com.mm.astraisandroid.ui.auth.components.AuthBackground
 
 private val CardBg         = Color.White.copy(alpha = 0.07f)
@@ -48,7 +50,7 @@ data class Friend(val initial: String, val name: String, val activeToday: Boolea
 data class ActivityItem(val text: String, val time: String)
 
 @Composable
-fun PerfilTab(onBack: () -> Unit = {}) {
+fun PerfilTab(user: UserMeResponse?, onBack: () -> Unit = {}, onLogout: () -> Unit = {}) {
     val context = LocalContext.current
     val achievements = listOf(
         Achievement("Primer logro",     true),
@@ -74,13 +76,13 @@ fun PerfilTab(onBack: () -> Unit = {}) {
     )
     fun shareProfileText() {
         val shareText = buildString {
-            appendLine("¡Mira mi perfil en Astrais!")
+            appendLine("¡Mira mi progreso en Astrais!")
             appendLine()
-            appendLine("Usuario: @soyadmin")
-            appendLine("Nivel: 14")
-            appendLine("Stats: manuel hazte la historia del limbus")
+            appendLine("Usuario: @${user?.nombre?.lowercase() ?: "usuario"}")
+            appendLine("Nivel: ${user?.nivel ?: 0}")
+            appendLine("XP Total: ${user?.xpTotal ?: 0}")
             appendLine()
-            appendLine("link: astrais.app")
+            appendLine("¡Únete en astrais.app!")
         }
 
         val shareIntent = Intent().apply {
@@ -109,17 +111,17 @@ fun PerfilTab(onBack: () -> Unit = {}) {
 
             // Hero
             ProfileHeroCard(
-                name         = "Astra",
-                username     = "@soyadmin",
-                level        = 14,
-                currentXp    = 340,
-                maxXp        = 500,
-                registerDate = "16 diciembre",
-                onShare = {shareProfileText()}
+                name         = user?.nombre ?: "Cargando...",
+                username     = "@${user?.nombre?.lowercase() ?: "..."}",
+                level        = user?.nivel ?: 0,
+                currentXp    = user?.xpActual ?: 0,
+                maxXp        = if (user != null) (user.nivel + 1) * 100 else 100,
+                registerDate = "Miembro activo",
+                onShare      = { shareProfileText() }
             )
 
             // Stats
-            StatsRow()
+            StatsRow(xpTotal = user?.xpTotal ?: 0)
 
             // Amigos
             FriendsCard(friends = friends)
@@ -129,6 +131,26 @@ fun PerfilTab(onBack: () -> Unit = {}) {
 
             // Actividad
             //ActivityCard(items = activity)
+
+            Button(
+                onClick = onLogout,
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFF4C4C)
+                ),
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            ) {
+                Text(
+                    text = "CERRAR SESIÓN",
+                    color = Color.White,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace,
+                    letterSpacing = 1.sp
+                )
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -420,7 +442,7 @@ fun XpBar(level: Int, currentXp: Int, maxXp: Int) {
 }
 
 @Composable
-fun StatsRow() {
+fun StatsRow(xpTotal: Int) {
     val shape = RoundedCornerShape(20.dp)
     Row(
         modifier = Modifier
@@ -436,7 +458,7 @@ fun StatsRow() {
         Box(modifier = Modifier.width(1.dp).height(36.dp).background(Color.White.copy(alpha = 0.1f)))
         StatItem(label = "Racha", value = "7d")
         Box(modifier = Modifier.width(1.dp).height(36.dp).background(Color.White.copy(alpha = 0.1f)))
-        StatItem(label = "XP Total", value = "1.2k")
+        StatItem(label = "XP Total", value = xpTotal.toString())
     }
 }
 

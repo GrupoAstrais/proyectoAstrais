@@ -2,6 +2,7 @@ package com.mm.astraisandroid
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -71,7 +72,11 @@ import com.mm.astraisandroid.ui.tabs.HomeTab
 import com.mm.astraisandroid.ui.tabs.PerfilTab
 import com.mm.astraisandroid.ui.tabs.TasksTab
 import com.mm.astraisandroid.ui.tabs.TiendaTab
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.LocalContext
+
+
 
 class AuthActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -106,7 +111,7 @@ fun AppNavigation(sessionDataStore: SessionDataStore) {
     }
 
     val navController = rememberNavController()
-
+    val coroutineScope = rememberCoroutineScope()
     NavHost(
         navController = navController,
         startDestination = if (hasSession) ScreenRoutes.Home.route
@@ -151,7 +156,30 @@ fun AppNavigation(sessionDataStore: SessionDataStore) {
         }
 
         composable(ScreenRoutes.Profile.route) {
-            PerfilTab(onBack = { navController.popBackStack() })
+            val userViewModel: UserViewModel = viewModel(
+                viewModelStoreOwner = LocalContext.current as ComponentActivity
+            )
+            val userData by userViewModel.userData.collectAsStateWithLifecycle()
+
+            LaunchedEffect(Unit) {
+                if (userData == null) {
+                    userViewModel.fetchUser()
+                }
+            }
+
+            PerfilTab(
+                user = userData,
+                onBack = { navController.popBackStack() },
+                onLogout = {
+                    coroutineScope.launch {
+                        sessionDataStore.clear()
+                        TokenHolder.clear()
+                        navController.navigate(ScreenRoutes.Login.route) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                }
+            )
         }
     }
 }
@@ -210,8 +238,17 @@ fun HomeScreen() {
 fun HomeScreen(onNavigateToProfile: () -> Unit) {
     val navController = rememberNavController()
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-
+    val context = LocalContext.current
     val taskViewModel: TaskViewModel = viewModel()
+    val userViewModel: UserViewModel = viewModel(
+        viewModelStoreOwner = LocalContext.current as ComponentActivity
+    )
+
+    LaunchedEffect(Unit) {
+        userViewModel.fetchUser()
+    }
+
+    val userData by userViewModel.userData.collectAsStateWithLifecycle()
 
     AuthBackground {
         Scaffold(
@@ -222,7 +259,7 @@ fun HomeScreen(onNavigateToProfile: () -> Unit) {
                         "home_tab"    -> 0
                         "tasks_tab"   -> 1
                         "add_tab"     -> 2
-                        "profile_tab" -> 3
+                        "group_tab"   -> 3
                         "store_tab"   -> 4
                         else          -> 0
                     },
@@ -234,7 +271,7 @@ fun HomeScreen(onNavigateToProfile: () -> Unit) {
                         val route = when (index) {
                             0 -> "home_tab"
                             1 -> "tasks_tab"
-                            3 -> "profile_tab"
+                            3 -> "group_tab"
                             4 -> "store_tab"
                             else -> "home_tab"
                         }
@@ -253,13 +290,19 @@ fun HomeScreen(onNavigateToProfile: () -> Unit) {
                 modifier = Modifier.padding(paddingValues)
             ) {
                 composable("home_tab") {
-                    HomeTab(onNavigateToProfile = onNavigateToProfile)
+                    HomeTab(
+                        username = userData?.nombre ?: "...",
+                        onNavigateToProfile = onNavigateToProfile
+                    )
                 }
                 composable("tasks_tab") {
-                    TasksTab(viewModel = taskViewModel)
+                    TasksTab(
+                        viewModel = taskViewModel,
+                        onTaskCompleted = { userViewModel.fetchUser() }
+                    )
                 }
-                composable("profile_tab") { GrupoTab() }
-                composable("store_tab")   { TiendaTab() }
+                composable("group_tab") { GrupoTab() }
+                composable("store_tab")   { TiendaTab(ludiones = userData?.ludiones ?: 0) }
             }
         }
     }
@@ -278,9 +321,16 @@ fun HomeScreen(onNavigateToProfile: () -> Unit) {
                         xp     = xp
                     )
                 } else {
-                    // Que no se me olvide meter aqui un toast
+                    // Para bugs que pasan con el backend al estar reiniciando
+                    Toast.makeText(
+                        context,
+                        "Error: Tu usuario no tiene grupo personal. Crea una cuenta nueva.",
+                        Toast.LENGTH_LONG
+                    ).show()
                     taskViewModel.closeCreateDialog()
                 }
+
+                taskViewModel.closeCreateDialog()
             }
         )
     }

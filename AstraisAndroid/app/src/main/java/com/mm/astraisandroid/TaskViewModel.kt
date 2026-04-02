@@ -8,8 +8,13 @@ import androidx.lifecycle.viewModelScope
 import com.mm.astraisandroid.api.BackendRepository
 import com.mm.astraisandroid.api.CreateTareaRequest
 import com.mm.astraisandroid.api.TareaResponse
+import com.mm.astraisandroid.ui.tabs.Difficulty
+import com.mm.astraisandroid.ui.tabs.TaskUIModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 sealed class TaskUIState {
@@ -31,8 +36,52 @@ class TaskViewModel : ViewModel() {
     var showCreateDialog by mutableStateOf(false)
         private set
 
+
+    private val _isShowingCompleted = MutableStateFlow(false)
+    val isShowingCompleted: StateFlow<Boolean> = _isShowingCompleted
+
+    private val _selectedCategory = MutableStateFlow("ALL")
+    val selectedCategory: StateFlow<String> = _selectedCategory
+
     fun openCreateDialog()  { showCreateDialog = true }
     fun closeCreateDialog() { showCreateDialog = false }
+
+    val uiTasks: StateFlow<List<TaskUIModel>> = combine(
+        _tareas,
+        _isShowingCompleted,
+        _selectedCategory
+    ) { tareas, showCompleted, category ->
+        val estadoBuscado = if (showCompleted) "COMPLETE" else "ACTIVE"
+
+        tareas
+            .filter { it.estado == estadoBuscado }
+            .filter { category == "ALL" || it.tipo == category }
+            .map { tarea ->
+                TaskUIModel(
+                    id = tarea.id,
+                    title = tarea.titulo,
+                    tipo = tarea.tipo,
+                    difficulty = when (tarea.prioridad) {
+                        0 -> Difficulty.EASY
+                        1 -> Difficulty.MEDIUM
+                        else -> Difficulty.HARD
+                    },
+                    xp = tarea.recompensaXp,
+                    isCompleted = tarea.estado == "COMPLETE"
+                )
+            }
+            .sortedByDescending { it.difficulty }
+
+        // stateIn convierte el Flow normal en un StateFlow para Compose
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun toggleShowingCompleted(show: Boolean) {
+        _isShowingCompleted.value = show
+    }
+
+    fun setCategory(category: String) {
+        _selectedCategory.value = category
+    }
 
     fun loadTareas(gid: Int) {
         viewModelScope.launch {
@@ -78,10 +127,13 @@ class TaskViewModel : ViewModel() {
         }
     }
 
-    fun completarTarea(tid: Int, gid: Int) {
+    fun completarTarea(tid: Int, gid: Int, onSuccess: () -> Unit = {}) {
         viewModelScope.launch {
             BackendRepository.completarTarea(tid)
-                .onSuccess { loadTareas(gid) }
+                .onSuccess {
+                    loadTareas(gid)
+                    onSuccess()
+                }
                 .onFailure { _uiState.value = TaskUIState.Error(it.message ?: "Error") }
         }
     }

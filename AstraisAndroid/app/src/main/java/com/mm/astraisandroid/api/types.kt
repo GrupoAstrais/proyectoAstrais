@@ -53,5 +53,6 @@ data class UserMeResponse(
     val nivel: Int,
     val xpActual: Int,
     val xpTotal: Int,
+    val ludiones: Int,
     val personalGid: Int?
 )

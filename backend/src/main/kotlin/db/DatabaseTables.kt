@@ -8,6 +8,7 @@ import com.astrais.db.TablaTarea.optReference
 import com.astrais.db.TablaTarea.reference
 import com.astrais.db.TablaTarea.text
 import com.astrais.db.TablaTarea.varchar
+import java.time.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.CompositeID
@@ -16,7 +17,6 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.dao.*
 import org.jetbrains.exposed.v1.datetime.date
-import java.time.LocalDate
 
 // Constantes unicos de la base de datos
 // TODO: Revisitar esto y mover los que se necesite
@@ -32,23 +32,27 @@ const val IMAGE_PATH_SIZE = 48
 
 const val CONFIRM_CODE_SIZE = 6
 
-enum class AuthProvider{
+enum class AuthProvider {
     SERVIDOR,
     GOOGLE
 }
+
 enum class UserRoles {
     NORMAL_USER,
     ADMIN_USER
 }
+
 enum class GroupRoles {
     MOD,
     USER
 }
-enum class TaskType{
+
+enum class TaskType {
     UNICO,
     OBJETIVO,
     HABITO
 }
+
 enum class TaskState {
     ACTIVE,
     COMPLETE,
@@ -60,9 +64,11 @@ object TablaUsuario : IntIdTable("Users") {
     val nombre = varchar("name", USER_NAME_LENGTH)
     // Rol del usuario
     val rol = enumerationByName<UserRoles>("role", 20).default(UserRoles.NORMAL_USER)
-    // Numero de horas de desplazamiento desde UTC+0 (Tiempo universal coordinado) (España seria UTC+1 por referencia)
+    // Numero de horas de desplazamiento desde UTC+0 (Tiempo universal coordinado) (España seria
+    // UTC+1 por referencia)
     val zona_horaria = float("utc_offset").default(0f)
-    // El idioma siguiendo la ISO 639-2/3 (Con 3 caracteres como: ESP, ENG, ITA, FRA, RUS, POR, CHN) (https://es.wikipedia.org/wiki/ISO_639-3)
+    // El idioma siguiendo la ISO 639-2/3 (Con 3 caracteres como: ESP, ENG, ITA, FRA, RUS, POR, CHN)
+    // (https://es.wikipedia.org/wiki/ISO_639-3)
     val idioma = varchar("language", 3)
     // El nivel actual del usuario
     val nivel = integer("level").default(0)
@@ -85,47 +91,47 @@ object TablaUsuario : IntIdTable("Users") {
     val email = varchar("email", USER_MAIL_LENGTH).nullable()
     // BCRYPT tiene un limite de 72 bytes
     val contrasenia = varchar("hash_passwd", 72).nullable()
-    // Dice si el mail del usuario esta confirmado. No deberia dejar meterse por mail si el email no es null y no esta confirmado.
+    // Dice si el mail del usuario esta confirmado. No deberia dejar meterse por mail si el email no
+    // es null y no esta confirmado.
     val esta_confirmado = integer("is_mail_confirmed").default(0)
 
     // TODO: Piezas de avatar
 }
 
-class EntidadUsuario(id : EntityID<Int>) : IntEntity(id) {
+class EntidadUsuario(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<EntidadUsuario>(TablaUsuario)
 
-    var nombre                   by TablaUsuario.nombre
-    var rol                      by TablaUsuario.rol
-    var zona_horaria             by TablaUsuario.zona_horaria
-    var idioma                   by TablaUsuario.idioma
-    var nivel                    by TablaUsuario.nivel
-    var xp_actual                by TablaUsuario.xp_actual
-    var xp_total                 by TablaUsuario.xp_total
-    var ludiones                 by TablaUsuario.ludiones
+    var nombre by TablaUsuario.nombre
+    var rol by TablaUsuario.rol
+    var zona_horaria by TablaUsuario.zona_horaria
+    var idioma by TablaUsuario.idioma
+    var nivel by TablaUsuario.nivel
+    var xp_actual by TablaUsuario.xp_actual
+    var xp_total by TablaUsuario.xp_total
+    var ludiones by TablaUsuario.ludiones
     var total_tareas_completadas by TablaUsuario.total_tareas_completadas
-    var racha_login_actual       by TablaUsuario.racha_login_actual
-    var racha_login_mayor        by TablaUsuario.racha_login_mayor
-    var ultimo_login             by TablaUsuario.ultimo_login
-    var email                    by TablaUsuario.email
-    var contrasenia              by TablaUsuario.contrasenia
-    var esta_confirmado          by TablaUsuario.esta_confirmado
+    var racha_login_actual by TablaUsuario.racha_login_actual
+    var racha_login_mayor by TablaUsuario.racha_login_mayor
+    var ultimo_login by TablaUsuario.ultimo_login
+    var email by TablaUsuario.email
+    var contrasenia by TablaUsuario.contrasenia
+    var esta_confirmado by TablaUsuario.esta_confirmado
 }
 
-
 object TablaConfirmacionUsuario : IntIdTable("UserConfirm") {
-    val uid                 = reference("user_id", TablaUsuario, onDelete = ReferenceOption.CASCADE)
+    val uid = reference("user_id", TablaUsuario, onDelete = ReferenceOption.CASCADE)
     val codigo_confirmacion = varchar("confirm_code", CONFIRM_CODE_SIZE)
 }
 
 class EntidadConfirmacionUsuario(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<EntidadConfirmacionUsuario>(TablaConfirmacionUsuario)
 
-    var uid                 by TablaConfirmacionUsuario.uid
+    var uid by TablaConfirmacionUsuario.uid
     var codigo_confirmacion by TablaConfirmacionUsuario.codigo_confirmacion
 }
 
 object TablaCredencialesAuth : CompositeIdTable("AuthCredentials") {
-    val uid      = reference("user_id", TablaUsuario, onDelete = ReferenceOption.CASCADE)
+    val uid = reference("user_id", TablaUsuario, onDelete = ReferenceOption.CASCADE)
     val provider = enumerationByName<AuthProvider>("provider", 16).default(AuthProvider.SERVIDOR)
     override val primaryKey = PrimaryKey(uid, provider)
 }
@@ -133,7 +139,7 @@ object TablaCredencialesAuth : CompositeIdTable("AuthCredentials") {
 class EntidadCredencialesAuth(id: EntityID<CompositeID>) : CompositeEntity(id) {
     companion object : CompositeEntityClass<EntidadCredencialesAuth>(TablaCredencialesAuth)
 
-    val uid      by TablaCredencialesAuth.uid
+    val uid by TablaCredencialesAuth.uid
     val provider by TablaCredencialesAuth.provider
 }
 
@@ -153,18 +159,19 @@ object TablaGrupo : IntIdTable("Group") {
     val descripcion = text("desc").default("")
     val owner = reference("owner_id", TablaUsuario)
 }
-class EntidadGrupo(id : EntityID<Int>) : IntEntity(id){
+
+class EntidadGrupo(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<EntidadGrupo>(TablaGrupo)
 
-    var es_grupo_personal  by TablaGrupo.es_grupo_personal
-    var nombre              by TablaGrupo.nombre
-    var descripcion         by TablaGrupo.descripcion
-    var owner               by TablaGrupo.owner
+    var es_grupo_personal by TablaGrupo.es_grupo_personal
+    var nombre by TablaGrupo.nombre
+    var descripcion by TablaGrupo.descripcion
+    var owner by TablaGrupo.owner
 }
 
 object TablaGrupoUsuario : CompositeIdTable("RelGroupUser") {
-    val gid  = reference("group_id", TablaGrupo, onDelete = ReferenceOption.CASCADE)
-    val uid  = reference("user_id", TablaUsuario, onDelete = ReferenceOption.CASCADE)
+    val gid = reference("group_id", TablaGrupo, onDelete = ReferenceOption.CASCADE)
+    val uid = reference("user_id", TablaUsuario, onDelete = ReferenceOption.CASCADE)
     val role = enumerationByName<GroupRoles>("role", 25)
     override val primaryKey = PrimaryKey(gid, uid)
 }
@@ -172,13 +179,13 @@ object TablaGrupoUsuario : CompositeIdTable("RelGroupUser") {
 class EntidadGrupoUsuario(id: EntityID<CompositeID>) : CompositeEntity(id) {
     companion object : CompositeEntityClass<EntidadGrupoUsuario>(TablaGrupoUsuario)
 
-    var gid  by TablaGrupoUsuario.gid
-    var uid  by TablaGrupoUsuario.uid
+    var gid by TablaGrupoUsuario.gid
+    var uid by TablaGrupoUsuario.uid
     var role by TablaGrupoUsuario.role
 }
 
-object TablaTarea : IntIdTable("Task"){
-    val id_grupo = reference("gid",TablaGrupo, onDelete = ReferenceOption.CASCADE)
+object TablaTarea : IntIdTable("Task") {
+    val id_grupo = reference("gid", TablaGrupo, onDelete = ReferenceOption.CASCADE)
     val titulo = varchar("title", TAREA_TITLE_LENGTH)
     val descripcion = text("desc").default("")
     val tipo = enumerationByName<TaskType>("type", 16)
@@ -190,14 +197,18 @@ object TablaTarea : IntIdTable("Task"){
     val recompensa_xp = integer("reward_xp").default(0)
     val recompensa_ludion = integer("reward_ludion").default(0)
 
-    val id_objetivo = optReference("objective_id",TablaTareaObjetivo, onDelete = ReferenceOption.CASCADE)
+    val recompensa_reclamada = bool("reward_claimed").default(false)
+
+    val id_objetivo =
+            optReference("objective_id", TablaTareaObjetivo, onDelete = ReferenceOption.CASCADE)
 }
+
 class EntidadTarea(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<EntidadTarea>(TablaTarea)
 
     var id_grupo by TablaTarea.id_grupo
-    var titulo  by TablaTarea.titulo
-    var descripcion  by TablaTarea.descripcion
+    var titulo by TablaTarea.titulo
+    var descripcion by TablaTarea.descripcion
     var tipo by TablaTarea.tipo
     var estado by TablaTarea.estado
     var prioridad by TablaTarea.prioridad
@@ -207,18 +218,22 @@ class EntidadTarea(id: EntityID<Int>) : IntEntity(id) {
     var recompensa_xp by TablaTarea.recompensa_xp
     var recompensa_ludion by TablaTarea.recompensa_ludion
 
+    var recompensa_reclamada by TablaTarea.recompensa_reclamada
+
     var id_objetivo by TablaTarea.id_objetivo
 }
 
-object TablaTareaUnica : IntIdTable("TaskUnique"){
+object TablaTareaUnica : IntIdTable("TaskUnique") {
     val id_tarea = reference("tid", TablaTarea, onDelete = ReferenceOption.CASCADE)
     val fecha_vencimiento = date("due_date").nullable()
 }
-object TablaTareaObjetivo : IntIdTable("TaskObjective"){
+
+object TablaTareaObjetivo : IntIdTable("TaskObjective") {
     val id_tarea = reference("tid", TablaTarea, onDelete = ReferenceOption.CASCADE)
     val fecha_limite = date("due_date").nullable()
 }
-object TablaTareaHabito : IntIdTable("TaskHabit"){
+
+object TablaTareaHabito : IntIdTable("TaskHabit") {
     val id_tarea = reference("tid", TablaTarea, onDelete = ReferenceOption.CASCADE)
     val racha_actual = integer("current_streak")
     val mejor_racha = integer("best_streak")

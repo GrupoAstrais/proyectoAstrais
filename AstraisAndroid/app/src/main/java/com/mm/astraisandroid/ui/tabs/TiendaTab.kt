@@ -89,7 +89,7 @@ data class CategoriaTienda(
 )
 
 @Composable
-fun TiendaTab() {
+fun TiendaTab(ludiones: Int) {
     var selectedTab by remember { mutableStateOf(0) }
     var query by remember { mutableStateOf("") }
 
@@ -147,7 +147,7 @@ fun TiendaTab() {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // Header
-            TiendaHeader()
+            TiendaHeader(ludiones = ludiones)
 
             // Subtitle
             Text(
@@ -181,7 +181,7 @@ fun TiendaTab() {
 }
 
 @Composable
-fun TiendaHeader() {
+fun TiendaHeader(ludiones: Int) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -206,7 +206,7 @@ fun TiendaHeader() {
                 modifier = Modifier.size(18.dp)
             )
             Text(
-                text = "125",
+                text = "${ludiones.toString()}",
                 color = Color.White,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,

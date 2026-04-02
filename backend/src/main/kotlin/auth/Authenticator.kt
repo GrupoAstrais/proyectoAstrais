@@ -14,50 +14,63 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
-import java.lang.Error
+
+@Serializable data class LoginRequest(val email: String, val passwd: String)
+
+@Serializable data class LoginResponse(val jwtAccessToken: String, val jwtRefreshToken: String)
 
 @Serializable
-data class LoginRequest(val email : String, val passwd : String)
-@Serializable
-data class LoginResponse(val jwtAccessToken : String, val jwtRefreshToken : String)
+data class RegisterRequest(
+        val name: String,
+        val email: String,
+        val passwd: String,
+        val lang: String,
+        val utcOffset: Float = 0f
+)
 
-@Serializable
-data class RegisterRequest(val name : String, val email: String, val passwd: String, val lang : String, val utcOffset : Float = 0f)
+@Serializable data class MailVerifierRequest(val email: String, val code: String)
 
-@Serializable
-data class MailVerifierRequest(val email: String, val code : String)
+@Serializable data class RegenAccessResponse(val newAccessToken: String)
 
-@Serializable
-data class RegenAccessResponse(val newAccessToken : String)
-
-fun Application.installAuth(){
-    install(Authentication){
+fun Application.installAuth() {
+    install(Authentication) {
         this@installAuth.initOauth(this)
         this@installAuth.initJWT(this)
     }
 }
 
-fun Route.authRoutes(){
+fun Route.authRoutes() {
     post("/auth/login") {
         // Se hace el login normal y devuelve su JWT
         try {
             val request = call.receive<LoginRequest>()
 
             // Comprobacion si alguno de los campos esta vacio
-            if (request.email.isBlank() || request.passwd.isBlank()){
-                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_BLANKVALUE.ordinal, "One of the strings is blank"))
+            if (request.email.isBlank() || request.passwd.isBlank()) {
+                call.respond(
+                        HttpStatusCode.BadRequest,
+                        Errors(ErrorCodes.ERR_BLANKVALUE.ordinal, "One of the strings is blank")
+                )
                 return@post
             }
 
             val jwt = getAuthRepoImpl().performBasicLogin(request)
-            if (jwt == null){
-                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "The user does not exist"))
-            }else{
+            if (jwt == null) {
+                call.respond(
+                        HttpStatusCode.BadRequest,
+                        Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "The user does not exist")
+                )
+            } else {
                 call.respond(HttpStatusCode.OK, jwt)
             }
-
-        } catch (e : BadRequestException){
-            call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "The data sent by the client was not in the accepted format"))
+        } catch (e: BadRequestException) {
+            call.respond(
+                    HttpStatusCode.BadRequest,
+                    Errors(
+                            ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal,
+                            "The data sent by the client was not in the accepted format"
+                    )
+            )
         }
     }
 
@@ -67,30 +80,58 @@ fun Route.authRoutes(){
             val request = call.receive<RegisterRequest>()
 
             // Comprobacion si alguno de los campos esta vacio
-            if (request.email.isBlank() || request.name.isBlank() || request.passwd.isBlank() || request.lang.isBlank()){
-                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_BLANKVALUE.ordinal, "One of the strings is blank"))
+            if (request.email.isBlank() ||
+                            request.name.isBlank() ||
+                            request.passwd.isBlank() ||
+                            request.lang.isBlank()
+            ) {
+                call.respond(
+                        HttpStatusCode.BadRequest,
+                        Errors(ErrorCodes.ERR_BLANKVALUE.ordinal, "One of the strings is blank")
+                )
                 return@post
             }
 
             // Comprueba si el lenguaje es correcto
-            if (request.lang.length != 3){
-                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "Language is not following ISO 639-2"))
+            if (request.lang.length != 3) {
+                call.respond(
+                        HttpStatusCode.BadRequest,
+                        Errors(
+                                ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal,
+                                "Language is not following ISO 639-2"
+                        )
+                )
                 return@post
-            } else if (!supportedLanguages.contains(request.lang)){
-                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_BADVALUE.ordinal, "Language ${request.lang} is not supported"))
+            } else if (!supportedLanguages.contains(request.lang)) {
+                call.respond(
+                        HttpStatusCode.BadRequest,
+                        Errors(
+                                ErrorCodes.ERR_BADVALUE.ordinal,
+                                "Language ${request.lang} is not supported"
+                        )
+                )
                 return@post
             }
 
             // Registra al usuario
-            if (getAuthRepoImpl().performBasicRegister(request)){
-                // Se envia eso ya que no me acuerdo en que frontend, pero descartaba los mensajes sin cuerpo.
+            if (getAuthRepoImpl().performBasicRegister(request)) {
+                // Se envia eso ya que no me acuerdo en que frontend, pero descartaba los mensajes
+                // sin cuerpo.
                 call.respond(HttpStatusCode.OK, mapOf("aknowledged" to true))
-            }else{
-                call.respond(HttpStatusCode.Conflict, Errors(ErrorCodes.ERR_RESOURCEALREADYEXISTS.ordinal, "User already exists"))
+            } else {
+                call.respond(
+                        HttpStatusCode.Conflict,
+                        Errors(ErrorCodes.ERR_RESOURCEALREADYEXISTS.ordinal, "User already exists")
+                )
             }
-
-        } catch (e : BadRequestException){
-            call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "The data sent by the client was not in the accepted format"))
+        } catch (e: BadRequestException) {
+            call.respond(
+                    HttpStatusCode.BadRequest,
+                    Errors(
+                            ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal,
+                            "The data sent by the client was not in the accepted format"
+                    )
+            )
         }
     }
 
@@ -100,23 +141,46 @@ fun Route.authRoutes(){
             // Regenera un AccessToken
             try {
                 val token = call.principal<JWTPrincipal>()
-                if (token == null){
+                if (token == null) {
                     // No deberia ser null, pero se hace la comprobacion por si acaso
-                    call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "Invalid/Missing refresh token"))
+                    call.respond(
+                            HttpStatusCode.Unauthorized,
+                            Errors(
+                                    ErrorCodes.ERR_INVALIDTOKEN.ordinal,
+                                    "Invalid/Missing refresh token"
+                            )
+                    )
                     return@post
                 }
 
                 val user = getAuthRepoImpl().regenAccessToken(token.subject?.toInt() ?: 0)
-                if (user == null){
-                    call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "Error regenerating the access token!"))
-                }else{
+                if (user == null) {
+                    call.respond(
+                            HttpStatusCode.Unauthorized,
+                            Errors(
+                                    ErrorCodes.ERR_RESOURCEMISSING.ordinal,
+                                    "Error regenerating the access token!"
+                            )
+                    )
+                } else {
                     call.respond(HttpStatusCode.OK, RegenAccessResponse(user))
                 }
-
-            } catch (e : BadRequestException){
-                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "The data sent by the client was not in the accepted format"))
-            } catch (e : NumberFormatException) {
-                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "The subject of the token is invalid"))
+            } catch (e: BadRequestException) {
+                call.respond(
+                        HttpStatusCode.BadRequest,
+                        Errors(
+                                ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal,
+                                "The data sent by the client was not in the accepted format"
+                        )
+                )
+            } catch (e: NumberFormatException) {
+                call.respond(
+                        HttpStatusCode.BadRequest,
+                        Errors(
+                                ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal,
+                                "The subject of the token is invalid"
+                        )
+                )
             }
         }
     }
@@ -125,22 +189,42 @@ fun Route.authRoutes(){
         post("/auth/deleteUser") {
             try {
                 val token = call.principal<JWTPrincipal>()
-                if (token == null){
+                if (token == null) {
                     // No deberia ser null, pero se hace la comprobacion por si acaso
-                    call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "Invalid/Missing refresh token"))
+                    call.respond(
+                            HttpStatusCode.Unauthorized,
+                            Errors(
+                                    ErrorCodes.ERR_INVALIDTOKEN.ordinal,
+                                    "Invalid/Missing refresh token"
+                            )
+                    )
                     return@post
                 }
 
-                if (getAuthRepoImpl().deleteUser(token.subject?.toInt() ?: 0)){
+                if (getAuthRepoImpl().deleteUser(token.subject?.toInt() ?: 0)) {
                     call.respond(HttpStatusCode.OK, arrayOf("aknowledged" to true))
-                }else{
-                    call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "Couldn't delete the user"))
+                } else {
+                    call.respond(
+                            HttpStatusCode.BadRequest,
+                            Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "Couldn't delete the user")
+                    )
                 }
-
-            } catch (e : BadRequestException){
-                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "The data sent by the client was not in the accepted format"))
-            } catch (e : NumberFormatException) {
-                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "The subject of the token is invalid"))
+            } catch (e: BadRequestException) {
+                call.respond(
+                        HttpStatusCode.BadRequest,
+                        Errors(
+                                ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal,
+                                "The data sent by the client was not in the accepted format"
+                        )
+                )
+            } catch (e: NumberFormatException) {
+                call.respond(
+                        HttpStatusCode.BadRequest,
+                        Errors(
+                                ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal,
+                                "The subject of the token is invalid"
+                        )
+                )
             }
         }
     }
@@ -148,46 +232,56 @@ fun Route.authRoutes(){
     post("/auth/google") {
         // Se loguea con google y devuelve su JWT
         // TODO: Implementar Oauth
-        call.respond(HttpStatusCode.BadGateway, Errors(ErrorCodes.ERR_UNIMPLEMENTED.ordinal, "The Oauth wasn't implemented yet"))
+        call.respond(
+                HttpStatusCode.BadGateway,
+                Errors(ErrorCodes.ERR_UNIMPLEMENTED.ordinal, "The Oauth wasn't implemented yet")
+        )
     }
 
     authenticate("access-jwt") {
         get("/auth/me") {
-            val uid = call.principal<JWTPrincipal>()!!.subject?.toInt()
-                ?: return@get call.respond(HttpStatusCode.Unauthorized)
+            val uid =
+                    call.principal<JWTPrincipal>()!!.subject?.toInt()
+                            ?: return@get call.respond(HttpStatusCode.Unauthorized)
 
-            val user = getDatabaseDaoImpl().getUsuarioByID(uid)
-                ?: return@get call.respond(HttpStatusCode.NotFound)
+            val user =
+                    getDatabaseDaoImpl().getUsuarioByID(uid)
+                            ?: return@get call.respond(HttpStatusCode.NotFound)
 
             val grupos = getDatabaseDaoImpl().getGroupsOfUser(uid)
             val gidPersonal = grupos.firstOrNull { it.es_grupo_personal }?.id?.value
 
-            call.respond(HttpStatusCode.OK, UserMeResponse(
-                id          = user.id.value,
-                nombre      = user.nombre,
-                nivel       = user.nivel,
-                xpActual    = user.xp_actual,
-                xpTotal     = user.xp_total,
-                personalGid = gidPersonal
-            ))
+            call.respond(
+                    HttpStatusCode.OK,
+                    UserMeResponse(
+                            id = user.id.value,
+                            nombre = user.nombre,
+                            nivel = user.nivel,
+                            xpActual = user.xp_actual,
+                            xpTotal = user.xp_total,
+                            ludiones = user.ludiones,
+                            personalGid = gidPersonal
+                    )
+            )
         }
     }
 }
 
-fun hashPassword(passwd : String) : String{
+fun hashPassword(passwd: String): String {
     return BCrypt.withDefaults().hashToString(8, passwd.toCharArray())
 }
 
-fun checkPassword(passwd: String, hash : String) : Boolean {
+fun checkPassword(passwd: String, hash: String): Boolean {
     return BCrypt.verifyer().verify(passwd.toCharArray(), hash).verified
 }
 
 @Serializable
 data class UserMeResponse(
-    val id: Int,
-    val nombre: String,
-    val nivel: Int,
-    val xpActual: Int,
-    val xpTotal: Int,
-    val personalGid: Int?
+        val id: Int,
+        val nombre: String,
+        val nivel: Int,
+        val xpActual: Int,
+        val xpTotal: Int,
+        val ludiones: Int,
+        val personalGid: Int?
 )

@@ -61,7 +61,7 @@ object BackendRepository {
             contentType(ContentType.Application.Json)
             setBody(request)
         }
-        if (req.status != HttpStatusCode.OK) {
+        if (req.status != HttpStatusCode.OK && req.status != HttpStatusCode.Created) {
             val errResponse = req.body<ServerErrorResponse>()
             val mensaje = errResponse.errorText ?: errResponse.error ?: "Error desconocido"
             error("Error: $mensaje")
