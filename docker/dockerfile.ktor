@@ -1,6 +1,8 @@
 FROM gradle:8.13-jdk21 AS build
 WORKDIR /home/gradle/src
 COPY --chown=gradle:gradle backend /home/gradle/src
+
+RUN echo "Building server..."
 RUN gradle buildFatJar --no-daemon
 
 FROM amazoncorretto:22 AS runtime
