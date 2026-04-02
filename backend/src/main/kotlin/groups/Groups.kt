@@ -99,6 +99,7 @@ fun Route.groupRoutes(){
                     AddUserReturn.NOGROUP -> call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "GID invalid"))
                     AddUserReturn.ALREADYJOINED -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEALREADYEXISTS.ordinal, "User already joined the group"))
                     AddUserReturn.NOPERMISSION -> call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "User doesn't have the permission to add people"))
+                    AddUserReturn.CONNERR -> call.respond(HttpStatusCode.NotAcceptable, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Error with the database"))
                 }
 
             } catch (e : BadRequestException){

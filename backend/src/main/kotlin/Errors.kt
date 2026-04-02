@@ -20,7 +20,9 @@ enum class ErrorCodes {
     /** El recurso no se puede crear */
     ERR_RESOURCENOTCREATED,
 
-    EER_FORBIDDEN
+    EER_FORBIDDEN,
+    /** Error interno importante */
+    ERR_INTERNALERROR
 }
 
 @Serializable

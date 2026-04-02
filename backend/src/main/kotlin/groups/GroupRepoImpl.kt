@@ -44,33 +44,38 @@ class GroupRepoImpl : GroupRepo{
             log.debug("Created group with ID $gid for owner $ownerId")
             return gid
         } catch (e : ExposedSQLException){
-            log.error("Error creating the group $name for $ownerId")
+            log.error("Error creating the group $name for $ownerId. Message: ${e.message}")
         }
         return -1
     }
 
     override suspend fun addUser(requesterId: Int, userId: Int, gid: Int): AddUserReturn {
-        val gp = getDatabaseDaoImpl().getGroupById(gid) ?: return AddUserReturn.NOGROUP
-        var role = ROLE_USEROWNER
+        try {
+            val gp = getDatabaseDaoImpl().getGroupById(gid) ?: return AddUserReturn.NOGROUP
+            var role = ROLE_USEROWNER
 
-        if (gp.owner.value != requesterId){
-            val d = getDatabaseDaoImpl().getUserRoleOnGroup(idusuario = requesterId, idgrupo = gid)
-            role = if (d == GroupRoles.MOD){
-                ROLE_USERMOD
-            }else{
-                ROLE_USERNORMAL
+            if (gp.owner.value != requesterId){
+                val d = getDatabaseDaoImpl().getUserRoleOnGroup(idusuario = requesterId, idgrupo = gid)
+                role = if (d == GroupRoles.MOD){
+                    ROLE_USERMOD
+                }else{
+                    ROLE_USERNORMAL
+                }
             }
-        }
 
-        if (role != ROLE_USERNORMAL){
-            val add = getDatabaseDaoImpl().addUserToGroup(userId, gid)
-            if (add){
-                return AddUserReturn.OK
-            }else{
-                return AddUserReturn.ALREADYJOINED
+            if (role != ROLE_USERNORMAL){
+                val add = getDatabaseDaoImpl().addUserToGroup(userId, gid)
+                if (add){
+                    return AddUserReturn.OK
+                }else{
+                    return AddUserReturn.ALREADYJOINED
+                }
             }
+            return AddUserReturn.NOPERMISSION
+        } catch (e : ExposedSQLException){
+            log.error("Couldn't add $userId to $gid with requester $requesterId. Message: ${e.message}")
+            return AddUserReturn.CONNERR
         }
-        return AddUserReturn.NOPERMISSION
     }
 }
 

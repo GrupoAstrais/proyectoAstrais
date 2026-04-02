@@ -9,7 +9,8 @@ enum class AddUserReturn {
     OK,
     NOGROUP,
     ALREADYJOINED,
-    NOPERMISSION
+    NOPERMISSION,
+    CONNERR
 }
 
 interface GroupRepo {
