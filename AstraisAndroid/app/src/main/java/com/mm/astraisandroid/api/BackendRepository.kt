@@ -19,8 +19,10 @@ object BackendRepository {
             contentType(ContentType.Application.Json)
             setBody(request)
         }
-        if (req.status != HttpStatusCode.OK){
-            error("Error del servidor! Error enviado: " + req.body<ServerErrorResponse>().error)
+        if (req.status != HttpStatusCode.OK) {
+            val errResponse = req.body<ServerErrorResponse>()
+            val mensaje = errResponse.errorText ?: errResponse.error ?: "Error desconocido"
+            error("Error: $mensaje")
         }
 
         // Devuelve el body
@@ -36,8 +38,10 @@ object BackendRepository {
         if (req.status == HttpStatusCode.OK){
             return@runCatching
         } else {
-            error("Error del servidor! Envio "+ req.status.toString() + "! Mensaje: " + req.body<ServerErrorResponse>().error)
-        }
+            val errResponse = req.body<ServerErrorResponse>()
+            val mensaje = errResponse.errorText ?: errResponse.error ?: "Error desconocido"
+            error("Error: $mensaje")
+    }
     }
 
     suspend fun getTareas(gid: Int): Result<List<TareaResponse>> = runCatching {
@@ -45,7 +49,9 @@ object BackendRepository {
             contentType(ContentType.Application.Json)
         }
         if (req.status != HttpStatusCode.OK) {
-            error("Error: " + req.body<ServerErrorResponse>().error)
+            val errResponse = req.body<ServerErrorResponse>()
+            val mensaje = errResponse.errorText ?: errResponse.error ?: "Error desconocido"
+            error("Error: $mensaje")
         }
         req.body<List<TareaResponse>>()
     }
@@ -55,8 +61,10 @@ object BackendRepository {
             contentType(ContentType.Application.Json)
             setBody(request)
         }
-        if (req.status != HttpStatusCode.Created) {
-            error("Error: " + req.body<ServerErrorResponse>().error)
+        if (req.status != HttpStatusCode.OK) {
+            val errResponse = req.body<ServerErrorResponse>()
+            val mensaje = errResponse.errorText ?: errResponse.error ?: "Error desconocido"
+            error("Error: $mensaje")
         }
     }
 
@@ -65,14 +73,18 @@ object BackendRepository {
             contentType(ContentType.Application.Json)
         }
         if (req.status != HttpStatusCode.OK) {
-            error("Error: " + req.body<ServerErrorResponse>().error)
+            val errResponse = req.body<ServerErrorResponse>()
+            val mensaje = errResponse.errorText ?: errResponse.error ?: "Error desconocido"
+            error("Error: $mensaje")
         }
     }
 
     suspend fun getMe(): Result<UserMeResponse> = runCatching {
         val req = client.get("$BASE_URL/auth/me")
         if (req.status != HttpStatusCode.OK) {
-            error("Error: " + req.body<ServerErrorResponse>().error)
+            val errResponse = req.body<ServerErrorResponse>()
+            val mensaje = errResponse.errorText ?: errResponse.error ?: "Error desconocido"
+            error("Error: $mensaje")
         }
         req.body<UserMeResponse>()
     }

@@ -268,12 +268,19 @@ fun HomeScreen(onNavigateToProfile: () -> Unit) {
         CreateTareaDialog(
             onDismiss = { taskViewModel.closeCreateDialog() },
             onCreate  = { titulo, tipo, xp ->
-                taskViewModel.crearTarea(
-                    gid    = 1,
-                    titulo = titulo,
-                    tipo   = tipo,
-                    xp     = xp
-                )
+                val userGid = TokenHolder.getPersonalGid()
+
+                if (userGid != null) {
+                    taskViewModel.crearTarea(
+                        gid    = userGid,
+                        titulo = titulo,
+                        tipo   = tipo,
+                        xp     = xp
+                    )
+                } else {
+                    // Que no se me olvide meter aqui un toast
+                    taskViewModel.closeCreateDialog()
+                }
             }
         )
     }

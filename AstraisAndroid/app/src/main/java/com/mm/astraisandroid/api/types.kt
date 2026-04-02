@@ -17,7 +17,11 @@ data class MailVerifierRequest(val email: String, val code : String)
 data class RegenAccessResponse(val newAccessToken : String)
 
 @Serializable
-data class ServerErrorResponse(val error : String)
+data class ServerErrorResponse(
+    val errorCode: Int? = null,
+    val errorText: String? = null,
+    val error: String? = null
+)
 
 @Serializable
 data class CreateTareaRequest(

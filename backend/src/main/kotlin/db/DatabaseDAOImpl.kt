@@ -99,8 +99,9 @@ class DatabaseDAOImpl : DatabaseDAO {
 
     override suspend fun getUserRoleOnGroup(idusuario: Int, idgrupo: Int): GroupRoles? {
         return suspendTransaction {
-            EntidadGrupoUsuario.find{
-                TablaGrupoUsuario.gid.eq(EntityID(idgrupo, TablaGrupo))
+            EntidadGrupoUsuario.find {
+                (TablaGrupoUsuario.gid eq EntityID(idgrupo, TablaGrupo)) and
+                        (TablaGrupoUsuario.uid eq EntityID(idusuario, TablaUsuario))
             }.singleOrNull()?.role
         }
     }
