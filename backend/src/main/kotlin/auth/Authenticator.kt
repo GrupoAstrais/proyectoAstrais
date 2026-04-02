@@ -186,7 +186,7 @@ fun Route.authRoutes() {
     }
 
     authenticate("access-jwt") {
-        post("/auth/deleteUser") {
+        delete("/auth/deleteUser") {
             try {
                 val token = call.principal<JWTPrincipal>()
                 if (token == null) {
@@ -198,7 +198,7 @@ fun Route.authRoutes() {
                                     "Invalid/Missing refresh token"
                             )
                     )
-                    return@post
+                    return@delete
                 }
 
                 if (getAuthRepoImpl().deleteUser(token.subject?.toInt() ?: 0)) {

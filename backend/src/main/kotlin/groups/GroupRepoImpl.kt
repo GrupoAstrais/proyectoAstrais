@@ -1,5 +1,6 @@
 package com.astrais.groups
 
+import com.astrais.*
 import com.astrais.db.GroupRoles
 import com.astrais.db.getDatabaseDaoImpl
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
@@ -46,6 +47,30 @@ class GroupRepoImpl : GroupRepo{
             log.error("Error creating the group $name for $ownerId")
         }
         return -1
+    }
+
+    override suspend fun addUser(requesterId: Int, userId: Int, gid: Int): AddUserReturn {
+        val gp = getDatabaseDaoImpl().getGroupById(gid) ?: return AddUserReturn.NOGROUP
+        var role = ROLE_USEROWNER
+
+        if (gp.owner.value != requesterId){
+            val d = getDatabaseDaoImpl().getUserRoleOnGroup(idusuario = requesterId, idgrupo = gid)
+            role = if (d == GroupRoles.MOD){
+                ROLE_USERMOD
+            }else{
+                ROLE_USERNORMAL
+            }
+        }
+
+        if (role != ROLE_USERNORMAL){
+            val add = getDatabaseDaoImpl().addUserToGroup(userId, gid)
+            if (add){
+                return AddUserReturn.OK
+            }else{
+                return AddUserReturn.ALREADYJOINED
+            }
+        }
+        return AddUserReturn.NOPERMISSION
     }
 }
 
