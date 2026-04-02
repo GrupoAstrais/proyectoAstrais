@@ -27,9 +27,9 @@ dependencies {
     implementation(libs.ktor.server.host.common)
     implementation(libs.kotlin.asyncapi.ktor)
     implementation(libs.ktor.network.tls)
-    implementation(libs.ktor.server.websockets)
 
     implementation(libs.ktor.server.cors)
+    implementation(libs.ktor.server.status.pages)
 
     // Serializacion por JSON
     implementation(libs.ktor.server.content.negotiation)
@@ -55,4 +55,7 @@ dependencies {
     implementation(libs.ktor.server.config.yaml)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
+
+
+    testImplementation(libs.ktor.server.test.host)
 }

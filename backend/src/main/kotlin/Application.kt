@@ -9,8 +9,11 @@ import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.ktor.server.plugins.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 
@@ -47,6 +50,21 @@ fun Application.module() {
         allowNonSimpleContentTypes = true
         allowMethod(HttpMethod.Post)
         allowMethod(HttpMethod.Get)
+    }
+
+
+    install(StatusPages) {
+        exception<BadRequestException> { call, _ ->
+            call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "The data sent by the client was not in the accepted format"))
+        }
+
+        exception<NumberFormatException> { call, _ ->
+            call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "Couldn't parse to int (Likely the UID)"))
+        }
+
+        exception<Exception> { call, except ->
+            call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Unknown exception happened while processing. Message: ${except.message}"))
+        }
     }
 
     routing {
