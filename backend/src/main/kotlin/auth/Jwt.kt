@@ -105,7 +105,7 @@ public fun Application.initJWT(authenticationConfig: AuthenticationConfig) {
 
         // Si tiene error, responde con ese texto
         challenge { _, _ ->
-            call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "Invalid/expired token"))
+            call.respond(HttpStatusCode.Forbidden, Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "Invalid/expired token"))
         }
     }
 
@@ -122,7 +122,7 @@ public fun Application.initJWT(authenticationConfig: AuthenticationConfig) {
 
         // Si tiene error, responde con ese texto
         challenge { _, _ ->
-            call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "Invalid/expired token"))
+            call.respond(HttpStatusCode.Forbidden, Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "Invalid/expired token"))
         }
     }
 }

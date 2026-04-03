@@ -35,6 +35,8 @@ dependencies {
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
 
+    implementation(libs.ktor.server.sse)
+
     // Exposed
     val exposed_ver = "1.0.0"
     implementation("org.jetbrains.exposed:exposed-core:$exposed_ver")

@@ -5,6 +5,8 @@ import com.astrais.auth.authRoutes
 import com.astrais.auth.installAuth
 import com.astrais.db.initDatabase
 import com.astrais.groups.groupRoutes
+import installSSE
+import io.ktor.client.plugins.sse.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -19,6 +21,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import java.io.File
 import kotlinx.serialization.json.Json
+import sseRoutes
 import storeRoutes
 
 const val POSTGRES_PORT = "5432"
@@ -72,12 +75,15 @@ fun Application.module() {
         }
     }
 
+    installSSE()
+
     routing {
         authRoutes()
         groupRoutes()
         tareaRoutes()
         storeRoutes()
         adminRoutes()
+        sseRoutes()
 
         staticResources("/static", "static") {}
 
