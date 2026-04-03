@@ -8,6 +8,7 @@ import Task from '../../components/ui/Task';
 import React from 'react'
 import Achiv from '../../components/ui/Achiv'
 import Modal from '../../components/modales/Modal'
+import { NavLink } from 'react-router'
 
 export default function Home() {
   const tarea: ITarea = {
@@ -52,9 +53,9 @@ export default function Home() {
           </header>
           <div className="grid w-2/3 grid-cols-1 gap-2.5 sm:grid-cols-2">
             <button onClick={() => setIsOpen(true)} className="cursor-pointer rounded-xl border border-transparent bg-[linear-gradient(90deg,#8b5cf6,#3b82f6)] px-3 py-2 text-[#f8f9ff] transition-colors duration-200">Crear tarea</button>
-            <button className="cursor-pointer rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-[#f8f9ff] transition-colors duration-200 hover:bg-white/20">Unirme a un grupo</button>
-            <button className="cursor-pointer rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-[#f8f9ff] transition-colors duration-200 hover:bg-white/20">Ver agenda</button>
-            <button className="cursor-pointer rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-[#f8f9ff] transition-colors duration-200 hover:bg-white/20">Reclamar recompensa</button>
+            <NavLink  className="cursor-pointer text-center rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-[#f8f9ff] transition-colors duration-200 hover:bg-white/20" to="/groups"><button>Crear un grupo</button></NavLink>
+            <NavLink  className="cursor-pointer text-center rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-[#f8f9ff] transition-colors duration-200 hover:bg-white/20" to="/profile"><button>Ver perfil</button></NavLink>
+            <NavLink className="cursor-pointer text-center rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-[#f8f9ff] transition-colors duration-200 hover:bg-white/20" to="/"><button >Cambiar la mascota</button></NavLink>
           </div>
           <img
             className="absolute -bottom-7 -right-56"
@@ -65,11 +66,16 @@ export default function Home() {
 
         <div className="grid w-full grid-cols-1 gap-4 lg:grid-cols-3">
           {/* Tareas Pendientes */}
+          
           <article className="rounded-2xl border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-4 shadow-[0_15px_32px_#090b1f59]">
             <header className="mb-3">
-              <h2 className="font-['Press_Start_2P'] text-lg">Tareas Pendientes</h2>
+              <NavLink to="/tasks">
+                <h2 className="font-['Press_Start_2P'] text-lg">Tareas Pendientes</h2>
+              </NavLink>
             </header>
             <div className="flex flex-col gap-3">
+              <Task data={tarea} />
+              <Task data={tarea} />
               <Task data={tarea} />
             </div>
           </article>
@@ -78,14 +84,16 @@ export default function Home() {
           <div className="flex flex-col gap-4 lg:col-span-2">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/* Tienda */}
-              <article className="rounded-2xl border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-4 shadow-[0_15px_32px_#090b1f59]">
-                <header className="mb-3">
-                  <h2 className="font-['Press_Start_2P'] text-lg">Tienda</h2>
-                </header>
-                <button className="w-full">
-                  <img src={shop} className="aspect-video max-w-full rounded-lg object-cover" alt="Tienda" />
-                </button>
-              </article>
+              <NavLink to="/shop">
+                <article className="rounded-2xl border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-4 shadow-[0_15px_32px_#090b1f59]">
+                  <header className="mb-3">
+                    <h2 className="font-['Press_Start_2P'] text-lg">Tienda</h2>
+                  </header>
+                  <button className="w-full">
+                    <img src={shop} className="aspect-video max-w-full rounded-lg object-cover" alt="Tienda" />
+                  </button>
+                </article>
+              </NavLink>
 
               {/* Notificaciones + Logros */}
               <div className="flex flex-col gap-4">
@@ -98,16 +106,18 @@ export default function Home() {
                   </header>
                 </article>
 
-                <article className="flex h-full flex-col gap-4 rounded-2xl border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-4 shadow-[0_15px_32px_#090b1f59]">
-                  <header className="mb-3">
-                    <h2 className="font-['Press_Start_2P'] text-lg">Logros</h2>
-                  </header>
-                  <div className="flex flex-row justify-between">
-                    <Achiv />
-                    <Achiv />
-                    <Achiv />
-                  </div>
-                </article>
+                <NavLink to="/achievements">
+                  <article className="flex h-full flex-col gap-4 rounded-2xl border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-4 shadow-[0_15px_32px_#090b1f59]">
+                    <header className="mb-3">
+                      <h2 className="font-['Press_Start_2P'] text-lg">Logros</h2>
+                    </header>
+                    <div className="flex flex-row justify-between">
+                      <Achiv />
+                      <Achiv />
+                      <Achiv />
+                    </div>
+                  </article>
+                </NavLink>
               </div>
             </div>
 
@@ -122,7 +132,9 @@ export default function Home() {
                   className="h-auto w-1/2 max-w-30 rounded-lg"
                   alt="Juego"
                 />
-                <button className="w-full max-w-xs cursor-pointer rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-[#f8f9ff] transition-colors duration-200 hover:bg-white/20">Jugar ahora</button>
+                <NavLink to="/games">
+                  <button className="w-full max-w-xs cursor-pointer rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-[#f8f9ff] transition-colors duration-200 hover:bg-white/20">Jugar ahora</button>
+                </NavLink>
               </div>
             </article>
           </div>
