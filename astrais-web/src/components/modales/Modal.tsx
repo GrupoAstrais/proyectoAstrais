@@ -1,10 +1,17 @@
-import Dificultad from "../ui/Difficulty";
+import { useState } from "react";
+import DifficultyModal from "../ui/DifficultyModal";
 
 interface ModalProps {
     onPress: (opcion: string) => void
 }
 
 export default function Modal({onPress} : ModalProps) {
+    const [active, setActive] = useState<string>("");
+    
+    const handleActive = (ac: string) => {
+        setActive(ac);
+    }
+        
   return (
     <div className="flex flex-col font-['Space_Grotesk'] h-auto w-1/2 lg:w-1/4 bg-secondary-500 rounded-md p-4 gap-3 border-2 border-accent-beige-300">
         <h1 className="font-['Press_Start_2P']">Editar tarea</h1>
@@ -12,9 +19,9 @@ export default function Modal({onPress} : ModalProps) {
             <input className="text-primary-900" id="nombre" placeholder="Nombre" />
         </div>
         <div className="flex flex-row justify-around bg-accent-beige-300  py-4 px-2 rounded-md">
-            <Dificultad dificultad={"EASY"} />
-            <Dificultad dificultad={"HARD"} />
-            <Dificultad dificultad={"MEDIUM"} />
+            <DifficultyModal handleActive={handleActive} esOtroActivo={active} dificultad={"EASY"} />
+            <DifficultyModal handleActive={handleActive} esOtroActivo={active}  dificultad={"MEDIUM"} />
+            <DifficultyModal handleActive={handleActive} esOtroActivo={active}  dificultad={"HARD"} />
         </div>
         <div className="flex flex-row justify-around bg-accent-beige-300  py-4 px-2 rounded-md">
             <div className="bg-state-success text-primary-900 rounded-xs shadow-xs shadow-primary-900 px-2">
