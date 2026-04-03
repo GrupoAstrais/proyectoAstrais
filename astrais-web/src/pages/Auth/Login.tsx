@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
 import loginBg from '../../assets/login-bg.jpg'
+import { performLogin } from '../../data/Api'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -10,7 +11,7 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState('')
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     if (!email.trim() || !password.trim()) {
@@ -18,9 +19,11 @@ export default function Login() {
       return
     }
 
-    setError('')
-    console.log({ email, password, rememberMe })
-    navigate('/home')
+    await performLogin({email: email, passwd: password}).then(() => {
+      navigate('/home')
+    }).catch(()=> {
+      setError('Usuario o cqwerontraseña no existen')
+    })
   }
 
   return (

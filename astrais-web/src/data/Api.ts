@@ -19,16 +19,16 @@ const instance = axios.create({
 //     return config
 // })
 
-export async function performLogin(req: LoginRequest) {
+export async function performLogin(req: LoginRequest) : Promise<void> {
     try {
         const data = await instance.post("/auth/login", req);
-        if (data.status == 0) {
+        if (data.status >= 200 && data.status < 300) {
             //jwtToken = data.data["JwtAccessToken"]
             console.error("Successful login! ");
-            return true;
+            return Promise.resolve();
         } else {
             console.error("Error en el log! " + data.data["error"]);
-            return false;
+            return Promise.reject();
         }
     } catch (err) {
         if (axios.isAxiosError(err)) {
@@ -37,20 +37,20 @@ export async function performLogin(req: LoginRequest) {
         } else {
             console.error("Error de la peticion!")
         }
-        return false;
+        return Promise.reject();
     }
 }
 
-export async function createUser(req: RegisterRequest) {
+export async function createUser(req: RegisterRequest) : Promise<void> {
     try {
         const data = await instance.post("/auth/register", req);
-        if (data.status == 0) {
+        if (data.status >= 200 && data.status < 300) {
             //jwtToken = data.data["JwtAccessToken"]
             console.error("Successful user profile set up! ");
-            return true;
+            return Promise.resolve();
         } else {
             console.error("Error en el log! " + data.data["error"]);
-            return false;
+            return Promise.reject();
         }
     } catch (err) {
         if (axios.isAxiosError(err)) {
@@ -59,7 +59,7 @@ export async function createUser(req: RegisterRequest) {
         } else {
             console.error("Error de la peticion!")
         }
-        return false;
+        return Promise.reject();
     }
 }
 

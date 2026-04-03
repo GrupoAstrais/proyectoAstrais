@@ -12,7 +12,7 @@ export default function Register() {
   const [passwordVer, setPasswordVer] = useState('')
   const [error, setError] = useState('')
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     if (!email.trim() || !password.trim() || !passwordVer.trim()) {
@@ -23,19 +23,14 @@ export default function Register() {
         setError('Passwords do not match.')
         return
       } else {
-        createUser({name: name, email: email, passwd: password, lang: 'ENG'}).then((res) => {
-          if (res) {
+        await createUser({name: name, email: email, passwd: password, lang: 'ENG'}).then( () => {
             navigate('/login')
-          } else {
-            setError('Error creating your account, try again later.')
           }
+        ).catch(()=> {
+          setError('Error creating your account, try again later.')
         })
       }
     }
-
-    setError('')
-    console.log({ email, password })
-    navigate('/home')
   }
 
   return (
