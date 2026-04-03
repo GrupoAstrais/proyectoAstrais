@@ -5,6 +5,7 @@ RUN gradle buildFatJar --no-daemon
 
 FROM amazoncorretto:22 AS runtime
 EXPOSE 5684
-RUN mkdir /app
+# RUN mkdir /app
+RUN mkdir -p /app/uploads
 COPY --from=build /home/gradle/src/build/libs/*.jar /app/ktor-backend.jar
 ENTRYPOINT ["java","-jar","/app/ktor-backend.jar"]

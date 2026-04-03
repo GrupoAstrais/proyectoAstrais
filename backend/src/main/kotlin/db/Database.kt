@@ -1,6 +1,8 @@
 package com.astrais.db
 
 import com.astrais.POSTGRES_PORT
+import com.astrais.db.TablaCosmetico
+import com.astrais.db.TablaInventario
 import io.ktor.server.application.*
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -64,6 +66,8 @@ object DatabaseController {
                 TablaTareaUnica,
                 TablaTareaObjetivo,
                 TablaTareaHabito,
+                TablaCosmetico,
+                TablaInventario,
                 inBatch = true
             )
         }

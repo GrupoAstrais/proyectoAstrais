@@ -1,4 +1,4 @@
-package com.mm.astraisandroid
+package com.mm.astraisandroid.data.preferences
 
 object TokenHolder {
     private var accessToken:  String? = null

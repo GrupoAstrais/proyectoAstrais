@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astrais - Panel de Administración</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0F3547;
+            color: white;
+            display: flex;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .card {
+            background-color: #1E1E2E;
+            padding: 30px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        h2 {
+            text-align: center;
+            color: #4ECDC4;
+            margin-top: 0;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #D1D5DB;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 6px;
+            border: 1px solid #374151;
+            background-color: #111827;
+            color: white;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            height: 120px;
+            font-family: monospace;
+            resize: vertical;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 25px;
+            background-color: #5865F2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background-color: #4752C4;
+        }
+
+        #message {
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .success {
+            color: #5BC88B;
+        }
+
+        .error {
+            color: #FF6B9D;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card">
+        <h2>Subir Cosmético</h2>
+        <form id="uploadForm">
+            <label>Nombre del objeto</label>
+            <input type="text" name="name" required placeholder="Ej: Gato Espacial">
+
+            <label>Descripción</label>
+            <input type="text" name="desc" required placeholder="Aparecerá en la tienda">
+
+            <label>Colección / Temática General</label>
+            <input type="text" name="collection" required placeholder="Ej: CYBERPUNK, HALLOWEEN, DEFAULT">
+
+            <label>Tipo de Cosmético</label>
+            <select name="type" id="typeSelector" onchange="toggleFields()">
+                <option value="PET">Mascota (Lottie)</option>
+                <option value="APP_THEME">Tema de Interfaz (Colores)</option>
+            </select>
+
+            <label>Precio (Ludiones)</label>
+            <input type="number" name="price" required min="0" value="100">
+
+            <div id="petFields">
+                <label>Archivo de Animación (.json)</label>
+                <input type="file" id="fileInput" name="file" accept=".json">
+            </div>
+
+            <div id="themeFields" style="display: none;">
+                <label>Configuración JSON de Colores</label>
+                <textarea id="themeInputColors" name="theme_colors"
+                    placeholder='{"primary": "#...", "secondary": "#..."}'></textarea>
+            </div>
+
+            <label>Contraseña de Administrador</label>
+            <input type="password" name="adminPassword" required>
+
+            <button type="submit">Subir a la Base de Datos</button>
+        </form>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        function toggleFields() {
+            const type = document.getElementById("typeSelector").value;
+            const petFields = document.getElementById("petFields");
+            const themeFields = document.getElementById("themeFields");
+            petFields.style.display = (type === "PET") ? "block" : "none";
+            themeFields.style.display = (type === "APP_THEME") ? "block" : "none";
+        }
+
+        document.getElementById("uploadForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const msgDiv = document.getElementById("message");
+            msgDiv.textContent = "Subiendo...";
+            const formData = new FormData();
+            const type = document.getElementById("typeSelector").value;
+
+            // Campos básicos
+            formData.append("name", document.querySelector("input[name='name']").value);
+            formData.append("desc", document.querySelector("input[name='desc']").value);
+            formData.append("collection", document.querySelector("input[name='collection']").value);
+            formData.append("type", type);
+            formData.append("price", document.querySelector("input[name='price']").value);
+            formData.append("adminPassword", document.querySelector("input[name='adminPassword']").value);
+
+            if (type === "PET") {
+                const fileInput = document.getElementById("fileInput");
+                if (!fileInput.files[0]) return alert("Falta el archivo JSON");
+                formData.append("file", fileInput.files[0]);
+                formData.append("theme", document.querySelector("input[name='collection']").value);
+            } else {
+                const themeJson = document.getElementById("themeInputColors").value;
+                formData.append("theme", themeJson);
+                const dummyBlob = new Blob(["{}"], { type: "application/json" });
+                formData.append("file", dummyBlob, "theme.json");
+            }
+
+            try {
+                const response = await fetch("/admin/cosmetic/upload", { method: "POST", body: formData });
+                const data = await response.json();
+                if (response.ok) {
+                    msgDiv.className = "success";
+                    msgDiv.textContent = "¡Subido con éxito!";
+                    document.getElementById("uploadForm").reset();
+                    toggleFields();
+                } else {
+                    msgDiv.className = "error";
+                    msgDiv.textContent = "Error: " + data.error;
+                }
+            } catch (error) {
+                msgDiv.className = "error";
+                msgDiv.textContent = "Error de conexión.";
+            }
+        });
+    </script>
+
+</body>
+
+</html>

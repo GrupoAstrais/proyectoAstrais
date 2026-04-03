@@ -31,10 +31,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.mm.astraisandroid.api.LoginRequest
+import com.mm.astraisandroid.data.api.LoginRequest
 import com.mm.astraisandroid.api.LoginUIState
 import com.mm.astraisandroid.api.LoginViewModel
-import com.mm.astraisandroid.api.RegisterRequest
+import com.mm.astraisandroid.data.api.RegisterRequest
 import com.mm.astraisandroid.ui.auth.components.AuthBackground
 import com.mm.astraisandroid.ui.auth.components.AuthTextField
 

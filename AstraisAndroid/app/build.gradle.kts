@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    id("com.google.devtools.ksp") version "2.1.20-1.0.31"
 }
 
 android {
@@ -78,4 +79,14 @@ dependencies {
 
     // ### JWT ###
     implementation("androidx.datastore:datastore-preferences:1.2.1")
+
+    // ### Lottie ###
+    implementation("com.airbnb.android:lottie-compose:6.4.0")
+
+    // ### ROOM ###
+    val roomVersion = "2.6.1"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    ksp("androidx.room:room-compiler:$roomVersion")
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 }

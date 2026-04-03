@@ -7,9 +7,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.Bolt
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Inventory
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -23,6 +23,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mm.astraisandroid.util.LottiePetRenderer
+import com.mm.astraisandroid.data.api.UserMeResponse
 
 private val ColorDinamico   = Color(0xFF7EB8F7)
 private val ColorPersona    = Color(0xFF6EF77E)
@@ -31,31 +33,40 @@ private val ColorDark       = Color.White.copy(alpha = 0.06f)
 
 
 @Composable
-fun HomeTab(username: String = "Astrais",
-            onNavigateToProfile: () -> Unit = {}) {
+fun HomeTab(
+    userData: UserMeResponse?,
+    onNavigateToProfile: () -> Unit = {},
+    onNavigateToTasks: () -> Unit = {},
+    onNavigateToStore: () -> Unit = {},
+    onNavigateToInventory: () -> Unit = {},
+    onNavigateToGroups: () -> Unit = {}
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Header
-        HomeHeader(username = username, onNavigateToProfile)
+        HomeHeader(username = userData?.nombre ?: "Viajero", onNavigateToProfile)
 
-        // Banner card
-        BannerCard()
+        BannerCard(userData = userData)
 
-        // Bento grid
-        BentoGrid(modifier = Modifier.weight(1f))
+        BentoGrid(
+            userData = userData,
+            modifier = Modifier.weight(1f),
+            onTasksClick = onNavigateToTasks,
+            onInventoryClick = onNavigateToInventory,
+            onStoreClick = onNavigateToStore,
+            onGroupsClick = onNavigateToGroups
+        )
 
-        // Barra de notificaciones
         NotificationsBar(count = 8)
     }
 }
 
 
 @Composable
-fun HomeHeader(username: String,  onProfileClick: () -> Unit) {
+fun HomeHeader(username: String, onProfileClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -79,7 +90,7 @@ fun HomeHeader(username: String,  onProfileClick: () -> Unit) {
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = username.first().uppercaseChar().toString(),
+                text = username.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
                 color = Color.White,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
@@ -90,7 +101,7 @@ fun HomeHeader(username: String,  onProfileClick: () -> Unit) {
 }
 
 @Composable
-fun BannerCard() {
+fun BannerCard(userData: UserMeResponse?) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -101,30 +112,61 @@ fun BannerCard() {
             .clickable { },
         contentAlignment = Alignment.CenterStart
     ) {
-        Text(
-            text = "",
-            color = Color.White.copy(alpha = 0.3f),
-            fontSize = 13.sp,
-            fontFamily = FontFamily.Monospace,
-            modifier = Modifier.padding(horizontal = 20.dp)
-        )
+        Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+            Text(
+                text = "Nivel ${userData?.nivel ?: 0}",
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = FontFamily.Monospace
+            )
+            Text(
+                text = "${userData?.xpActual ?: 0} / ${((userData?.nivel ?: 0) + 1) * 100} XP",
+                color = Color.White.copy(alpha = 0.5f),
+                fontSize = 12.sp,
+                fontFamily = FontFamily.Monospace
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(80.dp)
+                .align(Alignment.CenterEnd)
+                .padding(end = 12.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            if (userData?.equippedPetRef != null) {
+                LottiePetRenderer(assetRef = userData.equippedPetRef)
+            } else {
+                Text(
+                    text = "SIN MASCOTA",
+                    color = Color.White.copy(alpha = 0.2f),
+                    fontSize = 10.sp,
+                    fontFamily = FontFamily.Monospace,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
+        }
     }
 }
 
 @Composable
-fun BentoGrid(modifier: Modifier = Modifier) {
+fun BentoGrid(
+    userData: UserMeResponse?,
+    modifier: Modifier = Modifier,
+    onTasksClick: () -> Unit,
+    onInventoryClick: () -> Unit,
+    onStoreClick: () -> Unit,
+    onGroupsClick: () -> Unit,
+) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-
         BentoCell(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight(),
-            color = ColorDark,
-            borderAlpha = 0.1f,
-            onClick = {}
+            modifier = Modifier.weight(1f).fillMaxHeight(),
+            onClick = onTasksClick
         ) {
             Column(
                 modifier = Modifier.fillMaxSize(),
@@ -176,18 +218,50 @@ fun BentoGrid(modifier: Modifier = Modifier) {
         }
 
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight(),
+            modifier = Modifier.weight(1f).fillMaxHeight(),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             BentoCell(
+                modifier = Modifier.fillMaxWidth().weight(1.4f),
+                onClick = onInventoryClick
+            ) {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    Text(
+                        text = "Inventario",
+                        color = Color.White,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Black,
+                        fontFamily = FontFamily.Monospace
+                    )
+
+                    Box(
+                        modifier = Modifier.fillMaxWidth().weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (userData?.equippedPetRef != null) {
+                            LottiePetRenderer(
+                                assetRef = userData.equippedPetRef,
+                                modifier = Modifier.size(90.dp)
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Inventory,
+                                contentDescription = null,
+                                tint = Color.White.copy(alpha = 0.07f),
+                                modifier = Modifier.size(60.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            BentoCell(
                 modifier = Modifier.fillMaxWidth().weight(1f),
-                backgroundIcon = Icons.Default.Bolt,
-                onClick = {}
+                backgroundIcon = Icons.Default.ShoppingCart,
+                onClick = onStoreClick
             ) {
                 Text(
-                    text = "Dinamico",
+                    text = "Tienda",
                     color = Color.White,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Black,
@@ -197,36 +271,16 @@ fun BentoGrid(modifier: Modifier = Modifier) {
 
             BentoCell(
                 modifier = Modifier.fillMaxWidth().weight(1f),
-                backgroundIcon = Icons.Default.Person,
-                onClick = {}
+                backgroundIcon = Icons.Default.Star,
+                onClick = onGroupsClick
             ) {
                 Text(
-                    text = "Persona\nTienda",
+                    text = "Logros",
                     color = Color.White,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Black,
-                    fontFamily = FontFamily.Monospace,
-                    lineHeight = 22.sp
+                    fontFamily = FontFamily.Monospace
                 )
-            }
-
-            BentoCell(
-                modifier = Modifier.fillMaxWidth().weight(1f),
-                backgroundIcon = Icons.Default.Star,
-                onClick = {}
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Text(
-                        text = "Logros",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Black,
-                        fontFamily = FontFamily.Monospace
-                    )
-                }
             }
         }
     }
@@ -294,7 +348,7 @@ fun NotificationsBar(count: Int) {
             fontWeight = FontWeight.SemiBold
         )
         Icon(
-            imageVector = Icons.Default.ArrowForward,
+            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
             contentDescription = null,
             tint = Color.White,
             modifier = Modifier.size(18.dp)

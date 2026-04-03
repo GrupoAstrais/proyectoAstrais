@@ -1,4 +1,4 @@
-package com.mm.astraisandroid.api
+package com.mm.astraisandroid.data.api
 
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -8,7 +8,7 @@ import io.ktor.client.request.setBody
 import io.ktor.http.contentType
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import javax.security.auth.login.LoginException
+
 // 192.168.1.131
 // 192.168.0.97
 const val BASE_URL = "http://192.168.1.129:5684"
@@ -87,6 +87,22 @@ object BackendRepository {
             error("Error: $mensaje")
         }
         req.body<UserMeResponse>()
+    }
+
+    suspend fun getStoreItems(): Result<List<CosmeticResponse>> = runCatching {
+        val req = client.get("$BASE_URL/store/items")
+        if (req.status != HttpStatusCode.OK) error("Error al cargar la tienda")
+        req.body()
+    }
+
+    suspend fun buyCosmetic(id: Int): Result<Unit> = runCatching {
+        val req = client.post("$BASE_URL/store/buy/$id")
+        if (req.status != HttpStatusCode.OK) error("Fondos insuficientes")
+    }
+
+    suspend fun equipCosmetic(id: Int): Result<Unit> = runCatching {
+        val req = client.post("$BASE_URL/store/equip/$id")
+        if (req.status != HttpStatusCode.OK) error("Error al equipar")
     }
 }
 

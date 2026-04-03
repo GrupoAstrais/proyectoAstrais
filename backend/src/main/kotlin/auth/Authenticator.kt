@@ -3,6 +3,7 @@ package com.astrais.auth
 import at.favre.lib.crypto.bcrypt.BCrypt
 import com.astrais.ErrorCodes
 import com.astrais.Errors
+import com.astrais.db.EntidadCosmetico
 import com.astrais.db.getDatabaseDaoImpl
 import com.astrais.supportedLanguages
 import io.ktor.http.*
@@ -14,6 +15,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 @Serializable data class LoginRequest(val email: String, val passwd: String)
 
@@ -250,6 +252,11 @@ fun Route.authRoutes() {
 
             val grupos = getDatabaseDaoImpl().getGroupsOfUser(uid)
             val gidPersonal = grupos.firstOrNull { it.es_grupo_personal }?.id?.value
+            val mascotaEquipadaAsset = transaction {
+                user.id_mascota_equipada?.let { cosmeticoId ->
+                    EntidadCosmetico.findById(cosmeticoId)?.assetRef
+                }
+            }
 
             call.respond(
                     HttpStatusCode.OK,
@@ -260,7 +267,9 @@ fun Route.authRoutes() {
                             xpActual = user.xp_actual,
                             xpTotal = user.xp_total,
                             ludiones = user.ludiones,
-                            personalGid = gidPersonal
+                            personalGid = gidPersonal,
+                            equippedPetRef = mascotaEquipadaAsset,
+                            themeColors = user.themeColors
                     )
             )
         }
@@ -283,5 +292,7 @@ data class UserMeResponse(
         val xpActual: Int,
         val xpTotal: Int,
         val ludiones: Int,
-        val personalGid: Int?
+        val personalGid: Int?,
+        val equippedPetRef: String?,
+        val themeColors: String? = null
 )

@@ -1,7 +1,6 @@
 package com.mm.astraisandroid
 
 import android.os.Bundle
-import android.view.View
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,10 +11,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -32,22 +28,17 @@ import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
@@ -59,11 +50,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.mm.astraisandroid.api.BackendRepository
-import com.mm.astraisandroid.api.LoginRequest
-import com.mm.astraisandroid.api.LoginUIState
-import com.mm.astraisandroid.api.LoginViewModel
-import com.mm.astraisandroid.api.RegisterRequest
 import com.mm.astraisandroid.ui.auth.components.AuthBackground
 import com.mm.astraisandroid.ui.auth.screens.LoginScreen
 import com.mm.astraisandroid.ui.auth.screens.RegisterScreen
@@ -72,10 +58,15 @@ import com.mm.astraisandroid.ui.tabs.HomeTab
 import com.mm.astraisandroid.ui.tabs.PerfilTab
 import com.mm.astraisandroid.ui.tabs.TasksTab
 import com.mm.astraisandroid.ui.tabs.TiendaTab
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalContext
-
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import com.mm.astraisandroid.data.preferences.SessionDataStore
+import com.mm.astraisandroid.data.preferences.TokenHolder
+import com.mm.astraisandroid.ui.theme.AstraisandroidTheme
+import com.mm.astraisandroid.ui.viewmodels.TaskViewModel
+import com.mm.astraisandroid.ui.viewmodels.UserViewModel
+import com.mm.astraisandroid.util.ConnectivityObserver
 
 
 class AuthActivity : ComponentActivity() {
@@ -92,10 +83,16 @@ class AuthActivity : ComponentActivity() {
                 TokenHolder.setRefreshToken(refresh)
                 TokenHolder.setPersonalGid(gid)
             }
+
             setContent {
-                MaterialTheme {
-                    Surface(modifier = Modifier.fillMaxSize()) {
-                        AppNavigation(sessionDataStore = session)
+                val userViewModel: UserViewModel = viewModel(
+                    viewModelStoreOwner = LocalContext.current as ComponentActivity
+                )
+                val userData by userViewModel.userData.collectAsStateWithLifecycle()
+
+                AstraisandroidTheme(themeJson = userData?.themeColors) {
+                    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                        AppNavigation(sessionDataStore = session, initialHasSession = access != null)
                         OcultarBotonesSistema()
                     }
                 }
@@ -105,17 +102,13 @@ class AuthActivity : ComponentActivity() {
 }
 
 @Composable
-fun AppNavigation(sessionDataStore: SessionDataStore) {
-    val hasSession = remember {
-        TokenHolder.getAccessToken() != null
-    }
-
+fun AppNavigation(sessionDataStore: SessionDataStore, initialHasSession: Boolean) {
     val navController = rememberNavController()
     val coroutineScope = rememberCoroutineScope()
+
     NavHost(
         navController = navController,
-        startDestination = if (hasSession) ScreenRoutes.Home.route
-        else ScreenRoutes.Login.route
+        startDestination = if (initialHasSession) ScreenRoutes.Home.route else ScreenRoutes.Login.route
     ) {
         composable(ScreenRoutes.Login.route) {
             LoginScreen(
@@ -124,11 +117,9 @@ fun AppNavigation(sessionDataStore: SessionDataStore) {
                         popUpTo(ScreenRoutes.Login.route) { inclusive = true }
                     }
                 },
-
                 onNavigateToRegister = {
                     navController.navigate(ScreenRoutes.Register.route)
                 }
-
             )
         }
 
@@ -139,11 +130,9 @@ fun AppNavigation(sessionDataStore: SessionDataStore) {
                         popUpTo(ScreenRoutes.Login.route) { inclusive = true }
                     }
                 },
-
                 onRegisterSuccess = {
                     navController.navigate(ScreenRoutes.Login.route)
                 }
-
             )
         }
 
@@ -174,6 +163,7 @@ fun AppNavigation(sessionDataStore: SessionDataStore) {
                     coroutineScope.launch {
                         sessionDataStore.clear()
                         TokenHolder.clear()
+                        AppCache.clear()
                         navController.navigate(ScreenRoutes.Login.route) {
                             popUpTo(0) { inclusive = true }
                         }
@@ -183,62 +173,16 @@ fun AppNavigation(sessionDataStore: SessionDataStore) {
         }
     }
 }
-/*
-@Composable
-fun HomeScreen() {
-    var selectedTab by remember { mutableIntStateOf(0) }
-
-    val navItems = listOf(
-        NavItem("Random pero index", Icons.Filled.AddCircle),
-        NavItem("Random", Icons.Filled.Search),
-        NavItem("Random", Icons.Filled.Person)
-    )
-
-    Scaffold(
-        bottomBar = {
-            NavigationBar {
-                navItems.forEachIndexed { index, item ->
-                    if (item.title == "Random pero index") {
-                        NavigationBarItem(
-                            icon = { Icon(item.icon, contentDescription = item.title, modifier = Modifier.size(50.dp)) },
-                            label = { Text(item.title) },
-                            selected = selectedTab == index,
-                            onClick = { selectedTab = index }
-                        )
-                    } else {
-                        NavigationBarItem(
-                            icon = { Icon(item.icon, contentDescription = item.title) },
-                            label = { Text(item.title) },
-                            selected = selectedTab == index,
-                            onClick = { selectedTab = index }
-                        )
-                    }
-
-
-                }
-            }
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            when (selectedTab) {
-                0 -> Text("Inicio")
-                1 -> Text("Cosas")
-                2 -> Text("Cositas")
-            }
-        }
-    }
-}*/
 
 @Composable
 fun HomeScreen(onNavigateToProfile: () -> Unit) {
+    val context = LocalContext.current
+    AppCache.init(context)
+    val connectivityObserver = remember { ConnectivityObserver(context) }
+    val deviceHasInternet by connectivityObserver.status.collectAsState(initial = true)
+
     val navController = rememberNavController()
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-    val context = LocalContext.current
     val taskViewModel: TaskViewModel = viewModel()
     val userViewModel: UserViewModel = viewModel(
         viewModelStoreOwner = LocalContext.current as ComponentActivity
@@ -248,26 +192,58 @@ fun HomeScreen(onNavigateToProfile: () -> Unit) {
         userViewModel.fetchUser()
     }
 
-    val userData by userViewModel.userData.collectAsStateWithLifecycle()
+    LaunchedEffect(deviceHasInternet) {
+        if (deviceHasInternet) {
+            userViewModel.fetchUser()
 
+            val gid = TokenHolder.getPersonalGid()
+            if (gid != null) {
+                taskViewModel.syncOfflineActions(gid)
+            }
+        }
+    }
+
+    val userData by userViewModel.userData.collectAsStateWithLifecycle()
+    val isOffline by userViewModel.isOffline.collectAsStateWithLifecycle()
+
+    val isEffectivelyOffline = !deviceHasInternet || isOffline
     AuthBackground {
         Scaffold(
+            modifier = Modifier.statusBarsPadding(),
+            topBar = {
+                if (isEffectivelyOffline) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().background(Color(0xFFEF476F)).padding(vertical = 4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Modo sin conexión - Los cambios se sincronizarán después",
+                            color = Color.White, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                    }
+                }
+            },
             containerColor = Color.Transparent,
             bottomBar = {
                 NavBottomBar(
                     selected = when (currentRoute) {
-                        "home_tab"    -> 0
-                        "tasks_tab"   -> 1
-                        "add_tab"     -> 2
-                        "group_tab"   -> 3
-                        "store_tab"   -> 4
-                        else          -> 0
+                        "home_tab"      -> 0
+                        "tasks_tab"     -> 1
+                        "add_tab"       -> 2
+                        "group_tab"     -> 3
+                        "store_tab"     -> 4
+                        "inventory_tab" -> 0
+                        else            -> 0
                     },
                     onSelect = { index ->
+                        if (isEffectivelyOffline && (index == 3 || index == 4)) {
+                            Toast.makeText(context, "No disponible sin conexión", Toast.LENGTH_SHORT).show()
+                            return@NavBottomBar
+                        }
+
                         if (index == 2) {
                             taskViewModel.openCreateDialog()
                             return@NavBottomBar
                         }
+
                         val route = when (index) {
                             0 -> "home_tab"
                             1 -> "tasks_tab"
@@ -275,8 +251,11 @@ fun HomeScreen(onNavigateToProfile: () -> Unit) {
                             4 -> "store_tab"
                             else -> "home_tab"
                         }
+
                         navController.navigate(route) {
-                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
                             launchSingleTop = true
                             restoreState = true
                         }
@@ -291,8 +270,36 @@ fun HomeScreen(onNavigateToProfile: () -> Unit) {
             ) {
                 composable("home_tab") {
                     HomeTab(
-                        username = userData?.nombre ?: "...",
-                        onNavigateToProfile = onNavigateToProfile
+                        userData = userData,
+                        onNavigateToProfile = onNavigateToProfile,
+                        onNavigateToTasks = {
+                            navController.navigate("tasks_tab") {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onNavigateToInventory = {
+                            navController.navigate("inventory_tab") {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onNavigateToStore = {
+                            navController.navigate("store_tab") {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onNavigateToGroups = {
+                            navController.navigate("group_tab") {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
                     )
                 }
                 composable("tasks_tab") {
@@ -302,32 +309,33 @@ fun HomeScreen(onNavigateToProfile: () -> Unit) {
                     )
                 }
                 composable("group_tab") { GrupoTab() }
-                composable("store_tab")   { TiendaTab(ludiones = userData?.ludiones ?: 0) }
-            }
+
+                composable("store_tab") {
+                    TiendaTab(ludiones = userData?.ludiones ?: 0, onCosmeticChanged = { userViewModel.fetchUser() })
+                }
+
+                composable("inventory_tab") {
+                    com.mm.astraisandroid.ui.tabs.InventarioTab(onCosmeticChanged = { userViewModel.fetchUser() })
+                }}
         }
     }
 
     if (taskViewModel.showCreateDialog) {
         CreateTareaDialog(
             onDismiss = { taskViewModel.closeCreateDialog() },
-            onCreate  = { titulo, tipo, xp ->
+            onCreate  = { titulo, desc, tipo, prioridad ->
                 val userGid = TokenHolder.getPersonalGid()
 
                 if (userGid != null) {
                     taskViewModel.crearTarea(
-                        gid    = userGid,
-                        titulo = titulo,
-                        tipo   = tipo,
-                        xp     = xp
+                        gid         = userGid,
+                        titulo      = titulo,
+                        descripcion = desc,
+                        tipo        = tipo,
+                        prioridad   = prioridad
                     )
                 } else {
-                    // Para bugs que pasan con el backend al estar reiniciando
-                    Toast.makeText(
-                        context,
-                        "Error: Tu usuario no tiene grupo personal. Crea una cuenta nueva.",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    taskViewModel.closeCreateDialog()
+                    Toast.makeText(context, "Error: Usuario sin grupo personal.", Toast.LENGTH_LONG).show()
                 }
 
                 taskViewModel.closeCreateDialog()

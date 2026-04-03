@@ -1,4 +1,4 @@
-package com.mm.astraisandroid
+package com.mm.astraisandroid.data.preferences
 
 import android.content.Context
 import androidx.datastore.preferences.core.edit
@@ -8,7 +8,6 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.first
 
 val Context.dataStore by preferencesDataStore(name = "session")
-
 
 class SessionDataStore(private val context: Context) {
 

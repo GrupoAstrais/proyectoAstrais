@@ -1,5 +1,6 @@
 package com.astrais.db
 
+import CosmeticResponseDTO
 import java.time.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import org.jetbrains.exposed.v1.core.and
@@ -173,8 +174,9 @@ class DatabaseDAOImpl : DatabaseDAO {
                     usuario.xp_total += tarea.recompensa_xp
                     usuario.ludiones += tarea.recompensa_ludion
                     usuario.total_tareas_completadas += 1
-                    
-                    // He hecho esto para probar la logica de niveles. Habra que hacerle su funcion aparte
+
+                    // He hecho esto para probar la logica de niveles. Habra que hacerle su funcion
+                    // aparte
                     var xpParaSiguienteNivel = (usuario.nivel + 1) * 100
                     while (usuario.xp_actual >= xpParaSiguienteNivel) {
                         usuario.xp_actual -= xpParaSiguienteNivel
@@ -184,6 +186,123 @@ class DatabaseDAOImpl : DatabaseDAO {
 
                     tarea.recompensa_reclamada = true
                 }
+            }
+            true
+        }
+    }
+
+    override suspend fun buyCosmetic(uid: Int, cosmeticId: Int): Boolean {
+        return suspendTransaction {
+            val usuario = EntidadUsuario.findById(uid) ?: return@suspendTransaction false
+            val cosmetico = EntidadCosmetico.findById(cosmeticId) ?: return@suspendTransaction false
+
+            val yaLoTiene =
+                    EntidadInventario.find {
+                                (TablaInventario.id_usuario eq uid) and
+                                        (TablaInventario.id_cosmetico eq cosmeticId)
+                            }
+                            .empty()
+                            .not()
+
+            if (yaLoTiene || usuario.ludiones < cosmetico.precioLudiones)
+                    return@suspendTransaction false
+
+            usuario.ludiones -= cosmetico.precioLudiones
+            EntidadInventario.new {
+                id_usuario = EntityID(uid, TablaUsuario)
+                id_cosmetico = EntityID(cosmeticId, TablaCosmetico)
+                fecha_compra = java.time.LocalDate.now().toKotlinLocalDate()
+            }
+            true
+        }
+    }
+
+    override suspend fun getStoreItems(uid: Int): List<CosmeticResponseDTO> {
+        return suspendTransaction {
+            val inventarioUsuario =
+                    EntidadInventario.find { TablaInventario.id_usuario eq uid }.map {
+                        it.id_cosmetico.value
+                    }
+            val usuario = EntidadUsuario.findById(uid)
+
+            EntidadCosmetico.all().map { cosmetico ->
+                val isEquipped =
+                        if (cosmetico.tipo == CosmeticType.PET) {
+                            usuario?.id_mascota_equipada?.value == cosmetico.id.value
+                        } else if (cosmetico.tipo == CosmeticType.APP_THEME) {
+                            usuario?.themeColors == cosmetico.tema
+                        } else false
+
+                CosmeticResponseDTO(
+                        id = cosmetico.id.value,
+                        name = cosmetico.nombre,
+                        desc = cosmetico.descripcion,
+                        type = cosmetico.tipo.name,
+                        price = cosmetico.precioLudiones,
+                        assetRef = cosmetico.assetRef,
+                        theme = cosmetico.tema,
+                        coleccion = cosmetico.coleccion, 
+                        owned = inventarioUsuario.contains(cosmetico.id.value),
+                        equipped = isEquipped
+                )
+            }
+        }
+    }
+
+    override suspend fun equipCosmetic(uid: Int, cosmeticId: Int): Boolean {
+        return suspendTransaction {
+            val usuario = EntidadUsuario.findById(uid) ?: return@suspendTransaction false
+
+            if (cosmeticId == 0) return@suspendTransaction false
+
+            val loTiene =
+                    EntidadInventario.find {
+                                (TablaInventario.id_usuario eq uid) and
+                                        (TablaInventario.id_cosmetico eq cosmeticId)
+                            }
+                            .empty()
+                            .not()
+
+            if (loTiene) {
+                val cosmetico =
+                        EntidadCosmetico.findById(cosmeticId) ?: return@suspendTransaction false
+
+                if (cosmetico.tipo == CosmeticType.PET) {
+                    if (usuario.id_mascota_equipada?.value == cosmeticId) {
+                        usuario.id_mascota_equipada = null
+                    } else {
+                        usuario.id_mascota_equipada = EntityID(cosmeticId, TablaCosmetico)
+                    }
+                } else if (cosmetico.tipo == CosmeticType.APP_THEME) {
+                    if (usuario.themeColors == cosmetico.tema) {
+                        usuario.themeColors = null
+                    } else {
+                        usuario.themeColors = cosmetico.tema
+                    }
+                }
+                true
+            } else false
+        }
+    }
+
+    override suspend fun createCosmetic(
+            name: String,
+            desc: String,
+            type: CosmeticType,
+            price: Int,
+            assetRef: String,
+            theme: String,
+            coleccion: String
+    ): Boolean {
+        return suspendTransaction {
+            EntidadCosmetico.new {
+                this.nombre = name
+                this.descripcion = desc
+                this.tipo = type
+                this.precioLudiones = price
+                this.assetRef = assetRef
+                this.tema = theme
+                this.coleccion = coleccion
             }
             true
         }

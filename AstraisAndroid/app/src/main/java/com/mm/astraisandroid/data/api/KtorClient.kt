@@ -1,7 +1,7 @@
-package com.mm.astraisandroid.api
+package com.mm.astraisandroid.data.api
 
 import android.util.Log
-import com.mm.astraisandroid.TokenHolder
+import com.mm.astraisandroid.data.preferences.TokenHolder
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.android.Android
@@ -48,7 +48,7 @@ val client = HttpClient(Android) {
             refreshTokens {
                 val refreshToken = TokenHolder.getRefreshToken() ?: return@refreshTokens null
                 try {
-                    val response: RegenAccessResponse = client.post("$BASE_URL/auth/regenAccess") {
+                    val response: RegenAccessResponse = client.post("${BASE_URL}/auth/regenAccess") {
                         bearerAuth(refreshToken)
                         markAsRefreshTokenRequest()
                     }.body()
@@ -61,6 +61,7 @@ val client = HttpClient(Android) {
                     )
                 } catch (e: Exception) {
                     Log.e("KtorClient", "Error renovando token: $e")
+                    TokenHolder.clear()
                     null
                 }
             }

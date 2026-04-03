@@ -59,6 +59,12 @@ enum class TaskState {
     DUE
 }
 
+enum class CosmeticType {
+    PET,
+    PET_SKIN,
+    APP_THEME
+}
+
 object TablaUsuario : IntIdTable("Users") {
     // El nombre del usuario
     val nombre = varchar("name", USER_NAME_LENGTH)
@@ -95,6 +101,13 @@ object TablaUsuario : IntIdTable("Users") {
     // es null y no esta confirmado.
     val esta_confirmado = integer("is_mail_confirmed").default(0)
 
+    // Qué mascota está equipada. Le hago referencia en la base de datos para que se refleje en web
+    // y android
+    val id_mascota_equipada =
+            optReference("equipped_pet_id", TablaCosmetico, onDelete = ReferenceOption.SET_NULL)
+
+    // JSON con los colores
+    val themeColors = varchar("theme_colors", 255).nullable()
     // TODO: Piezas de avatar
 }
 
@@ -116,6 +129,8 @@ class EntidadUsuario(id: EntityID<Int>) : IntEntity(id) {
     var email by TablaUsuario.email
     var contrasenia by TablaUsuario.contrasenia
     var esta_confirmado by TablaUsuario.esta_confirmado
+    var id_mascota_equipada by TablaUsuario.id_mascota_equipada
+    var themeColors by TablaUsuario.themeColors
 }
 
 object TablaConfirmacionUsuario : IntIdTable("UserConfirm") {
@@ -238,4 +253,40 @@ object TablaTareaHabito : IntIdTable("TaskHabit") {
     val racha_actual = integer("current_streak")
     val mejor_racha = integer("best_streak")
     val ultima_vez_completada = date("last_completion").nullable()
+}
+
+object TablaCosmetico : IntIdTable("Cosmetic") {
+    val nombre = varchar("name", 50)
+    val descripcion = varchar("desc", 255)
+    val tipo = enumerationByName<CosmeticType>("type", 20)
+    val precioLudiones = integer("price_ludions").default(0)
+    val assetRef = varchar("asset_ref", 100)
+    val tema = varchar("theme", 255).default("DEFAULT")
+    val coleccion = varchar("coleccion", 50).default("DEFAULT")
+}
+
+class EntidadCosmetico(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<EntidadCosmetico>(TablaCosmetico)
+
+    var nombre by TablaCosmetico.nombre
+    var descripcion by TablaCosmetico.descripcion
+    var tipo by TablaCosmetico.tipo
+    var precioLudiones by TablaCosmetico.precioLudiones
+    var assetRef by TablaCosmetico.assetRef
+    var tema by TablaCosmetico.tema
+    var coleccion by TablaCosmetico.coleccion
+}
+
+object TablaInventario : IntIdTable("Inventory") {
+    val id_usuario = reference("user_id", TablaUsuario, onDelete = ReferenceOption.CASCADE)
+    val id_cosmetico = reference("cosmetic_id", TablaCosmetico, onDelete = ReferenceOption.CASCADE)
+    val fecha_compra = date("purchase_date")
+}
+
+class EntidadInventario(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<EntidadInventario>(TablaInventario)
+
+    var id_usuario by TablaInventario.id_usuario
+    var id_cosmetico by TablaInventario.id_cosmetico
+    var fecha_compra by TablaInventario.fecha_compra
 }

@@ -35,7 +35,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mm.astraisandroid.api.UserMeResponse
+import com.mm.astraisandroid.data.api.UserMeResponse
 import com.mm.astraisandroid.ui.auth.components.AuthBackground
 
 private val CardBg         = Color.White.copy(alpha = 0.07f)

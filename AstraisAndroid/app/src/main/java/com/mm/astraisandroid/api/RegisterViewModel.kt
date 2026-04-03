@@ -3,6 +3,8 @@ package com.mm.astraisandroid.api
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mm.astraisandroid.data.api.BackendRepository
+import com.mm.astraisandroid.data.api.RegisterRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
