@@ -1,25 +1,25 @@
 package com.astrais.auth
 
+import com.astrais.auth.*
 import com.astrais.db.DatabaseDAO
 import com.astrais.db.getDatabaseDaoImpl
-import kotlinx.datetime.toKotlinLocalDate
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger(AuthRepoImpl::class.java)
 
-class AuthRepoImpl : AuthRepo{
+class AuthRepoImpl : AuthRepo {
     override suspend fun performBasicLogin(loginRequest: LoginRequest) : LoginResponse?{
         try {
             val user = getDatabaseDaoImpl().getUsuario(loginRequest.email)
 
             if (user?.contrasenia != null && checkPassword(loginRequest.passwd, user.contrasenia!!)){
                 getDatabaseDaoImpl().setUserLastLogin(user)
-                log.debug("User ${user.nombre} (${user.id.value}) connected.")
+                log.info("User ${user.nombre} (${user.id.value}) connected.")
 
                 // Genera JWT
                 val i = LoginResponse(jwtAccessToken = generateAccessToken(user), jwtRefreshToken = generateRefreshToken(user))
-                log.debug("Created tokens for ${user.nombre} (${user.id.value})")
+                log.info("Created tokens for ${user.nombre} (${user.id.value})")
 
                 return i
             }
@@ -37,11 +37,11 @@ class AuthRepoImpl : AuthRepo{
             if (!existeUser){
                 val hashContrasenia = hashPassword(registerRequest.passwd)
                 val uid = dao.createUser(registerRequest.name, registerRequest.email, hashContrasenia, registerRequest.lang)
-                log.debug("User ${registerRequest.name} (${uid}) registered")
+                log.info("User ${registerRequest.name} (${uid}) registered")
 
                 // Crea grupo personal
                 dao.createGroup(uid, "${registerRequest.name}", "", true)
-                log.debug("Created the ${registerRequest.name}'s (${uid}) user space")
+                log.info("Created the ${registerRequest.name}'s (${uid}) user space")
                 return true
             }
         } catch (e : ExposedSQLException){

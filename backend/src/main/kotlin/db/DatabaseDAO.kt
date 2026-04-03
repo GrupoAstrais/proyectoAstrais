@@ -16,18 +16,54 @@ interface DatabaseDAO {
                 utcOffset: Float = 0f,
                 role: UserRoles = UserRoles.NORMAL_USER
         ): Int
+
+        /**
+         * Buscamos un usuario por su email.
+         * @param emailusu El correo del usuario
+         * @return Los datos del usuario, NULL si no se encontro
+         */
         suspend fun getUsuario(emailusu: String): EntidadUsuario?
+
+        /**
+         * Buscamos un usuario por su ID.
+         * @param id El ID del usuario
+         * @return Los datos del usuario, NULL si no se encontro
+         */
         suspend fun getUsuarioByID(id: Int): EntidadUsuario?
+
+        /**
+         * Borrado del usuario identificado por ID
+         * @param id El ID del usuario
+         * @return Si borro el usuario o no
+         */
         suspend fun deleteUsuario(id: Int): Boolean
 
+        /**
+         * Se cambia la fecha del ultimo login al actual
+         * @param ent El usuario concreto
+         */
         suspend fun setUserLastLogin(ent: EntidadUsuario)
 
+        /**
+         * Se crea un grupo para el usuario indicado
+         * @param grpownerId El ID del usuario que crea el grupo
+         * @param grpname El nombre del grupo
+         * @param grpdescription La descripcion del grupo, opcional.
+         * @param personal Indicador si el grupo se considera personal o no
+         * @return El ID del grupo
+         */
         suspend fun createGroup(
                 grpownerId: Int,
                 grpname: String,
                 grpdescription: String = "",
                 personal: Boolean = false
         ): Int
+
+        /**
+         * Se consigue la informacion del grupo por un ID
+         * @param id El ID del grupo
+         * @return Los datos del grupo, NULL si no se encontro
+         */
         suspend fun getGroupById(id: Int): EntidadGrupo?
 
         /**
