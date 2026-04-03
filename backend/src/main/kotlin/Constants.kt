@@ -12,3 +12,6 @@ val supportedLanguages = listOf(LANG_CODE_ENGLISH, LANG_CODE_SPANISH, LANG_CODE_
 const val ROLE_USERNORMAL   = 0
 const val ROLE_USERMOD      = 1
 const val ROLE_USEROWNER    = 2
+
+
+val OK_MESSAGE_RESPONSE = mapOf("aknowledged" to true)
