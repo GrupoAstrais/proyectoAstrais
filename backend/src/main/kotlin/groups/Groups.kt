@@ -13,13 +13,27 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 
 
+/**
+ * Salida de un grupo en /group/userGroups
+ */
 @Serializable
 data class SingleGroupOut(
+    /** ID del grupo */
     val id : Int,
+    /** Nombre del grupo */
     val name : String,
+    /** La descripcion del grupo*/
     val description : String,
+    /** El rol expresado de forma entera
+     * @see com.astrais.ROLE_USERNORMAL
+     * @see com.astrais.ROLE_USERMOD
+     * @see com.astrais.ROLE_USEROWNER */
     val role: Int
 )
+
+/**
+ * Salida de la ruta /group/userGroups
+ */
 @Serializable
 data class AllGroupsResponse(
     val groupList : List<SingleGroupOut>
