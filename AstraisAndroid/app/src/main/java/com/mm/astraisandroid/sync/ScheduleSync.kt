@@ -7,19 +7,29 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 
 /**
- * Programa el SyncWorker para que Android lo ejecute en segundo plano.
+ * Configura y encola una solicitud de trabajo único para el [SyncWorker].
+ *
+ * Esta función utiliza la API de **Jetpack WorkManager** para programar la sincronización
+ * de datos pendientes con el servidor. La tarea se añade a la cola
+ * del sistema y se ejecutará de forma asíncrona incluso si la aplicación se cierra.
+ *
+ * ### Restricciones (Constraints):
+ * Para optimizar los recursos del sistema, la tarea solo se iniciará cuando el dispositivo
+ * tenga una conexión de red activa ([NetworkType.CONNECTED]).
+ *
+ * @param context El contexto de la aplicación necesario para inicializar el servicio de [WorkManager].
  */
 fun scheduleSync(context: Context) {
-    // Esto son las condiciones. Ahora mismo voy a poner solo cuando haya red conectada :D
+    // Se definen las condiciones bajo las cuales se permite la ejecución.
     val constraints = Constraints.Builder()
         .setRequiredNetworkType(NetworkType.CONNECTED)
         .build()
 
-    // Se crea la petición de trabajo
+    // Se crea la petición de trabajo de una sola ejecución (OneTime).
     val syncWorkRequest = OneTimeWorkRequestBuilder<SyncWorker>()
         .setConstraints(constraints)
         .build()
 
-    // Se pone en la cola de android
+    // Se registra la petición en el gestor de trabajos de Android.
     WorkManager.getInstance(context).enqueue(syncWorkRequest)
 }
