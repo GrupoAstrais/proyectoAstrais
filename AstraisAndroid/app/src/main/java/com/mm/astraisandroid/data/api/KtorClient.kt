@@ -15,6 +15,7 @@ import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.post
+import io.ktor.http.encodedPath
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
@@ -55,6 +56,8 @@ val client = HttpClient(Android) {
 
                     TokenHolder.setAccessToken(response.newAccessToken)
 
+                    TokenHolder.saveTokensToDisk(response.newAccessToken, refreshToken)
+
                     BearerTokens(
                         accessToken  = response.newAccessToken,
                         refreshToken = refreshToken
@@ -67,7 +70,10 @@ val client = HttpClient(Android) {
             }
 
             sendWithoutRequest { request ->
-                !request.url.pathSegments.contains("auth")
+                val path = request.url.encodedPath
+                !path.contains("/auth/login") &&
+                        !path.contains("/auth/register") &&
+                        !path.contains("/auth/regenAccess")
             }
         }
     }

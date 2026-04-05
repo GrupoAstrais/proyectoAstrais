@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astrais Clicker</title>
+    <style>
+        body { background-color: #0F3547; color: white; font-family: sans-serif; text-align: center; display: flex; flex-direction: column; justify-content: center; height: 100vh; margin: 0; }
+        button { background-color: #C172FF; border: none; border-radius: 50%; width: 150px; height: 150px; color: white; font-size: 24px; font-weight: bold; cursor: pointer; }
+        button:active { transform: scale(0.95); }
+    </style>
+</head>
+<body>
+    <h1>¡Atrapa Ludiones!</h1>
+    <h2 id="timer">Tiempo: 10s</h2>
+    <h2 id="scoreText">Puntos: 0</h2>
+    <button id="clickBtn">CLICK</button>
+
+    <script>
+        let score = 0;
+        let timeLeft = 10;
+        let gameActive = true;
+
+        document.getElementById("clickBtn").addEventListener("click", () => {
+            if (!gameActive) return;
+            score++;
+            document.getElementById("scoreText").innerText = "Puntos: " + score;
+        });
+
+        const countdown = setInterval(() => {
+            timeLeft--;
+            document.getElementById("timer").innerText = "Tiempo: " + timeLeft + "s";
+            
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                gameActive = false;
+                
+                if (window.Android) {
+                    window.Android.sendResult(score);
+                } else {
+                    window.parent.postMessage({ type: 'GAME_OVER', score: score }, '*');
+                }
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
