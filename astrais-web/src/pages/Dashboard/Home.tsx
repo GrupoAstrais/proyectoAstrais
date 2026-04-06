@@ -5,17 +5,21 @@ import shop from '../../assets/shop.png'
 import game from '../../assets/game.png'
 import type { ITarea } from '../../types/Interfaces';
 import Task from '../../components/ui/Task';
-import React from 'react'
+import React, { useState } from 'react'
 import Achiv from '../../components/ui/Achiv'
-import Modal from '../../components/modales/Modal'
+import Modal from '../../components/modales/TaskModal'
 import { NavLink } from 'react-router'
 
 export default function Home() {
-  const tarea: ITarea = {
-    title: "Estudiar TypeScript",
-    dificultad: "HARD",
-    recompensa: 50
-  };
+    const tarea: ITarea = {
+        title: "Estudiar TypeScript",
+        dificultad: "HARD",
+        recompensa: 50,
+        taskType: "habit",
+        isComposed: false,
+        subtasks: [],
+        habitFrequency: "daily"
+    };
 
   const [notif] = React.useState<number>(0);
 
@@ -30,6 +34,25 @@ export default function Home() {
     }
   }
 
+  const [tasks, setTasks] = useState<ITarea[]>([]);
+  
+  const handleModalSubmit = (data: any) => {
+    // Datos de la tarea creada por el modal
+    const newTask: ITarea = {
+      title: data.name,
+      dificultad: data.difficulty,
+      recompensa: data.difficulty === "EASY" ? 20 : data.difficulty === "MEDIUM" ? 35 : 50,
+      taskType: data.taskType, // "diary" o "habit"
+      tags: data.tags || [], // solo si el usuario añadió tags
+      isComposed: data.isComposed,
+      subtasks: data.subtasks || [],
+      habitFrequency: data.habitFrequency
+    };
+      
+    setTasks([...tasks, newTask]);
+    setIsOpen(false);
+  };
+
 
 
   return (
@@ -39,7 +62,7 @@ export default function Home() {
 
       {/* modal */}
       <div className={`${isOpen ? '' : 'hidden'} fixed inset-0 z-50 flex items-center justify-center`}>
-        <Modal onPress={confirmarModal}  />
+        <Modal onSubmit={handleModalSubmit} onCancel={() => setIsOpen(false)} />
       </div>
       <Navbar />
 
@@ -75,8 +98,12 @@ export default function Home() {
             </header>
             <div className="flex flex-col gap-3">
               <Task data={tarea} />
-              <Task data={tarea} />
-              <Task data={tarea} />
+              {tasks.length === 0 ? (
+              <p className="text-gray-400 italic text-center py-4">No hay tareas</p>
+              ) : (
+              tasks.map((t, i) => (
+              <Task key={i} data={t}  />
+              )))}
             </div>
           </article>
 
