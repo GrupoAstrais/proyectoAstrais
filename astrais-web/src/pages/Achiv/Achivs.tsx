@@ -170,7 +170,7 @@ export default function Achivs() {
         <Navbar />
 
         <main className="flex min-h-0 flex-1 px-3 pb-3 pt-1 md:px-4 md:pb-4 xl:px-6 xl:pb-5">
-          <section className="mx-auto hidden h-full w-full max-w-[1460px] gap-3 lg:grid lg:grid-cols-[minmax(0,1.08fr)_minmax(19rem,0.88fr)] min-[1400px]:gap-4 min-[1400px]:grid-cols-[minmax(0,1.24fr)_minmax(24rem,0.92fr)]">
+          <section className="mx-auto hidden h-full w-full max-w-365 gap-3 lg:grid lg:grid-cols-[minmax(0,1.08fr)_minmax(19rem,0.88fr)] min-[1400px]:gap-4 min-[1400px]:grid-cols-[minmax(0,1.24fr)_minmax(24rem,0.92fr)]">
             <div className="grid min-h-0 grid-rows-[auto_auto_minmax(0,1fr)] gap-3 min-[1400px]:gap-4">
               <article className="panel-glow relative overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(160deg,rgba(15,23,42,0.88),rgba(91,33,182,0.54),rgba(30,74,99,0.74))] p-3.5 shadow-[0_20px_58px_rgba(7,12,24,0.5)] min-[1400px]:p-4">
                 <div className="pointer-events-none absolute -right-10 top-0 h-40 w-40 rounded-full bg-secondary-500/18 blur-3xl" />

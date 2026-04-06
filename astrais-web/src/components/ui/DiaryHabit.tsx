@@ -24,6 +24,7 @@ export default function ButtonFilter({handleActive, titulo, esOtroActivo} : Butt
     return (
         <>
             <button onClick={changeState} className={`rounded-xs px-2 shadow-xs shadow-primary-900 ${active ?  'translate-y-1 bg-secondary-700 text-white shadow-none' : 'bg-state-success text-primary-900' }`}>
+
                 <span className="font-bold">{titulo}</span></button>
         </>
   )
