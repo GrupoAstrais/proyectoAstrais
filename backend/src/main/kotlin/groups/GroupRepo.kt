@@ -35,6 +35,23 @@ interface GroupRepo {
      * @param gid El ID del grupo a agregar
      */
     suspend fun addUser(requesterId : Int, userId: Int, gid : Int) : AddUserReturn
+
+    /**
+     * Se borra el grupo entero
+     * @param gid El ID del grupo
+     * @param uid El ID del usuario que quiere borrarlo
+     * @return False si no tiene permisos
+     */
+    suspend fun deleteGroup(gid : Int, uid : Int) : Boolean
+
+    /**
+     * Se edita un grupo
+     * @param gid El ID del grupo
+     * @param uid El ID del usuario que quiere editarlo
+     * @param name El nuevo nombre, NULL si no se quiere cambiar
+     * @param desc La nueva descripcion, NULL si no se quiere cambiar
+     */
+    suspend fun editGroup(gid : Int, uid : Int, name: String? = null, desc: String? = null) : Boolean
 }
 
 fun getGroupRepoImpl() : GroupRepo{

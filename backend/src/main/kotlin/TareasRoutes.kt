@@ -1,17 +1,17 @@
 package com.astrais
 
+import com.astrais.db.EntidadGrupo
+import com.astrais.db.GroupRoles
 import com.astrais.db.TaskType
 import com.astrais.db.getDatabaseDaoImpl
+import com.astrais.groups.AddUserReturn
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.principal
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
-import io.ktor.server.routing.patch
-import io.ktor.server.routing.post
+import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -20,9 +20,7 @@ data class CreateTareaRequest(
     val titulo: String,
     val descripcion: String = "",
     val tipo: String = "UNICO",
-    val prioridad: Int = 0,
-    val recompensaXp: Int = 0,
-    val recompensaLudion: Int = 0
+    val prioridad: Int = 0
 )
 
 @Serializable
@@ -35,6 +33,13 @@ data class TareaResponse(
     val prioridad: Int,
     val recompensaXp: Int,
     val recompensaLudion: Int
+)
+
+@Serializable
+data class EditTareaRequest(
+    val titulo : String? = null,
+    val descripcion: String? = null,
+    val prioridad: Int? = null
 )
 
 fun Route.tareaRoutes() {
@@ -134,8 +139,40 @@ fun Route.tareaRoutes() {
                     ?: return@patch call.respond(HttpStatusCode.BadRequest)
 
             val ok = getDatabaseDaoImpl().completeTarea(tid, uid)
-            if (ok) call.respond(HttpStatusCode.OK, mapOf("aknowledged" to true))
+            if (ok) call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
             else call.respond(HttpStatusCode.NotFound)
+        }
+
+        patch("/tasks/{tid}/edit") {
+            val uid = call.principal<JWTPrincipal>()!!.subject?.toInt() ?: return@patch call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "No UID available"))
+            val tid = call.parameters["tid"]?.toInt() ?: return@patch call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Didn't catch the Task ID"))
+
+            val gid = getDatabaseDaoImpl().getGroupByTask(tid)
+            if (!checkTaskPriority(tid, uid, gid, call)){
+                return@patch
+            }
+
+            val data = call.receive<EditTareaRequest>()
+            getDatabaseDaoImpl().editTask(gid!!.id.value, data.titulo, data.descripcion, data.prioridad)
+            call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
+        }
+
+        delete("/tasks/{tid}/delete") {
+            val uid = call.principal<JWTPrincipal>()!!.subject?.toInt() ?: return@delete call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "No UID available"))
+            val tid = call.parameters["tid"]?.toInt() ?: return@delete call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Didn't catch the Task ID"))
+
+            // Solo borra si tiene permiso
+            val gid = getDatabaseDaoImpl().getGroupByTask(tid)
+            if (!checkTaskPriority(tid, uid, gid, call)){
+                return@delete
+            }
+
+            if (getDatabaseDaoImpl().deleteTarea(tid)) {
+                call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
+            }
+            else {
+                call.respond(HttpStatusCode.NotFound, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Couldn't delete the task"))
+            }
         }
     }
 }
@@ -159,4 +196,20 @@ fun calcularLudiones(tipo: TaskType, prioridad: Int): Int {
             TaskType.UNICO -> 2
         }
     return base + (prioridad * 10)
+}
+
+suspend fun checkTaskPriority(tid : Int, uid : Int, gid : EntidadGrupo?, call : RoutingCall) : Boolean{
+    if (gid == null) {
+        call.respond(HttpStatusCode.BadGateway)
+        return false
+    }
+
+    if (gid.owner.value != uid){
+        val d = getDatabaseDaoImpl().getUserRoleOnGroup(idusuario = uid, idgrupo = gid.id.value)
+        if (d != GroupRoles.MOD){
+            call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "You don't have enough priorities to do that"))
+            return false
+        }
+    }
+    return true
 }

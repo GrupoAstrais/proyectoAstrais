@@ -50,6 +50,18 @@ data class AddUserRequest(
     val userId : Int
 )
 
+@Serializable
+data class DeleteGroupRequest (
+    val gid : Int
+)
+
+@Serializable
+data class EditGroupRequest (
+    val gid : Int,
+    val name: String? = null,
+    val desc: String? = null
+)
+
 fun Route.groupRoutes(){
     authenticate("access-jwt") {
         get("/group/userGroups") {
@@ -98,6 +110,45 @@ fun Route.groupRoutes(){
                 AddUserReturn.ALREADYJOINED -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEALREADYEXISTS.ordinal, "User already joined the group"))
                 AddUserReturn.NOPERMISSION -> call.respond(HttpStatusCode.Forbidden, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "User doesn't have the permission to add people"))
                 AddUserReturn.CONNERR -> call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Error with the database"))
+            }
+        }
+
+        patch("/groups/editGroup") {
+            val token = call.principal<JWTPrincipal>()
+            val uid = token?.subject?.toInt() ?: -1
+            if (uid == -1){
+                call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_BADVALUE.ordinal, "Invalid UID"))
+                return@patch
+            }
+
+            val data = call.receive<EditGroupRequest>()
+
+            if (getGroupRepoImpl().editGroup(gid = data.gid, uid = uid, name = data.name, desc = data.desc)){
+                call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
+            }else{
+                call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Doesn't have enough privileges to edit the group"))
+            }
+
+        }
+
+        patch("/group/passOwnership"){
+            call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_UNIMPLEMENTED.ordinal, "Not implemented yet"))
+        }
+
+        delete("/groups/deleteGroup") {
+            val token = call.principal<JWTPrincipal>()
+            val uid = token?.subject?.toInt() ?: -1
+            if (uid == -1){
+                call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_BADVALUE.ordinal, "Invalid UID"))
+                return@delete
+            }
+
+            val data = call.receive<DeleteGroupRequest>()
+
+            if (getGroupRepoImpl().deleteGroup(uid = uid, gid = data.gid)){
+                call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
+            }else{
+                call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Doesn't have enough privileges to delete the group"))
             }
         }
 
