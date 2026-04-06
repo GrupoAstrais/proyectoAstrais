@@ -1,5 +1,7 @@
 import { useState } from "react";
 import DifficultyModal from "../ui/DifficultyModal";
+import TaskType from "../ui/TaskType";
+import DiaryHabit from "../ui/DiaryHabit";
 
 interface ModalProps {
     onPress: (opcion: string) => void
@@ -10,6 +12,18 @@ export default function Modal({onPress} : ModalProps) {
     
     const handleActive = (ac: string) => {
         setActive(ac);
+    }
+
+    const [isComposed, setIsComposed] = useState<boolean>(false);
+
+    const handleCompuesta = (ac: boolean) => {
+        setIsComposed(ac);
+    }
+
+    const [isDiary, setIsDiary] = useState<string>("");
+
+    const handleDiary = (ac: string) => {
+        setIsDiary(ac);
     }
         
   return (
@@ -24,12 +38,11 @@ export default function Modal({onPress} : ModalProps) {
             <DifficultyModal handleActive={handleActive} esOtroActivo={active}  dificultad={"HARD"} />
         </div>
         <div className="flex flex-row justify-around bg-accent-beige-300  py-4 px-2 rounded-md">
-            <div className="bg-state-success text-primary-900 rounded-xs shadow-xs shadow-primary-900 px-2">
-                <p className="font-bold">Hábito</p>
-            </div>
-            <div className="bg-state-success text-primary-900 rounded-xs shadow-xs shadow-primary-900 px-2">
-                <p className="font-bold">Diaria</p>
-            </div>
+            <DiaryHabit handleActive={handleDiary} titulo="Hábito" esOtroActivo={isDiary} />
+            <DiaryHabit handleActive={handleDiary} titulo="Diaria" esOtroActivo={isDiary} />
+        </div>
+        <div className="flex flex-row justify-around bg-accent-beige-300  py-4 px-2 rounded-md">
+            <TaskType handleActive={handleCompuesta} />
         </div>
         <div className="flex bg-accent-beige-300 rounded-md py-4 px-2">
             <input className="text-primary-900" id="tags" placeholder="Tags"/>

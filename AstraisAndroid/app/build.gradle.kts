@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     id("com.google.devtools.ksp") version "2.1.20-1.0.31"
+    id("org.jetbrains.dokka") version "2.2.0"
 }
 
 android {

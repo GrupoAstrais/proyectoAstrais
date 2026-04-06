@@ -10,7 +10,7 @@ export default function DifficultyModal({dificultad, handleActive, esOtroActivo}
         const [active, setIsActive] = React.useState<boolean>(false);
     
         const changeState = () => {
-            setIsActive(!dificultad);
+            setIsActive(!active);
             handleActive(dificultad)
         }
     

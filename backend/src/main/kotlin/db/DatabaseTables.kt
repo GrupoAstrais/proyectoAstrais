@@ -1,13 +1,5 @@
 package com.astrais.db
 
-import com.astrais.db.TablaTarea.default
-import com.astrais.db.TablaTarea.enumerationByName
-import com.astrais.db.TablaTarea.integer
-import com.astrais.db.TablaTarea.nullable
-import com.astrais.db.TablaTarea.optReference
-import com.astrais.db.TablaTarea.reference
-import com.astrais.db.TablaTarea.text
-import com.astrais.db.TablaTarea.varchar
 import java.time.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import org.jetbrains.exposed.v1.core.ReferenceOption
@@ -241,6 +233,12 @@ class EntidadTarea(id: EntityID<Int>) : IntEntity(id) {
 object TablaTareaUnica : IntIdTable("TaskUnique") {
     val id_tarea = reference("tid", TablaTarea, onDelete = ReferenceOption.CASCADE)
     val fecha_vencimiento = date("due_date").nullable()
+}
+class EntidadTareaUnica(id : EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<EntidadTareaUnica>(TablaTareaUnica)
+
+    var id_tarea by TablaTareaUnica.id_tarea
+    var fecha_vencimiento by TablaTareaUnica.fecha_vencimiento
 }
 
 object TablaTareaObjetivo : IntIdTable("TaskObjective") {

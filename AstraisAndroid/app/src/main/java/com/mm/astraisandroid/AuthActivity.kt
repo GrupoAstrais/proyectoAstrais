@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Games
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -63,6 +64,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.mm.astraisandroid.data.preferences.SessionDataStore
 import com.mm.astraisandroid.data.preferences.TokenHolder
+import com.mm.astraisandroid.ui.tabs.ClickerGameScreen
 import com.mm.astraisandroid.ui.theme.AstraisandroidTheme
 import com.mm.astraisandroid.ui.viewmodels.TaskViewModel
 import com.mm.astraisandroid.ui.viewmodels.UserViewModel
@@ -75,6 +77,8 @@ class AuthActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         val session = SessionDataStore(this)
+        TokenHolder.sessionDataStore = session
+
 
         lifecycleScope.launch {
             val (access, refresh, gid) = session.loadSession()
@@ -143,6 +147,8 @@ fun AppNavigation(sessionDataStore: SessionDataStore, initialHasSession: Boolean
                 }
             )
         }
+
+
 
         composable(ScreenRoutes.Profile.route) {
             val userViewModel: UserViewModel = viewModel(
@@ -230,6 +236,7 @@ fun HomeScreen(onNavigateToProfile: () -> Unit) {
                         "add_tab"       -> 2
                         "group_tab"     -> 3
                         "store_tab"     -> 4
+                        "minigames_tab" -> 5
                         "inventory_tab" -> 0
                         else            -> 0
                     },
@@ -249,6 +256,7 @@ fun HomeScreen(onNavigateToProfile: () -> Unit) {
                             1 -> "tasks_tab"
                             3 -> "group_tab"
                             4 -> "store_tab"
+                            5 -> "minigames_tab"
                             else -> "home_tab"
                         }
 
@@ -316,7 +324,22 @@ fun HomeScreen(onNavigateToProfile: () -> Unit) {
 
                 composable("inventory_tab") {
                     com.mm.astraisandroid.ui.tabs.InventarioTab(onCosmeticChanged = { userViewModel.fetchUser() })
-                }}
+                }
+
+                composable("minigames_tab") {
+                    ClickerGameScreen(
+                        url = "http://192.168.1.129:5684/static/minigames/clicker.html",
+                        onScoreSubmit = { puntos ->
+                            Toast.makeText(context, "¡Has ganado $puntos Ludiones!", Toast.LENGTH_LONG).show()
+
+                            navController.navigate("home_tab") {
+                                popUpTo(navController.graph.findStartDestination().id)
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                }
+            }
         }
     }
 
@@ -387,7 +410,8 @@ fun NavBottomBar(selected: Int, onSelect: (Int) -> Unit) {
         NavItem("Tasks", Icons.Filled.CheckCircle),
         NavItem("Add", Icons.Filled.AddCircle),
         NavItem("Groups", Icons.Filled.Person),
-        NavItem("Store", Icons.Filled.ShoppingCart)
+        NavItem("Store", Icons.Filled.ShoppingCart),
+        NavItem("Minigames", Icons.Filled.Games)
     )
 
     Row(

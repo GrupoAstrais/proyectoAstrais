@@ -17,6 +17,7 @@ interface AuthRepo {
 
     /**
      * Borra un usuario con el ID
+     * @param uid ID del usuario a borrar
      */
     suspend fun deleteUser(uid : Int) : Boolean
 
