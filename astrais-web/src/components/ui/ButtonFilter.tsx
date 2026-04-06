@@ -16,10 +16,10 @@ export default function ButtonFilter({handleActive, titulo, esOtroActivo} : Butt
     }
 
     React.useEffect(() => {
-        if(esOtroActivo != titulo) {
+        if(esOtroActivo !== titulo) {
             setIsActive(false)
         }
-    },[esOtroActivo])
+    },[esOtroActivo, titulo])
 
     return (
         <>

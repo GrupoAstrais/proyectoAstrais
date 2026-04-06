@@ -21,7 +21,7 @@ export default function Profile() {
         }
     }
 
-    const handleConfirmCustom = (confirm: boolean) => {
+    const handleConfirmCustom = () => {
         {/* aquí se guardan los combias del custom */}
         setActiveModal("");
     }

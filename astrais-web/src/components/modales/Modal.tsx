@@ -14,7 +14,7 @@ export default function Modal({onPress} : ModalProps) {
         setActive(ac);
     }
 
-    const [isComposed, setIsComposed] = useState<boolean>(false);
+    const [, setIsComposed] = useState<boolean>(false);
 
     const handleCompuesta = (ac: boolean) => {
         setIsComposed(ac);

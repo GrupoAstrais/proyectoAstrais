@@ -15,10 +15,10 @@ export default function DifficultyModal({dificultad, handleActive, esOtroActivo}
         }
     
         React.useEffect(() => {
-            if(esOtroActivo != dificultad) {
+            if(esOtroActivo !== dificultad) {
                 setIsActive(false)
             }
-        },[esOtroActivo])
+        },[esOtroActivo, dificultad])
         
     return (
         <>

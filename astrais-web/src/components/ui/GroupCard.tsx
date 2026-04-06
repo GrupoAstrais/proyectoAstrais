@@ -15,10 +15,10 @@ export default function GroupCard({onClick, id, activeId} : GroupCardProps) {
     }
     
     React.useEffect(() => {
-            if(activeId != id) {
+            if(activeId !== id) {
                 setIsActive(false)
             }
-    },[activeId])
+    },[activeId, id])
         
     return (
 

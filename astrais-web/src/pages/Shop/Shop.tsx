@@ -1,170 +1,430 @@
-import Navbar from "../../components/layout/Navbar"
+import React from 'react'
+import { NavLink } from 'react-router'
+import Navbar from '../../components/layout/Navbar'
+import astra from '../../assets/astra.png'
 import bgImage from '../../assets/homeScreenBack.jpg'
 import logo from '../../assets/logo_w.svg'
+import shopArt from '../../assets/shop.png'
+import { readClickerStats } from '../Games/gameStorage'
+import { SHOP_CATEGORIES, SHOP_ITEMS, getItemsForCategory, getRarityClasses, type ShopCategory } from './shopCatalog'
+import { calculateAvailableBalance, calculateSpentLudions, readShopState, type ShopState, writeShopState } from './shopStorage'
 
-// Mock data para visualización
-const PRODUCTS = Array.from({ length: 11 }, (_, i) => ({
-  id: i + 1,
-  name: `Pixel Item ${i + 1}`,
-  price: `${(Math.random() * 80 + 15).toFixed(0)}`,
-  tag: i % 4 === 0 ? 'HOT' : i % 4 === 1 ? 'NEW' : null
-}))
+const PAGE_SIZE = 4
 
-const CATEGORIES = ['All', 'Events', 'Themes', 'Pets', 'Specials']
+function usePersistedShopState() {
+  const [shopState, setShopState] = React.useState<ShopState>(() => readShopState())
+
+  const updateShopState = React.useCallback((nextState: ShopState) => {
+    setShopState(nextState)
+    writeShopState(nextState)
+  }, [])
+
+  return [shopState, updateShopState] as const
+}
 
 export default function Shop() {
+  const [shopState, updateShopState] = usePersistedShopState()
+  const [activeCategory, setActiveCategory] = React.useState<ShopCategory>('Todos')
+  const [currentPage, setCurrentPage] = React.useState(0)
+  const [selectedItemId, setSelectedItemId] = React.useState<string>(SHOP_ITEMS[0]?.id ?? '')
+  const [gameStats] = React.useState(() => readClickerStats())
+
+  const filteredItems = React.useMemo(() => getItemsForCategory(activeCategory), [activeCategory])
+  const pageCount = Math.max(1, Math.ceil(filteredItems.length / PAGE_SIZE))
+  const visibleItems = React.useMemo(
+    () => filteredItems.slice(currentPage * PAGE_SIZE, currentPage * PAGE_SIZE + PAGE_SIZE),
+    [currentPage, filteredItems],
+  )
+
+  const selectedItem =
+    filteredItems.find((item) => item.id === selectedItemId) ??
+    visibleItems[0] ??
+    SHOP_ITEMS[0]
+
+  const spentLudions = calculateSpentLudions(shopState.ownedIds)
+  const availableBalance = calculateAvailableBalance(gameStats.totalLudionsEarned, shopState.ownedIds)
+  const isOwned = selectedItem ? shopState.ownedIds.includes(selectedItem.id) : false
+  const isEquipped = selectedItem ? shopState.equippedBySlot[selectedItem.slot] === selectedItem.id : false
+
+  const equippedTheme = SHOP_ITEMS.find((item) => item.id === shopState.equippedBySlot.theme)
+  const equippedCompanion = SHOP_ITEMS.find((item) => item.id === shopState.equippedBySlot.companion)
+  const equippedAura = SHOP_ITEMS.find((item) => item.id === shopState.equippedBySlot.aura)
+
+  React.useEffect(() => {
+    setCurrentPage(0)
+  }, [activeCategory])
+
+  React.useEffect(() => {
+    if (currentPage > pageCount - 1) {
+      setCurrentPage(pageCount - 1)
+    }
+  }, [currentPage, pageCount])
+
+  React.useEffect(() => {
+    if (!visibleItems.length) {
+      return
+    }
+
+    const selectedIsVisible = visibleItems.some((item) => item.id === selectedItemId)
+
+    if (!selectedIsVisible) {
+      setSelectedItemId(visibleItems[0].id)
+    }
+  }, [selectedItemId, visibleItems])
+
+  const handleBuySelected = () => {
+    if (!selectedItem || isOwned || availableBalance < selectedItem.price) {
+      return
+    }
+
+    updateShopState({
+      ...shopState,
+      ownedIds: [...shopState.ownedIds, selectedItem.id],
+    })
+  }
+
+  const handleEquipSelected = () => {
+    if (!selectedItem || !isOwned) {
+      return
+    }
+
+    updateShopState({
+      ...shopState,
+      equippedBySlot: {
+        ...shopState.equippedBySlot,
+        [selectedItem.slot]: selectedItem.id,
+      },
+    })
+  }
+
   return (
-    <div 
-      className="flex flex-col h-screen relative bg-cover bg-center bg-no-repeat font-['Space_Grotesk'] text-white overflow-hidden"
-      style={{ backgroundImage: `url(${bgImage})` }}>
+    <div
+      style={{ backgroundImage: `url(${bgImage})` }}
+      className="relative h-screen overflow-hidden bg-cover bg-center font-['Space_Grotesk'] text-white"
+    >
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.18),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(139,92,246,0.24),transparent_38%),radial-gradient(circle_at_center,rgba(34,197,94,0.16),transparent_45%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-black/63" />
+      <div className="scanlines pointer-events-none absolute inset-0 opacity-25" />
 
-      <div className="absolute inset-0 bg-linear-to-b from-black/70 via-black/50 to-black/80 pointer-events-none" />
-      
-      <div 
-        className="absolute inset-0 pointer-events-none z-0 opacity-[0.03]"
-        style={{ backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 2px, #000 2px, #000 4px)` }}
-      />
-
-      <div className="relative z-50"> {/*El z es para posicionar el elemento por encima o por debajo, ya que se está usando relative*/}
+      <div className="relative z-10 flex h-full min-h-0 flex-col">
         <Navbar />
-      </div>
-      
-      <div className="relative z-10 grid grid-cols-12 gap-6 w-full mx-auto px-6 pt-2">
-        
-        <aside className="col-span-2 row-span-1 flex flex-col gap-3 h-fit sticky top-24
-                          bg-black/40 backdrop-blur-xs border-4 border-primary-500/80 rounded-md
-                          shadow-[0_0_20px_rgba(167,139,250,0.3),8px_8px_0px_0px_#4c2191]
-                          p-4 transition-all duration-300 hover:border-accent-beige-300">
-          
-          <h2 className="text-lg font-bold text-accent-beige-500 tracking-widest uppercase 
-                         border-b-2 border-primary-500/50 pb-2 mb-1 flex items-center gap-2">
-            <span className="inline-block w-2 h-2 animate-pulse" /> FILTERS
-          </h2>
-          
-          {CATEGORIES.map((cat, idx) => (
-            <button 
-              key={cat}
-              className={`w-full text-left px-3 py-2 font-semibold text-sm tracking-wide transition-all duration-200 
-                          border-2 rounded-sm relative overflow-hidden group
-                          ${idx === 0 
-                            ? 'bg-primary-500 border-white text-white shadow-[4px_4px_0px_0px_#000] -translate-y-0.5' 
-                            : 'bg-transparent border-primary-500/40 text-gray-300 hover:bg-primary-500/20 hover:border-accent-beige-300 hover:text-white hover:shadow-[3px_3px_0px_0px_#000] hover:-translate-y-0.5'
-                          }`}
-            >
-              {/* Efecto brillo al hover */}
-              <span className="absolute inset-0 bg-white/10 -translate-x-full group-hover:translate-x-0 transition-transform duration-300 skew-x-12" />
-              <span className="relative z-10">{cat}</span>
-            </button>
-          ))}
-        
-        </aside>
 
-        <div className="col-span-2 row-start-2 ml-2 text-center h-fit w-fit place-self-center
-        bg-black/40 backdrop-blur-xs border-4 border-primary-500/80 rounded-md
-                          font-semibold tracking-wide
-                           hover:bg-primary-500/20 hover:text-white hover:shadow-[3px_3px_0px_0px_#000] hover:-translate-y-0.5'
-                          p-4 transition-all duration-300 hover:border-accent-beige-300">
-            proximamente... 
-        </div>
+        <main className="flex min-h-0 flex-1 px-3 pb-3 pt-1 md:px-4 md:pb-4 xl:px-6 xl:pb-5">
+          <section className="mx-auto hidden h-full w-full max-w-365 gap-3 lg:grid lg:grid-cols-[13.5rem_minmax(0,1.02fr)_16.25rem] min-[1400px]:gap-4 min-[1400px]:grid-cols-[15.75rem_minmax(0,1.24fr)_20.25rem]">
+            <aside className="panel-glow relative grid min-h-0 grid-rows-[auto_auto_auto_minmax(0,1fr)] overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(170deg,rgba(15,23,42,0.9),rgba(30,74,99,0.78))] p-3.5 shadow-[0_20px_56px_rgba(7,12,24,0.46)] min-[1400px]:p-5">
+              <div className="pointer-events-none absolute -left-12 top-3 h-36 w-36 rounded-full bg-secondary-500/16 blur-3xl" />
+              <div className="relative z-10 flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[0.64rem] uppercase tracking-[0.28em] text-accent-beige-300">Astrais Store</p>
+                  <h1 className="mt-3 font-['Press_Start_2P'] text-[clamp(0.92rem,1.4vw,1.2rem)] leading-tight text-white">
+                    Tienda orbital
+                  </h1>
+                  <p className="mt-2 text-[0.8rem] leading-5 text-slate-300 xl:text-[0.86rem] xl:leading-6">
+                    Explora, compra y equipa a tu antojo.
+                  </p>
+                </div>
+                <img src={logo} alt="Astrais logo" className="h-9 w-9 opacity-85 min-[1400px]:h-12 min-[1400px]:w-12" />
+              </div>
 
-        {/*PANEL DE PRODUCTOS (col-span-10)*/}
-        <main className="col-span-10 row-span-2 bg-black/30 backdrop-blur-md border-4 border-secondary-500/60 rounded-md
-                         shadow-[0_0_25px_rgba(148,163,184,0.2),10px_10px_0px_0px_#3b1873] 
-                         p-5 flex flex-col relative overflow-hidden">
-          
-          {/* Cabecera del catálogo */}
-          <div className="flex items-center justify-between mb-2 pb-3 border-b-2 border-dashed border-white/20">
-            <h2 className="text-2xl font-bold tracking-[0.15em] text-accent-beige-300 drop-shadow-md">
-              SHOP
-            </h2>
-            <div className="flex items-center gap-2 text-xs font-bold bg-black/60 px-3 py-1 border-2 border-gray-600 rounded-sm text-gray-300">
-              <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-              {PRODUCTS.length} AVAILABLE ITEMS
-            </div>
-          </div>
+              <div className="relative z-10 mt-4 grid grid-cols-2 gap-2.5 min-[1400px]:gap-3">
+                <div className="rounded-2xl border border-white/10 bg-black/18 p-3">
+                  <p className="text-[0.56rem] uppercase tracking-[0.18em] text-slate-400">Saldo</p>
+                  <p className="mt-2 text-[1rem] font-semibold text-accent-mint-300 xl:text-[1.12rem]">{availableBalance}</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-black/18 p-3">
+                  <p className="text-[0.56rem] uppercase tracking-[0.18em] text-slate-400">Gastado</p>
+                  <p className="mt-2 text-[1rem] font-semibold text-[#f8d089] xl:text-[1.12rem]">{spentLudions}</p>
+                </div>
+              </div>
 
-          {/* Grid de productos */}
-          <div className="pt-3 grid grid-cols-6 gap-4 overflow-y-auto pr-2 max-h-[calc(100vh-240px)] custom-scrollbar">
-            {PRODUCTS.map((product) => (
-              <div key={product.id} className="col-span-2 group">
-                <div className="bg-slate-900/80 border-4 border-primary-500/50 p-2.5 
-                                relative transition-all duration-300 ease-out
-                                hover:border-accent-beige-300 hover:shadow-[0_0_15px_rgba(255,215,150,0.5),6px_6px_0px_0px_#0f172a] 
-                                hover:-translate-y-1">
-                  
-                  {/* Badge animado */}
-                  {product.tag && (
-                    <span className="absolute -top-2 -left-2 z-20 bg-state-error text-white text-[9px] font-black px-2 py-0.5 
-                                     border-2 border-slate-900 shadow-md animate-bounce"
-                          style={{ animationDuration: '2s' }}>
-                      {product.tag}
-                    </span>
-                  )}
-
-                  {/* Imagen placeholder */}
-                  <div className="aspect-square bg-linear-to-br from-primary-600/20 to-secondary-700/30 
-                                  border-2 border-white/5 mb-2 overflow-hidden relative pixel-frame">
-                    <img 
-                      src={`https://picsum.photos/seed/pix${product.id}/200/200`} 
-                      alt={product.name} 
-                      className="w-full h-full object-cover pixelated transition-transform duration-500 group-hover:scale-110" 
-                    />
-                    {/* Overlay de brillo al hover */}
-                    <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors duration-300" />
+              <div className="relative z-10 mt-4 rounded-3xl border border-white/10 bg-black/18 p-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-[0.58rem] uppercase tracking-[0.18em] text-slate-400">Conexion arcade</p>
+                  <span className="rounded-full border border-accent-mint-300/25 bg-accent-mint-300/8 px-2 py-1 text-[0.54rem] uppercase tracking-[0.14em] text-accent-mint-300">
+                    Activa
+                  </span>
+                </div>
+                <div className="mt-2 space-y-2 text-[0.76rem] text-slate-300 xl:text-[0.82rem]">
+                  <div className="flex items-center justify-between">
+                    <span>Ludiones del arcade</span>
+                    <span className="font-semibold text-white">{gameStats.totalLudionsEarned}</span>
                   </div>
-                  
-                  <h3 className="text-sm font-bold text-white truncate mb-1 tracking-wide">{product.name}</h3>
-                  
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-base font-black text-accent-beige-300 drop-shadow-sm">{product.price}
-                        <img src={logo} alt="Astrais logo" className="inline-block w-6 h-6 mb-1.5 ml-0.5" />
-                    </span>
-                    <button className="bg-primary-500 hover:bg-primary-400 text-white text-[10px] font-extrabold px-3 py-1 
-                                       border-2 border-white/40 shadow-[3px_3px_0px_0px_#000] 
-                                       active:translate-y-0.5 active:shadow-none transition-all duration-150 rounded-sm
-                                       hover:shadow-[0_0_10px_rgba(167,139,250,0.6)]">
-                      + BUY IT
-                    </button>
+                  <div className="flex items-center justify-between">
+                    <span>Objetos comprados</span>
+                    <span className="font-semibold text-white">{shopState.ownedIds.length}</span>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
+
+              <div className="relative z-10 mt-4 min-h-0 rounded-3xl border border-white/10 bg-black/18 p-3">
+                <p className="text-[0.58rem] uppercase tracking-[0.18em] text-slate-400">Categorias</p>
+                <div className="mt-2 grid grid-cols-1 gap-2">
+                  {SHOP_CATEGORIES.map((category) => (
+                    <button
+                      key={category}
+                      type="button"
+                      onClick={() => setActiveCategory(category)}
+                      className={`rounded-2xl border px-3 py-2.5 text-left text-[0.76rem] font-semibold transition xl:text-[0.82rem] ${
+                        activeCategory === category
+                          ? 'border-transparent bg-linear-to-r from-[#f97316] via-[#ec4899] to-[#8b5cf6] text-white shadow-[0_10px_24px_rgba(236,72,153,0.20)]'
+                          : 'border-white/12 bg-white/6 text-slate-200 hover:bg-white/10'
+                      }`}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </aside>
+
+            <section className="panel-glow relative grid min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-[28px] border border-white/15 bg-[linear-gradient(160deg,rgba(15,23,42,0.88),rgba(76,29,149,0.56),rgba(30,74,99,0.72))] p-3.5 shadow-[0_20px_58px_rgba(7,12,24,0.48)] min-[1400px]:p-5">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.10),transparent_25%)]" />
+              <header className="relative z-10 flex items-start justify-between gap-3 min-[1400px]:gap-4">
+                <div>
+                  <p className="text-[0.64rem] uppercase tracking-[0.28em] text-accent-beige-300">Catalogo activo</p>
+                  <h2 className="mt-3 font-['Press_Start_2P'] text-[clamp(0.92rem,1.4vw,1.15rem)] text-white">
+                    Seleccion premium
+                  </h2>
+                </div>
+
+                <div className="flex items-center gap-2.5 min-[1400px]:gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((page) => Math.max(0, page - 1))}
+                    disabled={currentPage === 0}
+                    className={`rounded-full border px-3 py-2 text-[0.74rem] font-semibold transition ${
+                      currentPage === 0
+                        ? 'cursor-not-allowed border-white/10 bg-white/6 text-slate-500'
+                        : 'border-white/15 bg-white/8 text-white hover:bg-white/12'
+                    }`}
+                  >
+                    Anterior
+                  </button>
+                  <span className="rounded-full border border-white/12 bg-black/18 px-3 py-2 text-[0.72rem] uppercase tracking-[0.18em] text-slate-300">
+                    Pagina {currentPage + 1}/{pageCount}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((page) => Math.min(pageCount - 1, page + 1))}
+                    disabled={currentPage >= pageCount - 1}
+                    className={`rounded-full border px-3 py-2 text-[0.74rem] font-semibold transition ${
+                      currentPage >= pageCount - 1
+                        ? 'cursor-not-allowed border-white/10 bg-white/6 text-slate-500'
+                        : 'border-white/15 bg-white/8 text-white hover:bg-white/12'
+                    }`}
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </header>
+
+              <div className="relative z-10 mt-4 grid min-h-0 grid-cols-2 gap-3 min-[1400px]:gap-4">
+                {visibleItems.map((item) => {
+                  const itemOwned = shopState.ownedIds.includes(item.id)
+                  const itemEquipped = shopState.equippedBySlot[item.slot] === item.id
+
+                  return (
+                    <article
+                      key={item.id}
+                      onClick={() => setSelectedItemId(item.id)}
+                      className={`catalog-card flex min-h-0 cursor-pointer flex-col rounded-3xl border p-3 transition min-[1400px]:p-4 ${
+                        selectedItem?.id === item.id
+                          ? 'border-accent-beige-300/40 bg-[linear-gradient(160deg,rgba(255,255,255,0.12),rgba(129,140,248,0.10))] shadow-[0_16px_38px_rgba(15,23,42,0.36)]'
+                          : 'border-white/12 bg-[rgba(15,23,42,0.74)] hover:border-white/18 hover:bg-white/8'
+                      }`}
+                    >
+                      <div
+                        className="relative overflow-hidden rounded-[20px] border border-white/10 px-3 py-3"
+                        style={{ background: `linear-gradient(145deg, ${item.accentFrom}33, ${item.accentTo}22)` }}
+                      >
+                        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.16),transparent_34%)]" />
+                        <div className="relative flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-[0.58rem] uppercase tracking-[0.18em] text-slate-300">{item.category}</p>
+                            <h3 className="mt-2 truncate text-[0.82rem] font-semibold text-white min-[1400px]:text-[0.94rem]">{item.name}</h3>
+                          </div>
+                          <span className={`rounded-full border px-2 py-1 text-[0.52rem] uppercase tracking-[0.16em] ${getRarityClasses(item.rarity)}`}>
+                            {item.rarity}
+                          </span>
+                        </div>
+
+                        {item.badge ? (
+                          <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/35 px-2 py-1 text-[0.5rem] uppercase tracking-[0.16em] text-accent-beige-300">
+                            {item.badge}
+                          </span>
+                        ) : null}
+
+                        <div className="relative mt-10 flex items-end justify-between gap-3">
+                          <img src={logo} alt="Astrais logo" className="h-8 w-8 opacity-85 min-[1400px]:h-11 min-[1400px]:w-11" />
+                          <p className="max-w-48 text-right text-[0.66rem] leading-5 text-slate-200 min-[1400px]:text-[0.76rem]">
+                            {item.shortDescription}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex items-center justify-between">
+                        <span className="text-[0.8rem] font-semibold text-[#f8d089] min-[1400px]:text-[0.9rem]">{item.price} L</span>
+                        <span className="rounded-full border border-white/12 bg-white/6 px-2 py-1 text-[0.54rem] uppercase tracking-[0.14em] text-slate-300">
+                          {itemEquipped ? 'Equipado' : itemOwned ? 'Comprado' : 'Disponible'}
+                        </span>
+                      </div>
+                    </article>
+                  )
+                })}
+              </div>
+            </section>
+
+            {selectedItem ? (
+              <aside className="panel-glow relative grid min-h-0 grid-rows-[minmax(0,1fr)_auto] overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(170deg,rgba(15,23,42,0.9),rgba(30,74,99,0.76))] p-3.5 shadow-[0_20px_56px_rgba(7,12,24,0.46)] min-[1400px]:p-5">
+                <div className="pointer-events-none absolute -right-10 top-6 h-36 w-36 rounded-full bg-secondary-500/18 blur-3xl" />
+                <div
+                  className="relative min-h-0 overflow-hidden rounded-3xl border border-white/10 p-4"
+                  style={{ background: `linear-gradient(145deg, ${selectedItem.accentFrom}30, ${selectedItem.accentTo}18)` }}
+                >
+                  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.16),transparent_34%)]" />
+                  <img
+                    src={shopArt}
+                    alt="Arte de la tienda"
+                    className="pointer-events-none absolute -right-20 bottom-0 hidden h-[clamp(7rem,18vh,10rem)] opacity-35 min-[1400px]:block"
+                  />
+                  <img
+                    src={astra}
+                    alt="Mascota Astrais"
+                    className="pointer-events-none absolute bottom-0 right-2 hidden h-[clamp(5rem,12vh,7rem)] opacity-75 min-[1400px]:block"
+                  />
+
+                  <div className="relative z-10 grid h-full min-h-0 grid-rows-[auto_auto_auto_auto_auto_auto]">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[0.58rem] uppercase tracking-[0.18em] text-slate-300">{selectedItem.category}</p>
+                        <h2 className="mt-2 font-['Press_Start_2P'] text-[0.8rem] leading-snug text-white min-[1400px]:text-[0.96rem]">
+                          {selectedItem.name}
+                        </h2>
+                      </div>
+                      <span className={`rounded-full border px-2 py-1 text-[0.52rem] uppercase tracking-[0.16em] ${getRarityClasses(selectedItem.rarity)}`}>
+                        {selectedItem.rarity}
+                      </span>
+                    </div>
+
+                    <p className="mt-4 text-[0.74rem] leading-5 text-slate-200 min-[1400px]:text-[0.86rem] min-[1400px]:leading-6">{selectedItem.detail}</p>
+
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                      <div className="rounded-2xl border border-white/10 bg-black/18 p-3">
+                        <p className="text-[0.56rem] uppercase tracking-[0.16em] text-slate-400">Precio</p>
+                        <p className="mt-2 text-[0.86rem] font-semibold text-[#f8d089] min-[1400px]:text-[1.04rem]">{selectedItem.price} L</p>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-black/18 p-3">
+                        <p className="text-[0.56rem] uppercase tracking-[0.16em] text-slate-400">Slot</p>
+                        <p className="mt-2 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-white min-[1400px]:text-[0.82rem]">
+                          {selectedItem.slot}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 rounded-[22px] border border-white/10 bg-black/20 px-4 py-3">
+                      <p className="text-[0.56rem] uppercase tracking-[0.16em] text-slate-400">Perk visual</p>
+                      <p className="mt-2 text-[0.72rem] leading-5 text-slate-200 min-[1400px]:text-[0.82rem] min-[1400px]:leading-6">{selectedItem.perk}</p>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-3 gap-3">
+                      <div className="rounded-2xl border border-white/10 bg-black/18 p-3">
+                        <p className="text-[0.54rem] uppercase tracking-[0.16em] text-slate-400">Tema</p>
+                        <p className="mt-2 text-[0.64rem] leading-5 text-white min-[1400px]:text-[0.74rem]">{equippedTheme?.name ?? 'Ninguno'}</p>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-black/18 p-3">
+                        <p className="text-[0.54rem] uppercase tracking-[0.16em] text-slate-400">Mascota</p>
+                        <p className="mt-2 text-[0.64rem] leading-5 text-white min-[1400px]:text-[0.74rem]">{equippedCompanion?.name ?? 'Ninguna'}</p>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-black/18 p-3">
+                        <p className="text-[0.54rem] uppercase tracking-[0.16em] text-slate-400">Aura</p>
+                        <p className="mt-2 text-[0.64rem] leading-5 text-white min-[1400px]:text-[0.74rem]">{equippedAura?.name ?? 'Ninguna'}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex items-center justify-between gap-3">
+                      <button
+                        type="button"
+                        onClick={handleBuySelected}
+                        disabled={isOwned || availableBalance < selectedItem.price}
+                          className={`rounded-2xl px-4 py-3 text-[0.72rem] font-semibold transition min-[1400px]:text-[0.82rem] ${
+                          isOwned
+                            ? 'cursor-default border border-accent-mint-300/25 bg-accent-mint-300/12 text-accent-mint-300'
+                            : availableBalance < selectedItem.price
+                              ? 'cursor-not-allowed border border-white/10 bg-white/8 text-slate-400'
+                              : 'border border-transparent bg-linear-to-r from-[#f97316] via-[#ec4899] to-[#8b5cf6] text-white shadow-[0_14px_28px_rgba(236,72,153,0.22)] hover:-translate-y-0.5'
+                        }`}
+                      >
+                        {isOwned ? 'Ya comprado' : 'Comprar ahora'}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleEquipSelected}
+                        disabled={!isOwned || isEquipped}
+                          className={`rounded-2xl px-4 py-3 text-[0.72rem] font-semibold transition min-[1400px]:text-[0.82rem] ${
+                          !isOwned
+                            ? 'cursor-not-allowed border border-white/10 bg-white/8 text-slate-400'
+                            : isEquipped
+                              ? 'cursor-default border border-accent-mint-300/25 bg-accent-mint-300/12 text-accent-mint-300'
+                              : 'border border-white/15 bg-white/8 text-white hover:bg-white/12'
+                        }`}
+                      >
+                        {isEquipped ? 'Equipado' : 'Equipar'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center justify-between gap-3">
+                  <div className="rounded-2xl border border-white/10 bg-black/18 px-4 py-3 text-[0.72rem] leading-5 text-slate-300 min-[1400px]:text-[0.8rem]">
+                    Si necesitas mas saldo, el arcade ya alimenta esta tienda con lo que ganas en minijuegos.
+                  </div>
+                  <NavLink
+                    to="/games"
+                    className="rounded-2xl border border-white/15 bg-white/8 px-4 py-3 text-[0.72rem] font-semibold text-white transition hover:bg-white/12 min-[1400px]:text-[0.82rem]"
+                  >
+                    Ir al arcade
+                  </NavLink>
+                </div>
+              </aside>
+            ) : null}
+          </section>
+
+          <section className="mx-auto flex h-full max-w-md items-center justify-center lg:hidden">
+            <article className="rounded-[28px] border border-white/15 bg-[rgba(15,23,42,0.84)] p-6 text-center shadow-[0_24px_60px_rgba(7,12,24,0.45)] backdrop-blur-sm">
+              <p className="text-[0.72rem] uppercase tracking-[0.28em] text-accent-beige-300">Astrais Store</p>
+              <h1 className="mt-4 font-['Press_Start_2P'] text-lg text-white">Vista de escritorio</h1>
+              <p className="mt-4 text-sm leading-6 text-slate-300">
+                Esta tienda esta optimizada para escritorios medianos y grandes. Saldo disponible: {availableBalance} ludiones.
+              </p>
+            </article>
+          </section>
         </main>
       </div>
 
-      {/* CSS Personalizado para efectos avanzados */}
       <style>{`
-        /* Forzar renderizado nítido de imágenes */
-        .pixelated {
-          image-rendering: pixelated;
-          image-rendering: -moz-crisp-edges;
-          image-rendering: crisp-edges;
+        .scanlines {
+          background-image: repeating-linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.06) 0,
+            rgba(255, 255, 255, 0.06) 1px,
+            transparent 1px,
+            transparent 4px
+          );
         }
-        
-        /* Marco pixelado sutil alrededor de imágenes */
-        .pixel-frame::before {
+
+        .panel-glow::after {
           content: '';
           position: absolute;
           inset: 0;
-          border: 2px solid rgba(255,255,255,0.05);
-          box-shadow: inset 0 0 10px rgba(0,0,0,0.4);
+          border-radius: inherit;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
           pointer-events: none;
         }
 
-        /* Scrollbar retro */
-        .custom-scrollbar::-webkit-scrollbar { width: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-track { 
-          background: #0f172a; 
-          border-left: 2px solid #334155; 
+        .catalog-card {
+          box-shadow: 0 14px 32px rgba(7, 12, 24, 0.22);
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb { 
-          background: #8b5cf6; 
-          border: 2px solid #0f172a;
-          box-shadow: inset 0 0 0 2px #c084fc;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a78bfa; }
-        .custom-scrollbar { scrollbar-color: #8b5cf6 #0f172a; }
       `}</style>
     </div>
   )

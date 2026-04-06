@@ -1,13 +1,13 @@
 import { Route, Routes } from 'react-router'
-import Home from './pages/Dashboard/Home'
 import Login from './pages/Auth/Login'
 import Register from './pages/Auth/Register'
+import Achivs from './pages/Achiv/Achivs'
+import Home from './pages/Dashboard/Home'
+import Games from './pages/Games/Games'
 import Group from './pages/Groups/Groups'
+import Shop from './pages/Shop/Shop'
 import Tasks from './pages/Tasks/Tasks'
 import Profile from './pages/User/Profile'
-import Shop from './pages/Shop/Shop'
-import Games from './pages/Games/Games'
-import Achivs from './pages/Achiv/Achivs'
 import './styles/colors.css'
 
 function Placeholder({ title }: { title: string }) {
@@ -23,7 +23,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/" element={<Login />} />
-      <Route path="/forgot-password" element={<Placeholder title="Recuperación de contraseña (próximamente)" />} />
+      <Route path="/forgot-password" element={<Placeholder title="Recuperacion de contrasena (proximamente)" />} />
       <Route path="/register" element={<Register />} />
       <Route path="/home" element={<Home />} />
       <Route path="/groups" element={<Group />} />
@@ -32,7 +32,7 @@ export default function App() {
       <Route path="/shop" element={<Shop />} />
       <Route path="/games" element={<Games />} />
       <Route path="/achievements" element={<Achivs />} />
-      <Route path="*" element={<Placeholder title="Página no encontrada" />} />
+      <Route path="*" element={<Placeholder title="Pagina no encontrada" />} />
     </Routes>
   )
 }
