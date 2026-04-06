@@ -2,6 +2,7 @@ package com.astrais.db
 
 import CosmeticResponseDTO
 import com.astrais.LANG_CODE_ENGLISH
+import com.astrais.auth.GoogleUserInfo
 
 interface DatabaseDAO {
     /**
@@ -43,6 +44,20 @@ interface DatabaseDAO {
      * @param ent El usuario concreto
      */
     suspend fun setUserLastLogin(ent: EntidadUsuario)
+
+    /**
+     * Mira si le UID del provider ya esta asignado a una cuenta
+     */
+    suspend fun checkForOauth(provider_uid : String, auth : AuthProvider) : Boolean
+
+    suspend fun createUserWithOauth(
+        nombreusu: String,
+        lang: String = LANG_CODE_ENGLISH,
+        utcOffset: Float = 0f,
+        role: UserRoles = UserRoles.NORMAL_USER,
+        provider_uid : String,
+        auth : AuthProvider
+        )
 
     /**
      * Se crea un grupo para el usuario indicado

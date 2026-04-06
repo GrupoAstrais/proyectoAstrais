@@ -3,6 +3,7 @@ package com.astrais
 import adminRoutes
 import com.astrais.auth.authRoutes
 import com.astrais.auth.installAuth
+import com.astrais.auth.oauthRoutes
 import com.astrais.db.initDatabase
 import com.astrais.groups.groupRoutes
 import installSSE
@@ -79,6 +80,7 @@ fun Application.module() {
 
     routing {
         authRoutes()
+        oauthRoutes()
         groupRoutes()
         tareaRoutes()
         storeRoutes()

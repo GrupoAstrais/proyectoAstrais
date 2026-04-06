@@ -1,6 +1,7 @@
 package com.astrais.db
 
 import CosmeticResponseDTO
+import com.astrais.auth.GoogleUserInfo
 import java.time.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import org.jetbrains.exposed.v1.core.*
@@ -79,6 +80,41 @@ class DatabaseDAOImpl : DatabaseDAO {
 
     override suspend fun setUserLastLogin(ent: EntidadUsuario) {
         suspendTransaction { ent.ultimo_login = java.time.LocalDate.now().toKotlinLocalDate() }
+    }
+
+    override suspend fun checkForOauth(provider_uid : String, auth : AuthProvider) : Boolean {
+        return suspendTransaction {
+            !TablaCredencialesAuth.selectAll().where {
+                (TablaCredencialesAuth.provider.eq(auth)).and(TablaCredencialesAuth.provider_uid.eq(provider_uid))
+            }.empty()
+        }
+    }
+
+    override suspend fun createUserWithOauth(
+        nombreusu: String,
+        lang: String,
+        utcOffset: Float,
+        role: UserRoles,
+        provider_uid: String,
+        auth: AuthProvider
+    ) {
+        suspendTransaction {
+            val newuser = EntidadUsuario.new {
+                this.nombre = nombreusu
+                this.email = null
+                this.contrasenia = null
+                this.idioma = lang
+                this.zona_horaria = utcOffset
+                this.rol = role
+                this.ultimo_login = LocalDate.now().toKotlinLocalDate()
+            }
+
+            EntidadCredencialesAuth.new {
+                this.uid = newuser.id
+                this.provider = auth
+                this.provider_uid = provider_uid
+            }
+        }
     }
 
     override suspend fun createGroup(
