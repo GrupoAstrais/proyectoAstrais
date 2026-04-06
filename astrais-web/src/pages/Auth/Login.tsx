@@ -22,7 +22,7 @@ export default function Login() {
     await performLogin({email: email, passwd: password}).then(() => {
       navigate('/home')
     }).catch(()=> {
-      setError('Usuario o cqwerontraseña no existen')
+      setError('Usuario o contraseña no existen')
     })
   }
 

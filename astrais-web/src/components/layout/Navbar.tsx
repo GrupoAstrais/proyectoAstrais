@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router'
-import logo from '../../assets/logo.svg'
+import logo from '../../assets/logo_b.svg'
 
 const links = [
   { to: '/home', label: 'Inicio' },
@@ -13,12 +13,12 @@ const links = [
 export default function Navbar() {
   return (
     <nav className="mb-2 flex w-full flex-row items-center justify-between border-b border-secondary-500/50 bg-secondary-500/40 px-2 text-white font-['Press_Start_2P']" aria-label="Navegación principal">
-      <div className="flex flex-row items-center">
+      <div className="flex flex-1 flex-row items-center">
         <div className="items-center justify-center">
           <img className="h-20 w-20" src={logo} alt="Astrais logo" />
         </div>
 
-        <div>
+        <div className='flex w-full items-center justify-around gap-1'>
           {links.map((link) => (
             <NavLink
               key={link.to}
@@ -39,7 +39,7 @@ export default function Navbar() {
 
       <NavLink to="/profile">
         <div className="flex items-center justify-center rounded-full bg-black w-12 h-12">
-          <span className="text-2xl text-white leading-none">P</span>
+          <p className="text-2xl text-white pl-1.5 pt-1">P</p>
         </div>
       </NavLink>
     </nav>
