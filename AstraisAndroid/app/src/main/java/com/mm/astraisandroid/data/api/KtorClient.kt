@@ -1,7 +1,7 @@
 package com.mm.astraisandroid.data.api
 
 import android.util.Log
-import com.mm.astraisandroid.data.preferences.TokenHolder
+import com.mm.astraisandroid.data.preferences.SessionManager
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.android.Android
@@ -41,22 +41,20 @@ val client = HttpClient(Android) {
         bearer {
             loadTokens {
                 BearerTokens(
-                    accessToken = TokenHolder.getAccessToken() ?: "",
-                    refreshToken = TokenHolder.getRefreshToken() ?: ""
+                    accessToken = SessionManager.getAccessToken() ?: "",
+                    refreshToken = SessionManager.getRefreshToken() ?: ""
                 )
             }
 
             refreshTokens {
-                val refreshToken = TokenHolder.getRefreshToken() ?: return@refreshTokens null
+                val refreshToken = SessionManager.getRefreshToken() ?: return@refreshTokens null
                 try {
                     val response: RegenAccessResponse = client.post("${BASE_URL}/auth/regenAccess") {
                         bearerAuth(refreshToken)
                         markAsRefreshTokenRequest()
                     }.body()
 
-                    TokenHolder.setAccessToken(response.newAccessToken)
-
-                    TokenHolder.saveTokensToDisk(response.newAccessToken, refreshToken)
+                    SessionManager.saveTokens(response.newAccessToken, refreshToken)
 
                     BearerTokens(
                         accessToken  = response.newAccessToken,
@@ -64,7 +62,7 @@ val client = HttpClient(Android) {
                     )
                 } catch (e: Exception) {
                     Log.e("KtorClient", "Error renovando token: $e")
-                    TokenHolder.clear()
+                    SessionManager.clear()
                     null
                 }
             }

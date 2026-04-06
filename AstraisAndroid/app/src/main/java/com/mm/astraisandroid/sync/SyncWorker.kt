@@ -5,6 +5,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.mm.astraisandroid.data.api.BackendRepository
 import com.mm.astraisandroid.data.api.CreateTareaRequest
+import com.mm.astraisandroid.data.api.client
 import com.mm.astraisandroid.data.local.AstraisDb
 import kotlinx.serialization.json.Json
 
@@ -36,29 +37,28 @@ class SyncWorker(appContext: Context, params: WorkerParameters) : CoroutineWorke
         val db = AstraisDb.getInstance(applicationContext)
         val actionDao = db.actionDao()
 
+        val api = BackendRepository(client)
+
         val pendingActions = actionDao.getAllPending()
 
         for (action in pendingActions) {
             val isSuccess = try {
                 when (action.type) {
                     "COMPLETE_TASK" -> {
-                        // El usuario marcó una tarea como completada offline.
-                        BackendRepository.completarTarea(action.targetId!!).isSuccess
+                        api.completarTarea(action.targetId!!)
+                        true
                     }
                     "CREATE_TASK" -> {
-                        // El usuario creó una tarea offline.
-                        // Recuperamos la petición original deserializando el JSON guardado.
                         val request = Json.decodeFromString<CreateTareaRequest>(action.data)
-                        BackendRepository.createTarea(request).isSuccess
+                        api.createTarea(request)
+                        true
                     }
                     else -> false
                 }
             } catch (e: Exception) {
-                // Si el backend da error, la acción permanece en la cola.
                 false
             }
 
-            // Si el backend confirma el éxito, limpiamos la acción de la cola local.
             if (isSuccess) {
                 actionDao.removeAction(action)
             }

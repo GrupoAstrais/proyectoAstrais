@@ -61,44 +61,30 @@ import com.mm.astraisandroid.ui.tabs.TasksTab
 import com.mm.astraisandroid.ui.tabs.TiendaTab
 import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import com.mm.astraisandroid.data.preferences.SessionDataStore
-import com.mm.astraisandroid.data.preferences.TokenHolder
+import com.mm.astraisandroid.data.preferences.SessionManager
 import com.mm.astraisandroid.ui.tabs.ClickerGameScreen
 import com.mm.astraisandroid.ui.theme.AstraisandroidTheme
 import com.mm.astraisandroid.ui.viewmodels.TaskViewModel
 import com.mm.astraisandroid.ui.viewmodels.UserViewModel
 import com.mm.astraisandroid.util.ConnectivityObserver
+import dagger.hilt.android.AndroidEntryPoint
 
-
+@AndroidEntryPoint
 class AuthActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val session = SessionDataStore(this)
-        TokenHolder.sessionDataStore = session
+        setContent {
+            val userViewModel: UserViewModel = hiltViewModel()
+            val userData by userViewModel.userData.collectAsStateWithLifecycle()
 
-
-        lifecycleScope.launch {
-            val (access, refresh, gid) = session.loadSession()
-            if (access != null && refresh != null) {
-                TokenHolder.setAccessToken(access)
-                TokenHolder.setRefreshToken(refresh)
-                TokenHolder.setPersonalGid(gid)
-            }
-
-            setContent {
-                val userViewModel: UserViewModel = viewModel(
-                    viewModelStoreOwner = LocalContext.current as ComponentActivity
-                )
-                val userData by userViewModel.userData.collectAsStateWithLifecycle()
-
-                AstraisandroidTheme(themeJson = userData?.themeColors) {
-                    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                        AppNavigation(sessionDataStore = session, initialHasSession = access != null)
-                        OcultarBotonesSistema()
-                    }
+            AstraisandroidTheme(themeJson = userData?.themeColors) {
+                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                    AppNavigation(initialHasSession = SessionManager.hasSession())
+                    OcultarBotonesSistema()
                 }
             }
         }
@@ -106,7 +92,7 @@ class AuthActivity : ComponentActivity() {
 }
 
 @Composable
-fun AppNavigation(sessionDataStore: SessionDataStore, initialHasSession: Boolean) {
+fun AppNavigation(initialHasSession: Boolean) {
     val navController = rememberNavController()
     val coroutineScope = rememberCoroutineScope()
 
@@ -151,9 +137,7 @@ fun AppNavigation(sessionDataStore: SessionDataStore, initialHasSession: Boolean
 
 
         composable(ScreenRoutes.Profile.route) {
-            val userViewModel: UserViewModel = viewModel(
-                viewModelStoreOwner = LocalContext.current as ComponentActivity
-            )
+            val userViewModel: UserViewModel = hiltViewModel()
             val userData by userViewModel.userData.collectAsStateWithLifecycle()
 
             LaunchedEffect(Unit) {
@@ -167,9 +151,7 @@ fun AppNavigation(sessionDataStore: SessionDataStore, initialHasSession: Boolean
                 onBack = { navController.popBackStack() },
                 onLogout = {
                     coroutineScope.launch {
-                        sessionDataStore.clear()
-                        TokenHolder.clear()
-                        AppCache.clear()
+                        SessionManager.clear()
                         navController.navigate(ScreenRoutes.Login.route) {
                             popUpTo(0) { inclusive = true }
                         }
@@ -183,16 +165,13 @@ fun AppNavigation(sessionDataStore: SessionDataStore, initialHasSession: Boolean
 @Composable
 fun HomeScreen(onNavigateToProfile: () -> Unit) {
     val context = LocalContext.current
-    AppCache.init(context)
     val connectivityObserver = remember { ConnectivityObserver(context) }
     val deviceHasInternet by connectivityObserver.status.collectAsState(initial = true)
 
     val navController = rememberNavController()
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-    val taskViewModel: TaskViewModel = viewModel()
-    val userViewModel: UserViewModel = viewModel(
-        viewModelStoreOwner = LocalContext.current as ComponentActivity
-    )
+    val taskViewModel: TaskViewModel = hiltViewModel()
+    val userViewModel: UserViewModel = hiltViewModel()
 
     LaunchedEffect(Unit) {
         userViewModel.fetchUser()
@@ -202,7 +181,7 @@ fun HomeScreen(onNavigateToProfile: () -> Unit) {
         if (deviceHasInternet) {
             userViewModel.fetchUser()
 
-            val gid = TokenHolder.getPersonalGid()
+            val gid = SessionManager.getPersonalGid()
             if (gid != null) {
                 taskViewModel.syncOfflineActions(gid)
             }
@@ -347,7 +326,7 @@ fun HomeScreen(onNavigateToProfile: () -> Unit) {
         CreateTareaDialog(
             onDismiss = { taskViewModel.closeCreateDialog() },
             onCreate  = { titulo, desc, tipo, prioridad ->
-                val userGid = TokenHolder.getPersonalGid()
+                val userGid = SessionManager.getPersonalGid()
 
                 if (userGid != null) {
                     taskViewModel.crearTarea(

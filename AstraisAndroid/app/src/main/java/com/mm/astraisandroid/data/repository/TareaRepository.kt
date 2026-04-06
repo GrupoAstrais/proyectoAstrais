@@ -22,14 +22,10 @@ class TareaRepository(
     suspend fun refreshTareas(gid: Int): Result<Unit> {
         return try {
             val result = api.getTareas(gid)
-            if (result.isSuccess) {
-                val entities = result.getOrNull()?.map { it.toEntity() } ?: emptyList()
-                tareaDao.clearAll()
-                tareaDao.insertTareas(entities)
-                Result.success(Unit)
-            } else {
-                Result.failure(Exception("Error de servidor"))
-            }
+            val entities = result.map { it.toEntity() }
+            tareaDao.clearAll()
+            tareaDao.insertTareas(entities)
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }

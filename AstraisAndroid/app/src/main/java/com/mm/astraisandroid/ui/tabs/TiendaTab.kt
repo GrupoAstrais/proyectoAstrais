@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mm.astraisandroid.util.LottiePetRenderer
@@ -41,7 +42,7 @@ import kotlinx.serialization.json.Json
 @Composable
 fun TiendaTab(
     ludiones: Int,
-    storeViewModel: StoreViewModel = viewModel(),
+    storeViewModel: StoreViewModel = hiltViewModel(),
     onCosmeticChanged: () -> Unit = {}
 ) {
     val storeItems by storeViewModel.items.collectAsStateWithLifecycle()

@@ -1,5 +1,6 @@
 package com.mm.astraisandroid.data.api
 
+import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
@@ -8,101 +9,91 @@ import io.ktor.client.request.setBody
 import io.ktor.http.contentType
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import javax.inject.Inject
 
 // 192.168.1.131
 // 192.168.0.97
 const val BASE_URL = "http://192.168.1.129:5684"
 
-object BackendRepository {
-    suspend fun performLogin(request: LoginRequest) : Result<LoginResponse> = runCatching {
+class BackendRepository(private val client: HttpClient) {
+
+    suspend fun performLogin(request: LoginRequest): LoginResponse {
         val req = client.post("$BASE_URL/auth/login") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }
         if (req.status != HttpStatusCode.OK) {
             val errResponse = req.body<ServerErrorResponse>()
-            val mensaje = errResponse.errorText ?: errResponse.error ?: "Error desconocido"
-            error("Error: $mensaje")
+            error(errResponse.errorText ?: errResponse.error ?: "Error desconocido")
         }
-
-        // Devuelve el body
-        req.body<LoginResponse>()
+        return req.body<LoginResponse>()
     }
 
-    suspend fun performRegister(request: RegisterRequest) : Result<Unit> = runCatching {
+    suspend fun performRegister(request: RegisterRequest) {
         val req = client.post("$BASE_URL/auth/register") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }
-
-        if (req.status == HttpStatusCode.OK){
-            return@runCatching
-        } else {
+        if (req.status != HttpStatusCode.OK) {
             val errResponse = req.body<ServerErrorResponse>()
-            val mensaje = errResponse.errorText ?: errResponse.error ?: "Error desconocido"
-            error("Error: $mensaje")
-    }
+            error(errResponse.errorText ?: errResponse.error ?: "Error desconocido")
+        }
     }
 
-    suspend fun getTareas(gid: Int): Result<List<TareaResponse>> = runCatching {
+    suspend fun getTareas(gid: Int): List<TareaResponse> {
         val req = client.get("$BASE_URL/tasks/$gid") {
             contentType(ContentType.Application.Json)
         }
         if (req.status != HttpStatusCode.OK) {
             val errResponse = req.body<ServerErrorResponse>()
-            val mensaje = errResponse.errorText ?: errResponse.error ?: "Error desconocido"
-            error("Error: $mensaje")
+            error(errResponse.errorText ?: errResponse.error ?: "Error desconocido")
         }
-        req.body<List<TareaResponse>>()
+        return req.body<List<TareaResponse>>()
     }
 
-    suspend fun createTarea(request: CreateTareaRequest): Result<Unit> = runCatching {
+    suspend fun createTarea(request: CreateTareaRequest) {
         val req = client.post("$BASE_URL/tasks") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }
         if (req.status != HttpStatusCode.OK && req.status != HttpStatusCode.Created) {
             val errResponse = req.body<ServerErrorResponse>()
-            val mensaje = errResponse.errorText ?: errResponse.error ?: "Error desconocido"
-            error("Error: $mensaje")
+            error(errResponse.errorText ?: errResponse.error ?: "Error desconocido")
         }
     }
 
-    suspend fun completarTarea(tid: Int): Result<Unit> = runCatching {
+    suspend fun completarTarea(tid: Int) {
         val req = client.patch("$BASE_URL/tasks/$tid/complete") {
             contentType(ContentType.Application.Json)
         }
         if (req.status != HttpStatusCode.OK) {
             val errResponse = req.body<ServerErrorResponse>()
-            val mensaje = errResponse.errorText ?: errResponse.error ?: "Error desconocido"
-            error("Error: $mensaje")
+            error(errResponse.errorText ?: errResponse.error ?: "Error desconocido")
         }
     }
 
-    suspend fun getMe(): Result<UserMeResponse> = runCatching {
+    suspend fun getMe(): UserMeResponse {
         val req = client.get("$BASE_URL/auth/me")
         if (req.status != HttpStatusCode.OK) {
             val errResponse = req.body<ServerErrorResponse>()
-            val mensaje = errResponse.errorText ?: errResponse.error ?: "Error desconocido"
-            error("Error: $mensaje")
+            error(errResponse.errorText ?: errResponse.error ?: "Error desconocido")
         }
-        req.body<UserMeResponse>()
+        return req.body<UserMeResponse>()
     }
 
-    suspend fun getStoreItems(): Result<List<CosmeticResponse>> = runCatching {
+    suspend fun getStoreItems(): List<CosmeticResponse> {
         val req = client.get("$BASE_URL/store/items")
         if (req.status != HttpStatusCode.OK) error("Error al cargar la tienda")
-        req.body()
+        return req.body()
     }
 
-    suspend fun buyCosmetic(id: Int): Result<Unit> = runCatching {
+    suspend fun buyCosmetic(id: Int) {
         val req = client.post("$BASE_URL/store/buy/$id")
         if (req.status != HttpStatusCode.OK) error("Fondos insuficientes")
     }
 
-    suspend fun equipCosmetic(id: Int): Result<Unit> = runCatching {
+    suspend fun equipCosmetic(id: Int) {
         val req = client.post("$BASE_URL/store/equip/$id")
         if (req.status != HttpStatusCode.OK) error("Error al equipar")
     }
 }
-

@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mm.astraisandroid.data.api.BackendRepository
 import com.mm.astraisandroid.data.api.CosmeticResponse
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 sealed class StoreUIState {
     object Loading : StoreUIState()
@@ -14,7 +16,10 @@ sealed class StoreUIState {
     data class Error(val message: String) : StoreUIState()
 }
 
-class StoreViewModel : ViewModel() {
+@HiltViewModel
+class StoreViewModel @Inject constructor(
+    private val backendRepository: BackendRepository
+) : ViewModel() {
     private val _items = MutableStateFlow<List<CosmeticResponse>>(emptyList())
     val items: StateFlow<List<CosmeticResponse>> = _items
 
@@ -24,22 +29,25 @@ class StoreViewModel : ViewModel() {
     fun loadStore() {
         viewModelScope.launch {
             _uiState.value = StoreUIState.Loading
-            BackendRepository.getStoreItems()
-                .onSuccess {
-                    _items.value = it
-                    _uiState.value = StoreUIState.Success
-                }
-                .onFailure {
-                    _uiState.value = StoreUIState.Error(it.message ?: "Error de conexión")
-                }
+            try {
+                val items = backendRepository.getStoreItems()
+                _items.value = items
+                _uiState.value = StoreUIState.Success
+            } catch (e: Exception) {
+                _uiState.value = StoreUIState.Error(e.message ?: "Error de conexión")
+            }
         }
     }
 
     fun buyItem(id: Int, onSuccess: () -> Unit) {
-        viewModelScope.launch { BackendRepository.buyCosmetic(id).onSuccess { loadStore(); onSuccess() } }
+        viewModelScope.launch {
+            try { backendRepository.buyCosmetic(id); loadStore(); onSuccess() } catch (e: Exception) {}
+        }
     }
 
     fun equipItem(id: Int, onSuccess: () -> Unit) {
-        viewModelScope.launch { BackendRepository.equipCosmetic(id).onSuccess { loadStore(); onSuccess() } }
+        viewModelScope.launch {
+            try { backendRepository.equipCosmetic(id); loadStore(); onSuccess() } catch (e: Exception) {}
+        }
     }
 }
