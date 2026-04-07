@@ -1,7 +1,9 @@
 package com.astrais.auth
 
 import com.astrais.auth.*
+import com.astrais.db.AuthProvider
 import com.astrais.db.DatabaseDAO
+import com.astrais.db.EntidadUsuario
 import com.astrais.db.getDatabaseDaoImpl
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.slf4j.LoggerFactory
@@ -70,5 +72,16 @@ class AuthRepoImpl : AuthRepo {
             log.error("Error trying regen access token for $id! Message: ${e.message}")
         }
         return null
+    }
+
+    override suspend fun tryLoginOrRegisterOauth(provider_uid : String, auth : AuthProvider) : Pair<Int, Boolean> {
+        try {
+            val out = getDatabaseDaoImpl().logOrCreateOauthUser(provider_uid = provider_uid, auth = auth)
+            return out
+        }
+        catch (e : ExposedSQLException){
+            log.error("Couldn't create account for $provider_uid (${auth.name})! Message: ${e.message}")
+            return Pair(-1, false)
+        }
     }
 }

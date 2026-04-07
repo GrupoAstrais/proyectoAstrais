@@ -24,6 +24,7 @@ import java.io.File
 import kotlinx.serialization.json.Json
 import sseRoutes
 import storeRoutes
+import java.util.logging.Logger
 
 const val POSTGRES_PORT = "5432"
 
@@ -36,6 +37,8 @@ fun initSampleServer() {
     embeddedServer(Netty, port = System.getenv("ktor.deployment.port").toInt()) { module() }
             .start(wait = true)
 }
+
+val mainlogger = Logger.getLogger("Main")
 
 fun Application.module() {
     initDatabase()
@@ -72,7 +75,9 @@ fun Application.module() {
         }
 
         exception<Exception> { call, except ->
-            call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Unknown exception happened while processing. Message: ${except.message}"))
+            val msg = "Unknown exception happened while processing. Message: ${except.message}"
+            mainlogger.severe(msg)
+            call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, msg))
         }
     }
 

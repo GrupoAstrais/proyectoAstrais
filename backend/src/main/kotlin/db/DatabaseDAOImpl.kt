@@ -1,6 +1,7 @@
 package com.astrais.db
 
 import CosmeticResponseDTO
+import com.astrais.LANG_CODE_ENGLISH
 import com.astrais.auth.GoogleUserInfo
 import java.time.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
@@ -90,30 +91,36 @@ class DatabaseDAOImpl : DatabaseDAO {
         }
     }
 
-    override suspend fun createUserWithOauth(
-        nombreusu: String,
-        lang: String,
-        utcOffset: Float,
-        role: UserRoles,
+    override suspend fun logOrCreateOauthUser(
         provider_uid: String,
         auth: AuthProvider
-    ) {
+    ) : Pair<Int, Boolean> {
         suspendTransaction {
-            val newuser = EntidadUsuario.new {
-                this.nombre = nombreusu
-                this.email = null
-                this.contrasenia = null
-                this.idioma = lang
-                this.zona_horaria = utcOffset
-                this.rol = role
-                this.ultimo_login = LocalDate.now().toKotlinLocalDate()
+            val notExistUser = TablaCredencialesAuth.selectAll().where {
+                (TablaCredencialesAuth.provider.eq(auth)).and(TablaCredencialesAuth.provider_uid.eq(provider_uid))
+            }.singleOrNull()
+
+            if (notExistUser == null){
+                val newuser = EntidadUsuario.new {
+                    this.nombre = "Astrais User"
+                    this.email = null
+                    this.contrasenia = null
+                    this.idioma = LANG_CODE_ENGLISH
+                    this.zona_horaria = 0.0f
+                    this.rol = UserRoles.NORMAL_USER
+                    this.ultimo_login = LocalDate.now().toKotlinLocalDate()
+                }
+
+                EntidadCredencialesAuth.new {
+                    this.uid = newuser.id
+                    this.provider = auth
+                    this.provider_uid = provider_uid
+                }
+                return@suspendTransaction Pair(newuser.id, true)
+            }else{
+                return@suspendTransaction Pair(notExistUser[TablaCredencialesAuth.id], false)
             }
 
-            EntidadCredencialesAuth.new {
-                this.uid = newuser.id
-                this.provider = auth
-                this.provider_uid = provider_uid
-            }
         }
     }
 

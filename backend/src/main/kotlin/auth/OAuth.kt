@@ -2,10 +2,15 @@ package com.astrais.auth
 
 import com.astrais.ErrorCodes
 import com.astrais.Errors
+import com.astrais.OK_MESSAGE_RESPONSE
+import com.astrais.db.AuthProvider
+import com.astrais.db.getDatabaseDaoImpl
+import com.astrais.mainlogger
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.apache.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -15,11 +20,17 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class GoogleUserInfo(
-    val id: String,
-    val email: String,
-    val verified_email: Boolean,
+    val sub: String,
     val name: String? = null,
+    val given_name: String? = null,
+    val family_name: String? = null,
     val picture: String? = null
+)
+
+@Serializable
+data class OauthLoginResponse(
+    val uid : Int,
+    val hadToRegister : Boolean
 )
 
 fun Application.initOauth(authenticationConfig: AuthenticationConfig){
@@ -53,13 +64,12 @@ fun Route.oauthRoutes() {
             }
 
             val googleInfo = getGoogleInfo(principal.accessToken)
-
-            // TODO: Que use los datos
-
-            call.respond(
-                HttpStatusCode.BadGateway,
-                Errors(ErrorCodes.ERR_UNIMPLEMENTED.ordinal, "The Oauth wasn't implemented yet")
-            )
+            val user = getAuthRepoImpl().tryLoginOrRegisterOauth(googleInfo.sub, AuthProvider.GOOGLE)
+            if (user.first == -1){
+                call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Couldn't do oauth"))
+            } else {
+                call.respond(HttpStatusCode.OK, OauthLoginResponse(uid = user.first, hadToRegister = user.second))
+            }
         }
 
         // TODO: Que android haga su oauth y le mande los datos al servidor
@@ -75,9 +85,13 @@ fun Route.oauthRoutes() {
 
 suspend fun getGoogleInfo(accessToken : String) : GoogleUserInfo{
     val client = HttpClient(Apache)
-    return client.get("https://www.googleapis.com/oauth2/v2/userinfo") {
+    val req = client.get("https://openidconnect.googleapis.com/v1/userinfo") {
         headers {
             append("Authorization", "Bearer $accessToken")
         }
-    }.body<GoogleUserInfo>()
+    }
+
+    //mainlogger.info("Received: ${req.bodyAsText(Charsets.UTF_8)}")
+
+    return req.body()
 }
