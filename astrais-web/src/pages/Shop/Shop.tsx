@@ -108,8 +108,8 @@ export default function Shop() {
         <Navbar />
 
         <main className="flex min-h-0 flex-1 px-3 pb-3 pt-1 md:px-4 md:pb-4 xl:px-6 xl:pb-5">
-          <section className="mx-auto hidden h-full w-full max-w-365 gap-3 lg:grid lg:grid-cols-[13.5rem_minmax(0,1.02fr)_16.25rem] min-[1400px]:gap-4 min-[1400px]:grid-cols-[15.75rem_minmax(0,1.24fr)_20.25rem]">
-            <aside className="panel-glow relative grid min-h-0 grid-rows-[auto_auto_auto_minmax(0,1fr)] overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(170deg,rgba(15,23,42,0.9),rgba(30,74,99,0.78))] p-3.5 shadow-[0_20px_56px_rgba(7,12,24,0.46)] min-[1400px]:p-5">
+          <section className="mx-auto hidden h-full w-full gap-3 lg:grid lg:grid-cols-12 min-[1400px]:gap-4 min-[1400px]:grid-cols-[15.75rem_minmax(0,1.24fr)_20.25rem]">
+            <aside className="panel-glow relative col-span-2 grid min-h-0 grid-rows-[auto_auto_auto_minmax(0,1fr)] overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(170deg,rgba(15,23,42,0.9),rgba(30,74,99,0.78))] p-3.5 shadow-[0_20px_56px_rgba(7,12,24,0.46)] min-[1400px]:p-5">
               <div className="pointer-events-none absolute -left-12 top-3 h-36 w-36 rounded-full bg-secondary-500/16 blur-3xl" />
               <div className="relative z-10 flex items-start justify-between gap-3">
                 <div>
@@ -156,7 +156,7 @@ export default function Shop() {
 
               <div className="relative z-10 mt-4 min-h-0 rounded-3xl border border-white/10 bg-black/18 p-3">
               <p className="text-xs text-center uppercase tracking-[0.18em] text-slate-400">Categorias</p>
-                <div className="mt-2 grid grid-cols-1 gap-2 overflow-y-scroll min-[1400px]:h-42">
+                <div className="mt-2 grid grid-cols-1 gap-2 overflow-y-scroll ">
                   {SHOP_CATEGORIES.map((category) => (
                     <button
                       key={category}
@@ -175,7 +175,7 @@ export default function Shop() {
               </div>
             </aside>
 
-            <section className="panel-glow relative grid min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-[28px] border border-white/15 bg-[linear-gradient(160deg,rgba(15,23,42,0.88),rgba(76,29,149,0.56),rgba(30,74,99,0.72))] p-3.5 shadow-[0_20px_58px_rgba(7,12,24,0.48)] min-[1400px]:p-5">
+            <section className="panel-glow relative col-span-7 grid min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-[28px] border border-white/15 bg-[linear-gradient(160deg,rgba(15,23,42,0.88),rgba(76,29,149,0.56),rgba(30,74,99,0.72))] p-3.5 shadow-[0_20px_58px_rgba(7,12,24,0.48)] min-[1400px]:p-5">
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.10),transparent_25%)]" />
               <header className="relative z-10 flex items-start justify-between gap-3 min-[1400px]:gap-4">
                 <div>
@@ -267,7 +267,7 @@ export default function Shop() {
             </section>
 
             {selectedItem ? (
-              <aside className="panel-glow relative grid min-h-0 
+              <aside className="panel-glow relative grid min-h-0 col-span-3
               grid-rows-[minmax(0,1fr)_auto] overflow-y-scroll rounded-[26px] border border-white/15 bg-[linear-gradient(170deg,rgba(15,23,42,0.9),rgba(30,74,99,0.76))] p-3.5 shadow-[0_20px_56px_rgba(7,12,24,0.46)] min-[1400px]:p-5">
                 <div className="pointer-events-none absolute -right-10 top-6 h-36 w-36 rounded-full bg-secondary-500/18 blur-3xl" />
                 <div
