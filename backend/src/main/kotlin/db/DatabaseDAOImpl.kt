@@ -234,9 +234,9 @@ class DatabaseDAOImpl : DatabaseDAO {
             if (descripcion != null) {
                 grp?.descripcion = descripcion
             }
-            if (prioridad != null){
-                grp?.prioridad = prioridad
-            }
+            //if (prioridad != null){
+            //    grp?.prioridad = prioridad
+            //}
         }
     }
 

@@ -167,7 +167,7 @@ object TablaGrupo : IntIdTable("Group") {
     val nombre = varchar("name", GROUP_NAME_LENGTH)
     val descripcion = text("desc").default("")
     val owner = reference("owner_id", TablaUsuario)
-    val prioridad = integer("priority")
+    //val prioridad = integer("priority")
 }
 
 class EntidadGrupo(id: EntityID<Int>) : IntEntity(id) {
@@ -177,7 +177,7 @@ class EntidadGrupo(id: EntityID<Int>) : IntEntity(id) {
     var nombre by TablaGrupo.nombre
     var descripcion by TablaGrupo.descripcion
     var owner by TablaGrupo.owner
-    var prioridad by TablaGrupo.prioridad
+    //var prioridad by TablaGrupo.prioridad
 }
 
 object TablaGrupoUsuario : CompositeIdTable("RelGroupUser") {

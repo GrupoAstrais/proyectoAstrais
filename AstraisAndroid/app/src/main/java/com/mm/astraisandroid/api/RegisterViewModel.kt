@@ -13,6 +13,7 @@ import javax.inject.Inject
 sealed class RegisterUIState {
     object Idle : RegisterUIState()
     object Loading : RegisterUIState()
+    //object CodeSent : RegisterUIState()
     object RegisterSuccess : RegisterUIState()
     data class RegisterError(val message: String) : RegisterUIState()
 }
@@ -23,7 +24,7 @@ class RegisterViewModel @Inject constructor(
 ) : ViewModel() {
     private val _registerState = MutableStateFlow<RegisterUIState>(RegisterUIState.Idle)
     val registerState: StateFlow<RegisterUIState> = _registerState
-
+    //var registeredEmail = ""
     fun register(request: RegisterRequest) {
         viewModelScope.launch {
             _registerState.value = RegisterUIState.Loading

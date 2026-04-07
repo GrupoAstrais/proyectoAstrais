@@ -31,5 +31,9 @@ fun scheduleSync(context: Context) {
         .build()
 
     // Se registra la petición en el gestor de trabajos de Android.
-    WorkManager.getInstance(context).enqueue(syncWorkRequest)
+    WorkManager.getInstance(context).enqueueUniqueWork(
+        "AstraisOfflineSync",
+        androidx.work.ExistingWorkPolicy.KEEP,
+        syncWorkRequest
+    )
 }

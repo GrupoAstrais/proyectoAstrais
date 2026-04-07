@@ -29,4 +29,7 @@ interface TareaDao {
      * */
     @Query("DELETE FROM tareas")
     suspend fun clearAll(): Int
+
+    @Query("DELETE FROM tareas WHERE isPendingSync = 0")
+    suspend fun clearSyncedTareas(): Int
 }

@@ -23,7 +23,7 @@ class TareaRepository(
         return try {
             val result = api.getTareas(gid)
             val entities = result.map { it.toEntity() }
-            tareaDao.clearAll()
+            tareaDao.clearSyncedTareas()
             tareaDao.insertTareas(entities)
             Result.success(Unit)
         } catch (e: Exception) {
