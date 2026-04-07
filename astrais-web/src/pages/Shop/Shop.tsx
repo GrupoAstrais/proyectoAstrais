@@ -1,10 +1,8 @@
 import React from 'react'
 import { NavLink } from 'react-router'
 import Navbar from '../../components/layout/Navbar'
-import astra from '../../assets/astra.png'
 import bgImage from '../../assets/homeScreenBack.jpg'
 import logo from '../../assets/logo_w.svg'
-import shopArt from '../../assets/shop.png'
 import { readClickerStats } from '../Games/gameStorage'
 import { SHOP_CATEGORIES, SHOP_ITEMS, getItemsForCategory, getRarityClasses, type ShopCategory } from './shopCatalog'
 import { calculateAvailableBalance, calculateSpentLudions, readShopState, type ShopState, writeShopState } from './shopStorage'
@@ -119,7 +117,7 @@ export default function Shop() {
                   <h1 className="mt-3 font-['Press_Start_2P'] text-[clamp(0.92rem,1.4vw,1.2rem)] leading-tight text-white">
                     Tienda orbital
                   </h1>
-                  <p className="mt-2 text-[0.8rem] leading-5 text-slate-300 xl:text-[0.86rem] xl:leading-6">
+                  <p className="mt-2 text-[0.8rem] text-left leading-5 text-slate-300 xl:text-[0.86rem] xl:leading-6">
                     Explora, compra y equipa a tu antojo.
                   </p>
                 </div>
@@ -157,8 +155,8 @@ export default function Shop() {
               </div>
 
               <div className="relative z-10 mt-4 min-h-0 rounded-3xl border border-white/10 bg-black/18 p-3">
-                <p className="text-[0.58rem] uppercase tracking-[0.18em] text-slate-400">Categorias</p>
-                <div className="mt-2 grid grid-cols-1 gap-2">
+              <p className="text-xs text-center uppercase tracking-[0.18em] text-slate-400">Categorias</p>
+                <div className="mt-2 grid grid-cols-1 gap-2 overflow-y-scroll min-[1400px]:h-42">
                   {SHOP_CATEGORIES.map((category) => (
                     <button
                       key={category}
@@ -218,7 +216,7 @@ export default function Shop() {
                 </div>
               </header>
 
-              <div className="relative z-10 mt-4 grid min-h-0 grid-cols-2 gap-3 min-[1400px]:gap-4">
+              <div className="relative z-10 mt-4 grid min-h-0 grid-cols-2 grid-rows-2 gap-3 min-[1400px]:gap-4">
                 {visibleItems.map((item) => {
                   const itemOwned = shopState.ownedIds.includes(item.id)
                   const itemEquipped = shopState.equippedBySlot[item.slot] === item.id
@@ -248,12 +246,6 @@ export default function Shop() {
                           </span>
                         </div>
 
-                        {item.badge ? (
-                          <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/35 px-2 py-1 text-[0.5rem] uppercase tracking-[0.16em] text-accent-beige-300">
-                            {item.badge}
-                          </span>
-                        ) : null}
-
                         <div className="relative mt-10 flex items-end justify-between gap-3">
                           <img src={logo} alt="Astrais logo" className="h-8 w-8 opacity-85 min-[1400px]:h-11 min-[1400px]:w-11" />
                           <p className="max-w-48 text-right text-[0.66rem] leading-5 text-slate-200 min-[1400px]:text-[0.76rem]">
@@ -275,23 +267,15 @@ export default function Shop() {
             </section>
 
             {selectedItem ? (
-              <aside className="panel-glow relative grid min-h-0 grid-rows-[minmax(0,1fr)_auto] overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(170deg,rgba(15,23,42,0.9),rgba(30,74,99,0.76))] p-3.5 shadow-[0_20px_56px_rgba(7,12,24,0.46)] min-[1400px]:p-5">
+              <aside className="panel-glow relative grid min-h-0 
+              grid-rows-[minmax(0,1fr)_auto] overflow-y-scroll rounded-[26px] border border-white/15 bg-[linear-gradient(170deg,rgba(15,23,42,0.9),rgba(30,74,99,0.76))] p-3.5 shadow-[0_20px_56px_rgba(7,12,24,0.46)] min-[1400px]:p-5">
                 <div className="pointer-events-none absolute -right-10 top-6 h-36 w-36 rounded-full bg-secondary-500/18 blur-3xl" />
                 <div
                   className="relative min-h-0 overflow-hidden rounded-3xl border border-white/10 p-4"
                   style={{ background: `linear-gradient(145deg, ${selectedItem.accentFrom}30, ${selectedItem.accentTo}18)` }}
                 >
                   <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.16),transparent_34%)]" />
-                  <img
-                    src={shopArt}
-                    alt="Arte de la tienda"
-                    className="pointer-events-none absolute -right-20 bottom-0 hidden h-[clamp(7rem,18vh,10rem)] opacity-35 min-[1400px]:block"
-                  />
-                  <img
-                    src={astra}
-                    alt="Mascota Astrais"
-                    className="pointer-events-none absolute bottom-0 right-2 hidden h-[clamp(5rem,12vh,7rem)] opacity-75 min-[1400px]:block"
-                  />
+                  
 
                   <div className="relative z-10 grid h-full min-h-0 grid-rows-[auto_auto_auto_auto_auto_auto]">
                     <div className="flex items-start justify-between gap-3">
@@ -315,7 +299,7 @@ export default function Shop() {
                       </div>
                       <div className="rounded-2xl border border-white/10 bg-black/18 p-3">
                         <p className="text-[0.56rem] uppercase tracking-[0.16em] text-slate-400">Slot</p>
-                        <p className="mt-2 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-white min-[1400px]:text-[0.82rem]">
+                        <p className="mt-4 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-white min-[1400px]:text-[9px]">
                           {selectedItem.slot}
                         </p>
                       </div>
@@ -375,7 +359,7 @@ export default function Shop() {
                   </div>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between gap-3">
+                <div className="mt-4 flex flex-col items-center justify-between gap-3">
                   <div className="rounded-2xl border border-white/10 bg-black/18 px-4 py-3 text-[0.72rem] leading-5 text-slate-300 min-[1400px]:text-[0.8rem]">
                     Si necesitas mas saldo, el arcade ya alimenta esta tienda con lo que ganas en minijuegos.
                   </div>
@@ -424,6 +408,10 @@ export default function Shop() {
 
         .catalog-card {
           box-shadow: 0 14px 32px rgba(7, 12, 24, 0.22);
+        }
+
+        ::-webkit-scrollbar {
+        display: none;
         }
       `}</style>
     </div>

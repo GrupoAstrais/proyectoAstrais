@@ -127,17 +127,17 @@ export default function Modal({ onSubmit, onCancel }: ModalProps) {
       {/* Dificultad */}
       <div className="flex flex-row justify-around bg-accent-beige-300 py-4 px-2 rounded-md">
         <DifficultyModal
-          handleActive={(d) => setDifficulty(d as any)}
+          handleActive={(d) => setDifficulty(d as "EASY" | "MEDIUM" | "HARD")}
           esOtroActivo={difficulty}
           dificultad="EASY"
         />
         <DifficultyModal
-          handleActive={(d) => setDifficulty(d as any)}
+          handleActive={(d) => setDifficulty(d as "EASY" | "MEDIUM" | "HARD")}
           esOtroActivo={difficulty}
           dificultad="MEDIUM"
         />
         <DifficultyModal
-          handleActive={(d) => setDifficulty(d as any)}
+          handleActive={(d) => setDifficulty(d as "EASY" | "MEDIUM" | "HARD")}
           esOtroActivo={difficulty}
           dificultad="HARD"
         />
@@ -289,7 +289,7 @@ export default function Modal({ onSubmit, onCancel }: ModalProps) {
               <button
                 key={value}
                 type="button"
-                onClick={() => setHabitFrequency(value as any)}
+                onClick={() => setHabitFrequency(value as "daily" | "weekly" | "monthly")}
                 className={`py-2 rounded border ${
                   habitFrequency === value
                     ? "bg-primary-500 text-white border-primary-900"

@@ -42,7 +42,7 @@ export default function Modal({onPress} : ModalProps) {
             <DiaryHabit handleActive={handleDiary} titulo="Diaria" esOtroActivo={isDiary} />
         </div>
         <div className="flex flex-row justify-around bg-accent-beige-300  py-4 px-2 rounded-md">
-            <TaskType handleActive={handleCompuesta} />
+            <TaskType handleActive={handleCompuesta}/>
         </div>
         <div className="flex bg-accent-beige-300 rounded-md py-4 px-2">
             <input className="text-primary-900" id="tags" placeholder="Tags"/>
