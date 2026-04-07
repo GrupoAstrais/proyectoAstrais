@@ -1,44 +1,56 @@
 package com.mm.astraisandroid.data.preferences
 
 import android.content.Context
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
-import kotlinx.coroutines.flow.first
+import android.content.SharedPreferences
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 
-val Context.dataStore by preferencesDataStore(name = "session")
+object SessionManager {
+    private var sharedPreferences: SharedPreferences? = null
 
-class SessionDataStore(private val context: Context) {
+    private const val ACCESS_KEY = "access_token"
+    private const val REFRESH_KEY = "refresh_token"
+    private const val GID_KEY = "personal_gid"
 
-    private val ACCESS_KEY  = stringPreferencesKey("access_token")
-    private val REFRESH_KEY = stringPreferencesKey("refresh_token")
-    private val GID_KEY     = intPreferencesKey("personal_gid")
+    fun init(context: Context) {
+        if (sharedPreferences != null) return
 
-    suspend fun saveTokens(access: String, refresh: String) {
-        context.dataStore.edit {
-            it[ACCESS_KEY]  = access
-            it[REFRESH_KEY] = refresh
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+
+        sharedPreferences = EncryptedSharedPreferences.create(
+            context.applicationContext,
+            "secure_session_prefs",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    }
+
+    fun saveTokens(access: String, refresh: String) {
+        sharedPreferences?.edit()?.apply {
+            putString(ACCESS_KEY, access)
+            putString(REFRESH_KEY, refresh)
+            apply()
         }
     }
 
-    suspend fun savePersonalGid(gid: Int) {
-        context.dataStore.edit {
-            it[GID_KEY] = gid
-        }
+    fun savePersonalGid(gid: Int) {
+        sharedPreferences?.edit()?.putInt(GID_KEY, gid)?.apply()
     }
 
-    suspend fun loadTokens(): Pair<String?, String?> {
-        val prefs = context.dataStore.data.first()
-        return Pair(prefs[ACCESS_KEY], prefs[REFRESH_KEY])
+    fun getAccessToken(): String? = sharedPreferences?.getString(ACCESS_KEY, null)
+    fun getRefreshToken(): String? = sharedPreferences?.getString(REFRESH_KEY, null)
+
+    fun getPersonalGid(): Int? {
+        val gid = sharedPreferences?.getInt(GID_KEY, -1)
+        return if (gid != -1) gid else null
     }
 
-    suspend fun loadSession(): Triple<String?, String?, Int?> {
-        val prefs = context.dataStore.data.first()
-        return Triple(prefs[ACCESS_KEY], prefs[REFRESH_KEY], prefs[GID_KEY])
-    }
+    fun hasSession(): Boolean = getAccessToken() != null
 
-    suspend fun clear() {
-        context.dataStore.edit { it.clear() }
+    fun clear() {
+        sharedPreferences?.edit()?.clear()?.apply()
     }
 }

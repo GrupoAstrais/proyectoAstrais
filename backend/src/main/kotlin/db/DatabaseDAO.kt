@@ -2,6 +2,7 @@ package com.astrais.db
 
 import CosmeticResponseDTO
 import com.astrais.LANG_CODE_ENGLISH
+import com.astrais.auth.GoogleUserInfo
 
 interface DatabaseDAO {
     /**
@@ -45,6 +46,20 @@ interface DatabaseDAO {
     suspend fun setUserLastLogin(ent: EntidadUsuario)
 
     /**
+     * Mira si le UID del provider ya esta asignado a una cuenta
+     */
+    suspend fun checkForOauth(provider_uid : String, auth : AuthProvider) : Boolean
+
+    suspend fun createUserWithOauth(
+        nombreusu: String,
+        lang: String = LANG_CODE_ENGLISH,
+        utcOffset: Float = 0f,
+        role: UserRoles = UserRoles.NORMAL_USER,
+        provider_uid : String,
+        auth : AuthProvider
+        )
+
+    /**
      * Se crea un grupo para el usuario indicado
      * @param grpownerId El ID del usuario que crea el grupo
      * @param grpname El nombre del grupo
@@ -86,6 +101,12 @@ interface DatabaseDAO {
      */
     suspend fun addUserToGroup(idusuario: Int, idgrupo: Int): Boolean
 
+    suspend fun checkIfUserIsAdmin(uid : Int, gid : Int) : Boolean
+
+    suspend fun editGroup(gid: Int, name: String?, desc: String?) : Boolean
+
+    suspend fun deleteGroup(gid : Int) : Boolean
+
     /**
      * Se crea una tarea nueva
      * @param gid El grupo al que pertenecera la tarea
@@ -107,9 +128,20 @@ interface DatabaseDAO {
         recompensaLudion: Int = 0
     ): Int
 
+    suspend fun getGroupByTask(tid : Int) : EntidadGrupo?
+
+    suspend fun editTask(
+        gid : Int,
+        titulo : String? = null,
+        descripcion: String? = null,
+        prioridad: Int? = null
+    )
+
     suspend fun getTareasByGroup(gid: Int): List<EntidadTarea>
 
     suspend fun completeTarea(tid: Int, uid: Int): Boolean
+
+    suspend fun deleteTarea(tid : Int) : Boolean
 
     // madre mia el formatter este
     suspend fun getStoreItems(uid: Int): List<CosmeticResponseDTO>

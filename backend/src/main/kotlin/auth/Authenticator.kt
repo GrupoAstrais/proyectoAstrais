@@ -231,15 +231,6 @@ fun Route.authRoutes() {
         }
     }
 
-    post("/auth/google") {
-        // Se loguea con google y devuelve su JWT
-        // TODO: Implementar Oauth
-        call.respond(
-                HttpStatusCode.BadGateway,
-                Errors(ErrorCodes.ERR_UNIMPLEMENTED.ordinal, "The Oauth wasn't implemented yet")
-        )
-    }
-
     authenticate("access-jwt") {
         get("/auth/me") {
             val uid =

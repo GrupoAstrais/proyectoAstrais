@@ -1,26 +1,27 @@
 package com.mm.astraisandroid.ui.viewmodels
 
-import android.app.Application
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mm.astraisandroid.data.api.BackendRepository
 import com.mm.astraisandroid.data.api.CreateTareaRequest
-import com.mm.astraisandroid.data.local.AstraisDb
+import com.mm.astraisandroid.data.local.dao.ActionDao
+import com.mm.astraisandroid.data.local.dao.TareaDao
 import com.mm.astraisandroid.data.local.entities.PendingAction
+import com.mm.astraisandroid.data.local.entities.TareaEntity
 import com.mm.astraisandroid.data.repository.TareaRepository
+import com.mm.astraisandroid.sync.scheduleSync
 import com.mm.astraisandroid.ui.tabs.Difficulty
 import com.mm.astraisandroid.ui.tabs.TaskUIModel
-import com.mm.astraisandroid.sync.scheduleSync
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import javax.inject.Inject
 
 sealed class TaskUIState {
     object Idle    : TaskUIState()
@@ -29,11 +30,15 @@ sealed class TaskUIState {
     data class Error(val message: String) : TaskUIState()
 }
 
-class TaskViewModel(application: Application) : AndroidViewModel(application) {
-    private val context = application.applicationContext
-    private val db = AstraisDb.getInstance(application)
+@HiltViewModel
+class TaskViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val backendRepository: BackendRepository,
+    private val tareaDao: TareaDao,
+    private val actionDao: ActionDao
+) : ViewModel() {
 
-    private val repository = TareaRepository(BackendRepository, db.tareaDao())
+    private val repository = TareaRepository(backendRepository, tareaDao)
 
     private val _uiState = MutableStateFlow<TaskUIState>(TaskUIState.Idle)
     val uiState: StateFlow<TaskUIState> = _uiState
@@ -53,8 +58,6 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
     fun openCreateDialog()  { showCreateDialog = true }
     fun closeCreateDialog() { showCreateDialog = false }
 
-    // Escuchamos a la base de datos.
-    // Si Room cambia la UI se actualiza.
     val uiTasks: StateFlow<List<TaskUIModel>> = combine(
         repository.allTareas,
         _isShowingCompleted,
@@ -90,33 +93,26 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
     fun loadTareas(gid: Int) {
         viewModelScope.launch {
             _uiState.value = TaskUIState.Loading
-
             val result = repository.refreshTareas(gid)
-
             if (result.isSuccess) {
                 _isOffline.value = false
-                _uiState.value = TaskUIState.Idle
             } else {
                 _isOffline.value = true
-                // He cambiado esto para que no mande Error, sino Idle porque Room ya tiene los datos cacheados
-                _uiState.value = TaskUIState.Idle
             }
+            _uiState.value = TaskUIState.Idle
         }
     }
 
     fun completarTarea(tid: Int, gid: Int, onSuccess: () -> Unit = {}) {
         viewModelScope.launch {
-            db.tareaDao().markAsCompleted(tid)
-
-            val result = BackendRepository.completarTarea(tid)
-
-            if (result.isFailure) {
-                // Cola de offline
-                db.actionDao().addAction(PendingAction(type = "COMPLETE_TASK", data = "", targetId = tid))
-                scheduleSync(context)
-            } else {
+            tareaDao.markAsCompleted(tid)
+            try {
+                backendRepository.completarTarea(tid)
                 loadTareas(gid)
                 onSuccess()
+            } catch (e: Exception) {
+                actionDao.addAction(PendingAction(type = "COMPLETE_TASK", data = "", targetId = tid))
+                scheduleSync(context)
             }
         }
     }
@@ -125,20 +121,17 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _uiState.value = TaskUIState.Loading
             val request = CreateTareaRequest(gid, titulo, descripcion, tipo, prioridad)
-            val result = BackendRepository.createTarea(request)
-
-            if (result.isSuccess) {
+            try {
+                backendRepository.createTarea(request)
                 _uiState.value = TaskUIState.Success
                 showCreateDialog = false
                 loadTareas(gid)
-            } else {
+            } catch (e: Exception) {
                 val jsonRequest = Json.encodeToString(request)
-                db.actionDao().addAction(
-                    PendingAction(type = "CREATE_TASK", data = jsonRequest)
-                )
+                actionDao.addAction(PendingAction(type = "CREATE_TASK", data = jsonRequest))
 
                 val tempId = -(System.currentTimeMillis() % 100000).toInt()
-                val fakeTarea = com.mm.astraisandroid.data.local.entities.TareaEntity(
+                val fakeTarea = TareaEntity(
                     id = tempId,
                     titulo = titulo,
                     descripcion = descripcion,
@@ -149,8 +142,7 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
                     recompensaLudion = 0,
                     isPendingSync = true
                 )
-                db.tareaDao().insertTareas(listOf(fakeTarea))
-
+                tareaDao.insertTareas(listOf(fakeTarea))
                 scheduleSync(context)
 
                 _uiState.value = TaskUIState.Success
@@ -159,46 +151,29 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun resetState() { _uiState.value = TaskUIState.Idle }
-
-    /**
-     * Vacia la cola de acciones pendientes y cuando termina, pide la lista al servidor.
-     * Esto evita que el servidor machaque nuestros cambios locales antes de recibirlos.
-     * Cuanta potencia tiene Git
-     */
     fun syncOfflineActions(gid: Int) {
         viewModelScope.launch {
-            val pending = db.actionDao().getAllPending()
-
-            // Si no hay nada pendiente, simplemente cargamos las tareas normales
+            val pending = actionDao.getAllPending()
             if (pending.isEmpty()) {
                 loadTareas(gid)
                 return@launch
             }
 
-            // Si hay tareas pendientes las enviamos a Ktor una por una
             for (action in pending) {
                 val isSuccess = try {
                     when (action.type) {
-                        "COMPLETE_TASK" -> {
-                            BackendRepository.completarTarea(action.targetId!!).isSuccess
-                        }
+                        "COMPLETE_TASK" -> { backendRepository.completarTarea(action.targetId!!); true }
                         "CREATE_TASK" -> {
                             val request = Json.decodeFromString<CreateTareaRequest>(action.data)
-                            BackendRepository.createTarea(request).isSuccess
+                            backendRepository.createTarea(request)
+                            true
                         }
                         else -> false
                     }
-                } catch (e: Exception) {
-                    false
-                }
+                } catch (e: Exception) { false }
 
-                // Si el servidor confirma que lo guardó, lo borramos de la cola
-                if (isSuccess) {
-                    db.actionDao().removeAction(action)
-                }
+                if (isSuccess) actionDao.removeAction(action)
             }
-
             loadTareas(gid)
         }
     }

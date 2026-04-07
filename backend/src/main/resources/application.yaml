@@ -15,3 +15,7 @@ db:
     user: $DB_USER
     password: $DB_PASSWORD
     dbname: $DB_NAME
+
+google:
+    clientId: $GOOGLE_CLIENT_ID
+    secretId: $GOOGLE_SECRET_ID

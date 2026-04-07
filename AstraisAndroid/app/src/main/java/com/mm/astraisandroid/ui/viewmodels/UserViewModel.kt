@@ -2,14 +2,18 @@ package com.mm.astraisandroid.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mm.astraisandroid.AppCache
 import com.mm.astraisandroid.data.api.BackendRepository
 import com.mm.astraisandroid.data.api.UserMeResponse
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class UserViewModel : ViewModel() {
+@HiltViewModel
+class UserViewModel @Inject constructor(
+    private val backendRepository: BackendRepository
+) : ViewModel() {
     private val _userData = MutableStateFlow<UserMeResponse?>(null)
     val userData: StateFlow<UserMeResponse?> = _userData
 
@@ -18,19 +22,13 @@ class UserViewModel : ViewModel() {
 
     fun fetchUser() {
         viewModelScope.launch {
-            BackendRepository.getMe()
-                .onSuccess { user ->
-                    _userData.value = user
-                    _isOffline.value = false
-                    AppCache.saveUser(user)
-                }
-                .onFailure {
-                    _isOffline.value = true
-                    val cachedUser = AppCache.getUser()
-                    if (cachedUser != null) {
-                        _userData.value = cachedUser
-                    }
-                }
+            try {
+                val user = backendRepository.getMe()
+                _userData.value = user
+                _isOffline.value = false
+            } catch (e: Exception) {
+                _isOffline.value = true
+            }
         }
     }
 }

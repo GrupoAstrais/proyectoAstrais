@@ -83,5 +83,19 @@ class GroupRepoImpl : GroupRepo{
             return AddUserReturn.CONNERR
         }
     }
+
+    override suspend fun deleteGroup(gid: Int, uid: Int): Boolean {
+        if (getDatabaseDaoImpl().checkIfUserIsAdmin(uid = uid, gid = gid)){
+            return getDatabaseDaoImpl().deleteGroup(gid)
+        }
+        return false
+    }
+
+    override suspend fun editGroup(gid: Int, uid: Int, name: String?, desc: String?): Boolean {
+        if (getDatabaseDaoImpl().checkIfUserIsAdmin(uid = uid, gid = gid) || getDatabaseDaoImpl().getUserRoleOnGroup(uid,gid) == GroupRoles.MOD){
+            return getDatabaseDaoImpl().editGroup(gid = gid, name = name, desc = desc)
+        }
+        return false
+    }
 }
 

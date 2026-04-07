@@ -16,17 +16,17 @@ interface TareaDao {
      * Inserta o actualiza tareas que vienen del backend
      * */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertTareas(tareas: List<TareaEntity>)
+    suspend fun insertTareas(tareas: List<TareaEntity>): List<Long>
 
     /**
      * Marca una tarea como completada en local
      * */
     @Query("UPDATE tareas SET estado = 'COMPLETE', isPendingSync = 1 WHERE id = :tid")
-    suspend fun markAsCompleted(tid: Int)
+    suspend fun markAsCompleted(tid: Int): Int
 
     /**
      * Elimina todas las tareas
      * */
     @Query("DELETE FROM tareas")
-    suspend fun clearAll()
+    suspend fun clearAll(): Int
 }

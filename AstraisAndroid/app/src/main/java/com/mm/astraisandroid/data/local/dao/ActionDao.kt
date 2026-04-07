@@ -9,7 +9,7 @@ interface ActionDao {
      * Inserta una nueva acción en la cola
      */
     @Insert
-    suspend fun addAction(action: PendingAction)
+    suspend fun addAction(action: PendingAction): Long
 
     /**
      * Obtiene todas las acciones guardadas para ser procesadas por el SyncWorker
@@ -21,5 +21,5 @@ interface ActionDao {
      * Elimina una acción una vez que el servidor ha confirmado que se procesó con éxito
      */
     @Delete
-    suspend fun removeAction(action: PendingAction)
+    suspend fun removeAction(action: PendingAction): Int
 }

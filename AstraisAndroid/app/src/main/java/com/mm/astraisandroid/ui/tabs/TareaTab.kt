@@ -25,11 +25,12 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.mm.astraisandroid.data.preferences.SessionManager
 import com.mm.astraisandroid.ui.viewmodels.TaskUIState
 import com.mm.astraisandroid.ui.viewmodels.TaskViewModel
-import com.mm.astraisandroid.data.preferences.TokenHolder
 
 enum class Difficulty { EASY, MEDIUM, HARD }
 
@@ -45,14 +46,14 @@ data class TaskUIModel(
 )
 
 @Composable
-fun TasksTab(viewModel: TaskViewModel = viewModel(), onTaskCompleted: () -> Unit) {
+fun TasksTab(viewModel: TaskViewModel = hiltViewModel(), onTaskCompleted: () -> Unit) {
     val isShowingCompleted by viewModel.isShowingCompleted.collectAsStateWithLifecycle()
     val selectedCategory by viewModel.selectedCategory.collectAsStateWithLifecycle()
     val tareasFiltradas by viewModel.uiTasks.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
-        val gid = TokenHolder.getPersonalGid()
+        val gid = SessionManager.getPersonalGid()
         if (gid != null) viewModel.loadTareas(gid)
     }
 
@@ -115,7 +116,7 @@ fun TasksTab(viewModel: TaskViewModel = viewModel(), onTaskCompleted: () -> Unit
                 ) {
                     items(tareasFiltradas, key = { it.id }) { task ->
                         TaskCard(task = task, onComplete = {
-                            val gid = TokenHolder.getPersonalGid() ?: return@TaskCard
+                            val gid = SessionManager.getPersonalGid() ?: return@TaskCard
                             viewModel.completarTarea(task.id, gid) { onTaskCompleted() }
                         })
                     }

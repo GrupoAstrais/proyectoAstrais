@@ -1,17 +1,12 @@
 package com.astrais.db
 
 import CosmeticResponseDTO
+import com.astrais.auth.GoogleUserInfo
 import java.time.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
-import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.inSubQuery
-import org.jetbrains.exposed.v1.core.or
-import org.jetbrains.exposed.v1.jdbc.deleteWhere
-import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.select
-import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 
 class DatabaseDAOImpl : DatabaseDAO {
@@ -51,11 +46,75 @@ class DatabaseDAOImpl : DatabaseDAO {
     }
 
     override suspend fun deleteUsuario(id: Int): Boolean {
+        // Primero borramos al usuario de los grupos
+        TablaGrupoUsuario.deleteWhere {
+            TablaGrupoUsuario.uid.eq(id)
+        }
+        // Luego, hacemos a otro usuario el owner
+        val subquery = EntidadGrupo.find {
+            TablaGrupo.owner.eq(id).and(TablaGrupo.es_grupo_personal.eq(false))
+        }.toList()
+
+        subquery.forEach { grp->
+            val gid = grp.id.value
+            val newOwner = TablaGrupoUsuario.selectAll()
+                .where {
+                    (TablaGrupoUsuario.gid.eq(gid)).and(TablaGrupoUsuario.uid.neq(id))
+                }
+                .limit(1)
+                .firstOrNull()
+
+            if (newOwner != null) {
+                grp.owner = newOwner[TablaGrupoUsuario.uid]
+            }
+        }
+
+        // Borramos grupo personal
+        TablaGrupo.deleteWhere {
+            TablaGrupo.owner.eq(id).and(TablaGrupo.es_grupo_personal.eq(true))
+        }
+
+        // Luego el usuario
         return suspendTransaction { TablaUsuario.deleteWhere { TablaUsuario.id.eq(id) } > 0 }
     }
 
     override suspend fun setUserLastLogin(ent: EntidadUsuario) {
         suspendTransaction { ent.ultimo_login = java.time.LocalDate.now().toKotlinLocalDate() }
+    }
+
+    override suspend fun checkForOauth(provider_uid : String, auth : AuthProvider) : Boolean {
+        return suspendTransaction {
+            !TablaCredencialesAuth.selectAll().where {
+                (TablaCredencialesAuth.provider.eq(auth)).and(TablaCredencialesAuth.provider_uid.eq(provider_uid))
+            }.empty()
+        }
+    }
+
+    override suspend fun createUserWithOauth(
+        nombreusu: String,
+        lang: String,
+        utcOffset: Float,
+        role: UserRoles,
+        provider_uid: String,
+        auth: AuthProvider
+    ) {
+        suspendTransaction {
+            val newuser = EntidadUsuario.new {
+                this.nombre = nombreusu
+                this.email = null
+                this.contrasenia = null
+                this.idioma = lang
+                this.zona_horaria = utcOffset
+                this.rol = role
+                this.ultimo_login = LocalDate.now().toKotlinLocalDate()
+            }
+
+            EntidadCredencialesAuth.new {
+                this.uid = newuser.id
+                this.provider = auth
+                this.provider_uid = provider_uid
+            }
+        }
     }
 
     override suspend fun createGroup(
@@ -151,6 +210,69 @@ class DatabaseDAOImpl : DatabaseDAO {
         }
     }
 
+    override suspend fun getGroupByTask(tid: Int): EntidadGrupo? {
+        return suspendTransaction {
+            val gid = TablaTarea.select(TablaTarea.id_grupo).where {
+                TablaTarea.id_grupo.eq(tid)
+            }.firstOrNull()?.get(TablaTarea.id_grupo)
+
+            gid?.let {
+                EntidadGrupo.findById(it.value)
+            }
+        }
+    }
+
+    override suspend fun editTask(gid : Int, titulo: String?, descripcion: String?, prioridad: Int?) {
+        suspendTransaction {
+            val grp = EntidadGrupo.find {
+                TablaGrupo.id.eq(gid)
+            }.singleOrNull()
+
+            if (titulo != null){
+                grp?.nombre = titulo
+            }
+            if (descripcion != null) {
+                grp?.descripcion = descripcion
+            }
+            if (prioridad != null){
+                grp?.prioridad = prioridad
+            }
+        }
+    }
+
+    override suspend fun checkIfUserIsAdmin(uid: Int, gid: Int): Boolean {
+        return suspendTransaction {
+            !TablaGrupo.selectAll().where { TablaGrupo.id.eq(gid).and(TablaGrupo.owner.eq(gid)) }.empty()
+        }
+    }
+
+    override suspend fun editGroup(gid: Int, name: String?, desc: String?) : Boolean {
+        return suspendTransaction {
+            val group = EntidadGrupo.findById(gid) ?: return@suspendTransaction false
+
+            if (name != null){
+                group.nombre = name
+            }
+            if (desc != null){
+                group.descripcion = desc
+            }
+
+            true
+        }
+    }
+
+    override suspend fun deleteGroup(gid: Int): Boolean {
+        return suspendTransaction {
+            TablaGrupoUsuario.deleteWhere {
+                TablaGrupoUsuario.gid.eq(gid)
+            }
+
+            TablaGrupo.deleteWhere {
+                TablaGrupo.id.eq(gid)
+            } > 0
+        }
+    }
+
     override suspend fun getTareasByGroup(gid: Int): List<EntidadTarea> {
         return suspendTransaction {
             EntidadTarea.find { TablaTarea.id_grupo.eq(EntityID(gid, TablaGrupo)) }.toList()
@@ -188,6 +310,14 @@ class DatabaseDAOImpl : DatabaseDAO {
                 }
             }
             true
+        }
+    }
+
+    override suspend fun deleteTarea(tid: Int): Boolean {
+        return suspendTransaction {
+            TablaTarea.deleteWhere {
+                TablaTarea.id.eq(tid)
+            } > 0
         }
     }
 

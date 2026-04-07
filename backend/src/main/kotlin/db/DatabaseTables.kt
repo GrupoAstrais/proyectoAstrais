@@ -25,7 +25,6 @@ const val IMAGE_PATH_SIZE = 48
 const val CONFIRM_CODE_SIZE = 6
 
 enum class AuthProvider {
-    SERVIDOR,
     GOOGLE
 }
 
@@ -139,15 +138,18 @@ class EntidadConfirmacionUsuario(id: EntityID<Int>) : IntEntity(id) {
 
 object TablaCredencialesAuth : CompositeIdTable("AuthCredentials") {
     val uid = reference("user_id", TablaUsuario, onDelete = ReferenceOption.CASCADE)
-    val provider = enumerationByName<AuthProvider>("provider", 16).default(AuthProvider.SERVIDOR)
+    val provider = enumerationByName<AuthProvider>("provider", 16)
+    val provider_uid = varchar("provider_user_id", 128).nullable()
+
     override val primaryKey = PrimaryKey(uid, provider)
 }
 
 class EntidadCredencialesAuth(id: EntityID<CompositeID>) : CompositeEntity(id) {
     companion object : CompositeEntityClass<EntidadCredencialesAuth>(TablaCredencialesAuth)
 
-    val uid by TablaCredencialesAuth.uid
-    val provider by TablaCredencialesAuth.provider
+    var uid by TablaCredencialesAuth.uid
+    var provider by TablaCredencialesAuth.provider
+    var provider_uid by TablaCredencialesAuth.provider_uid
 }
 
 object TableLogro : IntIdTable("Awards") {
@@ -165,6 +167,7 @@ object TablaGrupo : IntIdTable("Group") {
     val nombre = varchar("name", GROUP_NAME_LENGTH)
     val descripcion = text("desc").default("")
     val owner = reference("owner_id", TablaUsuario)
+    val prioridad = integer("priority")
 }
 
 class EntidadGrupo(id: EntityID<Int>) : IntEntity(id) {
@@ -174,6 +177,7 @@ class EntidadGrupo(id: EntityID<Int>) : IntEntity(id) {
     var nombre by TablaGrupo.nombre
     var descripcion by TablaGrupo.descripcion
     var owner by TablaGrupo.owner
+    var prioridad by TablaGrupo.prioridad
 }
 
 object TablaGrupoUsuario : CompositeIdTable("RelGroupUser") {
