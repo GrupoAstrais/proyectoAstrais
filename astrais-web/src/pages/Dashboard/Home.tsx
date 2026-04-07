@@ -25,15 +25,6 @@ export default function Home() {
 
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
 
-
-  const confirmarModal = (confirmar: string) => {
-    setIsOpen(false);
-
-    if(confirmar == "Confirmar") {
-      {/* add tarea */}
-    }
-  }
-
   const [tasks, setTasks] = useState<ITarea[]>([]);
   
   const handleModalSubmit = (data: any) => {

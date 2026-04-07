@@ -3,27 +3,36 @@ import React from "react";
 interface ButtonProps {
     handleActive : (titulo: string) => void,
     titulo: string,
-    esOtroActivo : string
+    esOtroActivo : string,
+    active?: boolean
 }
 
-export default function ButtonFilter({handleActive, titulo, esOtroActivo} : ButtonProps) {
+export default function ButtonFilter({handleActive, titulo, esOtroActivo, active: activeProp} : ButtonProps) {
 
     const [active, setIsActive] = React.useState<boolean>(false);
+    const currentActive = activeProp ?? active;
 
     const changeState = () => {
-        setIsActive(!active);
+        if(activeProp === undefined) {
+            setIsActive(!active);
+        }
+
         handleActive(titulo)
     }
 
     React.useEffect(() => {
+        if(activeProp !== undefined) {
+            return;
+        }
+
         if(esOtroActivo !== titulo) {
             setIsActive(false)
         }
-    },[esOtroActivo, titulo])
+    },[activeProp, esOtroActivo, titulo])
 
     return (
         <>
-            <button onClick={changeState} className={`rounded-full px-4 ${active ?  'bg-white text-black' : 'bg-black text-white' }`}><span className="font-bold">{titulo}</span></button>
+            <button onClick={changeState} className={`rounded-full px-4 ${currentActive ?  'bg-white text-black' : 'bg-black text-white' }`}><span className="font-bold">{titulo}</span></button>
         </>
   )
 }

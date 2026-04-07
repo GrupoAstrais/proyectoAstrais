@@ -1,4 +1,5 @@
 export interface ITarea {
+  id?: string;
   title: string;
   dificultad: "EASY" | "MEDIUM" | "HARD";
   recompensa: number;
@@ -7,4 +8,6 @@ export interface ITarea {
   isComposed: boolean; 
   subtasks: { id: string; name: string; completed: boolean }[]; 
   habitFrequency?: "daily" | "weekly" | "monthly"; 
+  completed?: boolean;
+  taskDate?: string;
 }

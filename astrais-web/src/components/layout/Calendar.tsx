@@ -1,9 +1,16 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import astra from '../../assets/astra.png'
 
-export default function Calendar({ className = '' }: { className?: string }) {
+interface CalendarProps {
+  className?: string
+  selectedDate?: Date | null
+  onSelectDate?: (date: Date) => void
+}
+
+export default function Calendar({ className = '', selectedDate, onSelectDate }: CalendarProps) {
   const [currentDate, setCurrentDate] = useState<Date>(new Date())
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [localSelectedDate, setLocalSelectedDate] = useState<Date | null>(null)
+  const activeSelectedDate = selectedDate ?? localSelectedDate
 
   const monthNames = [
     'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
@@ -41,8 +48,21 @@ export default function Calendar({ className = '' }: { className?: string }) {
       return
     }
 
-    setSelectedDate(new Date(year, month, day))
+    const newSelectedDate = new Date(year, month, day)
+
+    if (onSelectDate) {
+      onSelectDate(newSelectedDate)
+      return
+    }
+
+    setLocalSelectedDate(newSelectedDate)
   }
+
+  useEffect(() => {
+    if (!selectedDate) return
+
+    setCurrentDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1))
+  }, [selectedDate])
 
   return (
     <div>
@@ -83,9 +103,9 @@ export default function Calendar({ className = '' }: { className?: string }) {
                   ${day === null
                     ? 'invisible'
                     : 'cursor-pointer bg-black/20 text-white hover:bg-purple-900/50'}
-                  ${selectedDate?.getDate() === day &&
-                  selectedDate?.getMonth() === month &&
-                  selectedDate?.getFullYear() === year
+                  ${activeSelectedDate?.getDate() === day &&
+                  activeSelectedDate?.getMonth() === month &&
+                  activeSelectedDate?.getFullYear() === year
                     ? 'bg-secondary-600 ring-2 ring-purple-400'
                     : ''}
                 `}
