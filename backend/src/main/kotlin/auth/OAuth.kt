@@ -53,10 +53,10 @@ fun Application.initOauth(authenticationConfig: AuthenticationConfig){
 
 fun Route.oauthRoutes() {
     authenticate("oauth-google") {
-        get("/auth/googlelogin"){
+        get("/auth/google/login"){
             // Se supone que se redirige a authorizeUrl
         }
-        get("/auth/googlecallback"){
+        get("/auth/google/callback"){
             val principal: OAuthAccessTokenResponse.OAuth2? = call.principal()
             if (principal?.accessToken == null){
                 call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Couldn't get data correctly from google"))
@@ -73,7 +73,7 @@ fun Route.oauthRoutes() {
         }
 
         // TODO: Que android haga su oauth y le mande los datos al servidor
-        post("/auth/google/android") {
+        post("/auth/google/androidlogin") {
 
         }
 
