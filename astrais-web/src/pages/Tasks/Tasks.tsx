@@ -7,7 +7,7 @@ import { useState } from "react";
 import Modal from "../../components/modales/TaskModal";
 import ButtonFilter from "../../components/ui/ButtonFilter";
 import ButtonComplete from "../../components/ui/ButtonComplete";
-import { createLocalTask, filterTasksByCompleted, filterTasksByTime, sortTasksByCompleted, toggleTaskCompleted, type TTaskTimeFilter } from "../../data/Api";
+import { createLocalTask, filterTasksByCompleted, filterTasksByTime, sortTasksByCompleted, toggleSubtaskCompleted, toggleTaskCompleted, type TTaskTimeFilter } from "../../data/Api";
 
 export default function Tasks() {
   const [tasks, setTasks] = useState<ITarea[]>([]);
@@ -75,6 +75,10 @@ export default function Tasks() {
     setTasks((prevTasks) => toggleTaskCompleted(prevTasks, taskId));
   }
 
+  const handleToggleSubtaskCompleted = (taskId: string, subtaskId: string) => {
+    setTasks((prevTasks) => toggleSubtaskCompleted(prevTasks, taskId, subtaskId));
+  }
+
   const handleSelectedDate = (date: Date) => {
     setSelectedDate(date);
   }
@@ -113,9 +117,9 @@ export default function Tasks() {
       <div className="flex flex-col gap-6 px-2">
         <button
           onClick={() => setIsOpen(true)}
-          className="ml-auto border border-[#F4E9E9] bg-accent-beige-300/25 rounded-md px-4 py-2 w-1/5"
+          className="ml-auto border border-[#F4E9E9]/15 bg-accent-beige-300/25 rounded-md px-4 py-2 w-1/5 backdrop-blur-sm"
         >
-          <span className="font-bold text-2xl">+ Añadir tarea</span>
+          <span className="font-bold text-2xl ">+ Añadir tarea</span>
         </button>
 
         <div className="md:flex md:flex-row gap-4 px-10 pt-5 sm:grid sm:grid-cols-2">
@@ -139,7 +143,7 @@ export default function Tasks() {
                 <p className="text-gray-400 italic text-center py-4">No hay tareas diarias</p>
               ) : (
                 filteredDiariasTasks.map((t, i) => (
-                  <Task key={t.id ?? i} data={t} onComplete={handleToggleTaskCompleted}  />
+                  <Task key={t.id ?? i} data={t} onComplete={handleToggleTaskCompleted} onToggleSubtask={handleToggleSubtaskCompleted} />
                 ))
               )}
             </div>
@@ -165,7 +169,7 @@ export default function Tasks() {
                 <p className="text-gray-400 italic text-center py-4">No hay hábitos</p>
               ) : (
                 filteredHabitosTasks.map((t, i) => (
-                  <Task key={t.id ?? i} data={t} onComplete={handleToggleTaskCompleted}  />
+                  <Task key={t.id ?? i} data={t} onComplete={handleToggleTaskCompleted} onToggleSubtask={handleToggleSubtaskCompleted} />
                 ))
               )}
             </div>

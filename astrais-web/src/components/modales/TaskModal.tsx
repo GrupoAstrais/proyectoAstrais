@@ -116,36 +116,37 @@ export default function Modal({ onSubmit, onCancel }: ModalProps) {
   };
 
   return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto grow">
     <form onSubmit={handleSubmit}
-      className="flex flex-col font-['Space_Grotesk'] h-auto w-1/2 lg:w-1/4 bg-secondary-500 rounded-md p-4 gap-3 border-accent-beige-300"
+      className="flex flex-col font-['Space_Grotesk'] h-auto w-1/2 lg:w-1/4 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] rounded-md p-4 gap-3 border-accent-beige-300"
     >
       <h1 className="font-['Press_Start_2P'] text-xl text-center">Añadir tarea</h1>
 
       {/* Nombre */}
-      <div className="bg-accent-beige-300 rounded-md py-4 px-2">
+      <div className="bg-accent-beige-300/80 border border-white/15  rounded-md py-4 px-2">
         <input type="text" value={name}onChange={(e) => setName(e.target.value)} placeholder="Nombre" className="w-full text-primary-900 bg-transparent outline-none" required/>
       </div>
 
-      <div className="bg-accent-beige-300 rounded-md py-4 px-2">
+      <div className="bg-accent-beige-300/80 border border-white/15  rounded-md py-4 px-2">
         <input type="date" value={taskDate} onChange={(e) => setTaskDate(e.target.value)} className="w-full text-primary-900 bg-transparent outline-none" />
       </div>
 
       {/* Dificultad */}
-      <div className="flex flex-row justify-around bg-accent-beige-300 py-4 px-2 rounded-md">
+      <div className="flex flex-row justify-around bg-accent-beige-300/80 border border-white/15  py-4 px-2 rounded-md">
         <DifficultyModal handleActive={(d) => setDifficulty(d as "EASY" | "MEDIUM" | "HARD")} esOtroActivo={difficulty} dificultad="EASY" />
         <DifficultyModal handleActive={(d) => setDifficulty(d as "EASY" | "MEDIUM" | "HARD")} esOtroActivo={difficulty} dificultad="MEDIUM" />
         <DifficultyModal handleActive={(d) => setDifficulty(d as "EASY" | "MEDIUM" | "HARD")}  esOtroActivo={difficulty} dificultad="HARD" />
       </div>
 
       {/* Tipo: Hábito / Diaria */}
-      <div className="flex flex-row justify-around bg-accent-beige-300 py-4 px-2 rounded-md">
+      <div className="flex flex-row justify-around bg-accent-beige-300/80 border border-white/15  py-4 px-2 rounded-md">
         <DiaryHabit handleActive={(t) => setTaskType(t === "Hábito" ? "habit" : "diary")} titulo="Hábito" esOtroActivo={taskType === "habit" ? "Hábito" : ""}
         />
         <DiaryHabit handleActive={(t) => setTaskType(t === "Diaria" ? "diary" : null)} titulo="Diaria" esOtroActivo={taskType === "diary" ? "Diaria" : ""} />
       </div>
 
       {/* Es compuesta? */}
-      <div className="flex flex-row justify-around bg-accent-beige-300 py-4 px-2 rounded-md">
+      <div className="flex flex-row justify-around bg-accent-beige-300/80 border border-white/15  py-4 px-2 rounded-md">
         <TaskType active={isComposed} handleActive={setIsComposed} />
       </div>
 
@@ -176,7 +177,7 @@ export default function Modal({ onSubmit, onCancel }: ModalProps) {
       )}
 
       {/* Tags */}
-      <div className="bg-accent-beige-300 rounded-md p-3">
+      <div className="bg-accent-beige-300/80 border border-white/15 rounded-md p-3">
         <h3 className="font-bold mb-2 text-primary-900">Tags</h3>
         <div className="flex gap-2 mb-3">
           <input ref={tagInputRef} type="text" placeholder="Nombre del tag" className="flex-1 px-3 py-1 text-primary-900 rounded border border-primary-900" />
@@ -243,5 +244,6 @@ export default function Modal({ onSubmit, onCancel }: ModalProps) {
         <button type="button" onClick={onCancel} className="bg-state-error p-2 rounded-md border border-primary-900 text-[#460018] font-bold min-w-25" > Cancelar </button>
       </div>
     </form>
+    </div>
   );
 }

@@ -9,9 +9,10 @@ interface GroupModalProps {
     activePending: boolean
     handleActiveFilter: (title: string) => void
     handleToggleComplete: (taskId: string) => void
+    handleToggleSubtask: (taskId: string, subtaskId: string) => void
 }
 
-export default function GroupModal({ data, groupName, activeCompleted, activePending, handleActiveFilter, handleToggleComplete }: GroupModalProps) {
+export default function GroupModal({ data, groupName, activeCompleted, activePending, handleActiveFilter, handleToggleComplete, handleToggleSubtask }: GroupModalProps) {
     return (
         <div className="font-['Space_Grotesk'] flex flex-col gap-2 mx-2">
             <div className="flex flex-row gap-2 items-center">
@@ -32,7 +33,7 @@ export default function GroupModal({ data, groupName, activeCompleted, activePen
                     <p className="text-gray-400 italic text-center py-4">No hay tareas</p>
                 ) : (
                     data.map((t, i) => (
-                        <Task key={t.id ?? i} data={t} onToggleComplete={handleToggleComplete} />
+                        <Task key={t.id ?? i} data={t} onComplete={handleToggleComplete} onToggleSubtask={handleToggleSubtask} />
                     )))}
             </div>
         </div>

@@ -123,9 +123,36 @@ export const createLocalTask = (data: any): ITarea => {
 export const toggleTaskCompleted = (tasks: ITarea[], taskId: string): ITarea[] => {
     return tasks.map((task) =>
         task.id === taskId
-            ? { ...task, completed: !task.completed }
+            ? {
+                ...task,
+                completed: !task.completed,
+                subtasks: task.subtasks.map((subtask) => ({
+                    ...subtask,
+                    completed: !task.completed
+                }))
+            }
             : task
     );
+}
+
+export const toggleSubtaskCompleted = (tasks: ITarea[], taskId: string, subtaskId: string): ITarea[] => {
+    return tasks.map((task) => {
+        if (task.id !== taskId) {
+            return task;
+        }
+
+        const subtasks = task.subtasks.map((subtask) =>
+            subtask.id === subtaskId
+                ? { ...subtask, completed: !subtask.completed }
+                : subtask
+        );
+
+        return {
+            ...task,
+            subtasks,
+            completed: subtasks.length > 0 && subtasks.every((subtask) => subtask.completed)
+        };
+    });
 }
 
 export const filterTasksByCompleted = (tasks: ITarea[], filters: ITaskCompletedFilters): ITarea[] => {

@@ -6,7 +6,7 @@ import React, { useState } from "react";
 import type { ITarea } from "../../types/Interfaces";
 import Modal from "../../components/modales/TaskModal";
 import GroupSettingsModal from "../../components/modales/GroupSettingsModal";
-import { createLocalTask, filterTasksByCompleted, sortTasksByCompleted, toggleTaskCompleted } from "../../data/Api";
+import { createLocalTask, filterTasksByCompleted, sortTasksByCompleted, toggleSubtaskCompleted, toggleTaskCompleted } from "../../data/Api";
 
 interface IGroupData {
     id: number;
@@ -153,66 +153,43 @@ export default function Groups() {
         );
     }
 
+    const handleToggleSubtaskCompleted = (taskId: string, subtaskId: string) => {
+        if(activeGroup === -1) return;
+
+        setGroups((prevGroups) =>
+            prevGroups.map((group) =>
+                group.id === activeGroup
+                    ? { ...group, tasks: toggleSubtaskCompleted(group.tasks, taskId, subtaskId) }
+                    : group
+            )
+        );
+    }
+
     return (
         <div style={{ backgroundImage: `url(${bgImage})` }} className="flex flex-col gap-4 relative min-h-screen bg-cover bg-center font-['Space_Grotesk'] text-white">
             <Navbar />
             <div className="md:flex md:flex-row justify-center px-5 grid grid-cols-1 gap-2 ">
                 <div className="w-1/3 flex flex-col gap-2">
                     {groups.map((group) => (
-                        <GroupCard
-                            key={group.id}
-                            onClick={handleActiveGroup}
-                            id={group.id}
-                            activeId={activeGroup}
-                            data={group}
-                        />
+                        <GroupCard key={group.id}onClick={handleActiveGroup} id={group.id} activeId={activeGroup}data={group}  />
                     ))}
                 </div>
                 <div className={`${isOpen ? '' : 'hidden'} flex flex-col gap-2 w-1/2`}>
-                    <button
-                        disabled={!activeGroupData}
-                        onClick={() => setIsSettingsModalOpen(true)}
-                        className="border border-[#F4E9E9] bg-accent-beige-300/25 rounded-md px-4 py-2 w-auto disabled:cursor-not-allowed disabled:opacity-60"
-                    >
+                    <button disabled={!activeGroupData} onClick={() => setIsSettingsModalOpen(true)}className="border border-[#F4E9E9]/15 backdrop-blur-sm bg-accent-beige-300/25 rounded-md px-4 py-2 w-auto disabled:cursor-not-allowed disabled:opacity-60">
                         <span className="font-bold text-lg">Configuración</span>
                     </button>
-                    <button
-                        disabled={!activeGroupData}
-                        onClick={() => setIsOpenModal(true)}
-                        className="ml-auto border border-[#F4E9E9] bg-accent-beige-300/25 rounded-md px-4 py-2 w-1/5 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                        <span className="font-bold text-2xl">+ Añadir tarea</span>
+                    <button disabled={!activeGroupData} onClick={() => setIsOpenModal(true)} className="ml-auto backdrop-blur-sm border border-[#F4E9E9]/15 bg-accent-beige-300/25 rounded-md px-4 py-2 w-1/5 disabled:cursor-not-allowed disabled:opacity-60">
+                        <span className="font-bold text-2xl ">+ Añadir tarea</span>
                     </button>
-                    <GroupModal
-                        data={filteredGroupTasks}
-                        groupName={activeGroupData?.name ?? "Grupo"}
-                        activeCompleted={groupTaskFilters.completed}
-                        activePending={groupTaskFilters.pending}
-                        handleActiveFilter={handleActiveTaskFilter}
-                        handleToggleComplete={handleToggleTaskCompleted}
-                    />
+                    <GroupModal data={filteredGroupTasks} groupName={activeGroupData?.name ?? "Grupo"} activeCompleted={groupTaskFilters.completed} activePending={groupTaskFilters.pending} handleActiveFilter={handleActiveTaskFilter} handleToggleComplete={handleToggleTaskCompleted}  handleToggleSubtask={handleToggleSubtaskCompleted}/>
                 </div>
             </div>
 
             <div className={`${isOpenModal ? "" : "hidden"} fixed inset-0 z-50 flex items-center justify-center`}>
-                <Modal
-                    onSubmit={handleModalSubmit}
-                    onCancel={() => setIsOpenModal(false)}
-                />
+                <Modal onSubmit={handleModalSubmit} onCancel={() => setIsOpenModal(false)} />
             </div>
 
-            <GroupSettingsModal
-                isOpen={isSettingsModalOpen}
-                onClose={() => setIsSettingsModalOpen(false)}
-                initialData={
-                    activeGroupData ?? {
-                        name: '',
-                        description: '',
-                        members: []
-                    }
-                }
-                onSave={handleSaveSettings}
-            />
+            <GroupSettingsModal  isOpen={isSettingsModalOpen}  onClose={() => setIsSettingsModalOpen(false)} initialData={ activeGroupData ?? { name: '',  description: '', members: [] } }  onSave={handleSaveSettings}/>
         </div>
     )
 }

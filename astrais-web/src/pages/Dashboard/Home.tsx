@@ -9,42 +9,40 @@ import React, { useState } from 'react'
 import Achiv from '../../components/ui/Achiv'
 import Modal from '../../components/modales/TaskModal'
 import { NavLink } from 'react-router'
+import { createLocalTask, toggleSubtaskCompleted, toggleTaskCompleted } from '../../data/Api'
 
 export default function Home() {
-    const tarea: ITarea = {
-        title: "Estudiar TypeScript",
-        dificultad: "HARD",
-        recompensa: 50,
-        taskType: "habit",
-        isComposed: false,
-        subtasks: [],
-        habitFrequency: "daily"
-    };
-
   const [notif] = React.useState<number>(0);
 
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
 
-  const [tasks, setTasks] = useState<ITarea[]>([]);
+  const [tasks, setTasks] = useState<ITarea[]>(() => [
+    createLocalTask({
+      name: "Estudiar TypeScript",
+      difficulty: "HARD",
+      taskType: "habit",
+      isComposed: false,
+      subtasks: [],
+      habitFrequency: "daily"
+    })
+  ]);
   
   const handleModalSubmit = (data: any) => {
-    // Datos de la tarea creada por el modal
-    const newTask: ITarea = {
-      title: data.name,
-      dificultad: data.difficulty,
-      recompensa: data.difficulty === "EASY" ? 20 : data.difficulty === "MEDIUM" ? 35 : 50,
-      taskType: data.taskType, // "diary" o "habit"
-      tags: data.tags || [], // solo si el usuario añadió tags
-      isComposed: data.isComposed,
-      subtasks: data.subtasks || [],
-      habitFrequency: data.habitFrequency
-    };
+    const newTask: ITarea = createLocalTask(data);
       
-    setTasks([...tasks, newTask]);
+    setTasks((prevTasks) => [...prevTasks, newTask]);
     setIsOpen(false);
   };
 
+  const handleToggleTaskCompleted = (taskId: string) => {
+    setTasks((prevTasks) => toggleTaskCompleted(prevTasks, taskId));
+  }
+  
+  const handleToggleSubtaskCompleted = (taskId: string, subtaskId: string) => {
+    setTasks((prevTasks) => toggleSubtaskCompleted(prevTasks, taskId, subtaskId));
+  }
 
+  const filteredDiariasTasks = tasks.filter((t) => !t.completed);
 
   return (
     <main
@@ -62,8 +60,8 @@ export default function Home() {
         <article className="relative flex w-full max-w-2xl flex-col gap-6 rounded-2xl border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-6 shadow-[0_15px_32px_#090b1f59]">
           <header>
             <p className="pb-2 text-[0.78rem] uppercase tracking-[0.08em] text-[#c9b7ff]">Bienvenido de vuelta</p>
-            <h1 className="font-['Press_Start_2P'] text-xl sm:text-2xl">Hi, Astraïs</h1>
-            <p className="mt-1">¿Qué te queda por hacer?</p>
+            <h1 className="font-['Press_Start_2P'] text-xl sm:text-2xl">{'Hi, Astra\u00efs'}</h1>
+            <p className="mt-1">{'Qué te queda por hacer?'}</p>
           </header>
           <div className="grid w-2/3 grid-cols-1 gap-2.5 sm:grid-cols-2">
             <button onClick={() => setIsOpen(true)} className="cursor-pointer rounded-xl border border-transparent bg-[linear-gradient(90deg,#8b5cf6,#3b82f6)] px-3 py-2 text-[#f8f9ff] transition-colors duration-200">Crear tarea</button>
@@ -72,9 +70,9 @@ export default function Home() {
             <NavLink className="cursor-pointer text-center rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-[#f8f9ff] transition-colors duration-200 hover:bg-white/20" to="/"><button >Cambiar la mascota</button></NavLink>
           </div>
           <img
-            className="absolute -bottom-7 -right-56"
-            src={astra}
-            alt="Astraïs Astra"
+            className="absolute -bottom-7 -right-56 z-10 w-9/10"
+            src={astra} 
+            alt={"AstraAstra"}
           />
         </article>
 
@@ -88,12 +86,11 @@ export default function Home() {
               </NavLink>
             </header>
             <div className="flex flex-col gap-3">
-              <Task data={tarea} />
-              {tasks.length === 0 ? (
+              {filteredDiariasTasks.length === 0 ? (
               <p className="text-gray-400 italic text-center py-4">No hay tareas</p>
               ) : (
-              tasks.map((t, i) => (
-              <Task key={i} data={t}  />
+              filteredDiariasTasks.map((t, i) => (
+                <Task key={t.id ?? i} data={t} onComplete={handleToggleTaskCompleted} onToggleSubtask={handleToggleSubtaskCompleted} />
               )))}
             </div>
           </article>
