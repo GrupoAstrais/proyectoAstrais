@@ -7,9 +7,10 @@ interface TareaProps {
   data: ITarea;
   onComplete?: (taskId: string) => void;
   onToggleSubtask?: (taskId: string, subtaskId: string) => void;
+  onToggleConfig?: (id: string) => void;
 }
 
-export default function Task({ data, onComplete, onToggleSubtask }: TareaProps) {
+export default function Task({ onToggleConfig, data, onComplete, onToggleSubtask }: TareaProps) {
   const [checked, setChecked] = React.useState<boolean>(data.completed ?? false);
   const [localSubtasks, setLocalSubtasks] = React.useState(data.subtasks);
   const subtasks = onToggleSubtask ? data.subtasks : localSubtasks;
@@ -91,6 +92,14 @@ export default function Task({ data, onComplete, onToggleSubtask }: TareaProps) 
     });
   };
 
+  const configHandle = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+
+    if (onToggleConfig && data.id) {
+      onToggleConfig(data.id);
+    }
+  };
+
   return (
     <div onClick={ClickHandle} className={`border border-[#F4E9E9]/15 font-['Space_Grotesk'] relative backdrop-blur-sm
         ${taskChecked
@@ -98,9 +107,20 @@ export default function Task({ data, onComplete, onToggleSubtask }: TareaProps) 
           : "bg-accent-beige-300/35"
       } w-full rounded-md flex flex-row justify-between px-2 py-4`}
     >
+      {onToggleConfig && (
+      <button type="button" onClick={configHandle} className="absolute top-1 right-1 z-20">
+
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="6" r="2" fill="currentColor"/>
+          <circle cx="12" cy="12" r="2" fill="currentColor"/>
+          <circle cx="12" cy="18" r="2" fill="currentColor"/>
+        </svg>
+      </button>
+      )}
+
         {/* Tags en esquina superior derecha son opcionales */}
         {data.tags && (
-            <div className="absolute top-1 right-1 flex flex-wrap gap-1">
+            <div className="absolute bottom-1 right-1 flex flex-wrap gap-1">
             {data.tags.map((tag, id) => (
                 <span
                 key={id}
@@ -148,7 +168,6 @@ export default function Task({ data, onComplete, onToggleSubtask }: TareaProps) 
                 <input id="tareaRealizada" checked={taskChecked} onChange={checkedHandle} onClick={(e) => e.stopPropagation()} type="checkbox" className="accent-primary-700"/>
             </>
         )}
-
     </div>
   );
 }

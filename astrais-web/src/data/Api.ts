@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { LoginRequest, RegisterRequest } from '../types/LoginRequest';
-import type { ITarea } from '../types/Interfaces';
+import type { IGroup, ITarea } from '../types/Interfaces';
 
 export const API_BASE_URL = 'http://192.168.56.1:5684'
 
@@ -118,6 +118,17 @@ export const createLocalTask = (data: any): ITarea => {
         completed: false,
         taskDate: data.taskDate || formatTaskDate(new Date())
     };
+}
+
+export const createNewGroup = (data: any) : IGroup => {
+    return {
+        id: Date.now(),
+        name: data.name,
+        description: data.description,
+        photoUrl: URL.createObjectURL(data.photo),
+        members: [],
+        tasks: [],
+    }
 }
 
 export const toggleTaskCompleted = (tasks: ITarea[], taskId: string): ITarea[] => {

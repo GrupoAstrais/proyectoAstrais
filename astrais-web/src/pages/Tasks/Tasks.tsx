@@ -23,12 +23,28 @@ export default function Tasks() {
     completed: false,
     pending: false
   });
+  const [initialDataModal, setInitialDataModal] = useState<ITarea | null>(null);
 
   const handleModalSubmit = (data: any) => {
+    if (initialDataModal?.id) {
+      const updatedTask: ITarea = {
+        ...createLocalTask(data),
+        id: initialDataModal.id,
+        completed: initialDataModal.completed
+      };
+
+      setTasks((prevTasks) =>
+        prevTasks.map((task) => task.id === initialDataModal.id ? updatedTask : task)
+      );
+      setInitialDataModal(null);
+      setIsOpen(false);
+      return;
+    }
+
     const newTask: ITarea = createLocalTask(data);
 
-    setTasks([...tasks, newTask]);
-    setIsOpen(false);
+    setTasks((prevTasks) => [...prevTasks, newTask]);
+    closeModalHandle();
   };
 
   const handleActiveDiarias = (active: string) => {
@@ -100,6 +116,20 @@ export default function Tasks() {
     )
   );
 
+  const editTaskHandle = (id: string) => {
+    const aux = tasks.find((t) => t.id === id);
+
+    if (!aux) return;
+
+    setInitialDataModal(aux);
+    setIsOpen(true);
+  }
+
+  const closeModalHandle = () => {
+    setInitialDataModal(null);
+    setIsOpen(false);
+  }
+
   return (
     <div
       style={{ backgroundImage: `url(${bgImage})` }}
@@ -108,7 +138,8 @@ export default function Tasks() {
       <div className={`${isOpen ? "" : "hidden"} fixed inset-0 z-50 flex items-center justify-center`}>
         <Modal
           onSubmit={handleModalSubmit}
-          onCancel={() => setIsOpen(false)}
+          onCancel={closeModalHandle}
+          initialData={initialDataModal}
         />
       </div>
 
@@ -116,7 +147,10 @@ export default function Tasks() {
 
       <div className="flex flex-col gap-6 px-2">
         <button
-          onClick={() => setIsOpen(true)}
+          onClick={() => {
+            setInitialDataModal(null);
+            setIsOpen(true);
+          }}
           className="ml-auto border border-[#F4E9E9]/15 bg-accent-beige-300/25 rounded-md px-4 py-2 w-1/5 backdrop-blur-sm"
         >
           <span className="font-bold text-2xl ">+ Añadir tarea</span>
@@ -143,7 +177,7 @@ export default function Tasks() {
                 <p className="text-gray-400 italic text-center py-4">No hay tareas diarias</p>
               ) : (
                 filteredDiariasTasks.map((t, i) => (
-                  <Task key={t.id ?? i} data={t} onComplete={handleToggleTaskCompleted} onToggleSubtask={handleToggleSubtaskCompleted} />
+                  <Task key={t.id ?? i} data={t} onComplete={handleToggleTaskCompleted} onToggleSubtask={handleToggleSubtaskCompleted} onToggleConfig={editTaskHandle}/>
                 ))
               )}
             </div>
@@ -169,7 +203,7 @@ export default function Tasks() {
                 <p className="text-gray-400 italic text-center py-4">No hay hábitos</p>
               ) : (
                 filteredHabitosTasks.map((t, i) => (
-                  <Task key={t.id ?? i} data={t} onComplete={handleToggleTaskCompleted} onToggleSubtask={handleToggleSubtaskCompleted} />
+                  <Task key={t.id ?? i} data={t} onComplete={handleToggleTaskCompleted} onToggleSubtask={handleToggleSubtaskCompleted} onToggleConfig={editTaskHandle} />
                 ))
               )}
             </div>
