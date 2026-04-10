@@ -57,7 +57,7 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var acceptedTerms by remember { mutableStateOf(false) }
-
+    var verificationCode by remember { mutableStateOf("") }
     val uiState by viewModel.registerState.collectAsStateWithLifecycle()
 
     val passwordMismatch = confirmPassword.isNotEmpty() && password != confirmPassword
@@ -95,6 +95,36 @@ fun RegisterScreen(
 
             // Formulario
             Column(modifier = Modifier.fillMaxWidth()) {
+                if (uiState is RegisterUIState.CodeSent) {
+                    Text(
+                        text = "Ingresa el código enviado a tu correo",
+                        color = Color.White,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    AuthTextField(
+                        value = verificationCode,
+                        onValueChange = { verificationCode = it },
+                        label = "Código de verificación",
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Done
+                    )
+
+                    Spacer(modifier = Modifier.height(28.dp))
+
+                    Button(
+                        onClick = { viewModel.verifyCode(verificationCode) },
+                        enabled = verificationCode.length >= 6 && uiState !is RegisterUIState.Loading,
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        shape = RoundedCornerShape(50),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF0D0D0D),
+                            contentColor = Color.White,
+                            disabledContainerColor = Color(0xFF0D0D0D).copy(alpha = 0.5f)
+                        )
+                    ) {
+                        Text("Verificar Cuenta", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                } else {
                 AuthTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -156,14 +186,14 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.height(28.dp))
 
                 // Error del servidor
-                if (uiState is RegisterUIState.RegisterError) {
-                    Text(
-                        text = (uiState as RegisterUIState.RegisterError).message,
-                        color = Color(0xFFFF6B6B),
-                        fontSize = 13.sp,
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    )
-                }
+                    if (uiState is RegisterUIState.RegisterError) {
+                        Text(
+                            text = (uiState as RegisterUIState.RegisterError).message,
+                            color = Color(0xFFFF6B6B),
+                            fontSize = 13.sp,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+                    }
 
                 Button(
                     onClick = {
@@ -212,4 +242,4 @@ fun RegisterScreen(
             }
         }
     }
-}
+}}

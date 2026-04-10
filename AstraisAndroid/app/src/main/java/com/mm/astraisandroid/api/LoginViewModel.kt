@@ -53,4 +53,21 @@ class LoginViewModel @Inject constructor(
         }
     }
     fun resetState() { _loginState.value = LoginUIState.Idle }
+
+    fun loginWithGoogle(idToken: String) {
+        viewModelScope.launch {
+            _loginState.value = LoginUIState.Loading
+            try {
+                val response = backendRepository.performGoogleLogin(idToken)
+
+                SessionManager.saveTokens(response.jwtAccessToken, response.jwtRefreshToken)
+                val me = backendRepository.getMe()
+                me.personalGid?.let { SessionManager.savePersonalGid(it) }
+
+                _loginState.value = LoginUIState.LoginSuccess
+            } catch (e: Exception) {
+                _loginState.value = LoginUIState.LoginError(e.message ?: "Error desconocido")
+            }
+        }
+    }
 }

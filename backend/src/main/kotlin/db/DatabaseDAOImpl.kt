@@ -95,12 +95,12 @@ class DatabaseDAOImpl : DatabaseDAO {
         provider_uid: String,
         auth: AuthProvider
     ) : Pair<Int, Boolean> {
-        suspendTransaction {
+        return suspendTransaction {
             val notExistUser = TablaCredencialesAuth.selectAll().where {
                 (TablaCredencialesAuth.provider.eq(auth)).and(TablaCredencialesAuth.provider_uid.eq(provider_uid))
             }.singleOrNull()
 
-            if (notExistUser == null){
+            if (notExistUser == null) {
                 val newuser = EntidadUsuario.new {
                     this.nombre = "Astrais User"
                     this.email = null
@@ -111,16 +111,17 @@ class DatabaseDAOImpl : DatabaseDAO {
                     this.ultimo_login = LocalDate.now().toKotlinLocalDate()
                 }
 
-                EntidadCredencialesAuth.new {
-                    this.uid = newuser.id
-                    this.provider = auth
-                    this.provider_uid = provider_uid
+                TablaCredencialesAuth.insert {
+                    it[TablaCredencialesAuth.uid] = newuser.id.value
+                    it[TablaCredencialesAuth.provider] = auth
+                    it[TablaCredencialesAuth.provider_uid] = provider_uid
                 }
-                return@suspendTransaction Pair(newuser.id, true)
-            }else{
-                return@suspendTransaction Pair(notExistUser[TablaCredencialesAuth.id], false)
-            }
 
+                Pair(newuser.id.value, true)
+
+            } else {
+                Pair(notExistUser[TablaCredencialesAuth.uid].value, false)
+            }
         }
     }
 
@@ -442,6 +443,39 @@ class DatabaseDAOImpl : DatabaseDAO {
                 this.coleccion = coleccion
             }
             true
+        }
+    }
+
+    override suspend fun saveConfirmationCode(uid: Int, code: String) {
+        suspendTransaction {
+            EntidadConfirmacionUsuario.new {
+                this.uid = EntityID(uid, TablaUsuario)
+                this.codigo_confirmacion = code
+            }
+        }
+    }
+
+    override suspend fun verifyConfirmationCode(email: String, code: String): Boolean {
+        return suspendTransaction {
+            val user = EntidadUsuario.find { TablaUsuario.email eq email }.singleOrNull() ?: return@suspendTransaction false
+            val confirmacion = EntidadConfirmacionUsuario.find {
+                (TablaConfirmacionUsuario.uid eq user.id) and (TablaConfirmacionUsuario.codigo_confirmacion eq code)
+            }.singleOrNull()
+
+            if (confirmacion != null) {
+                user.esta_confirmado = 1
+                confirmacion.delete()
+                true
+            } else {
+                false
+            }
+        }
+    }
+
+    override suspend fun isUserConfirmed(email: String): Boolean {
+        return suspendTransaction {
+            val user = EntidadUsuario.find { TablaUsuario.email eq email }.singleOrNull()
+            user?.esta_confirmado == 1
         }
     }
 }

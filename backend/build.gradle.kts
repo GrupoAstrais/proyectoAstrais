@@ -60,4 +60,9 @@ dependencies {
 
 
     testImplementation(libs.ktor.server.test.host)
+
+    // Email
+    implementation("org.apache.commons:commons-email:1.5")
+
+    implementation("com.google.api-client:google-api-client:1.34.0")
 }

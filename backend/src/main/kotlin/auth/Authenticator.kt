@@ -56,6 +56,15 @@ fun Route.authRoutes() {
                 return@post
             }
 
+            val isConfirmed = getDatabaseDaoImpl().isUserConfirmed(request.email)
+            if (!isConfirmed) {
+                call.respond(
+                    HttpStatusCode.Forbidden,
+                    Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Por favor, verifica tu correo antes de iniciar sesión.")
+                )
+                return@post
+            }
+
             val jwt = getAuthRepoImpl().performBasicLogin(request)
             if (jwt == null) {
                 call.respond(
@@ -73,6 +82,25 @@ fun Route.authRoutes() {
                             "The data sent by the client was not in the accepted format"
                     )
             )
+        }
+    }
+
+    post("/auth/verify") {
+        try {
+            val request = call.receive<MailVerifierRequest>()
+            if (request.email.isBlank() || request.code.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_BLANKVALUE.ordinal, "Faltan datos"))
+                return@post
+            }
+
+            val success = getDatabaseDaoImpl().verifyConfirmationCode(request.email, request.code)
+            if (success) {
+                call.respond(HttpStatusCode.OK, mapOf("success" to true))
+            } else {
+                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_BADVALUE.ordinal, "Código incorrecto o expirado"))
+            }
+        } catch (e: Exception) {
+            call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "Error de formato"))
         }
     }
 

@@ -158,6 +158,10 @@ interface DatabaseDAO {
         theme: String,
         coleccion: String
     ): Boolean
+
+    suspend fun saveConfirmationCode(uid: Int, code: String)
+    suspend fun verifyConfirmationCode(email: String, code: String): Boolean
+    suspend fun isUserConfirmed(email: String): Boolean
 }
 
 fun getDatabaseDaoImpl(): DatabaseDAO {

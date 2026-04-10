@@ -96,4 +96,29 @@ class BackendRepository(private val client: HttpClient) {
         val req = client.post("$BASE_URL/store/equip/$id")
         if (req.status != HttpStatusCode.OK) error("Error al equipar")
     }
+
+    suspend fun verifyEmail(request: MailVerifierRequest) {
+        val req = client.post("$BASE_URL/auth/verify") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }
+        if (req.status != HttpStatusCode.OK) {
+            val errResponse = req.body<ServerErrorResponse>()
+            error(errResponse.errorText ?: errResponse.error ?: "Error al verificar el código")
+        }
+    }
+
+    suspend fun performGoogleLogin(idToken: String): LoginResponse {
+        val req = client.post("$BASE_URL/auth/google/androidlogin") {
+            contentType(ContentType.Application.Json)
+            setBody(mapOf("idToken" to idToken))
+        }
+
+        if (req.status != HttpStatusCode.OK) {
+            val errResponse = req.body<ServerErrorResponse>()
+            error(errResponse.errorText ?: errResponse.error ?: "Error al verificar en el backend")
+        }
+
+        return req.body<LoginResponse>()
+    }
 }

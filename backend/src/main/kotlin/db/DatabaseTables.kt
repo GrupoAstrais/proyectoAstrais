@@ -3,6 +3,7 @@ package com.astrais.db
 import java.time.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -136,7 +137,7 @@ class EntidadConfirmacionUsuario(id: EntityID<Int>) : IntEntity(id) {
     var codigo_confirmacion by TablaConfirmacionUsuario.codigo_confirmacion
 }
 
-object TablaCredencialesAuth : CompositeIdTable("AuthCredentials") {
+object TablaCredencialesAuth : Table("AuthCredentials") {
     val uid = reference("user_id", TablaUsuario, onDelete = ReferenceOption.CASCADE)
     val provider = enumerationByName<AuthProvider>("provider", 16)
     val provider_uid = varchar("provider_user_id", 128).nullable()
@@ -144,13 +145,13 @@ object TablaCredencialesAuth : CompositeIdTable("AuthCredentials") {
     override val primaryKey = PrimaryKey(uid, provider)
 }
 
-class EntidadCredencialesAuth(id: EntityID<CompositeID>) : CompositeEntity(id) {
-    companion object : CompositeEntityClass<EntidadCredencialesAuth>(TablaCredencialesAuth)
-
-    var uid by TablaCredencialesAuth.uid
-    var provider by TablaCredencialesAuth.provider
-    var provider_uid by TablaCredencialesAuth.provider_uid
-}
+//class EntidadCredencialesAuth(id: EntityID<CompositeID>) : CompositeEntity(id) {
+//    companion object : CompositeEntityClass<EntidadCredencialesAuth>(TablaCredencialesAuth)
+//
+//    var uid by TablaCredencialesAuth.uid
+//    var provider by TablaCredencialesAuth.provider
+//    var provider_uid by TablaCredencialesAuth.provider_uid
+//}
 
 object TableLogro : IntIdTable("Awards") {
     val titulo = varchar("title", AWARD_TITLE_LENGTH)
