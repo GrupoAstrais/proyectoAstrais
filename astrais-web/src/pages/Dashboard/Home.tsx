@@ -85,6 +85,8 @@ export default function Home() {
       </div>
       <Navbar />
 
+      
+
       <section className="mx-auto flex w-full max-w-7xl flex-col items-center justify-center gap-4 px-4 py-6">
         {/* dashboard */}
         <article className="relative flex w-full max-w-2xl flex-col gap-6 rounded-2xl border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-6 shadow-[0_15px_32px_#090b1f59]">
@@ -98,9 +100,9 @@ export default function Home() {
               setInitialDataModal(null);
               setIsOpen(true);
             }} className="cursor-pointer rounded-xl border border-transparent bg-[linear-gradient(90deg,#8b5cf6,#3b82f6)] px-3 py-2 text-[#f8f9ff] transition-colors duration-200">Crear tarea</button>
-            <NavLink className="cursor-pointer text-center rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-[#f8f9ff] transition-colors duration-200 hover:bg-white/20" to="/groups?openCreateModal=true"><button>Crear un grupo</button></NavLink>
-            <NavLink  className="cursor-pointer text-center rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-[#f8f9ff] transition-colors duration-200 hover:bg-white/20" to="/profile"><button>Ver perfil</button></NavLink>
-            <NavLink className="cursor-pointer text-center rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-[#f8f9ff] transition-colors duration-200 hover:bg-white/20" to="/shop"><button >Cambiar la mascota</button></NavLink>
+            <NavLink className="cursor-pointer backdrop-blur-sm text-center rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-[#f8f9ff] transition-colors duration-200 hover:bg-white/20" to="/groups?openCreateModal=true"><button>Crear un grupo</button></NavLink>
+            <NavLink  className="cursor-pointer backdrop-blur-sm text-center rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-[#f8f9ff] transition-colors duration-200 hover:bg-white/20" to="/profile"><button>Ver perfil</button></NavLink>
+            <NavLink className="cursor-pointer backdrop-blur-sm text-center rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-[#f8f9ff] transition-colors duration-200 hover:bg-white/20" to="/shop"><button >Cambiar la mascota</button></NavLink>
           </div>
           <img
             className="absolute -bottom-7 -right-56 z-10 w-9/10"
@@ -133,7 +135,7 @@ export default function Home() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/* Tienda */}
               <NavLink to="/shop">
-                <article className="rounded-2xl border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-4 shadow-[0_15px_32px_#090b1f59]">
+                <article className="rounded-2xl h-full border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-4 shadow-[0_15px_32px_#090b1f59]">
                   <header className="mb-3">
                     <h2 className="font-['Press_Start_2P'] text-lg">Tienda</h2>
                   </header>
