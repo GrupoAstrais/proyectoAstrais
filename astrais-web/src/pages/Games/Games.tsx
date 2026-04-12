@@ -216,7 +216,7 @@ export default function Games() {
               <footer className="relative z-10 mt-3 flex items-end justify-between gap-2.5 min-[1400px]:gap-3">
                 <div className="max-w-88 rounded-2xl border border-white/10 bg-black/18 px-4 py-3 text-[0.8rem] leading-5 text-slate-200 xl:text-[0.88rem] xl:leading-6">
                   {status === 'playing' && 'La ronda esta en marcha. Cada clic empuja tu calor de sesion y tu premio final.'}
-                  {status === 'idle' && 'Todo esta comprimido para escritorio: entra, juega y vuelve a tus paneles sin scroll.'}
+                  {status === 'idle' && 'Todo listo para que empieces la partida.'}
                   {status === 'finished' &&
                     `Sesion completada. Premio actual: ${roundReward} ludiones. Mejor marca guardada: ${careerStats.bestScore}.`}
                 </div>

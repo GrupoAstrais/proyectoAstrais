@@ -181,8 +181,7 @@ export default function Achivs() {
                       Logros y recompensas
                     </h1>
                     <p className="mt-3 max-w-xl text-[0.82rem] leading-5 text-slate-200 xl:text-[0.9rem] xl:leading-6">
-                      Una vista compacta para escritorio con filtros, detalle activo y recompensas listas para reclamar
-                      sin necesidad de scroll.
+                      Una vista de los logros para los usuarios, con su progreso y saldo para la tienda, barras de progreso y etc.
                     </p>
                   </div>
 
