@@ -11,3 +11,12 @@ export interface ITarea {
   completed?: boolean;
   taskDate?: string;
 }
+
+export interface IGroup {
+    id: number;
+    name: string;
+    description: string;
+    photoUrl?: string | null;
+    members: Array<{ id: number; name: string; avatar?: string }>;
+    tasks: ITarea[];
+}

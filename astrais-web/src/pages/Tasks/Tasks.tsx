@@ -7,7 +7,7 @@ import { useState } from "react";
 import Modal from "../../components/modales/TaskModal";
 import ButtonFilter from "../../components/ui/ButtonFilter";
 import ButtonComplete from "../../components/ui/ButtonComplete";
-import { createLocalTask, filterTasksByCompleted, filterTasksByTime, sortTasksByCompleted, toggleTaskCompleted, type TTaskTimeFilter } from "../../data/Api";
+import { createLocalTask, filterTasksByCompleted, filterTasksByTime, sortTasksByCompleted, toggleSubtaskCompleted, toggleTaskCompleted, type TTaskTimeFilter } from "../../data/Api";
 
 export default function Tasks() {
   const [tasks, setTasks] = useState<ITarea[]>([]);
@@ -23,12 +23,28 @@ export default function Tasks() {
     completed: false,
     pending: false
   });
+  const [initialDataModal, setInitialDataModal] = useState<ITarea | null>(null);
 
   const handleModalSubmit = (data: any) => {
+    if (initialDataModal?.id) {
+      const updatedTask: ITarea = {
+        ...createLocalTask(data),
+        id: initialDataModal.id,
+        completed: initialDataModal.completed
+      };
+
+      setTasks((prevTasks) =>
+        prevTasks.map((task) => task.id === initialDataModal.id ? updatedTask : task)
+      );
+      setInitialDataModal(null);
+      setIsOpen(false);
+      return;
+    }
+
     const newTask: ITarea = createLocalTask(data);
 
-    setTasks([...tasks, newTask]);
-    setIsOpen(false);
+    setTasks((prevTasks) => [...prevTasks, newTask]);
+    closeModalHandle();
   };
 
   const handleActiveDiarias = (active: string) => {
@@ -75,6 +91,10 @@ export default function Tasks() {
     setTasks((prevTasks) => toggleTaskCompleted(prevTasks, taskId));
   }
 
+  const handleToggleSubtaskCompleted = (taskId: string, subtaskId: string) => {
+    setTasks((prevTasks) => toggleSubtaskCompleted(prevTasks, taskId, subtaskId));
+  }
+
   const handleSelectedDate = (date: Date) => {
     setSelectedDate(date);
   }
@@ -96,6 +116,20 @@ export default function Tasks() {
     )
   );
 
+  const editTaskHandle = (id: string) => {
+    const aux = tasks.find((t) => t.id === id);
+
+    if (!aux) return;
+
+    setInitialDataModal(aux);
+    setIsOpen(true);
+  }
+
+  const closeModalHandle = () => {
+    setInitialDataModal(null);
+    setIsOpen(false);
+  }
+
   return (
     <div
       style={{ backgroundImage: `url(${bgImage})` }}
@@ -104,7 +138,8 @@ export default function Tasks() {
       <div className={`${isOpen ? "" : "hidden"} fixed inset-0 z-50 flex items-center justify-center`}>
         <Modal
           onSubmit={handleModalSubmit}
-          onCancel={() => setIsOpen(false)}
+          onCancel={closeModalHandle}
+          initialData={initialDataModal}
         />
       </div>
 
@@ -112,10 +147,13 @@ export default function Tasks() {
 
       <div className="flex flex-col gap-6 px-2">
         <button
-          onClick={() => setIsOpen(true)}
-          className="ml-auto border border-[#F4E9E9] bg-accent-beige-300/25 rounded-md px-4 py-2 w-1/5"
+          onClick={() => {
+            setInitialDataModal(null);
+            setIsOpen(true);
+          }}
+          className="ml-auto border border-[#F4E9E9]/15 bg-accent-beige-300/25 rounded-md px-4 py-2 w-1/5 backdrop-blur-sm"
         >
-          <span className="font-bold text-2xl">+ Añadir tarea</span>
+          <span className="font-bold text-2xl ">+ Añadir tarea</span>
         </button>
 
         <div className="md:flex md:flex-row gap-4 px-10 pt-5 sm:grid sm:grid-cols-2">
@@ -139,7 +177,7 @@ export default function Tasks() {
                 <p className="text-gray-400 italic text-center py-4">No hay tareas diarias</p>
               ) : (
                 filteredDiariasTasks.map((t, i) => (
-                  <Task key={t.id ?? i} data={t} onComplete={handleToggleTaskCompleted}  />
+                  <Task key={t.id ?? i} data={t} onComplete={handleToggleTaskCompleted} onToggleSubtask={handleToggleSubtaskCompleted} onToggleConfig={editTaskHandle}/>
                 ))
               )}
             </div>
@@ -165,7 +203,7 @@ export default function Tasks() {
                 <p className="text-gray-400 italic text-center py-4">No hay hábitos</p>
               ) : (
                 filteredHabitosTasks.map((t, i) => (
-                  <Task key={t.id ?? i} data={t} onComplete={handleToggleTaskCompleted}  />
+                  <Task key={t.id ?? i} data={t} onComplete={handleToggleTaskCompleted} onToggleSubtask={handleToggleSubtaskCompleted} onToggleConfig={editTaskHandle} />
                 ))
               )}
             </div>

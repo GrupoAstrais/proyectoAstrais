@@ -83,7 +83,7 @@ class AuthActivity : ComponentActivity() {
 
             AstraisandroidTheme(themeJson = userData?.themeColors) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    AppNavigation(initialHasSession = SessionManager.hasSession())
+                    AppNavigation(initialHasSession = SessionManager.hasSession(), userViewModel= userViewModel)
                     OcultarBotonesSistema()
                 }
             }
@@ -92,7 +92,7 @@ class AuthActivity : ComponentActivity() {
 }
 
 @Composable
-fun AppNavigation(initialHasSession: Boolean) {
+fun AppNavigation(initialHasSession: Boolean, userViewModel: UserViewModel) {
     val navController = rememberNavController()
     val coroutineScope = rememberCoroutineScope()
 
@@ -128,9 +128,11 @@ fun AppNavigation(initialHasSession: Boolean) {
 
         composable(ScreenRoutes.Home.route) {
             HomeScreen(
+                userViewModel = userViewModel,
                 onNavigateToProfile = {
                     navController.navigate(ScreenRoutes.Profile.route)
                 }
+
             )
         }
 
@@ -163,7 +165,7 @@ fun AppNavigation(initialHasSession: Boolean) {
 }
 
 @Composable
-fun HomeScreen(onNavigateToProfile: () -> Unit) {
+fun HomeScreen(userViewModel: UserViewModel, onNavigateToProfile: () -> Unit) {
     val context = LocalContext.current
     val connectivityObserver = remember { ConnectivityObserver(context) }
     val deviceHasInternet by connectivityObserver.status.collectAsState(initial = true)
@@ -171,7 +173,7 @@ fun HomeScreen(onNavigateToProfile: () -> Unit) {
     val navController = rememberNavController()
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     val taskViewModel: TaskViewModel = hiltViewModel()
-    val userViewModel: UserViewModel = hiltViewModel()
+    //val userViewModel: UserViewModel = hiltViewModel()
 
     LaunchedEffect(Unit) {
         userViewModel.fetchUser()
@@ -215,7 +217,7 @@ fun HomeScreen(onNavigateToProfile: () -> Unit) {
                         "add_tab"       -> 2
                         "group_tab"     -> 3
                         "store_tab"     -> 4
-                        "minigames_tab" -> 5
+                        //"minigames_tab" -> 5
                         "inventory_tab" -> 0
                         else            -> 0
                     },
@@ -235,7 +237,7 @@ fun HomeScreen(onNavigateToProfile: () -> Unit) {
                             1 -> "tasks_tab"
                             3 -> "group_tab"
                             4 -> "store_tab"
-                            5 -> "minigames_tab"
+                            //5 -> "minigames_tab"
                             else -> "home_tab"
                         }
 
@@ -304,7 +306,7 @@ fun HomeScreen(onNavigateToProfile: () -> Unit) {
                 composable("inventory_tab") {
                     com.mm.astraisandroid.ui.tabs.InventarioTab(onCosmeticChanged = { userViewModel.fetchUser() })
                 }
-
+/*
                 composable("minigames_tab") {
                     ClickerGameScreen(
                         url = "http://192.168.1.129:5684/static/minigames/clicker.html",
@@ -317,7 +319,7 @@ fun HomeScreen(onNavigateToProfile: () -> Unit) {
                             }
                         }
                     )
-                }
+                }*/
             }
         }
     }
@@ -390,7 +392,7 @@ fun NavBottomBar(selected: Int, onSelect: (Int) -> Unit) {
         NavItem("Add", Icons.Filled.AddCircle),
         NavItem("Groups", Icons.Filled.Person),
         NavItem("Store", Icons.Filled.ShoppingCart),
-        NavItem("Minigames", Icons.Filled.Games)
+        //NavItem("Minigames", Icons.Filled.Games)
     )
 
     Row(

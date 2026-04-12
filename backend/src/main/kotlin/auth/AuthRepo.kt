@@ -1,5 +1,8 @@
 package com.astrais.auth
 
+import com.astrais.db.AuthProvider
+import com.astrais.db.EntidadUsuario
+
 interface AuthRepo {
     /**
      * Hace un login basico, generando un nuevo token JWT.
@@ -27,6 +30,14 @@ interface AuthRepo {
      * @return El token de acceso, NULL si no se pudo
      */
     suspend fun regenAccessToken(id : Int) : String?
+
+    /**
+     * Intenta loguear o registrar un nuevo usuario con las credenciales de OAuth indicadas
+     * @param provider_uid El UID que el proveedor OAuth nos otorga
+     * @param auth El tipo de provedor oauth que hace la operacion
+     * @return Un par con el uid (-1 si hubo error) y el otro booleano que dice si se tuvo que registrar un usuario
+     */
+    suspend fun tryLoginOrRegisterOauth(provider_uid : String, auth: AuthProvider) : Pair<Int, Boolean>
 }
 
 fun getAuthRepoImpl() :AuthRepo {

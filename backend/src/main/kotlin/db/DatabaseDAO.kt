@@ -50,14 +50,16 @@ interface DatabaseDAO {
      */
     suspend fun checkForOauth(provider_uid : String, auth : AuthProvider) : Boolean
 
-    suspend fun createUserWithOauth(
-        nombreusu: String,
-        lang: String = LANG_CODE_ENGLISH,
-        utcOffset: Float = 0f,
-        role: UserRoles = UserRoles.NORMAL_USER,
+    /**
+     * Intenta loguear o registrar un nuevo usuario con las credenciales de OAuth indicadas
+     * @param provider_uid El UID que el proveedor OAuth nos otorga
+     * @param auth El tipo de provedor oauth que hace la operacion
+     * @return Un pair, El primer elemento es el ID, el otro dice si se tuvo que registrar un usuario
+     */
+    suspend fun logOrCreateOauthUser(
         provider_uid : String,
         auth : AuthProvider
-        )
+        ) : Pair<Int, Boolean>
 
     /**
      * Se crea un grupo para el usuario indicado
@@ -156,6 +158,10 @@ interface DatabaseDAO {
         theme: String,
         coleccion: String
     ): Boolean
+
+    suspend fun saveConfirmationCode(uid: Int, code: String)
+    suspend fun verifyConfirmationCode(email: String, code: String): Boolean
+    suspend fun isUserConfirmed(email: String): Boolean
 }
 
 fun getDatabaseDaoImpl(): DatabaseDAO {

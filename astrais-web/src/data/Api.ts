@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { LoginRequest, RegisterRequest } from '../types/LoginRequest';
-import type { ITarea } from '../types/Interfaces';
+import type { IGroup, ITarea } from '../types/Interfaces';
 
 export const API_BASE_URL = 'http://192.168.56.1:5684'
 
@@ -120,12 +120,50 @@ export const createLocalTask = (data: any): ITarea => {
     };
 }
 
+export const createNewGroup = (data: any) : IGroup => {
+    return {
+        id: Date.now(),
+        name: data.name,
+        description: data.description,
+        photoUrl: URL.createObjectURL(data.photo),
+        members: [],
+        tasks: [],
+    }
+}
+
 export const toggleTaskCompleted = (tasks: ITarea[], taskId: string): ITarea[] => {
     return tasks.map((task) =>
         task.id === taskId
-            ? { ...task, completed: !task.completed }
+            ? {
+                ...task,
+                completed: !task.completed,
+                subtasks: task.subtasks.map((subtask) => ({
+                    ...subtask,
+                    completed: !task.completed
+                }))
+            }
             : task
     );
+}
+
+export const toggleSubtaskCompleted = (tasks: ITarea[], taskId: string, subtaskId: string): ITarea[] => {
+    return tasks.map((task) => {
+        if (task.id !== taskId) {
+            return task;
+        }
+
+        const subtasks = task.subtasks.map((subtask) =>
+            subtask.id === subtaskId
+                ? { ...subtask, completed: !subtask.completed }
+                : subtask
+        );
+
+        return {
+            ...task,
+            subtasks,
+            completed: subtasks.length > 0 && subtasks.every((subtask) => subtask.completed)
+        };
+    });
 }
 
 export const filterTasksByCompleted = (tasks: ITarea[], filters: ITaskCompletedFilters): ITarea[] => {

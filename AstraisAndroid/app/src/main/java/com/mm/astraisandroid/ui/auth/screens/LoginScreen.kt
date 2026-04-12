@@ -20,24 +20,33 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.mm.astraisandroid.data.api.LoginRequest
 import com.mm.astraisandroid.api.LoginUIState
 import com.mm.astraisandroid.api.LoginViewModel
 import com.mm.astraisandroid.data.api.RegisterRequest
 import com.mm.astraisandroid.ui.auth.components.AuthBackground
 import com.mm.astraisandroid.ui.auth.components.AuthTextField
+import kotlinx.coroutines.launch
+import com.mm.astraisandroid.BuildConfig
 
 
 @Composable
@@ -50,6 +59,8 @@ fun LoginScreen(
     // sino cada vez que Compose redibuja la pantalla, email volvería a ser ""
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     // es un StateFlow en el ViewModel, es como un useState
     val uiState by viewModel.loginState.collectAsStateWithLifecycle()
@@ -61,6 +72,44 @@ fun LoginScreen(
         if (uiState is LoginUIState.LoginSuccess) {
             onNavigateToHome()
             viewModel.resetState()
+        }
+    }
+
+    // TODO: Corregir guarrada de prueba
+    val handleGoogleSignIn: () -> Unit = {
+        coroutineScope.launch {
+            try {
+                val credentialManager = CredentialManager.create(context)
+
+                val googleIdOption = GetGoogleIdOption.Builder()
+                    .setFilterByAuthorizedAccounts(false)
+                    .setServerClientId(BuildConfig.GOOGLE_WEB_CLIENT_ID)
+                    .setAutoSelectEnabled(true)
+                    .build()
+
+                val request = GetCredentialRequest.Builder()
+                    .addCredentialOption(googleIdOption)
+                    .build()
+
+                val result = credentialManager.getCredential(
+                    request = request,
+                    context = context
+                )
+
+                val credential = result.credential
+                if (credential is CustomCredential &&
+                    credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+
+                    val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                    val idToken = googleIdTokenCredential.idToken
+
+                    viewModel.loginWithGoogle(idToken)
+                }
+            } catch (e: androidx.credentials.exceptions.GetCredentialException) {
+                android.util.Log.e("GOOGLE_LOGIN", "Error de CredentialManager: ${e.javaClass.simpleName} - ${e.errorMessage}")
+            } catch (e: Exception) {
+                android.util.Log.e("GOOGLE_LOGIN", "Error general: ${e.message}")
+            }
         }
     }
 
@@ -132,18 +181,15 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 Button(
-                    onClick = { viewModel.testRegister(RegisterRequest("Test", "test@test.com", "test", "ESP")) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
+                    onClick = handleGoogleSignIn,
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF0D0D0D),
-                        contentColor = Color.White,
-                        disabledContainerColor = Color(0xFF0D0D0D).copy(alpha = 0.5f)
+                        containerColor = Color.White,
+                        contentColor = Color.Black
                     )
                 ) {
-                    Text("Register test")
+                    Text("Continuar con Google", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
 

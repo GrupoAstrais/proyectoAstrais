@@ -1,8 +1,14 @@
 package com.astrais.auth
 
 import com.astrais.auth.*
+import com.astrais.db.AuthProvider
 import com.astrais.db.DatabaseDAO
+import com.astrais.db.EntidadUsuario
 import com.astrais.db.getDatabaseDaoImpl
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.apache.commons.mail.DefaultAuthenticator
+import org.apache.commons.mail.HtmlEmail
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.slf4j.LoggerFactory
 
@@ -29,25 +35,81 @@ class AuthRepoImpl : AuthRepo {
         return null
     }
 
-    override suspend fun performBasicRegister(registerRequest: RegisterRequest) : Boolean{
+    override suspend fun performBasicRegister(registerRequest: RegisterRequest): Boolean {
         try {
-            val dao : DatabaseDAO = getDatabaseDaoImpl()
-            val existeUser = getDatabaseDaoImpl().getUsuario(registerRequest.email) != null
+            val dao: DatabaseDAO = getDatabaseDaoImpl()
+            val user = dao.getUsuario(registerRequest.email)
 
-            if (!existeUser){
+            if (user == null) {
+                // Usuario nuevo
                 val hashContrasenia = hashPassword(registerRequest.passwd)
                 val uid = dao.createUser(registerRequest.name, registerRequest.email, hashContrasenia, registerRequest.lang)
-                log.info("User ${registerRequest.name} (${uid}) registered")
 
-                // Crea grupo personal
-                dao.createGroup(uid, "${registerRequest.name}", "", true)
-                log.info("Created the ${registerRequest.name}'s (${uid}) user space")
+                dao.createGroup(uid, registerRequest.name, "", true)
+
+                val code = (100000..999999).random().toString()
+                dao.saveConfirmationCode(uid, code)
+                sendEmail(registerRequest.email, code)
+
+                log.info("User ${registerRequest.name} ($uid) registered. Code sent.")
                 return true
+
+            } else if (user.esta_confirmado == 0) {
+                // El usuario existe pero no está confirmado
+                log.info("User ${registerRequest.email} is unconfirmed. Resending new code.")
+
+                // dao.updateUserPassword(user.id.value, hashPassword(registerRequest.passwd))
+
+                val code = (100000..999999).random().toString()
+                dao.saveConfirmationCode(user.id.value, code)
+                sendEmail(registerRequest.email, code)
+
+                return true
+
+            } else {
+                log.warn("Attempt to register already confirmed user: ${registerRequest.email}")
+                return false
             }
-        } catch (e : ExposedSQLException){
-            log.error("Error trying to register user ${registerRequest.name} with mail ${registerRequest.email}! Message: ${e.message}")
+        } catch (e: ExposedSQLException) {
+            log.error("Error trying to register... Message: ${e.message}")
         }
         return false
+    }
+
+    private suspend fun sendEmail(toAddress: String, code: String) {
+        withContext(Dispatchers.IO) {
+            try {
+                val mailUser = System.getenv("SMTP_EMAIL") ?: ""
+                val mailPass = System.getenv("SMTP_PASSWORD") ?: ""
+
+                val email = HtmlEmail()
+                email.hostName = "smtp.gmail.com"
+                email.setSmtpPort(465)
+                email.setAuthenticator(DefaultAuthenticator(mailUser, mailPass))
+                email.isSSLOnConnect = true
+
+                email.setFrom(mailUser, "Registro Astrais")
+                email.subject = "Código de verificación"
+
+                val htmlStream = this@AuthRepoImpl::class.java.getResourceAsStream("/templates/verification.html")
+                val htmlText = htmlStream?.bufferedReader()?.use { it.readText() }
+                    ?.replace("{{CODE}}", code)
+
+                val textContent = code
+
+                if (htmlText != null) {
+                    email.setHtmlMsg(htmlText)
+                    email.setTextMsg(textContent)
+                } else {
+                    email.setMsg(textContent)
+                }
+
+                email.addTo(toAddress)
+                email.send()
+            } catch (e: Exception) {
+                log.error("Error al enviar correo: ${e.message}")
+            }
+        }
     }
 
     override suspend fun deleteUser(uid: Int): Boolean {
@@ -70,5 +132,16 @@ class AuthRepoImpl : AuthRepo {
             log.error("Error trying regen access token for $id! Message: ${e.message}")
         }
         return null
+    }
+
+    override suspend fun tryLoginOrRegisterOauth(provider_uid : String, auth : AuthProvider) : Pair<Int, Boolean> {
+        try {
+            val out = getDatabaseDaoImpl().logOrCreateOauthUser(provider_uid = provider_uid, auth = auth)
+            return out
+        }
+        catch (e : ExposedSQLException){
+            log.error("Couldn't create account for $provider_uid (${auth.name})! Message: ${e.message}")
+            return Pair(-1, false)
+        }
     }
 }

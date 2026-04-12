@@ -1,6 +1,7 @@
 package com.astrais.db
 
 import CosmeticResponseDTO
+import com.astrais.LANG_CODE_ENGLISH
 import com.astrais.auth.GoogleUserInfo
 import java.time.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
@@ -90,29 +91,36 @@ class DatabaseDAOImpl : DatabaseDAO {
         }
     }
 
-    override suspend fun createUserWithOauth(
-        nombreusu: String,
-        lang: String,
-        utcOffset: Float,
-        role: UserRoles,
+    override suspend fun logOrCreateOauthUser(
         provider_uid: String,
         auth: AuthProvider
-    ) {
-        suspendTransaction {
-            val newuser = EntidadUsuario.new {
-                this.nombre = nombreusu
-                this.email = null
-                this.contrasenia = null
-                this.idioma = lang
-                this.zona_horaria = utcOffset
-                this.rol = role
-                this.ultimo_login = LocalDate.now().toKotlinLocalDate()
-            }
+    ) : Pair<Int, Boolean> {
+        return suspendTransaction {
+            val notExistUser = TablaCredencialesAuth.selectAll().where {
+                (TablaCredencialesAuth.provider.eq(auth)).and(TablaCredencialesAuth.provider_uid.eq(provider_uid))
+            }.singleOrNull()
 
-            EntidadCredencialesAuth.new {
-                this.uid = newuser.id
-                this.provider = auth
-                this.provider_uid = provider_uid
+            if (notExistUser == null) {
+                val newuser = EntidadUsuario.new {
+                    this.nombre = "Astrais User"
+                    this.email = null
+                    this.contrasenia = null
+                    this.idioma = LANG_CODE_ENGLISH
+                    this.zona_horaria = 0.0f
+                    this.rol = UserRoles.NORMAL_USER
+                    this.ultimo_login = LocalDate.now().toKotlinLocalDate()
+                }
+
+                TablaCredencialesAuth.insert {
+                    it[TablaCredencialesAuth.uid] = newuser.id.value
+                    it[TablaCredencialesAuth.provider] = auth
+                    it[TablaCredencialesAuth.provider_uid] = provider_uid
+                }
+
+                Pair(newuser.id.value, true)
+
+            } else {
+                Pair(notExistUser[TablaCredencialesAuth.uid].value, false)
             }
         }
     }
@@ -234,9 +242,9 @@ class DatabaseDAOImpl : DatabaseDAO {
             if (descripcion != null) {
                 grp?.descripcion = descripcion
             }
-            if (prioridad != null){
-                grp?.prioridad = prioridad
-            }
+            //if (prioridad != null){
+            //    grp?.prioridad = prioridad
+            //}
         }
     }
 
@@ -435,6 +443,39 @@ class DatabaseDAOImpl : DatabaseDAO {
                 this.coleccion = coleccion
             }
             true
+        }
+    }
+
+    override suspend fun saveConfirmationCode(uid: Int, code: String) {
+        suspendTransaction {
+            EntidadConfirmacionUsuario.new {
+                this.uid = EntityID(uid, TablaUsuario)
+                this.codigo_confirmacion = code
+            }
+        }
+    }
+
+    override suspend fun verifyConfirmationCode(email: String, code: String): Boolean {
+        return suspendTransaction {
+            val user = EntidadUsuario.find { TablaUsuario.email eq email }.singleOrNull() ?: return@suspendTransaction false
+            val confirmacion = EntidadConfirmacionUsuario.find {
+                (TablaConfirmacionUsuario.uid eq user.id) and (TablaConfirmacionUsuario.codigo_confirmacion eq code)
+            }.singleOrNull()
+
+            if (confirmacion != null) {
+                user.esta_confirmado = 1
+                confirmacion.delete()
+                true
+            } else {
+                false
+            }
+        }
+    }
+
+    override suspend fun isUserConfirmed(email: String): Boolean {
+        return suspendTransaction {
+            val user = EntidadUsuario.find { TablaUsuario.email eq email }.singleOrNull()
+            user?.esta_confirmado == 1
         }
     }
 }

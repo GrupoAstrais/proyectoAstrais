@@ -1,50 +1,53 @@
-import Navbar from "../../components/layout/Navbar"
-import bgImage from '../../assets/homeScreenBack.jpg'
-import GroupCard from "../../components/ui/GroupCard"
-import GroupModal from "../../components/modales/GroupModal"
 import React, { useState } from "react";
-import type { ITarea } from "../../types/Interfaces";
+import { useSearchParams } from "react-router";
+import bgImage from '../../assets/homeScreenBack.jpg';
+import Navbar from "../../components/layout/Navbar";
+import GroupCard from "../../components/ui/GroupCard";
+import ButtonComplete from "../../components/ui/ButtonComplete";
+import Task from "../../components/ui/Task";
 import Modal from "../../components/modales/TaskModal";
 import GroupSettingsModal from "../../components/modales/GroupSettingsModal";
-import { createLocalTask, filterTasksByCompleted, sortTasksByCompleted, toggleTaskCompleted } from "../../data/Api";
-
-interface IGroupData {
-    id: number;
-    name: string;
-    description: string;
-    photoUrl?: string | null;
-    members: Array<{ id: number; name: string; avatar?: string }>;
-    tasks: ITarea[];
-}
+import CreateGroupModal from "../../components/modales/CreateGroupModal";
+import type { IGroup, ITarea } from "../../types/Interfaces";
+import {
+    createLocalTask,
+    createNewGroup,
+    filterTasksByCompleted,
+    sortTasksByCompleted,
+    toggleSubtaskCompleted,
+    toggleTaskCompleted
+} from "../../data/Api";
 
 export default function Groups() {
     const [isOpen, setIsOpen] = React.useState<boolean>(false);
     const [isOpenModal, setIsOpenModal] = React.useState<boolean>(false);
     const [activeGroup, setActiveGroup] = useState<number>(-1);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = React.useState<boolean>(false);
+    const [isCreateModalOpen, setIsCreateModalOpen] = React.useState<boolean>(false);
+    const [initialDataModal, setInitialDataModal] = useState<ITarea | null>(null);
     const [groupTaskFilters, setGroupTaskFilters] = useState({
         completed: false,
         pending: false
     });
 
-    const [groups, setGroups] = useState<IGroupData[]>([
+    const [groups, setGroups] = useState<IGroup[]>([
         {
             id: 0,
             name: 'Astraïs',
             description: 'Grupo de trabajo para el proyecto Astraïs',
             members: [
-                { id: 1, name: 'Juan Pérez' },
-                { id: 2, name: 'María García' },
-                { id: 3, name: 'Carlos López' }
+                { id: 1, name: 'Juan PPerez' },
+                { id: 2, name: 'Maria Garcia' },
+                { id: 3, name: 'Carlos Lopez' }
             ],
             tasks: []
         },
         {
             id: 1,
             name: 'Nebula',
-            description: 'Diseño y narrativa del juego',
+            description: 'DiseÃ±o y narrativa del juego',
             members: [
-                { id: 1, name: 'Lucía Torres' },
+                { id: 1, name: 'Lucia Torres' },
                 { id: 2, name: 'Diego Ruiz' }
             ],
             tasks: []
@@ -54,7 +57,7 @@ export default function Groups() {
             name: 'Obviamente no astrais',
             description: 'Otro grupo de astrais',
             members: [
-                { id: 1, name: 'Elena Martín' },
+                { id: 1, name: 'Elena Martinez' },
                 { id: 2, name: 'Pablo Sanz' },
                 { id: 3, name: 'Irene Gil' }
             ],
@@ -62,21 +65,62 @@ export default function Groups() {
         }
     ]);
 
+    const [searchParams, setSearchParams] = useSearchParams();
     const activeGroupData = groups.find((group) => group.id === activeGroup) ?? null;
-    const filteredGroupTasks = sortTasksByCompleted(filterTasksByCompleted(activeGroupData?.tasks ?? [], groupTaskFilters));
+    const filteredGroupTasks = sortTasksByCompleted(
+        filterTasksByCompleted(activeGroupData?.tasks ?? [], groupTaskFilters)
+    );
+
+    React.useEffect(() => {
+        if (searchParams.get('openCreateModal') !== 'true') return;
+
+        setIsCreateModalOpen(true);
+
+        const nextSearchParams = new URLSearchParams(searchParams);
+        nextSearchParams.delete('openCreateModal');
+        setSearchParams(nextSearchParams, { replace: true });
+    }, [searchParams, setSearchParams]);
 
     const handleActiveGroup = (active: number) => {
-        if (isOpen == false || active != activeGroup) {
+        if (isOpen === false || active !== activeGroup) {
             setIsOpen(true);
             setActiveGroup(active);
         } else {
             setIsOpen(false);
             setActiveGroup(-1);
         }
-    }
+    };
+
+    const closeTaskModalHandle = () => {
+        setInitialDataModal(null);
+        setIsOpenModal(false);
+    };
 
     const handleModalSubmit = (data: any) => {
         if (activeGroup === -1) return;
+
+        if (initialDataModal?.id) {
+            const updatedTask: ITarea = {
+                ...createLocalTask(data),
+                id: initialDataModal.id,
+                completed: initialDataModal.completed
+            };
+
+            setGroups((prevGroups) =>
+                prevGroups.map((group) =>
+                    group.id === activeGroup
+                        ? {
+                            ...group,
+                            tasks: group.tasks.map((task) =>
+                                task.id === initialDataModal.id ? updatedTask : task
+                            )
+                        }
+                        : group
+                )
+            );
+            closeTaskModalHandle();
+            return;
+        }
 
         const newTask: ITarea = createLocalTask(data);
 
@@ -87,7 +131,13 @@ export default function Groups() {
                     : group
             )
         );
-        setIsOpenModal(false);
+        closeTaskModalHandle();
+    };
+
+    const handleCreateGroup = (data: any) => {
+        const newGroup: IGroup = createNewGroup(data);
+        setGroups((prev) => [...prev, newGroup]);
+        setIsCreateModalOpen(false);
     };
 
     const handleSaveSettings = (settings: {
@@ -127,7 +177,7 @@ export default function Groups() {
     };
 
     const handleActiveTaskFilter = (active: string) => {
-        if(active == "Completadas") {
+        if (active === "Completadas") {
             setGroupTaskFilters((prev) => ({
                 ...prev,
                 completed: !prev.completed
@@ -139,10 +189,10 @@ export default function Groups() {
             ...prev,
             pending: !prev.pending
         }));
-    }
+    };
 
     const handleToggleTaskCompleted = (taskId: string) => {
-        if(activeGroup === -1) return;
+        if (activeGroup === -1) return;
 
         setGroups((prevGroups) =>
             prevGroups.map((group) =>
@@ -151,68 +201,101 @@ export default function Groups() {
                     : group
             )
         );
-    }
+    };
+
+    const handleToggleSubtaskCompleted = (taskId: string, subtaskId: string) => {
+        if (activeGroup === -1) return;
+
+        setGroups((prevGroups) =>
+            prevGroups.map((group) =>
+                group.id === activeGroup
+                    ? { ...group, tasks: toggleSubtaskCompleted(group.tasks, taskId, subtaskId) }
+                    : group
+            )
+        );
+    };
+
+    const editTaskHandle = (taskId: string) => {
+        if (!activeGroupData) return;
+
+        const taskToEdit = activeGroupData.tasks.find((task) => task.id === taskId);
+
+        if (!taskToEdit) return;
+
+        setInitialDataModal(taskToEdit);
+        setIsOpenModal(true);
+    };
 
     return (
         <div style={{ backgroundImage: `url(${bgImage})` }} className="flex flex-col gap-4 relative min-h-screen bg-cover bg-center font-['Space_Grotesk'] text-white">
             <Navbar />
+
             <div className="md:flex md:flex-row justify-center px-5 grid grid-cols-1 gap-2 ">
                 <div className="w-1/3 flex flex-col gap-2">
+                    <button onClick={() => setIsCreateModalOpen(true)} className="backdrop-blur-sm border border-[#F4E9E9]/15 bg-accent-beige-300/25 rounded-md px-4 py-2 w-full disabled:cursor-not-allowed disabled:opacity-60">
+                        <span className="font-bold text-2xl ">Crear grupo</span>
+                    </button>
                     {groups.map((group) => (
-                        <GroupCard
-                            key={group.id}
-                            onClick={handleActiveGroup}
-                            id={group.id}
-                            activeId={activeGroup}
-                            data={group}
-                        />
+                        <GroupCard key={group.id} onClick={handleActiveGroup} id={group.id} activeId={activeGroup} data={group} />
                     ))}
                 </div>
+
                 <div className={`${isOpen ? '' : 'hidden'} flex flex-col gap-2 w-1/2`}>
-                    <button
-                        disabled={!activeGroupData}
-                        onClick={() => setIsSettingsModalOpen(true)}
-                        className="border border-[#F4E9E9] bg-accent-beige-300/25 rounded-md px-4 py-2 w-auto disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                        <span className="font-bold text-lg">Configuración</span>
-                    </button>
-                    <button
-                        disabled={!activeGroupData}
-                        onClick={() => setIsOpenModal(true)}
-                        className="ml-auto border border-[#F4E9E9] bg-accent-beige-300/25 rounded-md px-4 py-2 w-1/5 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                        <span className="font-bold text-2xl">+ Añadir tarea</span>
-                    </button>
-                    <GroupModal
-                        data={filteredGroupTasks}
-                        groupName={activeGroupData?.name ?? "Grupo"}
-                        activeCompleted={groupTaskFilters.completed}
-                        activePending={groupTaskFilters.pending}
-                        handleActiveFilter={handleActiveTaskFilter}
-                        handleToggleComplete={handleToggleTaskCompleted}
-                    />
+                    <div className="flex flex-row  w-full">
+                        <button disabled={!activeGroupData} onClick={() => setIsSettingsModalOpen(true)} className="border border-[#F4E9E9]/15 backdrop-blur-sm bg-accent-beige-300/25 rounded-md px-4 py-2 disabled:cursor-not-allowed disabled:opacity-60">
+                            <span className="font-bold text-2xl">Configuración</span>
+                        </button>
+                        <button
+                            disabled={!activeGroupData}
+                            onClick={() => {
+                                setInitialDataModal(null);
+                                setIsOpenModal(true);
+                            }}
+                            className="ml-auto backdrop-blur-sm border border-[#F4E9E9]/15 bg-accent-beige-300/25 rounded-md px-4 py-2 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            <span className="font-bold text-2xl ">+ Añadir tarea</span>
+                        </button>
+                    </div>
+
+                    <div className="font-['Space_Grotesk'] flex flex-col gap-2 mx-2">
+                        <div className="flex flex-row gap-2 items-center">
+                            <div className="bg-accent-beige-300/35 rounded-md px-4 py-2 font-bold font-['Press_Start_2P']">
+                                <h2>{activeGroupData?.name ?? "Grupo"}</h2>
+                            </div>
+
+                            <div className="rounded-full px-2 border border-white bg-black">
+                                <p className="text-white">Filtrar:</p>
+                            </div>
+
+                            <ButtonComplete title="Completadas" active={groupTaskFilters.completed} handleActive={handleActiveTaskFilter} />
+                            <ButtonComplete title="Pendientes" active={groupTaskFilters.pending} handleActive={handleActiveTaskFilter} />
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            {filteredGroupTasks.length === 0 ? (
+                                <p className="text-gray-400 italic text-center py-4">No hay tareas</p>
+                            ) : (
+                                filteredGroupTasks.map((task, i) => (
+                                    <Task
+                                        key={task.id ?? i}
+                                        data={task}
+                                        onComplete={handleToggleTaskCompleted}
+                                        onToggleSubtask={handleToggleSubtaskCompleted}
+                                        onToggleConfig={editTaskHandle}
+                                    />
+                                ))
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div className={`${isOpenModal ? "" : "hidden"} fixed inset-0 z-50 flex items-center justify-center`}>
-                <Modal
-                    onSubmit={handleModalSubmit}
-                    onCancel={() => setIsOpenModal(false)}
-                />
+                <Modal onSubmit={handleModalSubmit} onCancel={closeTaskModalHandle} initialData={initialDataModal} />
             </div>
 
-            <GroupSettingsModal
-                isOpen={isSettingsModalOpen}
-                onClose={() => setIsSettingsModalOpen(false)}
-                initialData={
-                    activeGroupData ?? {
-                        name: '',
-                        description: '',
-                        members: []
-                    }
-                }
-                onSave={handleSaveSettings}
-            />
+            <GroupSettingsModal isOpen={isSettingsModalOpen} onClose={() => setIsSettingsModalOpen(false)} initialData={activeGroupData ?? { name: '', description: '', members: [] }} onSave={handleSaveSettings} />
+            <CreateGroupModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} onSave={handleCreateGroup} />
         </div>
-    )
+    );
 }
