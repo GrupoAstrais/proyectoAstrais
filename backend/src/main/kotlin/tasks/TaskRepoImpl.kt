@@ -5,7 +5,6 @@ import com.astrais.db.*
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
-import java.time.format.DateTimeFormatter
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -84,15 +83,27 @@ class TaskRepoImpl : TaskRepo{
 
             val tareas =
                 getDatabaseDaoImpl().getTareasByGroup(gid).map {
+                    val typeStr = when (it.tipo) {
+                        TaskType.UNICO -> TASKTYPE_UNIQUE
+                        TaskType.OBJETIVO -> TASKTYPE_OBJECTIVE
+                        TaskType.HABITO -> TASKTYPE_HABIT
+                    }
+                    val extraUnico : CreateTareaUniqueData? = null
+                    val extraHabito : CreateTareaHabitData? = null
+
+                    // TODO: Parsear los datos extra
+
                     TareaResponse(
                         id = it.id.value,
                         titulo = it.titulo,
                         descripcion = it.descripcion,
-                        tipo = it.tipo.name,
+                        tipo = typeStr,
                         estado = it.estado.name,
                         prioridad = it.prioridad,
                         recompensaXp = it.recompensa_xp,
-                        recompensaLudion = it.recompensa_ludion
+                        recompensaLudion = it.recompensa_ludion,
+                        extraUnico = extraUnico,
+                        extraHabito = extraHabito
                     )
                 }
             return Pair(CreateTaskRepoResponse.RESP_OK, tareas)
