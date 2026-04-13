@@ -24,6 +24,7 @@ import java.io.File
 import kotlinx.serialization.json.Json
 import sseRoutes
 import storeRoutes
+import tasks.tareaRoutes
 import java.util.logging.Logger
 
 const val POSTGRES_PORT = "5432"
@@ -60,8 +61,10 @@ fun Application.module() {
         anyHost()
         allowCredentials = true
         allowNonSimpleContentTypes = true
-        allowMethod(HttpMethod.Post)
         allowMethod(HttpMethod.Get)
+        allowMethod(HttpMethod.Post)
+        allowMethod(HttpMethod.Patch)
+        allowMethod(HttpMethod.Delete)
     }
 
 
