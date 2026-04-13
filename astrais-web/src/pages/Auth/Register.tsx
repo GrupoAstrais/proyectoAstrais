@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
 import loginBg from '../../assets/login-bg.jpg'
-import { createUser } from '../../data/Api'
+import { confirmRegister, createUser } from '../../data/Api'
 
 export default function Register() {
   const navigate = useNavigate()
@@ -10,25 +10,42 @@ export default function Register() {
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [passwordVer, setPasswordVer] = useState('')
+  const [confirmation, setConfirmation] = useState('')
+  const [codeSent, setCodeSent] = useState(false)
   const [error, setError] = useState('')
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    if (!email.trim() || !password.trim() || !passwordVer.trim()) {
-      setError('Complete email and password to create you account.')
-      return
-    } else {
-      if (password !== passwordVer) {
-        setError('Passwords do not match.')
+    if(!codeSent) {
+      if (!email.trim() || !password.trim() || !passwordVer.trim()) {
+        setError('Complete email and password to create you account.')
         return
       } else {
-        await createUser({name: name, email: email, passwd: password, lang: 'ENG'}).then( () => {
-            navigate('/login')
-          }
-        ).catch(()=> {
-          setError('Error creating your account, try again later.')
-        })
+        if (password !== passwordVer) {
+          setError('Passwords do not match.')
+          return
+        } else {
+          await createUser({name: name, email: email, passwd: password, lang: 'ENG'}).then( () => {
+              setCodeSent(true);
+            }
+          ).catch(()=> {
+            setError('Error creating your account, try again later.')
+          })
+        }
+      }
+    } else {
+      if (confirmation.trim() === '') {
+        setError('Tienes que introducir el codigo de confirmacion para continuar.')
+        return
+      } 
+      else
+      {
+        await confirmRegister({email: email, code: parseInt(confirmation)}).then( () => {
+            navigate('/login');
+          }).catch(() => {
+            setError('Error on cofriming your email, try again later.')
+          })
       }
     }
   }
@@ -101,6 +118,20 @@ export default function Register() {
               placeholder="••••••••"
               value={passwordVer}
               onChange={(event) => setPasswordVer(event.target.value)}
+              autoComplete="current-password"
+              required
+              className="rounded-xl border border-white/25 bg-black/25 px-3.5 py-3 text-base text-white placeholder:text-white/65 focus-visible:outline-2 focus-visible:outline-[#ff66dd] focus-visible:outline-offset-1"
+            />
+          </div>
+
+          <div className={`grid gap-2 ${!codeSent && 'hidden'}`}>
+            <label htmlFor="passwordVer" className="text-[0.95rem]">Introduce your confirmation code</label>
+            <input
+              id="text"
+              type="text"
+              placeholder="123456"
+              value={confirmation}
+              onChange={(event) => setConfirmation(event.target.value)}
               autoComplete="current-password"
               required
               className="rounded-xl border border-white/25 bg-black/25 px-3.5 py-3 text-base text-white placeholder:text-white/65 focus-visible:outline-2 focus-visible:outline-[#ff66dd] focus-visible:outline-offset-1"

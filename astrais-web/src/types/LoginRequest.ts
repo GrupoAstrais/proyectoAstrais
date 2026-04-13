@@ -1,8 +1,13 @@
 export interface LoginRequest {
   email: string,
   passwd: string
-
 }
+
+export interface VerifyRequest {
+  email: string,
+  code: number
+}
+
 
 export interface RegisterRequest {
   name: string,

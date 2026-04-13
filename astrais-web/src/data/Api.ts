@@ -1,8 +1,8 @@
 import axios from 'axios';
-import type { LoginRequest, RegisterRequest } from '../types/LoginRequest';
+import type { LoginRequest, RegisterRequest, VerifyRequest } from '../types/LoginRequest';
 import type { IGroup, ITarea } from '../types/Interfaces';
 
-export const API_BASE_URL = 'http://192.168.56.1:5684'
+export const API_BASE_URL = 'http://192.168.3.148:5684'
 
 //let jwtToken: string | null = null
 
@@ -41,6 +41,30 @@ export async function performLogin(req: LoginRequest) : Promise<void> {
         return Promise.reject();
     }
 }
+
+export async function confirmRegister(req: VerifyRequest) : Promise<void> {
+    try {
+        const data = await instance.post("/auth/verify", req);
+        if (data.status >= 200 && data.status < 300) {
+            //jwtToken = data.data["JwtAccessToken"]
+            console.error("Successful confirmation! ");
+            return Promise.resolve();
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            // Error de axios
+            console.error("Error interno de axios!!")
+        } else {
+            console.error("Error de la peticion!")
+        }
+        return Promise.reject();
+    }
+}
+
+
 
 export async function createUser(req: RegisterRequest) : Promise<void> {
     try {
