@@ -9,6 +9,8 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
+import tasks.CreateTareaHabitData
+import tasks.CreateTareaUniqueData
 
 class DatabaseDAOImpl : DatabaseDAO {
     // https://www.jetbrains.com/help/exposed/dsl-querying-data.html
@@ -194,27 +196,51 @@ class DatabaseDAOImpl : DatabaseDAO {
     }
 
     override suspend fun createTarea(
-            gid: Int,
-            titulo: String,
-            descripcion: String,
-            tipo: TaskType,
-            prioridad: Int,
-            recompensaXp: Int,
-            recompensaLudion: Int
+        gid: Int,
+        titulo: String,
+        descripcion: String,
+        tipo: TaskType,
+        prioridad: Int,
+        recompensaXp: Int,
+        recompensaLudion: Int,
+        extraUnico : TareaUniqueData?,
+        extraHabito : TareaHabitData?,
     ): Int {
         return suspendTransaction {
-            EntidadTarea.new {
-                        id_grupo = EntityID(gid, TablaGrupo)
-                        this.titulo = titulo
-                        this.descripcion = descripcion
-                        this.tipo = tipo
-                        estado = TaskState.ACTIVE
-                        this.prioridad = prioridad
-                        recompensa_xp = recompensaXp
-                        recompensa_ludion = recompensaLudion
+            if (tipo == TaskType.UNICO && extraUnico == null){
+                return@suspendTransaction -1
+            } else if (tipo == TaskType.HABITO && extraHabito == null){
+                return@suspendTransaction -2
+            } else{
+                val nuevaTarea = EntidadTarea.new {
+                    this.id_grupo = EntityID(gid, TablaGrupo)
+                    this.titulo = titulo
+                    this.descripcion = descripcion
+                    this.tipo = tipo
+                    this.estado = TaskState.ACTIVE
+                    this.prioridad = prioridad
+                    this.recompensa_xp = recompensaXp
+                    this.recompensa_ludion = recompensaLudion
+                    this.fecha_creacion = java.time.LocalDate.now().toKotlinLocalDate()
+                    this.fecha_actualizado = this.fecha_creacion
+                }
+
+                if (tipo == TaskType.UNICO){
+                    EntidadTareaUnica.new {
+                        this.id_tarea = nuevaTarea.id
+                        this.fecha_vencimiento = extraUnico!!.fechaLimite
                     }
-                    .id
-                    .value
+                } else if (tipo == TaskType.HABITO){
+                    EntidadTareaHabito.new {
+                        this.id_tarea = nuevaTarea.id
+                        this.variacion_freq = extraHabito!!.numeroFrecuencia
+                        this.frecuencia = extraHabito.frequency
+                        this.ultima_vez_completada = null
+                    }
+                }
+
+                nuevaTarea.id.value
+            }
         }
     }
 
@@ -230,21 +256,24 @@ class DatabaseDAOImpl : DatabaseDAO {
         }
     }
 
-    override suspend fun editTask(gid : Int, titulo: String?, descripcion: String?, prioridad: Int?) {
-        suspendTransaction {
-            val grp = EntidadGrupo.find {
-                TablaGrupo.id.eq(gid)
+    override suspend fun editTask(gid : Int, titulo: String?, descripcion: String?, prioridad: Int?) : Boolean {
+        return suspendTransaction {
+            val grp = EntidadTarea.find {
+                TablaTarea.id.eq(gid)
             }.singleOrNull()
+            if (grp == null){
+                return@suspendTransaction false
+            }
 
-            if (titulo != null){
-                grp?.nombre = titulo
+            if (!titulo.isNullOrEmpty()){
+                grp.titulo = titulo
             }
-            if (descripcion != null) {
-                grp?.descripcion = descripcion
+            if (!descripcion.isNullOrEmpty()) {
+                grp.descripcion = descripcion
             }
-            //if (prioridad != null){
-            //    grp?.prioridad = prioridad
-            //}
+            grp.fecha_actualizado = java.time.LocalDate.now().toKotlinLocalDate()
+
+            return@suspendTransaction true
         }
     }
 
@@ -258,10 +287,10 @@ class DatabaseDAOImpl : DatabaseDAO {
         return suspendTransaction {
             val group = EntidadGrupo.findById(gid) ?: return@suspendTransaction false
 
-            if (name != null){
+            if (!name.isNullOrEmpty()){
                 group.nombre = name
             }
-            if (desc != null){
+            if (!desc.isNullOrEmpty()){
                 group.descripcion = desc
             }
 
@@ -329,29 +358,31 @@ class DatabaseDAOImpl : DatabaseDAO {
         }
     }
 
-    override suspend fun buyCosmetic(uid: Int, cosmeticId: Int): Boolean {
+    override suspend fun buyCosmetic(uid: Int, cosmeticId: Int): BuyCosmeticResponse {
         return suspendTransaction {
-            val usuario = EntidadUsuario.findById(uid) ?: return@suspendTransaction false
-            val cosmetico = EntidadCosmetico.findById(cosmeticId) ?: return@suspendTransaction false
+            val usuario = EntidadUsuario.findById(uid) ?: return@suspendTransaction BuyCosmeticResponse.USER_NOT_FOUND
+            val cosmetico = EntidadCosmetico.findById(cosmeticId) ?: return@suspendTransaction BuyCosmeticResponse.COSMETIC_NOT_FOUND
 
             val yaLoTiene =
                     EntidadInventario.find {
-                                (TablaInventario.id_usuario eq uid) and
-                                        (TablaInventario.id_cosmetico eq cosmeticId)
-                            }
-                            .empty()
-                            .not()
+                        (TablaInventario.id_usuario eq uid) and (TablaInventario.id_cosmetico eq cosmeticId)
+                    }
+                    .empty()
+                    .not()
 
-            if (yaLoTiene || usuario.ludiones < cosmetico.precioLudiones)
-                    return@suspendTransaction false
-
-            usuario.ludiones -= cosmetico.precioLudiones
-            EntidadInventario.new {
-                id_usuario = EntityID(uid, TablaUsuario)
-                id_cosmetico = EntityID(cosmeticId, TablaCosmetico)
-                fecha_compra = java.time.LocalDate.now().toKotlinLocalDate()
+            if (yaLoTiene){
+                return@suspendTransaction BuyCosmeticResponse.ALREADY_HAS_OBJECT
+            } else if (usuario.ludiones < cosmetico.precioLudiones){
+                return@suspendTransaction BuyCosmeticResponse.INSUFICIENT_CURRENCY
+            } else {
+                usuario.ludiones -= cosmetico.precioLudiones
+                EntidadInventario.new {
+                    id_usuario = EntityID(uid, TablaUsuario)
+                    id_cosmetico = EntityID(cosmeticId, TablaCosmetico)
+                    fecha_compra = java.time.LocalDate.now().toKotlinLocalDate()
+                }
+                return@suspendTransaction BuyCosmeticResponse.OKAY
             }
-            true
         }
     }
 
@@ -387,23 +418,21 @@ class DatabaseDAOImpl : DatabaseDAO {
         }
     }
 
-    override suspend fun equipCosmetic(uid: Int, cosmeticId: Int): Boolean {
+    override suspend fun equipCosmetic(uid: Int, cosmeticId: Int): BuyCosmeticResponse {
         return suspendTransaction {
-            val usuario = EntidadUsuario.findById(uid) ?: return@suspendTransaction false
+            val usuario = EntidadUsuario.findById(uid) ?: return@suspendTransaction BuyCosmeticResponse.USER_NOT_FOUND
 
-            if (cosmeticId == 0) return@suspendTransaction false
+            if (cosmeticId == 0) return@suspendTransaction BuyCosmeticResponse.COSMETIC_NOT_FOUND
 
             val loTiene =
                     EntidadInventario.find {
-                                (TablaInventario.id_usuario eq uid) and
-                                        (TablaInventario.id_cosmetico eq cosmeticId)
-                            }
-                            .empty()
-                            .not()
+                        (TablaInventario.id_usuario eq uid) and (TablaInventario.id_cosmetico eq cosmeticId)
+                    }
+                    .empty()
+                    .not()
 
             if (loTiene) {
-                val cosmetico =
-                        EntidadCosmetico.findById(cosmeticId) ?: return@suspendTransaction false
+                val cosmetico = EntidadCosmetico.findById(cosmeticId) ?: return@suspendTransaction BuyCosmeticResponse.COSMETIC_NOT_FOUND
 
                 if (cosmetico.tipo == CosmeticType.PET) {
                     if (usuario.id_mascota_equipada?.value == cosmeticId) {
@@ -418,8 +447,11 @@ class DatabaseDAOImpl : DatabaseDAO {
                         usuario.themeColors = cosmetico.tema
                     }
                 }
-                true
-            } else false
+
+                return@suspendTransaction BuyCosmeticResponse.OKAY
+            } else {
+                return@suspendTransaction BuyCosmeticResponse.ALREADY_HAS_OBJECT
+            }
         }
     }
 

@@ -10,6 +10,7 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.dao.*
 import org.jetbrains.exposed.v1.datetime.date
+import org.jetbrains.exposed.v1.datetime.datetime
 
 // Constantes unicos de la base de datos
 // TODO: Revisitar esto y mover los que se necesite
@@ -237,7 +238,7 @@ class EntidadTarea(id: EntityID<Int>) : IntEntity(id) {
 
 object TablaTareaUnica : IntIdTable("TaskUnique") {
     val id_tarea = reference("tid", TablaTarea, onDelete = ReferenceOption.CASCADE)
-    val fecha_vencimiento = date("due_date").nullable()
+    val fecha_vencimiento = datetime("due_date").nullable()
 }
 class EntidadTareaUnica(id : EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<EntidadTareaUnica>(TablaTareaUnica)
@@ -248,14 +249,34 @@ class EntidadTareaUnica(id : EntityID<Int>) : IntEntity(id) {
 
 object TablaTareaObjetivo : IntIdTable("TaskObjective") {
     val id_tarea = reference("tid", TablaTarea, onDelete = ReferenceOption.CASCADE)
-    val fecha_limite = date("due_date").nullable()
+
 }
+class EntidadTareaObjetivo(id : EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<EntidadTareaObjetivo>(TablaTareaObjetivo)
+
+    var id_tarea by TablaTareaObjetivo.id_tarea
+}
+
 
 object TablaTareaHabito : IntIdTable("TaskHabit") {
     val id_tarea = reference("tid", TablaTarea, onDelete = ReferenceOption.CASCADE)
-    val racha_actual = integer("current_streak")
-    val mejor_racha = integer("best_streak")
+    val racha_actual = integer("current_streak").default(0)
+    val mejor_racha = integer("best_streak").default(0)
     val ultima_vez_completada = date("last_completion").nullable()
+
+    val variacion_freq = integer("frqvar")
+    val frecuencia = varchar("frequency", 10)
+}
+class EntidadTareaHabito(id : EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<EntidadTareaHabito>(TablaTareaHabito)
+
+    var id_tarea by TablaTareaHabito.id_tarea
+    var racha_actual by TablaTareaHabito.racha_actual
+    var mejor_racha by TablaTareaHabito.mejor_racha
+    var ultima_vez_completada by TablaTareaHabito.ultima_vez_completada
+
+    var variacion_freq by TablaTareaHabito.variacion_freq
+    var frecuencia by TablaTareaHabito.frecuencia
 }
 
 object TablaCosmetico : IntIdTable("Cosmetic") {

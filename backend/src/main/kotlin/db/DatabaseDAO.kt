@@ -2,7 +2,25 @@ package com.astrais.db
 
 import CosmeticResponseDTO
 import com.astrais.LANG_CODE_ENGLISH
-import com.astrais.auth.GoogleUserInfo
+import kotlinx.datetime.LocalDateTime
+
+enum class BuyCosmeticResponse{
+    OKAY,
+    USER_NOT_FOUND,
+    COSMETIC_NOT_FOUND,
+    INSUFICIENT_CURRENCY,
+    ALREADY_HAS_OBJECT
+}
+
+data class TareaUniqueData(
+    val fechaLimite : LocalDateTime
+)
+
+data class TareaHabitData(
+    val numeroFrecuencia : Int,
+    val frequency : String
+)
+
 
 interface DatabaseDAO {
     /**
@@ -103,6 +121,9 @@ interface DatabaseDAO {
      */
     suspend fun addUserToGroup(idusuario: Int, idgrupo: Int): Boolean
 
+    /**
+     * Comprueba si el usuario indicado es admin del grupo
+     */
     suspend fun checkIfUserIsAdmin(uid : Int, gid : Int) : Boolean
 
     suspend fun editGroup(gid: Int, name: String?, desc: String?) : Boolean
@@ -118,7 +139,7 @@ interface DatabaseDAO {
      * @param prioridad La prioridad que tiene la tarea
      * @param recompensaXp El XP que se concedera al usuario por realizarla
      * @param recompensaLudion El numero de ludiones que se daran al usuario por realizar la tarea
-     * @return El ID de la tarea creada
+     * @return El ID de la tarea creada. -1 si extraUnico es null y es una tarea unica, -2 si extraHabito es null y es una habito
      */
     suspend fun createTarea(
         gid: Int,
@@ -127,7 +148,9 @@ interface DatabaseDAO {
         tipo: TaskType,
         prioridad: Int = 0,
         recompensaXp: Int = 0,
-        recompensaLudion: Int = 0
+        recompensaLudion: Int = 0,
+        extraUnico : TareaUniqueData? = null,
+        extraHabito : TareaHabitData? = null,
     ): Int
 
     suspend fun getGroupByTask(tid : Int) : EntidadGrupo?
@@ -137,7 +160,7 @@ interface DatabaseDAO {
         titulo : String? = null,
         descripcion: String? = null,
         prioridad: Int? = null
-    )
+    ) : Boolean
 
     suspend fun getTareasByGroup(gid: Int): List<EntidadTarea>
 
@@ -147,8 +170,8 @@ interface DatabaseDAO {
 
     // madre mia el formatter este
     suspend fun getStoreItems(uid: Int): List<CosmeticResponseDTO>
-    suspend fun buyCosmetic(uid: Int, cosmeticId: Int): Boolean
-    suspend fun equipCosmetic(uid: Int, cosmeticId: Int): Boolean
+    suspend fun buyCosmetic(uid: Int, cosmeticId: Int): BuyCosmeticResponse
+    suspend fun equipCosmetic(uid: Int, cosmeticId: Int): BuyCosmeticResponse
     suspend fun createCosmetic(
         name: String,
         desc: String,
