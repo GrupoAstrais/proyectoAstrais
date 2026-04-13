@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import bgImage from '../../assets/homeScreenBack.jpg';
 import Navbar from "../../components/layout/Navbar";
@@ -10,9 +10,11 @@ import GroupSettingsModal from "../../components/modales/GroupSettingsModal";
 import CreateGroupModal from "../../components/modales/CreateGroupModal";
 import type { IGroup, ITarea } from "../../types/Interfaces";
 import {
+    createGroup,
     createLocalTask,
     createNewGroup,
     filterTasksByCompleted,
+    getUserGroup,
     sortTasksByCompleted,
     toggleSubtaskCompleted,
     toggleTaskCompleted
@@ -30,40 +32,29 @@ export default function Groups() {
         pending: false
     });
 
-    const [groups, setGroups] = useState<IGroup[]>([
-        {
-            id: 0,
-            name: 'Astraïs',
-            description: 'Grupo de trabajo para el proyecto Astraïs',
-            members: [
-                { id: 1, name: 'Juan PPerez' },
-                { id: 2, name: 'Maria Garcia' },
-                { id: 3, name: 'Carlos Lopez' }
-            ],
-            tasks: []
-        },
-        {
-            id: 1,
-            name: 'Nebula',
-            description: 'DiseÃ±o y narrativa del juego',
-            members: [
-                { id: 1, name: 'Lucia Torres' },
-                { id: 2, name: 'Diego Ruiz' }
-            ],
-            tasks: []
-        },
-        {
-            id: 2,
-            name: 'Obviamente no astrais',
-            description: 'Otro grupo de astrais',
-            members: [
-                { id: 1, name: 'Elena Martinez' },
-                { id: 2, name: 'Pablo Sanz' },
-                { id: 3, name: 'Irene Gil' }
-            ],
-            tasks: []
-        }
-    ]);
+    const [groups, setGroups] = useState<IGroup[]>([]);
+
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                const d = await getUserGroup();
+                setGroups(d.map(group => ({
+                    id: group.id,
+                    name: group.nombre,
+                    description: group.description,
+                    members: [],
+                    tasks: []
+                })));
+            } catch (error) {
+                console.error("Error fetching user groups:", error);
+            } finally {
+                console.log("Final")
+            }
+        };
+        loadData();
+
+    }, []);
+
 
     const [searchParams, setSearchParams] = useSearchParams();
     const activeGroupData = groups.find((group) => group.id === activeGroup) ?? null;
@@ -134,8 +125,16 @@ export default function Groups() {
         closeTaskModalHandle();
     };
 
-    const handleCreateGroup = (data: any) => {
+    const handleCreateGroup = async (data: IGroup) => {
         const newGroup: IGroup = createNewGroup(data);
+
+        await createGroup({name: data.name, desc: data.description}).then(() => {
+            console.log("Grupo creado con éxito");
+        }).catch((error) => {
+            console.error("Error al crear el grupo:", error);
+        });
+
+
         setGroups((prev) => [...prev, newGroup]);
         setIsCreateModalOpen(false);
     };

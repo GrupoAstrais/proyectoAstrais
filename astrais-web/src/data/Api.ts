@@ -1,10 +1,10 @@
 import axios from 'axios';
-import type { LoginRequest, RegisterRequest, VerifyRequest } from '../types/LoginRequest';
+import type { AddUserToGroup, CreateGroup, EditGroup, LoginRequest, RegisterRequest, UserData, UserGroups, VerifyRequest } from '../types/LoginRequest';
 import type { IGroup, ITarea } from '../types/Interfaces';
 
 export const API_BASE_URL = 'http://192.168.3.148:5684'
 
-//let jwtToken: string | null = null
+let jwtToken: string | null = null
 
 const instance = axios.create({
     baseURL: API_BASE_URL,
@@ -12,19 +12,16 @@ const instance = axios.create({
     headers: { 'Content-Type': 'application/json' }
 })
 
-// Injecta el token si lo tiene
-// axios.interceptors.request.use(config => {
-//     if (jwtToken) {
-//         config.headers.Authorization = `Bearer ${jwtToken}`
-//     }
-//     return config
-// })
-
 export async function performLogin(req: LoginRequest) : Promise<void> {
     try {
         const data = await instance.post("/auth/login", req);
         if (data.status >= 200 && data.status < 300) {
-            //jwtToken = data.data["JwtAccessToken"]
+            jwtToken = data.data["JwtAccessToken"];
+
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('jwtToken', jwtToken!)
+            }
+            
             console.error("Successful login! ");
             return Promise.resolve();
         } else {
@@ -46,7 +43,7 @@ export async function confirmRegister(req: VerifyRequest) : Promise<void> {
     try {
         const data = await instance.post("/auth/verify", req);
         if (data.status >= 200 && data.status < 300) {
-            //jwtToken = data.data["JwtAccessToken"]
+            jwtToken = data.data["JwtAccessToken"]
             console.error("Successful confirmation! ");
             return Promise.resolve();
         } else {
@@ -64,11 +61,148 @@ export async function confirmRegister(req: VerifyRequest) : Promise<void> {
     }
 }
 
+export async function getUserData() : Promise<UserData> {
+    try {
+        
+        instance.interceptors.request.use(config => {
+            if (localStorage.getItem('jwtToken')) {
+                config.headers.Authorization = `Bearer ${localStorage.getItem('jwtToken')}` // 
+            }
+            return config
+        })
 
+
+        const data = await instance.get("/auth/me");
+        if (data.status >= 200 && data.status < 300) {
+            console.error("Successful confirmation! ");
+            const result = data.data as UserData;
+            return result;
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            // Error de axios
+            console.error("Error interno de axios!!")
+        } else {
+            console.error("Error de la peticion!")
+        }
+        return Promise.reject();
+    }
+}
+
+export async function getUserGroup() : Promise<UserGroups[]> {
+    try {
+        
+        instance.interceptors.request.use(config => {
+            if (localStorage.getItem('jwtToken')) {
+                config.headers.Authorization = `Bearer ${localStorage.getItem('jwtToken')}` // 
+            }
+            return config
+        })
+
+        const data = await instance.get("/group/userGroups");
+        if (data.status >= 200 && data.status < 300) {
+            console.error("Successful confirmation! ");
+            const result = data.data as UserGroups[];
+            return result;
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            // Error de axios
+            console.error("Error interno de axios!!")
+        } else {
+            console.error("Error de la peticion!")
+        }
+        return Promise.reject();
+    }
+}
+
+export async function createGroup(req: CreateGroup) : Promise<void> {
+    try {
+        instance.interceptors.request.use(config => {
+            if (localStorage.getItem('jwtToken')) {
+                config.headers.Authorization = `Bearer ${localStorage.getItem('jwtToken')}` // 
+            }
+            return config
+        })
+
+        const data = await instance.post("/group/createGroup", req);
+        if (data.status >= 200 && data.status < 300) {
+            console.error("Successful confirmation! ");
+            return Promise.resolve();
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            // Error de axios
+            console.error("Error interno de axios!!")
+        } else {
+            console.error("Error de la peticion!")
+        }
+        return Promise.reject();
+    }
+}
+
+export async function editGroup(req: EditGroup) : Promise<void> {
+    try {
+        instance.interceptors.request.use(config => {
+            if (localStorage.getItem('jwtToken')) {
+                config.headers.Authorization = `Bearer ${localStorage.getItem('jwtToken')}` // 
+            }
+            return config
+        })
+
+        const data = await instance.post("/groups/edit", req);
+        if (data.status >= 200 && data.status < 300) {
+            console.error("Successful group edit! ");
+            return Promise.resolve();
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            // Error de axios
+            console.error("Error interno de axios!!")
+        } else {
+            console.error("Error de la peticion!")
+        }
+        return Promise.reject();
+    }
+}
 
 export async function createUser(req: RegisterRequest) : Promise<void> {
     try {
         const data = await instance.post("/auth/register", req);
+        if (data.status >= 200 && data.status < 300) {
+            //jwtToken = data.data["JwtAccessToken"]
+            console.error("Successful user profile set up! ");
+            return Promise.resolve();
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            // Error de axios
+            console.error("Error interno de axios!!")
+        } else {
+            console.error("Error de la peticion!")
+        }
+        return Promise.reject();
+    }
+}
+
+export async function addUserToGroup(req: AddUserToGroup) : Promise<void> {
+    try {
+        const data = await instance.post("/group/addUser", req);
         if (data.status >= 200 && data.status < 300) {
             //jwtToken = data.data["JwtAccessToken"]
             console.error("Successful user profile set up! ");
@@ -149,7 +283,7 @@ export const createNewGroup = (data: any) : IGroup => {
         id: Date.now(),
         name: data.name,
         description: data.description,
-        photoUrl: URL.createObjectURL(data.photo),
+        photoUrl: data.photo ? URL.createObjectURL(data.photo) : null,
         members: [],
         tasks: [],
     }
