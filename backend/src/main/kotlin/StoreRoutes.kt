@@ -1,5 +1,7 @@
 import com.astrais.ErrorCodes
 import com.astrais.Errors
+import com.astrais.OK_MESSAGE_RESPONSE
+import com.astrais.db.BuyCosmeticResponse
 import com.astrais.db.getDatabaseDaoImpl
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.*
@@ -26,36 +28,32 @@ fun Route.storeRoutes() {
     authenticate("access-jwt") {
         route("/store") {
             get("/items") {
-                val uid =
-                        call.principal<JWTPrincipal>()!!.subject?.toInt()
-                                ?: return@get call.respond(HttpStatusCode.Unauthorized)
+                val uid = call.principal<JWTPrincipal>()!!.subject?.toInt() ?: return@get call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "No UID available"))
                 call.respond(HttpStatusCode.OK, getDatabaseDaoImpl().getStoreItems(uid))
             }
             post("/buy/{id}") {
-                val uid =
-                        call.principal<JWTPrincipal>()!!.subject?.toInt()
-                                ?: return@post call.respond(HttpStatusCode.Unauthorized)
-                val cid =
-                        call.parameters["id"]?.toInt()
-                                ?: return@post call.respond(HttpStatusCode.BadRequest)
-                if (getDatabaseDaoImpl().buyCosmetic(uid, cid))
-                        call.respond(HttpStatusCode.OK, mapOf("success" to true))
-                else
-                        call.respond(
-                                HttpStatusCode.BadRequest,
-                                mapOf("error" to "No funds or already owned")
-                        )
+                val uid = call.principal<JWTPrincipal>()!!.subject?.toInt() ?: return@post call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "No UID available"))
+                val cid = call.parameters["id"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Didn't catch the Cosmetic ID"))
+
+                when (getDatabaseDaoImpl().buyCosmetic(uid, cid)){
+                    BuyCosmeticResponse.OKAY -> call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
+                    BuyCosmeticResponse.USER_NOT_FOUND -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "User was not found"))
+                    BuyCosmeticResponse.COSMETIC_NOT_FOUND -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "The cosmetic was not found"))
+                    BuyCosmeticResponse.INSUFICIENT_CURRENCY -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Insuficient funds"))
+                    BuyCosmeticResponse.ALREADY_HAS_OBJECT -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEALREADYEXISTS.ordinal, "Cosmetic was already bought"))
+                }
             }
             post("/equip/{id}") {
-                val uid =
-                        call.principal<JWTPrincipal>()!!.subject?.toInt()
-                                ?: return@post call.respond(HttpStatusCode.Unauthorized)
-                val cid =
-                        call.parameters["id"]?.toInt()
-                                ?: return@post call.respond(HttpStatusCode.BadRequest)
-                if (getDatabaseDaoImpl().equipCosmetic(uid, cid))
-                        call.respond(HttpStatusCode.OK, mapOf("success" to true))
-                else call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Not owned"))
+                val uid = call.principal<JWTPrincipal>()!!.subject?.toInt() ?: return@post call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "No UID available"))
+                val cid = call.parameters["id"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Didn't catch the Cosmetic ID"))
+
+                when (getDatabaseDaoImpl().equipCosmetic(uid, cid)){
+                    BuyCosmeticResponse.OKAY -> call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
+                    BuyCosmeticResponse.USER_NOT_FOUND -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "User was not found"))
+                    BuyCosmeticResponse.COSMETIC_NOT_FOUND -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "The cosmetic was not found"))
+                    BuyCosmeticResponse.INSUFICIENT_CURRENCY -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Insuficient funds"))
+                    BuyCosmeticResponse.ALREADY_HAS_OBJECT -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "Not owned"))
+                }
             }
         }
     }

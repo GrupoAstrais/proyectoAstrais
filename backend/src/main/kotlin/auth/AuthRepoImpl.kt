@@ -19,7 +19,7 @@ class AuthRepoImpl : AuthRepo {
         try {
             val user = getDatabaseDaoImpl().getUsuario(loginRequest.email)
 
-            if (user?.contrasenia != null && checkPassword(loginRequest.passwd, user.contrasenia!!)){
+            if (user?.contrasenia != null && user.esta_confirmado != 0 && checkPassword(loginRequest.passwd, user.contrasenia!!)){
                 getDatabaseDaoImpl().setUserLastLogin(user)
                 log.info("User ${user.nombre} (${user.id.value}) connected.")
 

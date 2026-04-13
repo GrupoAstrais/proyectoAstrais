@@ -3,6 +3,7 @@ package com.astrais.auth
 import at.favre.lib.crypto.bcrypt.BCrypt
 import com.astrais.ErrorCodes
 import com.astrais.Errors
+import com.astrais.OK_MESSAGE_RESPONSE
 import com.astrais.db.EntidadCosmetico
 import com.astrais.db.getDatabaseDaoImpl
 import com.astrais.supportedLanguages
@@ -60,7 +61,7 @@ fun Route.authRoutes() {
             if (!isConfirmed) {
                 call.respond(
                     HttpStatusCode.Forbidden,
-                    Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Por favor, verifica tu correo antes de iniciar sesión.")
+                    Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Please, verify your email before logging in.")
                 )
                 return@post
             }
@@ -89,18 +90,18 @@ fun Route.authRoutes() {
         try {
             val request = call.receive<MailVerifierRequest>()
             if (request.email.isBlank() || request.code.isBlank()) {
-                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_BLANKVALUE.ordinal, "Faltan datos"))
+                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_BLANKVALUE.ordinal, "Data missing"))
                 return@post
             }
 
             val success = getDatabaseDaoImpl().verifyConfirmationCode(request.email, request.code)
             if (success) {
-                call.respond(HttpStatusCode.OK, mapOf("success" to true))
+                call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
             } else {
-                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_BADVALUE.ordinal, "Código incorrecto o expirado"))
+                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_BADVALUE.ordinal, "Code incorrect or expired"))
             }
         } catch (e: Exception) {
-            call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "Error de formato"))
+            call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "Format error"))
         }
     }
 
@@ -147,7 +148,7 @@ fun Route.authRoutes() {
             if (getAuthRepoImpl().performBasicRegister(request)) {
                 // Se envia eso ya que no me acuerdo en que frontend, pero descartaba los mensajes
                 // sin cuerpo.
-                call.respond(HttpStatusCode.OK, mapOf("aknowledged" to true))
+                call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
             } else {
                 call.respond(
                         HttpStatusCode.Conflict,
