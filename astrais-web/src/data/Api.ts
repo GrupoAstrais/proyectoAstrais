@@ -1,10 +1,151 @@
-import axios from 'axios';
-import type { AddUserToGroup, CreateGroup, EditGroup, LoginRequest, RegisterRequest, UserData, UserGroups, VerifyRequest } from '../types/LoginRequest';
+import axios, { type InternalAxiosRequestConfig } from 'axios';
+import type { AddUserToGroup, CreateGroup, EditGroup, LoginRequest, RegisterRequest, UserData, UserGroups, UserGroupsResponse, VerifyRequest } from '../types/LoginRequest';
 import type { IGroup, ITarea } from '../types/Interfaces';
 
 export const API_BASE_URL = 'http://192.168.3.148:5684'
 
 let jwtToken: string | null = null
+
+let jwtRefreshToken: string | null = null
+
+type EditGroupPayload = EditGroup & CreateGroup;
+
+type RefreshAccessResponse = {
+    newAccessToken: string;
+}
+
+type RetryableRequestConfig = InternalAxiosRequestConfig & {
+    _retry?: boolean;
+}
+
+const getStoredAccessToken = (): string | null => {
+    if (typeof window === 'undefined') {
+        return jwtToken;
+    }
+
+    return localStorage.getItem('jwtToken');
+}
+
+const getStoredRefreshToken = (): string | null => {
+    if (typeof window === 'undefined') {
+        return jwtRefreshToken;
+    }
+
+    return localStorage.getItem('jwtRefreshToken');
+}
+
+const setStoredTokens = (accessToken: string | null, refreshToken: string | null): void => {
+    jwtToken = accessToken;
+    jwtRefreshToken = refreshToken;
+
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    if (accessToken) {
+        localStorage.setItem('jwtToken', accessToken);
+    } else {
+        localStorage.removeItem('jwtToken');
+    }
+
+    if (refreshToken) {
+        localStorage.setItem('jwtRefreshToken', refreshToken);
+    } else {
+        localStorage.removeItem('jwtRefreshToken');
+    }
+}
+
+const parseJwtPayload = (token: string): { exp?: number } | null => {
+    try {
+        const [, payload] = token.split('.');
+
+        if (!payload) {
+            return null;
+        }
+
+        const normalizedPayload = payload
+            .replace(/-/g, '+')
+            .replace(/_/g, '/')
+            .padEnd(Math.ceil(payload.length / 4) * 4, '=');
+
+        return JSON.parse(atob(normalizedPayload)) as { exp?: number };
+    } catch {
+        return null;
+    }
+}
+
+export const isTokenExpired = (token: string | null): boolean => {
+    if (!token) {
+        return true;
+    }
+
+    const payload = parseJwtPayload(token);
+
+    if (!payload?.exp) {
+        return true;
+    }
+
+    return Date.now() >= payload.exp * 1000;
+}
+
+let refreshTokenRequest: Promise<string | null> | null = null;
+
+export async function regenerateAccessToken(): Promise<string | null> {
+    if (refreshTokenRequest) {
+        return refreshTokenRequest;
+    }
+
+    refreshTokenRequest = (async () => {
+        const refreshToken = getStoredRefreshToken();
+
+        if (!refreshToken) {
+            return null;
+        }
+
+        try {
+            const data = await axios.post(
+                `${API_BASE_URL}/auth/regenAccess`,
+                {},
+                {
+                    timeout: 10_000,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${refreshToken}`
+                    }
+                }
+            );
+
+            if (data.status < 200 || data.status >= 300) {
+                return null;
+            }
+
+            const newAccessToken = (data.data as RefreshAccessResponse).newAccessToken;
+
+            if (!newAccessToken) {
+                return null;
+            }
+
+            setStoredTokens(newAccessToken, refreshToken);
+            return newAccessToken;
+        } catch (err) {
+            if (axios.isAxiosError(err) && err.response?.status === 401) {
+                setStoredTokens(null, null);
+            }
+
+            if (axios.isAxiosError(err)) {
+                console.error('Error regenerando el access token');
+            } else {
+                console.error('Error inesperado regenerando el access token');
+            }
+
+            return null;
+        } finally {
+            refreshTokenRequest = null;
+        }
+    })();
+
+    return refreshTokenRequest;
+}
 
 const instance = axios.create({
     baseURL: API_BASE_URL,
@@ -12,15 +153,73 @@ const instance = axios.create({
     headers: { 'Content-Type': 'application/json' }
 })
 
+instance.interceptors.request.use(async (config) => {
+    const isRefreshRequest = config.url?.includes('/auth/regenAccess') === true;
+
+    if (isRefreshRequest) {
+        const refreshToken = getStoredRefreshToken();
+
+        if (refreshToken) {
+            config.headers.Authorization = `Bearer ${refreshToken}`;
+        }
+
+        return config;
+    }
+
+    let token = getStoredAccessToken();
+
+    if (!token || isTokenExpired(token)) {
+        token = await regenerateAccessToken();
+    }
+
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+})
+
+instance.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        if (!axios.isAxiosError(error)) {
+            return Promise.reject(error);
+        }
+
+        const originalRequest = error.config as RetryableRequestConfig | undefined;
+        const refreshToken = getStoredRefreshToken();
+
+        if (
+            error.response?.status !== 401 ||
+            !originalRequest ||
+            originalRequest._retry ||
+            originalRequest.url?.includes('/auth/regenAccess') ||
+            !refreshToken
+        ) {
+            return Promise.reject(error);
+        }
+
+        originalRequest._retry = true;
+
+        const newAccessToken = await regenerateAccessToken();
+
+        if (!newAccessToken) {
+            return Promise.reject(error);
+        }
+
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        return instance(originalRequest);
+    }
+)
+
 export async function performLogin(req: LoginRequest) : Promise<void> {
     try {
         const data = await instance.post("/auth/login", req);
         if (data.status >= 200 && data.status < 300) {
-            jwtToken = data.data["JwtAccessToken"];
+            jwtToken = data.data["jwtAccessToken"];
+            jwtRefreshToken = data.data["jwtRefreshToken"];
 
-            if (typeof window !== 'undefined') {
-                localStorage.setItem('jwtToken', jwtToken!)
-            }
+            setStoredTokens(jwtToken, jwtRefreshToken);
             
             console.error("Successful login! ");
             return Promise.resolve();
@@ -43,7 +242,7 @@ export async function confirmRegister(req: VerifyRequest) : Promise<void> {
     try {
         const data = await instance.post("/auth/verify", req);
         if (data.status >= 200 && data.status < 300) {
-            jwtToken = data.data["JwtAccessToken"]
+            
             console.error("Successful confirmation! ");
             return Promise.resolve();
         } else {
@@ -63,19 +262,13 @@ export async function confirmRegister(req: VerifyRequest) : Promise<void> {
 
 export async function getUserData() : Promise<UserData> {
     try {
-        
-        instance.interceptors.request.use(config => {
-            if (localStorage.getItem('jwtToken')) {
-                config.headers.Authorization = `Bearer ${localStorage.getItem('jwtToken')}` // 
-            }
-            return config
-        })
-
 
         const data = await instance.get("/auth/me");
         if (data.status >= 200 && data.status < 300) {
-            console.error("Successful confirmation! ");
+            console.error("Successful user data retrieval! ");
             const result = data.data as UserData;
+
+
             return result;
         } else {
             console.error("Error en el log! " + data.data["error"]);
@@ -94,19 +287,14 @@ export async function getUserData() : Promise<UserData> {
 
 export async function getUserGroup() : Promise<UserGroups[]> {
     try {
-        
-        instance.interceptors.request.use(config => {
-            if (localStorage.getItem('jwtToken')) {
-                config.headers.Authorization = `Bearer ${localStorage.getItem('jwtToken')}` // 
-            }
-            return config
-        })
 
         const data = await instance.get("/group/userGroups");
         if (data.status >= 200 && data.status < 300) {
-            console.error("Successful confirmation! ");
-            const result = data.data as UserGroups[];
-            return result;
+            console.error("Successful user group retrieval! ");
+
+            const res = data.data as UserGroupsResponse;
+
+            return res.groupList;
         } else {
             console.error("Error en el log! " + data.data["error"]);
             return Promise.reject();
@@ -124,16 +312,10 @@ export async function getUserGroup() : Promise<UserGroups[]> {
 
 export async function createGroup(req: CreateGroup) : Promise<void> {
     try {
-        instance.interceptors.request.use(config => {
-            if (localStorage.getItem('jwtToken')) {
-                config.headers.Authorization = `Bearer ${localStorage.getItem('jwtToken')}` // 
-            }
-            return config
-        })
 
-        const data = await instance.post("/group/createGroup", req);
+        const data = await instance.post("/groups/createGroup", req);
         if (data.status >= 200 && data.status < 300) {
-            console.error("Successful confirmation! ");
+            console.error("Successful group creation! ");
             return Promise.resolve();
         } else {
             console.error("Error en el log! " + data.data["error"]);
@@ -150,16 +332,10 @@ export async function createGroup(req: CreateGroup) : Promise<void> {
     }
 }
 
-export async function editGroup(req: EditGroup) : Promise<void> {
+export async function editGroup(req: EditGroupPayload) : Promise<void> {
     try {
-        instance.interceptors.request.use(config => {
-            if (localStorage.getItem('jwtToken')) {
-                config.headers.Authorization = `Bearer ${localStorage.getItem('jwtToken')}` // 
-            }
-            return config
-        })
 
-        const data = await instance.post("/groups/edit", req);
+        const data = await instance.post("/groups/editGroup", req);
         if (data.status >= 200 && data.status < 300) {
             console.error("Successful group edit! ");
             return Promise.resolve();
@@ -182,7 +358,7 @@ export async function createUser(req: RegisterRequest) : Promise<void> {
     try {
         const data = await instance.post("/auth/register", req);
         if (data.status >= 200 && data.status < 300) {
-            //jwtToken = data.data["JwtAccessToken"]
+            
             console.error("Successful user profile set up! ");
             return Promise.resolve();
         } else {
@@ -202,7 +378,7 @@ export async function createUser(req: RegisterRequest) : Promise<void> {
 
 export async function addUserToGroup(req: AddUserToGroup) : Promise<void> {
     try {
-        const data = await instance.post("/group/addUser", req);
+        const data = await instance.post("/groups/addUser", req);
         if (data.status >= 200 && data.status < 300) {
             //jwtToken = data.data["JwtAccessToken"]
             console.error("Successful user profile set up! ");
@@ -389,4 +565,3 @@ export const filterTasksByTime = (
 
     return tasks.filter((task) => isTaskAvailableOnDate(task, today));
 }
-

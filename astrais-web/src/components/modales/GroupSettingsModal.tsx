@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 interface GroupSettingsModalProps {
     isOpen: boolean;
     onClose: () => void;
+    onDelete: () => void; // Новая функция для удаления группы
     initialData: {
         name: string;
         description: string;
@@ -20,6 +21,7 @@ interface GroupSettingsModalProps {
 export default function GroupSettingsModal({
     isOpen,
     onClose,
+    onDelete, // Добавляем пропс
     initialData,
     onSave
 }: GroupSettingsModalProps) {
@@ -194,19 +196,28 @@ export default function GroupSettingsModal({
                     </div>
                 </div>
 
-                <div className="border-t border-gray-700 p-4 flex justify-end gap-3">
+                <div className="border-t border-gray-700 p-4 flex justify-between gap-3"> {/* Изменили flex justify-end на flex justify-between */}
                     <button
-                        onClick={onClose}
-                        className="px-6 py-2 border border-gray-600 rounded-md text-white hover:bg-gray-700 transition-colors"
+                        onClick={onDelete} // Обработчик удаления группы
+                        className="px-6 py-2 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 transition-colors"
                     >
-                        Cancelar
+                        Borrar grupo
                     </button>
-                    <button
-                        onClick={handleSubmit}
-                        className="px-6 py-2 bg-accent-beige-300 text-black rounded-md font-medium hover:bg-accent-beige-400 transition-colors"
-                    >
-                        Guardar cambios
-                    </button>
+                    
+                    <div className="flex gap-3"> {/* Оборачиваем остальные кнопки в отдельный контейнер */}
+                        <button
+                            onClick={onClose}
+                            className="px-6 py-2 border border-gray-600 rounded-md text-white hover:bg-gray-700 transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            onClick={handleSubmit}
+                            className="px-6 py-2 bg-accent-beige-300 text-black rounded-md font-medium hover:bg-accent-beige-400 transition-colors"
+                        >
+                            Guardar cambios
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

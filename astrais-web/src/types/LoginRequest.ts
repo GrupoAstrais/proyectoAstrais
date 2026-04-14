@@ -39,6 +39,10 @@ export interface CreateGroup {
   desc: string;
 }
 
+export interface UserGroupsResponse {
+    groupList: UserGroups[];
+};
+
 export interface EditGroup {
   guid: number;
   userid: number;
@@ -48,3 +52,4 @@ export interface AddUserToGroup {
   guid: number;
   userid: number;
 }
+

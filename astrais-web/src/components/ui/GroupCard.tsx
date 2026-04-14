@@ -37,7 +37,7 @@ export default function GroupCard({ onClick, id, activeId, data }: GroupCardProp
                     />
                 ) : (
                     <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-primary-900 bg-accent-beige-300 text-lg font-bold">
-                        {data.name.charAt(0).toUpperCase()}
+                        {data?.name?.charAt(0).toUpperCase()}
                     </div>
                 )}
                 <div className="flex flex-col">

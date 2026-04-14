@@ -13,7 +13,9 @@ import {
     createGroup,
     createLocalTask,
     createNewGroup,
+    editGroup,
     filterTasksByCompleted,
+    getUserData,
     getUserGroup,
     sortTasksByCompleted,
     toggleSubtaskCompleted,
@@ -38,6 +40,7 @@ export default function Groups() {
         const loadData = async () => {
             try {
                 const d = await getUserGroup();
+                console.log("GROUPS RESPONSE:", d);
                 setGroups(d.map(group => ({
                     id: group.id,
                     name: group.nombre,
@@ -129,7 +132,7 @@ export default function Groups() {
         const newGroup: IGroup = createNewGroup(data);
 
         await createGroup({name: data.name, desc: data.description}).then(() => {
-            console.log("Grupo creado con éxito");
+            console.log("Grupo creado con exito");
         }).catch((error) => {
             console.error("Error al crear el grupo:", error);
         });
@@ -139,7 +142,7 @@ export default function Groups() {
         setIsCreateModalOpen(false);
     };
 
-    const handleSaveSettings = (settings: {
+    const handleSaveSettings = async (settings: {
         name: string;
         description: string;
         photo?: File | null;
@@ -148,6 +151,20 @@ export default function Groups() {
         if (activeGroup === -1) return;
 
         const newPhotoUrl = settings.photo ? URL.createObjectURL(settings.photo) : undefined;
+
+        try {
+            const userData = await getUserData();
+            await editGroup({
+                guid: activeGroup,
+                userid: userData.id,
+                name: settings.name,
+                desc: settings.description
+            });
+            console.log("Grupo editado con exito");
+        } catch (error) {
+            console.error("Error al editar el grupo:", error);
+            return;
+        }
 
         setGroups((prevGroups) =>
             prevGroups.map((group) => {
