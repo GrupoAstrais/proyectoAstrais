@@ -59,12 +59,14 @@ fun Application.module() {
     // Instala politica CORS
     install(CORS) {
         anyHost()
+
         allowCredentials = true
         allowNonSimpleContentTypes = true
-        allowMethod(HttpMethod.Get)
-        allowMethod(HttpMethod.Post)
-        allowMethod(HttpMethod.Patch)
-        allowMethod(HttpMethod.Delete)
+
+        allowHeader(HttpHeaders.ContentType)
+        allowHeader(HttpHeaders.Authorization)
+
+        anyMethod()
     }
 
 
