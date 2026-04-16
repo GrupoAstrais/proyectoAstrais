@@ -1,7 +1,7 @@
 package com.astrais.db
 
 import CosmeticResponseDTO
-import com.astrais.LANG_CODE_ENGLISH
+import LANG_CODE_ENGLISH
 import kotlinx.datetime.LocalDateTime
 
 enum class BuyCosmeticResponse{
@@ -13,7 +13,8 @@ enum class BuyCosmeticResponse{
 }
 
 data class TareaUniqueData(
-    val fechaLimite : LocalDateTime
+    val fechaLimite : LocalDateTime,
+    val idObjetivo : Int?
 )
 
 data class TareaHabitData(

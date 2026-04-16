@@ -61,6 +61,8 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.animation)
+    implementation(libs.androidx.hilt.common)
+    implementation(libs.androidx.hilt.work)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -1,0 +1,59 @@
+package com.mm.astraisandroid.navigation
+
+import kotlinx.serialization.Serializable
+
+/**
+ * Define todas las rutas de navegación disponibles en la aplicación.
+ * * Cada objeto representa una pantalla o sección específica dentro del grafo de navegación.
+ */
+sealed interface Route {
+
+    /**
+     * Ruta hacia la pantalla de inicio de sesión.
+     */
+    @Serializable
+    data object Login : Route
+
+    /**
+     * Ruta hacia la pantalla de registro para nuevos usuarios.
+     */
+    @Serializable
+    data object Register : Route
+
+    /**
+     * Ruta hacia la pantalla principal de la aplicación.
+     * Es el contenedor del `BottomNavigationBar` y los tabs.
+     */
+    @Serializable
+    data object Home : Route
+
+    /**
+     * Ruta hacia la pantalla del perfil del usuario.
+     */
+    @Serializable
+    data object Profile : Route
+
+    /**
+     * Ruta hacia la pantalla de Inventario.
+     */
+    @Serializable
+    data object Inventory : Route
+
+    /**
+     * Ruta hacia el tab de Tareas.
+     */
+    @Serializable
+    data object TasksTab : Route
+
+    /**
+     * Ruta hacia el tab de Grupos.
+     */
+    @Serializable
+    data object GroupTab : Route
+
+    /**
+     * Ruta hacia el tab de la Tienda.
+     */
+    @Serializable
+    data object StoreTab : Route
+}

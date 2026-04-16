@@ -1,5 +1,7 @@
 package tasks
 
+import OK_MESSAGE_RESPONSE
+import TASKTYPE_UNIQUE
 import com.astrais.*
 import io.ktor.http.*
 import io.ktor.server.auth.*
@@ -14,16 +16,35 @@ data class CreateTareaUniqueData(
     val fechaLimite : String
 )
 
-const val HABIT_FREQ_HOURLY = "HOURLY"
-const val HABIT_FREQ_DAILY = "DAILY"
-const val HABIT_FREQ_WEEKLY = "WEEKLY"
-const val HABIT_FREQ_MONTHLY = "MONTHLY"
-const val HABIT_FREQ_YEARLY = "YEARLY"
+// const val HABIT_FREQ_HOURLY = "HOURLY"
+// const val HABIT_FREQ_DAILY = "DAILY"
+// const val HABIT_FREQ_WEEKLY = "WEEKLY"
+// const val HABIT_FREQ_MONTHLY = "MONTHLY"
+// const val HABIT_FREQ_YEARLY = "YEARLY"
+
+/*
+* Si se necesita el valor desde la API se puede poner
+* val fromApi = HabitFrequency.fromValue("weekly")
+* y lo tranforma
+* */
+
+enum class HabitFrequency(val value: String) {
+    HOURLY("HOURLY"),
+    DAILY("DAILY"),
+    WEEKLY("WEEKLY"),
+    MONTHLY("MONTHLY"),
+    YEARLY("YEARLY");
+
+    companion object {
+        fun fromValue(value: String): HabitFrequency? =
+            entries.find { it.value.equals(value, ignoreCase = true) }
+    }
+}
 
 @Serializable
 data class CreateTareaHabitData(
     val numeroFrecuencia : Int,
-    val frequency : String = HABIT_FREQ_DAILY
+    val frequency : HabitFrequency = HabitFrequency.DAILY
 )
 
 @Serializable
@@ -36,6 +57,7 @@ data class CreateTareaRequest(
 
     val extraUnico : CreateTareaUniqueData? = null,
     val extraHabito : CreateTareaHabitData? = null,
+    val idObjetivo: Int? = null // Si no es null, es subtarea del objetivo
 )
 
 @Serializable
@@ -51,6 +73,7 @@ data class TareaResponse(
 
     val extraUnico : CreateTareaUniqueData? = null,
     val extraHabito : CreateTareaHabitData? = null,
+    val idObjetivo: Int? = null
 )
 
 @Serializable

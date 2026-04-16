@@ -3,10 +3,10 @@ package com.astrais.auth
 import at.favre.lib.crypto.bcrypt.BCrypt
 import com.astrais.ErrorCodes
 import com.astrais.Errors
-import com.astrais.OK_MESSAGE_RESPONSE
+import OK_MESSAGE_RESPONSE
 import com.astrais.db.EntidadCosmetico
 import com.astrais.db.getDatabaseDaoImpl
-import com.astrais.supportedLanguages
+import supportedLanguages
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*

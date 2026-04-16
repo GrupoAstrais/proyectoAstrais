@@ -2,10 +2,8 @@ package com.astrais.auth
 
 import com.astrais.ErrorCodes
 import com.astrais.Errors
-import com.astrais.OK_MESSAGE_RESPONSE
 import com.astrais.db.AuthProvider
 import com.astrais.db.getDatabaseDaoImpl
-import com.astrais.mainlogger
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
@@ -13,7 +11,6 @@ import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.apache.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*

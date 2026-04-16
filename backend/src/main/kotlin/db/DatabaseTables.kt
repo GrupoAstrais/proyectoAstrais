@@ -55,7 +55,8 @@ enum class TaskState {
 enum class CosmeticType {
     PET,
     PET_SKIN,
-    APP_THEME
+    APP_THEME,
+    AVATAR_PART
 }
 
 object TablaUsuario : IntIdTable("Users") {
@@ -85,6 +86,9 @@ object TablaUsuario : IntIdTable("Users") {
     val racha_login_mayor = integer("greatest_streak").default(0)
     // Fecha del ultimo login hecho
     val ultimo_login = date("last_login").nullable()
+
+    val ludiones_ganados_hoy = integer("daily_ludions").default(0)
+    val ultima_fecha_ganancia = date("last_earn_date").default(LocalDate.now().toKotlinLocalDate())
 
     // Email del usuario
     val email = varchar("email", USER_MAIL_LENGTH).nullable()
@@ -124,6 +128,8 @@ class EntidadUsuario(id: EntityID<Int>) : IntEntity(id) {
     var esta_confirmado by TablaUsuario.esta_confirmado
     var id_mascota_equipada by TablaUsuario.id_mascota_equipada
     var themeColors by TablaUsuario.themeColors
+    var ludiones_ganados_hoy by TablaUsuario.ludiones_ganados_hoy
+    var ultima_fecha_ganancia by TablaUsuario.ultima_fecha_ganancia
 }
 
 object TablaConfirmacionUsuario : IntIdTable("UserConfirm") {

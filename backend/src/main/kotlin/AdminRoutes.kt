@@ -23,11 +23,28 @@ data class CreateCosmeticRequest(
     val adminPassword: String
 )
 
+enum class RarityType(val multiplier: Double) {
+    COMUN(1.0),
+    RARO(2.5),
+    EPICO(5.0),
+    LEGENDARIO(10.0)
+}
+
+fun calculateCosmeticPrice(type: CosmeticType, rarity: RarityType): Int {
+    val baseCost = when (type) {
+        CosmeticType.AVATAR_PART -> 100
+        CosmeticType.PET_SKIN -> 300
+        CosmeticType.APP_THEME -> 500
+        CosmeticType.PET -> 1000
+    }
+    return (baseCost * rarity.multiplier).toInt()
+}
+
 fun Route.adminRoutes() {
     route("/admin") {
         post("/cosmetic/upload") {
             val multipart = call.receiveMultipart()
-
+            var rarityStr = "COMUN"
             var name = ""
             var desc = ""
             var type = ""
@@ -52,6 +69,7 @@ fun Route.adminRoutes() {
                             "adminPassword" ->
                                 adminPassword = part.value
                             "collection" -> collection = part.value
+                            "rarity" -> rarityStr = part.value
                         }
                     }
                     is PartData.FileItem -> {
@@ -96,22 +114,19 @@ fun Route.adminRoutes() {
                 val file = File(uploadDir, fileName)
                 file.writeBytes(fileBytes!!)
 
-                val typeEnum =
-                    runCatching { CosmeticType.valueOf(type) }.getOrElse {
-                        CosmeticType.PET
-                    }
 
-                val success =
-                    getDatabaseDaoImpl()
-                        .createCosmetic(
-                            name = name,
-                            desc = desc,
-                            type = typeEnum,
-                            price = price,
-                            assetRef = fileName,
-                            theme = theme,
-                            coleccion = collection
-                        )
+                val typeEnum = runCatching { CosmeticType.valueOf(type) }.getOrElse { CosmeticType.PET }
+                val rarityEnum = runCatching { RarityType.valueOf(rarityStr) }.getOrElse { RarityType.COMUN }
+                val finalPrice = calculateCosmeticPrice(typeEnum, rarityEnum)
+                val success = getDatabaseDaoImpl().createCosmetic(
+                    name = name,
+                    desc = desc,
+                    type = typeEnum,
+                    price = finalPrice,
+                    assetRef = fileName,
+                    theme = theme,
+                    coleccion = collection
+                )
 
                 if (success) {
                     call.respond(

@@ -1,6 +1,8 @@
 package com.astrais.groups
 
-import com.astrais.*
+import ROLE_USERMOD
+import ROLE_USERNORMAL
+import ROLE_USEROWNER
 import com.astrais.db.GroupRoles
 import com.astrais.db.getDatabaseDaoImpl
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException

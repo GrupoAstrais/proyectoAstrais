@@ -1,6 +1,5 @@
 import com.astrais.ErrorCodes
 import com.astrais.Errors
-import com.astrais.OK_MESSAGE_RESPONSE
 import com.astrais.db.BuyCosmeticResponse
 import com.astrais.db.getDatabaseDaoImpl
 import io.ktor.http.HttpStatusCode

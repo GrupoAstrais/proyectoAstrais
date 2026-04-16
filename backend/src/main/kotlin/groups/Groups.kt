@@ -2,11 +2,10 @@ package com.astrais.groups
 
 import com.astrais.ErrorCodes
 import com.astrais.Errors
-import com.astrais.OK_MESSAGE_RESPONSE
+import OK_MESSAGE_RESPONSE
 import io.ktor.http.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
-import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -25,9 +24,9 @@ data class SingleGroupOut(
     /** La descripcion del grupo*/
     val description : String,
     /** El rol expresado de forma entera
-     * @see com.astrais.ROLE_USERNORMAL
-     * @see com.astrais.ROLE_USERMOD
-     * @see com.astrais.ROLE_USEROWNER */
+     * @see ROLE_USERNORMAL
+     * @see ROLE_USERMOD
+     * @see ROLE_USEROWNER */
     val role: Int
 )
 

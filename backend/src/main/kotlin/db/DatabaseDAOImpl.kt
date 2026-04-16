@@ -1,16 +1,13 @@
 package com.astrais.db
 
 import CosmeticResponseDTO
-import com.astrais.LANG_CODE_ENGLISH
-import com.astrais.auth.GoogleUserInfo
+import LANG_CODE_ENGLISH
 import java.time.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
-import tasks.CreateTareaHabitData
-import tasks.CreateTareaUniqueData
 
 class DatabaseDAOImpl : DatabaseDAO {
     // https://www.jetbrains.com/help/exposed/dsl-querying-data.html
@@ -223,6 +220,10 @@ class DatabaseDAOImpl : DatabaseDAO {
                     this.recompensa_ludion = recompensaLudion
                     this.fecha_creacion = java.time.LocalDate.now().toKotlinLocalDate()
                     this.fecha_actualizado = this.fecha_creacion
+
+                    if (extraUnico?.idObjetivo != null) {
+                        this.id_objetivo = EntityID(extraUnico.idObjetivo, TablaTareaObjetivo)
+                    }
                 }
 
                 if (tipo == TaskType.UNICO){
@@ -321,32 +322,89 @@ class DatabaseDAOImpl : DatabaseDAO {
             val tarea = EntidadTarea.findById(tid) ?: return@suspendTransaction false
             val usuario = EntidadUsuario.findById(uid) ?: return@suspendTransaction false
 
-            if (tarea.estado == TaskState.COMPLETE) {
-                tarea.estado = TaskState.ACTIVE
-                tarea.fecha_completado = null
-            } else {
-                tarea.estado = TaskState.COMPLETE
-                tarea.fecha_completado = java.time.LocalDate.now().toKotlinLocalDate()
+            if (tarea.tipo == TaskType.HABITO) {
+                val habito = EntidadTareaHabito.find { TablaTareaHabito.id_tarea eq tarea.id }.singleOrNull()
+                if (habito != null) {
+                    val hoy = LocalDate.now().toKotlinLocalDate()
 
-                if (!tarea.recompensa_reclamada) {
-                    usuario.xp_actual += tarea.recompensa_xp
-                    usuario.xp_total += tarea.recompensa_xp
-                    usuario.ludiones += tarea.recompensa_ludion
-                    usuario.total_tareas_completadas += 1
+                    // Evitar farmeo
+                    if (habito.ultima_vez_completada == hoy) return@suspendTransaction false
 
-                    // He hecho esto para probar la logica de niveles. Habra que hacerle su funcion
-                    // aparte
-                    var xpParaSiguienteNivel = (usuario.nivel + 1) * 100
-                    while (usuario.xp_actual >= xpParaSiguienteNivel) {
-                        usuario.xp_actual -= xpParaSiguienteNivel
-                        usuario.nivel += 1
-                        xpParaSiguienteNivel = (usuario.nivel + 1) * 100
+                    habito.ultima_vez_completada = hoy
+                    habito.racha_actual += 1
+                    if (habito.racha_actual > habito.mejor_racha) {
+                        habito.mejor_racha = habito.racha_actual
                     }
 
+                    recompensarUsuario(usuario, tarea)
+                    return@suspendTransaction true
+                }
+            }
+
+            if (tarea.estado != TaskState.COMPLETE) {
+                tarea.estado = TaskState.COMPLETE
+                tarea.fecha_completado = LocalDate.now().toKotlinLocalDate()
+
+                if (!tarea.recompensa_reclamada) {
+                    recompensarUsuario(usuario, tarea)
                     tarea.recompensa_reclamada = true
+                }
+
+                if (tarea.id_objetivo != null) {
+                    val objetivoId = tarea.id_objetivo!!
+
+                    val subtareas = EntidadTarea.find { TablaTarea.id_objetivo eq objetivoId }
+                    val todasCompletas = subtareas.all { it.estado == TaskState.COMPLETE }
+
+                    if (todasCompletas) {
+                        val objetivoPadre = EntidadTareaObjetivo.findById(objetivoId.value)
+                        val tareaPadre = objetivoPadre?.id_tarea?.let { EntidadTarea.findById(it.value) }
+
+                        if (tareaPadre != null && tareaPadre.estado != TaskState.COMPLETE) {
+                            tareaPadre.estado = TaskState.COMPLETE
+                            tareaPadre.fecha_completado = LocalDate.now().toKotlinLocalDate()
+
+                            if (!tareaPadre.recompensa_reclamada) {
+                                recompensarUsuario(usuario, tareaPadre)
+                                tareaPadre.recompensa_reclamada = true
+                            }
+                        }
+                    }
                 }
             }
             true
+        }
+    }
+
+    private fun recompensarUsuario(usuario: EntidadUsuario, tarea: EntidadTarea) {
+        val hoy = java.time.LocalDate.now().toKotlinLocalDate()
+
+        if (usuario.ultima_fecha_ganancia != hoy) {
+            usuario.ludiones_ganados_hoy = 0
+            usuario.ultima_fecha_ganancia = hoy
+        }
+
+        val LIMITE_DIARIO = 500
+        var ludionesFinales = tarea.recompensa_ludion
+
+        if (tarea.tipo != TaskType.OBJETIVO) {
+            val disponibles = LIMITE_DIARIO - usuario.ludiones_ganados_hoy
+            if (ludionesFinales > disponibles) {
+                ludionesFinales = if (disponibles > 0) disponibles else 0
+            }
+            usuario.ludiones_ganados_hoy += ludionesFinales
+        }
+
+        usuario.ludiones += ludionesFinales
+        usuario.xp_actual += tarea.recompensa_xp
+        usuario.xp_total += tarea.recompensa_xp
+        usuario.total_tareas_completadas += 1
+
+        var xpParaSiguienteNivel = (usuario.nivel + 1) * 100
+        while (usuario.xp_actual >= xpParaSiguienteNivel) {
+            usuario.xp_actual -= xpParaSiguienteNivel
+            usuario.nivel += 1
+            xpParaSiguienteNivel = (usuario.nivel + 1) * 100
         }
     }
 

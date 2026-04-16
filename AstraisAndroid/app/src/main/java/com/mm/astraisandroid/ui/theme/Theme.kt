@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.core.graphics.toColorInt
 import com.mm.astraisandroid.data.api.ThemeConfig
+import com.mm.astraisandroid.data.models.Theme
 import kotlinx.serialization.json.Json
 
 private val DefaultDarkColorScheme = darkColorScheme(
@@ -51,38 +52,33 @@ private fun parseHexColor(hexString: String, fallback: Color): Color {
 
 @Composable
 fun AstraisandroidTheme(
-    themeJson: String? = null,
+    userTheme: Theme? = null,
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (!themeJson.isNullOrBlank()) {
-        try {
-            val config = Json { ignoreUnknownKeys = true }.decodeFromString<ThemeConfig>(themeJson)
-            val textColor = parseHexColor(config.text, Gray50)
+    val colorScheme = if (userTheme != null) {
+        val textColor = parseHexColor(userTheme.text, Gray50)
 
-            val prim = parseHexColor(config.primary, IndigoGalaxia)
-            val sec = parseHexColor(config.secondary, MoradoNebulosa)
-            val tert = parseHexColor(config.tertiary, TurquesaCosmico)
-            val err = parseHexColor(config.error, StateError)
+        val prim = parseHexColor(userTheme.primary, IndigoGalaxia)
+        val sec = parseHexColor(userTheme.secondary, MoradoNebulosa)
+        val tert = parseHexColor(userTheme.tertiary, TurquesaCosmico)
+        val err = parseHexColor(userTheme.error, StateError)
 
-            darkColorScheme(
-                primary = prim,
-                onPrimary = getContrastColor(prim),
-                secondary = sec,
-                onSecondary = getContrastColor(sec),
-                tertiary = tert,
-                onTertiary = getContrastColor(tert),
-                background = parseHexColor(config.background, BgDark),
-                surfaceVariant = parseHexColor(config.backgroundAlt, BgDark),
-                surface = parseHexColor(config.surface, SurfaceDark),
-                error = err,
-                onError = getContrastColor(err),
-                onBackground = textColor,
-                onSurface = textColor
-            )
-        } catch (e: Exception) {
-            DefaultDarkColorScheme
-        }
+        darkColorScheme(
+            primary = prim,
+            onPrimary = getContrastColor(prim),
+            secondary = sec,
+            onSecondary = getContrastColor(sec),
+            tertiary = tert,
+            onTertiary = getContrastColor(tert),
+            background = parseHexColor(userTheme.background, BgDark),
+            surfaceVariant = parseHexColor(userTheme.backgroundAlt, BgDark),
+            surface = parseHexColor(userTheme.surface, SurfaceDark),
+            error = err,
+            onError = getContrastColor(err),
+            onBackground = textColor,
+            onSurface = textColor
+        )
     } else {
         DefaultDarkColorScheme
     }

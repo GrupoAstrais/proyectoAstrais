@@ -1,10 +1,15 @@
 package tasks
 
-import com.astrais.*
+import TASKTYPE_HABIT
+import TASKTYPE_OBJECTIVE
+import TASKTYPE_UNIQUE
 import com.astrais.db.*
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
+import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -24,10 +29,11 @@ class TaskRepoImpl : TaskRepo{
 
             var tipo: TaskType
             tipo = when (req.tipo) {
-                TASKTYPE_UNIQUE-> {
+                TASKTYPE_UNIQUE -> {
                     if (req.extraUnico != null){
                         extraUnica = TareaUniqueData(
-                            fechaLimite = Instant.parse(req.extraUnico.fechaLimite).toLocalDateTime(TimeZone.UTC)
+                            fechaLimite = Instant.parse(req.extraUnico.fechaLimite).toLocalDateTime(TimeZone.UTC),
+                            idObjetivo = null
                         )
 
                     }else{
@@ -41,7 +47,7 @@ class TaskRepoImpl : TaskRepo{
                     if (req.extraHabito != null){
                         extraHabito = TareaHabitData(
                             numeroFrecuencia = req.extraHabito.numeroFrecuencia,
-                            frequency = req.extraHabito.frequency
+                            frequency = req.extraHabito.frequency.value
                         )
 
                     }else{
@@ -81,33 +87,55 @@ class TaskRepoImpl : TaskRepo{
                 return Pair(CreateTaskRepoResponse.RESP_NOTMEMBER, emptyList())
             }
 
-            val tareas =
-                getDatabaseDaoImpl().getTareasByGroup(gid).map {
+            val tareasEntidades = getDatabaseDaoImpl().getTareasByGroup(gid)
+
+            val tareas = suspendTransaction {
+                tareasEntidades.map { it ->
                     val typeStr = when (it.tipo) {
                         TaskType.UNICO -> TASKTYPE_UNIQUE
                         TaskType.OBJETIVO -> TASKTYPE_OBJECTIVE
                         TaskType.HABITO -> TASKTYPE_HABIT
                     }
-                    val extraUnico : CreateTareaUniqueData? = null
-                    val extraHabito : CreateTareaHabitData? = null
 
-                    // TODO: Parsear los datos extra
+                    var extraUnico : CreateTareaUniqueData? = null
+                    var extraHabito : CreateTareaHabitData? = null
+                    var estadoActual = it.estado.name
+
+                    if (it.tipo == TaskType.UNICO) {
+                        val unica = EntidadTareaUnica.find { TablaTareaUnica.id_tarea eq it.id }.singleOrNull()
+                        if (unica != null && unica.fecha_vencimiento != null) {
+                            extraUnico = CreateTareaUniqueData(fechaLimite = unica.fecha_vencimiento.toString())
+                        }
+                    } else if (it.tipo == TaskType.HABITO) {
+                        val habito = EntidadTareaHabito.find { TablaTareaHabito.id_tarea eq it.id }.singleOrNull()
+                        if (habito != null) {
+                            val fEnum = HabitFrequency.entries.find { f -> f.value == habito.frecuencia } ?: HabitFrequency.DAILY
+                            extraHabito = CreateTareaHabitData(habito.variacion_freq, fEnum)
+
+                            val hoy = java.time.LocalDate.now().toKotlinLocalDate()
+                            if (habito.ultima_vez_completada == hoy) {
+                                estadoActual = TaskState.COMPLETE.name
+                            }
+                        }
+                    }
 
                     TareaResponse(
                         id = it.id.value,
                         titulo = it.titulo,
                         descripcion = it.descripcion,
                         tipo = typeStr,
-                        estado = it.estado.name,
+                        estado = estadoActual,
                         prioridad = it.prioridad,
                         recompensaXp = it.recompensa_xp,
                         recompensaLudion = it.recompensa_ludion,
                         extraUnico = extraUnico,
-                        extraHabito = extraHabito
+                        extraHabito = extraHabito,
+                        idObjetivo = it.id_objetivo?.value
                     )
                 }
+            }
             return Pair(CreateTaskRepoResponse.RESP_OK, tareas)
-        } catch (e : ExposedSQLException) {
+        } catch (e : Exception) {
             return Pair(CreateTaskRepoResponse.RESP_EXPOSEDERR, emptyList())
         }
     }
@@ -164,26 +192,43 @@ class TaskRepoImpl : TaskRepo{
     }
 }
 
-// Esto es placeholder chavaloides, hay que cambiarlo
-fun calcularXp(tipo: TaskType, prioridad: Int): Int {
-    val base =
-        when (tipo) {
-            TaskType.HABITO -> 30
-            TaskType.OBJETIVO -> 50
-            TaskType.UNICO -> 20
-        }
-    return base + (prioridad * 10)
+fun getFrecuencyMultiplier(frecuencia: HabitFrequency?): Double {
+    if (frecuencia == null) return 1.0
+    return when (frecuencia) {
+        HabitFrequency.HOURLY -> 0.2
+        HabitFrequency.DAILY -> 1.0
+        HabitFrequency.WEEKLY -> 5.0
+        HabitFrequency.MONTHLY -> 20.0
+        HabitFrequency.YEARLY -> 100.0
+    }
 }
 
-fun calcularLudiones(tipo: TaskType, prioridad: Int): Int {
-    val base =
-        when (tipo) {
-            TaskType.HABITO -> 900
-            TaskType.OBJETIVO -> 5000
-            TaskType.UNICO -> 2
-        }
-    return base + (prioridad * 10)
+fun calcularXp(tipo: TaskType, prioridad: Int, frecuencia: HabitFrequency? = null): Int {
+    val multiplicadorPrio = 1.0 + (prioridad * 0.5) // Baja x1, Media x1.5, Alta x2
+    val multiplicadorFreq = getFrecuencyMultiplier(frecuencia)
+
+    val xpBase = when (tipo) {
+        TaskType.HABITO -> 20
+        TaskType.UNICO -> 50
+        TaskType.OBJETIVO -> 400
+    }
+
+    return (xpBase * multiplicadorPrio * multiplicadorFreq).toInt()
 }
+
+fun calcularLudiones(tipo: TaskType, prioridad: Int, frecuencia: HabitFrequency? = null): Int {
+    val multiplicadorPrio = 1.0 + (prioridad * 0.5)
+    val multiplicadorFreq = getFrecuencyMultiplier(frecuencia)
+
+    val ludionesBase = when (tipo) {
+        TaskType.HABITO -> 25
+        TaskType.UNICO -> 80
+        TaskType.OBJETIVO -> 800
+    }
+
+    return (ludionesBase * multiplicadorPrio * multiplicadorFreq).toInt()
+}
+
 
 suspend fun checkTaskPriority(uid : Int, gid : EntidadGrupo?) : Int{
     if (gid == null) {

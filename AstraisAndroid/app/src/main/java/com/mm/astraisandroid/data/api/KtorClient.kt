@@ -19,6 +19,8 @@ import io.ktor.http.encodedPath
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
+const val BASE_URL = "http://192.168.1.137:5684"
+
 val client = HttpClient(Android) {
     install(ContentNegotiation){
         json(Json {

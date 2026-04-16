@@ -1,5 +1,3 @@
-package com.astrais
-
 // Constantes globales
 
 const val LANG_CODE_SPANISH = "ESP"
