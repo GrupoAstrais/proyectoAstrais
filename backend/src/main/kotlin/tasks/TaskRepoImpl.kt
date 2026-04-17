@@ -33,7 +33,7 @@ class TaskRepoImpl : TaskRepo{
                     if (req.extraUnico != null){
                         extraUnica = TareaUniqueData(
                             fechaLimite = Instant.parse(req.extraUnico.fechaLimite).toLocalDateTime(TimeZone.UTC),
-                            idObjetivo = null
+                            idObjetivo = req.idObjetivo
                         )
 
                     }else{
@@ -71,7 +71,7 @@ class TaskRepoImpl : TaskRepo{
                     recompensaXp = calcularXp(tipo, req.prioridad),
                     recompensaLudion = calcularLudiones(tipo, req.prioridad),
                     extraUnico = extraUnica,
-                    extraHabito = extraHabito
+                    extraHabito = extraHabito,
                 )
             return Pair(CreateTaskRepoResponse.RESP_OK, tid)
         } catch (e : ExposedSQLException) {

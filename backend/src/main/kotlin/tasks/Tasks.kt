@@ -90,10 +90,10 @@ fun Route.tareaRoutes() {
 
         val resp = getTaskDaoImpl().createTask(body, uid)
         when (resp.first){
-            CreateTaskRepoResponse.RESP_OK -> call.respond(HttpStatusCode.OK, mapOf("id" to resp.second))
+            CreateTaskRepoResponse.RESP_OK -> call.respond(HttpStatusCode.OK, mapOf("taskId" to resp.second))
             CreateTaskRepoResponse.RESP_NOTMEMBER -> call.respond(HttpStatusCode.Forbidden, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Not a member of this group"))
             CreateTaskRepoResponse.RESP_EXPOSEDERR -> call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Exposed error"))
-            CreateTaskRepoResponse.RESP_INVALIDTYPE -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_BADVALUE.ordinal, "Invalid task type"))
+            CreateTaskRepoResponse.RESP_INVALIDTYPE -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "Invalid task type"))
             CreateTaskRepoResponse.RESP_NOPERMISSION -> call.respond(HttpStatusCode.Forbidden, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "No permission to do the action"))
             CreateTaskRepoResponse.RESP_INVALIDDATE -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_BADVALUE.ordinal, "The date couldn't be parsed"))
             CreateTaskRepoResponse.RESP_MISSINGDATA -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "Missing extra task data"))
@@ -101,9 +101,9 @@ fun Route.tareaRoutes() {
     }
 
     // Obtener tareas de un grupo
-    get("/tasks/{gid}") {
-        val uid = call.principal<JWTPrincipal>()!!.subject?.toInt() ?: return@get call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "No UID available"))
-        val gid = call.parameters["gid"]?.toInt() ?: return@get call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Didn't catch the Group ID"))
+    post("/tasks/{gid}") {
+        val uid = call.principal<JWTPrincipal>()!!.subject?.toInt() ?: return@post call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "No UID available"))
+        val gid = call.parameters["gid"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Didn't catch the Group ID"))
 
         val response = getTaskDaoImpl().getGroupTasks(gid, uid)
 
@@ -111,7 +111,7 @@ fun Route.tareaRoutes() {
             CreateTaskRepoResponse.RESP_OK -> call.respond(HttpStatusCode.OK, mapOf("taskList" to response.second))
             CreateTaskRepoResponse.RESP_NOTMEMBER -> call.respond(HttpStatusCode.Forbidden, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Not a member of this group"))
             CreateTaskRepoResponse.RESP_EXPOSEDERR -> call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Exposed error"))
-            CreateTaskRepoResponse.RESP_INVALIDTYPE -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_BADVALUE.ordinal, "Invalid task type"))
+            CreateTaskRepoResponse.RESP_INVALIDTYPE -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "Invalid task type"))
             CreateTaskRepoResponse.RESP_NOPERMISSION -> call.respond(HttpStatusCode.Forbidden, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "No permission to do the action"))
             CreateTaskRepoResponse.RESP_INVALIDDATE -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_BADVALUE.ordinal, "The date couldn't be parsed"))
             CreateTaskRepoResponse.RESP_MISSINGDATA -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "Missing extra task data"))
@@ -139,7 +139,7 @@ fun Route.tareaRoutes() {
             CreateTaskRepoResponse.RESP_OK -> call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
             CreateTaskRepoResponse.RESP_NOTMEMBER -> call.respond(HttpStatusCode.Forbidden, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Not a member of this group"))
             CreateTaskRepoResponse.RESP_EXPOSEDERR -> call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Exposed error"))
-            CreateTaskRepoResponse.RESP_INVALIDTYPE -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_BADVALUE.ordinal, "Invalid task type"))
+            CreateTaskRepoResponse.RESP_INVALIDTYPE -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "Invalid task type"))
             CreateTaskRepoResponse.RESP_NOPERMISSION -> call.respond(HttpStatusCode.Forbidden, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "No permission to do the action"))
             CreateTaskRepoResponse.RESP_INVALIDDATE -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_BADVALUE.ordinal, "The date couldn't be parsed"))
             CreateTaskRepoResponse.RESP_MISSINGDATA -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "Missing extra task data"))
@@ -155,7 +155,7 @@ fun Route.tareaRoutes() {
             CreateTaskRepoResponse.RESP_OK -> call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
             CreateTaskRepoResponse.RESP_NOTMEMBER -> call.respond(HttpStatusCode.Forbidden, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Not a member of this group"))
             CreateTaskRepoResponse.RESP_EXPOSEDERR -> call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Exposed error"))
-            CreateTaskRepoResponse.RESP_INVALIDTYPE -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_BADVALUE.ordinal, "Invalid task type"))
+            CreateTaskRepoResponse.RESP_INVALIDTYPE -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "Invalid task type"))
             CreateTaskRepoResponse.RESP_NOPERMISSION -> call.respond(HttpStatusCode.Forbidden, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "No permission to do the action"))
             CreateTaskRepoResponse.RESP_INVALIDDATE -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_BADVALUE.ordinal, "The date couldn't be parsed"))
             CreateTaskRepoResponse.RESP_MISSINGDATA -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "Missing extra task data"))

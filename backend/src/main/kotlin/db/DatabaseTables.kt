@@ -1,5 +1,6 @@
 package com.astrais.db
 
+import AvatarLayer
 import java.time.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import org.jetbrains.exposed.v1.core.ReferenceOption
@@ -144,7 +145,7 @@ class EntidadConfirmacionUsuario(id: EntityID<Int>) : IntEntity(id) {
     var codigo_confirmacion by TablaConfirmacionUsuario.codigo_confirmacion
 }
 
-object TablaCredencialesAuth : Table("AuthCredentials") {
+object TablaCredencialesAuth : CompositeIdTable("AuthCredentials") {
     val uid = reference("user_id", TablaUsuario, onDelete = ReferenceOption.CASCADE)
     val provider = enumerationByName<AuthProvider>("provider", 16)
     val provider_uid = varchar("provider_user_id", 128).nullable()
@@ -293,6 +294,8 @@ object TablaCosmetico : IntIdTable("Cosmetic") {
     val assetRef = varchar("asset_ref", 100)
     val tema = varchar("theme", 255).default("DEFAULT")
     val coleccion = varchar("coleccion", 50).default("DEFAULT")
+
+    val layer = enumeration<AvatarLayer>("layer").nullable()
 }
 
 class EntidadCosmetico(id: EntityID<Int>) : IntEntity(id) {
@@ -305,6 +308,8 @@ class EntidadCosmetico(id: EntityID<Int>) : IntEntity(id) {
     var assetRef by TablaCosmetico.assetRef
     var tema by TablaCosmetico.tema
     var coleccion by TablaCosmetico.coleccion
+
+    var layer by TablaCosmetico.layer
 }
 
 object TablaInventario : IntIdTable("Inventory") {
@@ -319,4 +324,16 @@ class EntidadInventario(id: EntityID<Int>) : IntEntity(id) {
     var id_usuario by TablaInventario.id_usuario
     var id_cosmetico by TablaInventario.id_cosmetico
     var fecha_compra by TablaInventario.fecha_compra
+}
+
+object TablaAvatarEquipado : IntIdTable("AvatarEquipped") {
+    val id_usuario   = reference("user_id", TablaUsuario, onDelete = ReferenceOption.CASCADE)
+    val id_cosmetico = reference("cosmetic_id", TablaCosmetico, onDelete = ReferenceOption.CASCADE)
+}
+
+class EntidadAvatarEquipado(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<EntidadAvatarEquipado>(TablaAvatarEquipado)
+
+    var id_usuario   by TablaAvatarEquipado.id_usuario
+    var id_cosmetico by TablaAvatarEquipado.id_cosmetico
 }

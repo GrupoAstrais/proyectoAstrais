@@ -1,7 +1,9 @@
 package com.astrais.db
 
+import AvatarLayer
 import CosmeticResponseDTO
 import LANG_CODE_ENGLISH
+import avatar.AvatarLayerDTO
 import java.time.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import org.jetbrains.exposed.v1.core.*
@@ -48,7 +50,7 @@ class DatabaseDAOImpl : DatabaseDAO {
     override suspend fun deleteUsuario(id: Int): Boolean {
         // Primero borramos al usuario de los grupos
         TablaGrupoUsuario.deleteWhere {
-            TablaGrupoUsuario.uid.eq(id)
+            uid.eq(id)
         }
         // Luego, hacemos a otro usuario el owner
         val subquery = EntidadGrupo.find {
@@ -71,7 +73,7 @@ class DatabaseDAOImpl : DatabaseDAO {
 
         // Borramos grupo personal
         TablaGrupo.deleteWhere {
-            TablaGrupo.owner.eq(id).and(TablaGrupo.es_grupo_personal.eq(true))
+            owner.eq(id).and(es_grupo_personal.eq(true))
         }
 
         // Luego el usuario
@@ -79,7 +81,7 @@ class DatabaseDAOImpl : DatabaseDAO {
     }
 
     override suspend fun setUserLastLogin(ent: EntidadUsuario) {
-        suspendTransaction { ent.ultimo_login = java.time.LocalDate.now().toKotlinLocalDate() }
+        suspendTransaction { ent.ultimo_login = LocalDate.now().toKotlinLocalDate() }
     }
 
     override suspend fun checkForOauth(provider_uid : String, auth : AuthProvider) : Boolean {
@@ -111,8 +113,8 @@ class DatabaseDAOImpl : DatabaseDAO {
                 }
 
                 TablaCredencialesAuth.insert {
-                    it[TablaCredencialesAuth.uid] = newuser.id.value
-                    it[TablaCredencialesAuth.provider] = auth
+                    it[uid] = newuser.id.value
+                    it[provider] = auth
                     it[TablaCredencialesAuth.provider_uid] = provider_uid
                 }
 
@@ -218,7 +220,7 @@ class DatabaseDAOImpl : DatabaseDAO {
                     this.prioridad = prioridad
                     this.recompensa_xp = recompensaXp
                     this.recompensa_ludion = recompensaLudion
-                    this.fecha_creacion = java.time.LocalDate.now().toKotlinLocalDate()
+                    this.fecha_creacion = LocalDate.now().toKotlinLocalDate()
                     this.fecha_actualizado = this.fecha_creacion
 
                     if (extraUnico?.idObjetivo != null) {
@@ -272,7 +274,7 @@ class DatabaseDAOImpl : DatabaseDAO {
             if (!descripcion.isNullOrEmpty()) {
                 grp.descripcion = descripcion
             }
-            grp.fecha_actualizado = java.time.LocalDate.now().toKotlinLocalDate()
+            grp.fecha_actualizado = LocalDate.now().toKotlinLocalDate()
 
             return@suspendTransaction true
         }
@@ -306,7 +308,7 @@ class DatabaseDAOImpl : DatabaseDAO {
             }
 
             TablaGrupo.deleteWhere {
-                TablaGrupo.id.eq(gid)
+                id.eq(gid)
             } > 0
         }
     }
@@ -377,7 +379,7 @@ class DatabaseDAOImpl : DatabaseDAO {
     }
 
     private fun recompensarUsuario(usuario: EntidadUsuario, tarea: EntidadTarea) {
-        val hoy = java.time.LocalDate.now().toKotlinLocalDate()
+        val hoy = LocalDate.now().toKotlinLocalDate()
 
         if (usuario.ultima_fecha_ganancia != hoy) {
             usuario.ludiones_ganados_hoy = 0
@@ -411,7 +413,7 @@ class DatabaseDAOImpl : DatabaseDAO {
     override suspend fun deleteTarea(tid: Int): Boolean {
         return suspendTransaction {
             TablaTarea.deleteWhere {
-                TablaTarea.id.eq(tid)
+                id.eq(tid)
             } > 0
         }
     }
@@ -437,7 +439,7 @@ class DatabaseDAOImpl : DatabaseDAO {
                 EntidadInventario.new {
                     id_usuario = EntityID(uid, TablaUsuario)
                     id_cosmetico = EntityID(cosmeticId, TablaCosmetico)
-                    fecha_compra = java.time.LocalDate.now().toKotlinLocalDate()
+                    fecha_compra = LocalDate.now().toKotlinLocalDate()
                 }
                 return@suspendTransaction BuyCosmeticResponse.OKAY
             }
@@ -504,6 +506,22 @@ class DatabaseDAOImpl : DatabaseDAO {
                     } else {
                         usuario.themeColors = cosmetico.tema
                     }
+                } else if (cosmetico.tipo == CosmeticType.AVATAR_PART) {
+                    val noLoPuso = (TablaAvatarEquipado.innerJoin(
+                        TablaCosmetico
+                    )).selectAll().where {
+                        TablaCosmetico.layer.isNotNull().and(TablaCosmetico.layer.eq(cosmetico.layer))
+                    }.singleOrNull()
+
+                    if (noLoPuso != null){
+                        TablaAvatarEquipado.deleteWhere {
+                            id.eq(noLoPuso[id])
+                        }
+                    }
+                    EntidadAvatarEquipado.new {
+                        this.id_usuario = EntityID(uid, TablaUsuario)
+                        this.id_cosmetico = EntityID(cosmeticId, TablaCosmetico)
+                    }
                 }
 
                 return@suspendTransaction BuyCosmeticResponse.OKAY
@@ -520,9 +538,14 @@ class DatabaseDAOImpl : DatabaseDAO {
             price: Int,
             assetRef: String,
             theme: String,
-            coleccion: String
+            coleccion: String,
+            layer : AvatarLayer?
     ): Boolean {
         return suspendTransaction {
+            if (type == CosmeticType.AVATAR_PART && layer != null){
+                return@suspendTransaction false
+            }
+
             EntidadCosmetico.new {
                 this.nombre = name
                 this.descripcion = desc
@@ -531,8 +554,24 @@ class DatabaseDAOImpl : DatabaseDAO {
                 this.assetRef = assetRef
                 this.tema = theme
                 this.coleccion = coleccion
+                this.layer = layer
             }
             true
+        }
+    }
+
+    override suspend fun retrieveAvatar(uid: Int) : List<AvatarLayerDTO> {
+        return suspendTransaction {
+            (TablaInventario.innerJoin(TablaCosmetico)).selectAll().where {
+                (TablaInventario.id_usuario eq uid).and(TablaCosmetico.tipo eq CosmeticType.AVATAR_PART)
+            }.orderBy(TablaCosmetico.layer).map {
+                AvatarLayerDTO(
+                    slot = it[TablaCosmetico.tema],
+                    layer = it[TablaCosmetico.layer]!!,
+                    assetRef = it[TablaCosmetico.assetRef],
+                    cosmeticId = it[TablaCosmetico.id].value
+                )
+            }
         }
     }
 

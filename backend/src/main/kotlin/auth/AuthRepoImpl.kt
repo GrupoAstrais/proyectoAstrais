@@ -56,7 +56,7 @@ class AuthRepoImpl : AuthRepo {
 
             } else if (user.esta_confirmado == 0) {
                 // El usuario existe pero no está confirmado
-                log.info("User ${registerRequest.email} is unconfirmed. Resending new code.")
+                log.info("User ${registerRequest.email} is not confirmed. Resending new code.")
 
                 // dao.updateUserPassword(user.id.value, hashPassword(registerRequest.passwd))
 
@@ -67,7 +67,7 @@ class AuthRepoImpl : AuthRepo {
                 return true
 
             } else {
-                log.warn("Attempt to register already confirmed user: ${registerRequest.email}")
+                log.warn("Attempt to register already registered user: ${registerRequest.email}")
                 return false
             }
         } catch (e: ExposedSQLException) {

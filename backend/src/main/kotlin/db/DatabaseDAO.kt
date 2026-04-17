@@ -1,7 +1,9 @@
 package com.astrais.db
 
+import AvatarLayer
 import CosmeticResponseDTO
 import LANG_CODE_ENGLISH
+import avatar.AvatarLayerDTO
 import kotlinx.datetime.LocalDateTime
 
 enum class BuyCosmeticResponse{
@@ -180,8 +182,11 @@ interface DatabaseDAO {
         price: Int,
         assetRef: String,
         theme: String,
-        coleccion: String
+        coleccion: String,
+        layer : AvatarLayer?
     ): Boolean
+
+    suspend fun retrieveAvatar(uid: Int) : List<AvatarLayerDTO>
 
     suspend fun saveConfirmationCode(uid: Int, code: String)
     suspend fun verifyConfirmationCode(email: String, code: String): Boolean

@@ -23,3 +23,11 @@ const val TASKTYPE_OBJECTIVE = "OBJECTIVE"
 
 /** Mensaje de Ok a las rutas que no devuelve nada */
 val OK_MESSAGE_RESPONSE = mapOf("aknowledged" to true)
+
+enum class AvatarLayer{
+    FRONT_HAIR,
+    FACE,
+    HEAD,
+    BODY,
+    BACK_HAIR
+}
