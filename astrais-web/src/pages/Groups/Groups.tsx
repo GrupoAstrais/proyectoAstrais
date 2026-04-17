@@ -13,14 +13,47 @@ import {
     createGroup,
     createLocalTask,
     createNewGroup,
-    editGroup,
+    deleteGroup,
     filterTasksByCompleted,
-    getUserData,
     getUserGroup,
     sortTasksByCompleted,
     toggleSubtaskCompleted,
     toggleTaskCompleted
 } from "../../data/Api";
+
+const compareGroupsAlphabetically = (firstGroup: IGroup, secondGroup: IGroup): number => {
+    return firstGroup.name.localeCompare(secondGroup.name, "es", { sensitivity: "base" });
+};
+
+const mapUserGroupToLocalGroup = (group: {
+    gid?: number;
+    id?: number;
+    name?: string;
+    nombre?: string;
+    description: string;
+    role: number;
+}): IGroup => {
+    return {
+        gid: group.gid ?? group.id ?? -1,
+        name: group.name ?? group.nombre ?? "Grupo",
+        description: group.description,
+        members: [],
+        tasks: [],
+        role: group.role
+    };
+};
+
+const getSortedGroups = (groups: IGroup[], activeGroup: number): IGroup[] => {
+    return [...groups].sort((firstGroup, secondGroup) => {
+        const firstGroupIsActive = firstGroup.gid === activeGroup;
+        const secondGroupIsActive = secondGroup.gid === activeGroup;
+
+        if (firstGroupIsActive && !secondGroupIsActive) return -1;
+        if (!firstGroupIsActive && secondGroupIsActive) return 1;
+
+        return compareGroupsAlphabetically(firstGroup, secondGroup);
+    });
+};
 
 export default function Groups() {
     const [isOpen, setIsOpen] = React.useState<boolean>(false);
@@ -33,6 +66,7 @@ export default function Groups() {
         completed: false,
         pending: false
     });
+    const [groupToDelete, setGroupToDelete] = useState<{ gid: number; role: number }>({ gid: -1, role: -1 });
 
     const [groups, setGroups] = useState<IGroup[]>([]);
 
@@ -40,14 +74,7 @@ export default function Groups() {
         const loadData = async () => {
             try {
                 const d = await getUserGroup();
-                console.log("GROUPS RESPONSE:", d);
-                setGroups(d.map(group => ({
-                    id: group.id,
-                    name: group.nombre,
-                    description: group.description,
-                    members: [],
-                    tasks: []
-                })));
+                setGroups(d.slice(1).map(mapUserGroupToLocalGroup));
             } catch (error) {
                 console.error("Error fetching user groups:", error);
             } finally {
@@ -58,9 +85,31 @@ export default function Groups() {
 
     }, []);
 
+    useEffect(() => {
+        if (groupToDelete.gid === -1) return;
+
+        const loadData = async () => {
+            await deleteGroup(groupToDelete.gid, groupToDelete.role).then(() => {
+                console.log("Grupo borrad con éxito");
+
+                setGroups((prev) => prev.filter(group => group.gid !== groupToDelete.gid));
+                if (groupToDelete.gid === activeGroup) {
+                    setActiveGroup(-1);
+                    setIsOpen(false);
+                }
+                setIsSettingsModalOpen(false);
+            }).catch((error) => {
+                console.error("Error al borrar el grupo:", error);
+            });
+        };
+        loadData();
+
+    }, [groupToDelete]);
+
 
     const [searchParams, setSearchParams] = useSearchParams();
-    const activeGroupData = groups.find((group) => group.id === activeGroup) ?? null;
+    const sortedGroups = getSortedGroups(groups, activeGroup);
+    const activeGroupData = groups.find((group) => group.gid === activeGroup);
     const filteredGroupTasks = sortTasksByCompleted(
         filterTasksByCompleted(activeGroupData?.tasks ?? [], groupTaskFilters)
     );
@@ -85,6 +134,7 @@ export default function Groups() {
         }
     };
 
+
     const closeTaskModalHandle = () => {
         setInitialDataModal(null);
         setIsOpenModal(false);
@@ -102,7 +152,7 @@ export default function Groups() {
 
             setGroups((prevGroups) =>
                 prevGroups.map((group) =>
-                    group.id === activeGroup
+                    group.gid === activeGroup
                         ? {
                             ...group,
                             tasks: group.tasks.map((task) =>
@@ -120,7 +170,7 @@ export default function Groups() {
 
         setGroups((prevGroups) =>
             prevGroups.map((group) =>
-                group.id === activeGroup
+                group.gid === activeGroup
                     ? { ...group, tasks: [...group.tasks, newTask] }
                     : group
             )
@@ -128,21 +178,26 @@ export default function Groups() {
         closeTaskModalHandle();
     };
 
-    const handleCreateGroup = async (data: IGroup) => {
-        const newGroup: IGroup = createNewGroup(data);
+    const handleCreateGroup = async (data: any) => {
 
-        await createGroup({name: data.name, desc: data.description}).then(() => {
-            console.log("Grupo creado con exito");
-        }).catch((error) => {
-            console.error("Error al crear el grupo:", error);
-        });
+        const create = async () => {
+            try {
+                const d = createGroup({name: data.name, desc: data.description});
+                const newGroup: IGroup = createNewGroup(data, await d);
+                setGroups((prev) => [...prev, newGroup]);
+            } catch (error) {
+                console.error("Error fetching user groups:", error);
+            } finally {
+                console.log("Final")
+            }
+        };
 
-
-        setGroups((prev) => [...prev, newGroup]);
+        create();
         setIsCreateModalOpen(false);
-    };
+    }
 
-    const handleSaveSettings = async (settings: {
+
+    const handleSaveSettings = (settings: {
         name: string;
         description: string;
         photo?: File | null;
@@ -152,23 +207,9 @@ export default function Groups() {
 
         const newPhotoUrl = settings.photo ? URL.createObjectURL(settings.photo) : undefined;
 
-        try {
-            const userData = await getUserData();
-            await editGroup({
-                guid: activeGroup,
-                userid: userData.id,
-                name: settings.name,
-                desc: settings.description
-            });
-            console.log("Grupo editado con exito");
-        } catch (error) {
-            console.error("Error al editar el grupo:", error);
-            return;
-        }
-
         setGroups((prevGroups) =>
             prevGroups.map((group) => {
-                if (group.id !== activeGroup) return group;
+                if (group.gid !== activeGroup) return group;
 
                 const nextMemberId =
                     group.members.reduce((maxId, member) => Math.max(maxId, member.id), 0) + 1;
@@ -212,7 +253,7 @@ export default function Groups() {
 
         setGroups((prevGroups) =>
             prevGroups.map((group) =>
-                group.id === activeGroup
+                group.gid === activeGroup
                     ? { ...group, tasks: toggleTaskCompleted(group.tasks, taskId) }
                     : group
             )
@@ -224,7 +265,7 @@ export default function Groups() {
 
         setGroups((prevGroups) =>
             prevGroups.map((group) =>
-                group.id === activeGroup
+                group.gid === activeGroup
                     ? { ...group, tasks: toggleSubtaskCompleted(group.tasks, taskId, subtaskId) }
                     : group
             )
@@ -242,6 +283,7 @@ export default function Groups() {
         setIsOpenModal(true);
     };
 
+
     return (
         <div style={{ backgroundImage: `url(${bgImage})` }} className="flex flex-col gap-4 relative min-h-screen bg-cover bg-center font-['Space_Grotesk'] text-white">
             <Navbar />
@@ -251,8 +293,8 @@ export default function Groups() {
                     <button onClick={() => setIsCreateModalOpen(true)} className="backdrop-blur-sm border border-[#F4E9E9]/15 bg-accent-beige-300/25 rounded-md px-4 py-2 w-full disabled:cursor-not-allowed disabled:opacity-60">
                         <span className="font-bold text-2xl ">Crear grupo</span>
                     </button>
-                    {groups.map((group) => (
-                        <GroupCard key={group.id} onClick={handleActiveGroup} id={group.id} activeId={activeGroup} data={group} />
+                    {sortedGroups.map((group) => (
+                        <GroupCard key={group.gid+"-"+group.name} onClick={handleActiveGroup} id={group.gid} activeId={activeGroup} data={group} />
                     ))}
                 </div>
 
@@ -293,7 +335,7 @@ export default function Groups() {
                             ) : (
                                 filteredGroupTasks.map((task, i) => (
                                     <Task
-                                        key={task.id ?? i}
+                                        key={ i}
                                         data={task}
                                         onComplete={handleToggleTaskCompleted}
                                         onToggleSubtask={handleToggleSubtaskCompleted}
@@ -310,7 +352,7 @@ export default function Groups() {
                 <Modal onSubmit={handleModalSubmit} onCancel={closeTaskModalHandle} initialData={initialDataModal} />
             </div>
 
-            <GroupSettingsModal isOpen={isSettingsModalOpen} onClose={() => setIsSettingsModalOpen(false)} initialData={activeGroupData ?? { name: '', description: '', members: [] }} onSave={handleSaveSettings} />
+            {activeGroupData && <GroupSettingsModal isOpen={isSettingsModalOpen} onClose={() => setIsSettingsModalOpen(false)} initialData={activeGroupData!!} onSave={handleSaveSettings} onDelete={({gid, role}) => setGroupToDelete({gid, role})} /> }
             <CreateGroupModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} onSave={handleCreateGroup} />
         </div>
     );

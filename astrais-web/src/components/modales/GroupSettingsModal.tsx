@@ -4,27 +4,34 @@ import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 interface GroupSettingsModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onDelete: () => void; // Новая функция для удаления группы
     initialData: {
+        gid: number;
         name: string;
         description: string;
         members: Array<{ id: number; name: string; avatar?: string }>;
+        role: number;
     };
     onSave: (data: {
+        gid: number;
         name: string;
         description: string;
         photo?: File | null;
         newMembers: string[];
+    }) => void;
+    onDelete: (data: {
+        gid: number,
+        role: number
     }) => void;
 }
 
 export default function GroupSettingsModal({
     isOpen,
     onClose,
-    onDelete, // Добавляем пропс
     initialData,
-    onSave
+    onSave,
+    onDelete
 }: GroupSettingsModalProps) {
+    const [gid] = useState<number>(initialData.gid);
     const [name, setName] = useState<string>(initialData.name);
     const [description, setDescription] = useState<string>(initialData.description);
     const [photo, setPhoto] = useState<File | null>(null);
@@ -32,6 +39,7 @@ export default function GroupSettingsModal({
     const [newMembers, setNewMembers] = useState<string[]>([]);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [role] = useState<number>(initialData.role);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -68,6 +76,7 @@ export default function GroupSettingsModal({
 
     const handleSubmit = () => {
         onSave({
+            gid,
             name,
             description,
             photo,
@@ -196,27 +205,11 @@ export default function GroupSettingsModal({
                     </div>
                 </div>
 
-                <div className="border-t border-gray-700 p-4 flex justify-between gap-3"> {/* Изменили flex justify-end на flex justify-between */}
-                    <button
-                        onClick={onDelete} // Обработчик удаления группы
-                        className="px-6 py-2 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 transition-colors"
-                    >
-                        Borrar grupo
-                    </button>
-                    
-                    <div className="flex gap-3"> {/* Оборачиваем остальные кнопки в отдельный контейнер */}
-                        <button
-                            onClick={onClose}
-                            className="px-6 py-2 border border-gray-600 rounded-md text-white hover:bg-gray-700 transition-colors"
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            onClick={handleSubmit}
-                            className="px-6 py-2 bg-accent-beige-300 text-black rounded-md font-medium hover:bg-accent-beige-400 transition-colors"
-                        >
-                            Guardar cambios
-                        </button>
+                <div className="border-t border-gray-700 p-4 flex justify-between gap-3">
+                    <button onClick={() => onDelete({gid, role})} className="px-6 py-2 border border-gray-600 rounded-md text-white bg-red-500/50  font-medium hover:bg-state-error/50 transition-colors">Eliminar grupo </button>
+                    <div className='flex justify-end gap-3'>
+                        <button onClick={onClose} className="px-6 py-2 border border-gray-600 rounded-md text-white hover:bg-gray-700 transition-colors" > Cancelar </button>
+                        <button onClick={handleSubmit}  className="px-6 py-2 bg-accent-beige-300 text-black rounded-md font-medium hover:bg-accent-beige-400 transition-colors" >Guardar cambios  </button>
                     </div>
                 </div>
             </div>

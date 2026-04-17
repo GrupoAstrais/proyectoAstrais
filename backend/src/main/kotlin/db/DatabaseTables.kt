@@ -152,13 +152,13 @@ object TablaCredencialesAuth : Table("AuthCredentials") {
     override val primaryKey = PrimaryKey(uid, provider)
 }
 
-//class EntidadCredencialesAuth(id: EntityID<CompositeID>) : CompositeEntity(id) {
-//    companion object : CompositeEntityClass<EntidadCredencialesAuth>(TablaCredencialesAuth)
-//
-//    var uid by TablaCredencialesAuth.uid
-//    var provider by TablaCredencialesAuth.provider
-//    var provider_uid by TablaCredencialesAuth.provider_uid
-//}
+// class EntidadCredencialesAuth(id: EntityID<CompositeID>) : CompositeEntity(id) {
+//     companion object : CompositeEntityClass<EntidadCredencialesAuth>(TablaCredencialesAuth)
+// 
+//     var uid by TablaCredencialesAuth.uid
+//     var provider by TablaCredencialesAuth.provider
+//     var provider_uid by TablaCredencialesAuth.provider_uid
+// }
 
 object TableLogro : IntIdTable("Awards") {
     val titulo = varchar("title", AWARD_TITLE_LENGTH)

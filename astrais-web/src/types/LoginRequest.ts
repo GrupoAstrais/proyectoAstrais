@@ -28,8 +28,10 @@ export interface UserData {
 }
 
 export interface UserGroups {
-  id: number;
-  nombre: string;
+  gid?: number;
+  id?: number;
+  name?: string;
+  nombre?: string;
   description: string;
   role: number;
 }
