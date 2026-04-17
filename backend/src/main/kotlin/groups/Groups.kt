@@ -86,7 +86,7 @@ fun Route.groupRoutes(){
             val req = call.receive<CreateGroupRequest>()
             val gid = getGroupRepoImpl().createGroup(req.name, req.desc, uid)
             if (gid != -1){
-                call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
+                call.respond(HttpStatusCode.OK, mapOf("groupId" to gid))
             }else{
                 call.respond(HttpStatusCode.Conflict, Errors(ErrorCodes.ERR_RESOURCENOTCREATED.ordinal, "Can't create the group"))
             }
@@ -130,7 +130,7 @@ fun Route.groupRoutes(){
 
         }
 
-        patch("/group/passOwnership"){
+        patch("/groups/passOwnership"){
             call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_UNIMPLEMENTED.ordinal, "Not implemented yet"))
         }
 
