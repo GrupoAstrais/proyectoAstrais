@@ -64,20 +64,34 @@ object GlobalBusSSE {
 object UserBusSSE {
     private val _events = ConcurrentHashMap<Int, MutableSharedFlow<SSEMessage>>()
 
+    /**
+     * Intenta subscribir a un usuario a un canal SSE.
+     * @param uid Usuario a agregar.
+     * @return El flow de notificaciones.
+     */
     public fun subscribeChannel(uid : Int) : MutableSharedFlow<SSEMessage>{
         // A veces amo kotlin, esto es una maldita linea
         _events.putIfAbsent(uid, MutableSharedFlow(extraBufferCapacity = USER_BUFFER_CAPACITY))
         return _events[uid]!!
     }
 
+    /**
+     * Se borra un canal SSE de la lista
+     */
     public fun unsubscribeChannel(uid: Int) {
         _events.remove(uid)
     }
 
+    /**
+     * Se emite un mensaje para un usuario en especifico
+     */
     public suspend fun publish(uid: Int, message: SSEMessage) {
         _events[uid]?.emit(message)
     }
 
+    /**
+     * Shortcut para el evento de agregar tareas
+     */
     public suspend fun publishAddTask(uid : Int, data : SSEEventAddTaskData) = publish(
         uid = uid,
         message = SSEMessage(
