@@ -1,11 +1,10 @@
 // components/modales/GroupSettingsModal.tsx
 import { useRef, useState, type ChangeEvent } from 'react';
-import type { IGroup } from '../../types/Interfaces';
 
 interface CreateGroupModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (data: IGroup) => void;
+    onSave: (data: any) => void;
 }
 
 export default function CreateGroupModal({
@@ -34,11 +33,12 @@ export default function CreateGroupModal({
 
     const handleSubmit = () => {
         onSave({
-            id: 0,
             name: name,
             description: description,
+            photo,
             members: [],
-            tasks: []
+            tasks: [],
+            role: 2
         });
     };
 

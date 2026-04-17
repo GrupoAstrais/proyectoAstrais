@@ -13,10 +13,11 @@ export interface ITarea {
 }
 
 export interface IGroup {
-    id: number;
+    gid: number;
     name: string;
     description: string;
     photoUrl?: string | null;
     members: Array<{ id: number; name: string; avatar?: string }>;
     tasks: ITarea[];
+    role: number;
 }
