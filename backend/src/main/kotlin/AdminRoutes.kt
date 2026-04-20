@@ -125,7 +125,8 @@ fun Route.adminRoutes() {
                     price = finalPrice,
                     assetRef = fileName,
                     theme = theme,
-                    coleccion = collection
+                    coleccion = collection,
+                    layer = null
                 )
 
                 if (success) {
