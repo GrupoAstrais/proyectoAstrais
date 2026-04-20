@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { AddUserToGroup, CreateGroup, EditGroup, LoginRequest, RegisterRequest, UserData, UserGroups, UserGroupsResponse, VerifyRequest } from '../types/LoginRequest';
+import type { AddUserToGroup, CreateGroup, CreateTask, EditGroup, LoginRequest, RegisterRequest, UserData, UserGroups, UserGroupsResponse, VerifyRequest } from '../types/LoginRequest';
 import type { IGroup, ITarea } from '../types/Interfaces';
 
 
@@ -23,12 +23,12 @@ instance.interceptors.request.use(config => {
     return config
 })
 
-instance.interceptors.response.use(
-    response => response,
-    async error => {
-        const originalRequest = error.config;
+instance.interceptors.response.use(response => response, async error => {
+    const originalRequest = error.config;
+    const status = error.response?.status;
+    const errorCode = error.response?.data?.errorCode;
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
+    if (status === 401 && errorCode === 0 &&  !originalRequest._retry) {
             originalRequest._retry = true;
 
             const refreshToken = localStorage.getItem('jwtRefreshToken');
@@ -44,11 +44,16 @@ instance.interceptors.response.use(
 
                 originalRequest.headers.Authorization = `Bearer ${newToken}`;
 
+                console.log("Desde regenAccess");
+                console.log("TOKEN: ", localStorage.getItem('jwtToken'));
+                console.log("REFRESH TOKEN: ", localStorage.getItem('jwtRefreshToken'));
+
+
                 return instance(originalRequest);
             } catch (e) {
                 localStorage.removeItem('jwtToken');
                 localStorage.removeItem('jwtRefreshToken');
-                window.location.href = '/login';
+                //window.location.href = '/login';
             }
         }
 
@@ -69,8 +74,34 @@ export async function performLogin(req: LoginRequest) : Promise<void> {
                 localStorage.setItem('jwtToken', jwtToken!)
                 localStorage.setItem('jwtRefreshToken', jwtRefreshToken!)
             }
+
+            
+            console.log("TOKEN: "+jwtToken);
+            console.log("REFRESH TOKEN: "+jwtRefreshToken);
             
             console.error("Successful login! ");
+            return Promise.resolve();
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            // Error de axios
+            console.error("Error interno de axios!!")
+        } else {
+            console.error("Error de la peticion!")
+        }
+        return Promise.reject();
+    }
+}
+
+export async function createUser(req: RegisterRequest) : Promise<void> {
+    try {
+        const data = await instance.post("/auth/register", req);
+        if (data.status >= 200 && data.status < 300) {
+            
+            console.error("Successful user profile set up! ");
             return Promise.resolve();
         } else {
             console.error("Error en el log! " + data.data["error"]);
@@ -165,7 +196,7 @@ export async function createGroup(req: CreateGroup) : Promise<number> {
         const data = await instance.post("/groups/createGroup", req);
         if (data.status >= 200 && data.status < 300) {
             console.error("Successful group creation! ");
-            return data.data["gid"] as number;
+            return data.data["groupId"] as number;
         } else {
             console.error("Error en el log! " + data.data["error"]);
             return Promise.reject();
@@ -184,7 +215,10 @@ export async function createGroup(req: CreateGroup) : Promise<number> {
 export async function deleteGroup(gid: number, role: number) : Promise<void> {
     if(role == 2) {
         try {
-            const data = await instance.post("/groups/deleteGroup", gid);
+            const data = await instance.delete("/groups/deleteGroup", {
+                data: { gid: gid }
+            });
+
             if (data.status >= 200 && data.status < 300) {
                 console.error("Successful group deletion! ");
                 return Promise.resolve();
@@ -194,10 +228,10 @@ export async function deleteGroup(gid: number, role: number) : Promise<void> {
             }
         } catch (err) {
             if (axios.isAxiosError(err)) {
-                // Error de axios
-                console.error("Error interno de axios!!")
+                console.error("STATUS:", err.response?.status);
+                console.error("DATA:", err.response?.data);
             } else {
-                console.error("Error de la peticion!")
+                console.error(err);
             }
             return Promise.reject();
         }
@@ -210,7 +244,7 @@ export async function deleteGroup(gid: number, role: number) : Promise<void> {
 export async function editGroup(req: EditGroup) : Promise<void> {
     try {
 
-        const data = await instance.post("/groups/editGroup", req);
+        const data = await instance.patch("/groups/editGroup", req);
         if (data.status >= 200 && data.status < 300) {
             console.error("Successful group edit! ");
             return Promise.resolve();
@@ -219,21 +253,22 @@ export async function editGroup(req: EditGroup) : Promise<void> {
             return Promise.reject();
         }
     } catch (err) {
-        if (axios.isAxiosError(err)) {
-            // Error de axios
-            console.error("Error interno de axios!!")
-        } else {
-            console.error("Error de la peticion!")
-        }
+            if (axios.isAxiosError(err)) {
+                console.error("STATUS:", err.response?.status);
+                console.error("DATA:", err.response?.data);
+            } else {
+                console.error(err);
+            }
         return Promise.reject();
     }
 }
 
-export async function createUser(req: RegisterRequest) : Promise<void> {
+
+export async function addUserToGroup(req: AddUserToGroup) : Promise<void> {
     try {
-        const data = await instance.post("/auth/register", req);
+        const data = await instance.post("/groups/addUser", req);
         if (data.status >= 200 && data.status < 300) {
-            
+
             console.error("Successful user profile set up! ");
             return Promise.resolve();
         } else {
@@ -251,13 +286,13 @@ export async function createUser(req: RegisterRequest) : Promise<void> {
     }
 }
 
-export async function addUserToGroup(req: AddUserToGroup) : Promise<void> {
+export async function createTask(req: CreateTask) : Promise<number> {
     try {
-        const data = await instance.post("/groups/addUser", req);
+        const data = await instance.post("/tasks", req);
         if (data.status >= 200 && data.status < 300) {
-            //jwtToken = data.data["JwtAccessToken"]
-            console.error("Successful user profile set up! ");
-            return Promise.resolve();
+
+            console.error("Successful task created! ");
+            return data.data["taskId"] as number;
         } else {
             console.error("Error en el log! " + data.data["error"]);
             return Promise.reject();

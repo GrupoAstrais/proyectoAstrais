@@ -13,13 +13,16 @@ import {
     createGroup,
     createLocalTask,
     createNewGroup,
+    createTask,
     deleteGroup,
+    editGroup,
     filterTasksByCompleted,
     getUserGroup,
     sortTasksByCompleted,
     toggleSubtaskCompleted,
     toggleTaskCompleted
 } from "../../data/Api";
+import type { CreateTask } from "../../types/LoginRequest";
 
 const compareGroupsAlphabetically = (firstGroup: IGroup, secondGroup: IGroup): number => {
     return firstGroup.name.localeCompare(secondGroup.name, "es", { sensitivity: "base" });
@@ -90,7 +93,7 @@ export default function Groups() {
 
         const loadData = async () => {
             await deleteGroup(groupToDelete.gid, groupToDelete.role).then(() => {
-                console.log("Grupo borrad con éxito");
+                console.log("Grupo borrado con éxito");
 
                 setGroups((prev) => prev.filter(group => group.gid !== groupToDelete.gid));
                 if (groupToDelete.gid === activeGroup) {
@@ -143,6 +146,19 @@ export default function Groups() {
     const handleModalSubmit = (data: any) => {
         if (activeGroup === -1) return;
 
+        const loadData = async () => {
+            await createTask(data as CreateTask).then(() => {
+                /* no me ha dado tiempo acabarlo
+                const newTask: ITask = createNewGroup(data, await d);
+                setGroups((prev) => [...prev, newGroup]);
+                console.log("Tarea creada con éxito");
+                */
+            }).catch((error) => {
+                console.error("Error al crear la tarea:", error);
+            });
+        };
+        loadData();
+
         if (initialDataModal?.id) {
             const updatedTask: ITarea = {
                 ...createLocalTask(data),
@@ -165,6 +181,8 @@ export default function Groups() {
             closeTaskModalHandle();
             return;
         }
+
+
 
         const newTask: ITarea = createLocalTask(data);
 
@@ -198,6 +216,7 @@ export default function Groups() {
 
 
     const handleSaveSettings = (settings: {
+        gid: number,
         name: string;
         description: string;
         photo?: File | null;
@@ -210,6 +229,19 @@ export default function Groups() {
         setGroups((prevGroups) =>
             prevGroups.map((group) => {
                 if (group.gid !== activeGroup) return group;
+
+
+                const update = async () => {
+                    try {
+                        editGroup({gid: settings.gid, name: settings.name, desc: settings.description})
+                    } catch (error) {
+                        console.error("Error fetching user groups:", error);
+                    } finally {
+                        console.log("Final")
+                    }
+                };
+                update();
+
 
                 const nextMemberId =
                     group.members.reduce((maxId, member) => Math.max(maxId, member.id), 0) + 1;

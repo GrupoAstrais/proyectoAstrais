@@ -46,8 +46,9 @@ export interface UserGroupsResponse {
 };
 
 export interface EditGroup {
-  guid: number;
-  userid: number;
+  gid: number,
+  name: string,
+  desc: string
 }
 
 export interface AddUserToGroup {
@@ -55,3 +56,18 @@ export interface AddUserToGroup {
   userid: number;
 }
 
+export interface CreateTask {
+  gid: number;
+  titulo: string;
+  descripcion: string;
+  tipo: 'UNIQUE' | 'HABIT' | 'OBJECTIVE';
+  prioridad: number;
+  extraUnico?: [
+    fechaLimite: string, // Formato ISO (date.toISOString()
+    ]
+  extraHabito?: [
+    numeroFrecuencia?: number,
+    frequency?: 'HOURLY' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
+  ]
+  idObjetivo?: number,
+}
