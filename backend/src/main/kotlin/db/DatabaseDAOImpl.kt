@@ -282,7 +282,7 @@ class DatabaseDAOImpl : DatabaseDAO {
 
     override suspend fun checkIfUserIsAdmin(uid: Int, gid: Int): Boolean {
         return suspendTransaction {
-            !TablaGrupo.selectAll().where { TablaGrupo.id.eq(gid).and(TablaGrupo.owner.eq(gid)) }.empty()
+            !TablaGrupo.selectAll().where { TablaGrupo.id.eq(gid).and(TablaGrupo.owner.eq(uid)) }.empty()
         }
     }
 
