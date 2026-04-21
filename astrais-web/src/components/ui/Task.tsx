@@ -1,173 +1,110 @@
-import React from "react";
+import type React from "react";
 import type { ITarea } from "../../types/Interfaces";
+import { isTaskCompleted } from "../../data/Api";
 import Dificultad from "./Difficulty";
 import XP from "./xp";
 
 interface TareaProps {
   data: ITarea;
-  onComplete?: (taskId: string) => void;
-  onToggleSubtask?: (taskId: string, subtaskId: string) => void;
-  onToggleConfig?: (id: string) => void;
+  subtasks?: ITarea[];
+  onComplete?: (taskId: number) => void | Promise<void>;
+  onToggleSubtask?: (taskId: number, subtaskId: number) => void | Promise<void>;
+  onToggleConfig?: (id: number) => void;
 }
 
-export default function Task({ onToggleConfig, data, onComplete, onToggleSubtask }: TareaProps) {
-  const [checked, setChecked] = React.useState<boolean>(data.completed ?? false);
-  const [localSubtasks, setLocalSubtasks] = React.useState(data.subtasks);
-  const subtasks = onToggleSubtask ? data.subtasks : localSubtasks;
-  const allSubtasksCompleted =
-    data.isComposed &&
-    subtasks.length > 0 &&
-    subtasks.every((subtask) => subtask.completed);
-  const taskChecked =
-    allSubtasksCompleted || (data.completed !== undefined ? data.completed : checked);
-
-  React.useEffect(() => {
-    setChecked(data.completed ?? false);
-  }, [data.completed]);
-
-  React.useEffect(() => {
-    setLocalSubtasks(data.subtasks);
-  }, [data.subtasks]);
+export default function Task({ onToggleConfig, data, subtasks = [], onComplete, onToggleSubtask }: TareaProps) {
+  const hasSubtasks = subtasks.length > 0;
+  const allSubtasksCompleted = hasSubtasks && subtasks.every((subtask) => isTaskCompleted(subtask));
+  const taskChecked = hasSubtasks ? allSubtasksCompleted : isTaskCompleted(data);
 
   const checkedHandle = (e?: React.ChangeEvent<HTMLInputElement>) => {
-    if (e) {
-      e.stopPropagation();
-    }
-
-    if (onComplete && data.id) {
-      onComplete(data.id);
-      return;
-    }
-
-    setChecked(!taskChecked);
+    e?.stopPropagation();
+    void onComplete?.(data.id);
   };
 
-  const ClickHandle = () => {
-    if (onComplete && data.id) {
-      onComplete(data.id);
-      return;
-    }
-
-    const newChecked = !taskChecked;
-    setChecked(newChecked);
-    
-    if(localSubtasks.length > 0) {
-      if(newChecked) {
-        const updated = localSubtasks.map(t => ({
-          ...t,
-          completed: true
-        }));
-
-        setLocalSubtasks(updated);
-
-      } else {
-        const updated = localSubtasks.map(t => ({
-          ...t,
-          completed: false
-        }));
-
-        setLocalSubtasks(updated);
-      }
-    }
+  const clickHandle = () => {
+    void onComplete?.(data.id);
   };
 
-  const subtaskHandle = (subtaskId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+  const subtaskHandle = (subtaskId: number, e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
-
-    if (onToggleSubtask && data.id) {
-      onToggleSubtask(data.id, subtaskId);
-      return;
-    }
-
-    setLocalSubtasks((prevSubtasks) => {
-      const nextSubtasks = prevSubtasks.map((subtask) =>
-        subtask.id === subtaskId
-          ? { ...subtask, completed: !subtask.completed }
-          : subtask
-      );
-
-      setChecked(nextSubtasks.length > 0 && nextSubtasks.every((subtask) => subtask.completed));
-
-      return nextSubtasks;
-    });
+    void onToggleSubtask?.(data.id, subtaskId);
   };
 
   const configHandle = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-
-    if (onToggleConfig && data.id) {
-      onToggleConfig(data.id);
-    }
+    onToggleConfig?.(data.id);
   };
 
   return (
-    <div onClick={ClickHandle} className={`border border-[#F4E9E9]/15 font-['Space_Grotesk'] relative backdrop-blur-sm
-        ${taskChecked
-          ? "bg-[#918C84]/55 line-through decoration-primary-900 text-white/50"
+    <div
+      onClick={clickHandle}
+      className={`relative flex w-full flex-row justify-between rounded-md border border-[#F4E9E9]/15 px-2 py-4 font-['Space_Grotesk'] backdrop-blur-sm ${
+        taskChecked
+          ? "bg-[#918C84]/55 text-white/50 line-through decoration-primary-900"
           : "bg-accent-beige-300/35"
-      } w-full rounded-md flex flex-row justify-between px-2 py-4`}
+      }`}
     >
       {onToggleConfig && (
-      <button type="button" onClick={configHandle} className="absolute top-1 right-1 z-20">
-
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="12" cy="6" r="2" fill="currentColor"/>
-          <circle cx="12" cy="12" r="2" fill="currentColor"/>
-          <circle cx="12" cy="18" r="2" fill="currentColor"/>
-        </svg>
-      </button>
+        <button type="button" onClick={configHandle} className="absolute top-1 right-1 z-20">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="6" r="2" fill="currentColor" />
+            <circle cx="12" cy="12" r="2" fill="currentColor" />
+            <circle cx="12" cy="18" r="2" fill="currentColor" />
+          </svg>
+        </button>
       )}
 
-        {/* Tags en esquina superior derecha son opcionales */}
-        {data.tags && (
-            <div className="absolute bottom-1 right-1 flex flex-wrap gap-1">
-            {data.tags.map((tag, id) => (
-                <span
-                key={id}
-                className={`text-xs px-1.5 py-0.5 rounded ${
-                    tag.color
-                    ? `${tag.color} text-white`
-                    : "bg-gray-200 text-primary-900"
-                }`}
-                >
-                {tag.name}
-                </span>
-            ))}
+      {hasSubtasks ? (
+        <div className="flex w-full flex-col gap-3">
+          <div className="flex flex-row items-start justify-between gap-3 border-b border-white/20 pb-2 pr-8">
+            <div className="flex flex-col gap-1">
+              <h2 className="text-lg">{data.titulo}</h2>
+              {data.descripcion && <p className="text-sm text-white/75">{data.descripcion}</p>}
             </div>
-        )}
 
-      {/* si existen subtareas se dibuja esto*/}
-        {(localSubtasks.length > 0 && data.isComposed == true) && (
-            <div className="flex flex-col w-full">
-                <div className="flex flex-row items-center gap-2 pb-2 border-b">
-                    <h2 className="text-lg">{data.title}</h2>
-                    <div className="flex flex-row gap-4 text-primary-900 font-bold">
-                        <Dificultad dificultad={data.dificultad} />
-                        <XP recompensa={data.recompensa} />
-                    </div>
-                </div>
-                {localSubtasks.map((s) => (
-                <div key={s.id} className="flex flex-row justify-between">
-                    <h3 className="px-2">{s.name}</h3>
-                    <input id="subtareaRealizada" checked={s.completed} onChange={(e) => subtaskHandle(s.id, e)} onClick={(e) => e.stopPropagation()} type="checkbox" className="accent-primary-700"/>
-                </div>
-                ))}
+            <div className="flex flex-row gap-4 font-bold text-primary-900">
+              <Dificultad dificultad={data.prioridad} />
+              <XP recompensa={data.recompensaXp} />
             </div>
-        )}
-            
-            {/* si no existen subtareas */}
-        {(data.isComposed == false || subtasks.length == 0) && (
-            <>
-                <div className="flex flex-col gap-2">
-                    <h3>{data.title}</h3>
-                    <div className="flex flex-row gap-4 text-primary-900 font-bold">
-                        <Dificultad dificultad={data.dificultad} />
-                        <XP recompensa={data.recompensa} />
-                    </div>
-                </div>
-                <input id="tareaRealizada" checked={taskChecked} onChange={checkedHandle} onClick={(e) => e.stopPropagation()} type="checkbox" className="accent-primary-700"/>
-            </>
-        )}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            {subtasks.map((subtask) => (
+              <label key={subtask.id} className="flex flex-row items-center justify-between gap-3">
+                <span>{subtask.titulo}</span>
+                <input
+                  id={`subtask-${subtask.id}`}
+                  checked={isTaskCompleted(subtask)}
+                  onChange={(e) => subtaskHandle(subtask.id, e)}
+                  onClick={(e) => e.stopPropagation()}
+                  type="checkbox"
+                  className="accent-primary-700"
+                />
+              </label>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-col gap-2 pr-8">
+            <h3>{data.titulo}</h3>
+            {data.descripcion && <p className="text-sm text-white/75">{data.descripcion}</p>}
+            <div className="flex flex-row gap-4 font-bold text-primary-900">
+              <Dificultad dificultad={data.prioridad} />
+              <XP recompensa={data.recompensaXp} />
+            </div>
+          </div>
+          <input
+            id={`task-${data.id}`}
+            checked={taskChecked}
+            onChange={checkedHandle}
+            onClick={(e) => e.stopPropagation()}
+            type="checkbox"
+            className="accent-primary-700"
+          />
+        </>
+      )}
     </div>
   );
 }

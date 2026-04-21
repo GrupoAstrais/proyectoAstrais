@@ -8,8 +8,8 @@ interface GroupModalProps {
     activeCompleted: boolean
     activePending: boolean
     handleActiveFilter: (title: string) => void
-    handleToggleComplete: (taskId: string) => void
-    handleToggleSubtask: (taskId: string, subtaskId: string) => void
+    handleToggleComplete: (taskId: number) => void | Promise<void>
+    handleToggleSubtask: (taskId: number, subtaskId: number) => void | Promise<void>
 }
 
 export default function GroupModal({ data, groupName, activeCompleted, activePending, handleActiveFilter, handleToggleComplete, handleToggleSubtask }: GroupModalProps) {

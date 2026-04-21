@@ -1,3 +1,5 @@
+import type { ITarea } from "./Interfaces";
+
 export interface LoginRequest {
   email: string,
   passwd: string
@@ -70,4 +72,14 @@ export interface CreateTask {
     frequency?: 'HOURLY' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
   ]
   idObjetivo?: number,
+}
+
+export interface UserTasksResponse {
+  tasksList: ITarea[];
+};
+
+export interface EditTask {
+  titulo: string,
+  descripcion: string,
+  prioridad: string
 }

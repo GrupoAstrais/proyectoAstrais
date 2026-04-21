@@ -1,12 +1,22 @@
+import { getTaskPriorityLabel, normalizeTaskPriority } from "../../data/Api";
 
 interface DifProps {
-    dificultad: string
+  dificultad: number;
 }
 
-export default function Dificultad({dificultad} : DifProps) {
-    return (
-    <div className={`text-primary-900 rounded-xs shadow-xs shadow-primary-900 font-['Space_Grotesk'] px-2 ${dificultad == "EASY" ? 'bg-state-success' : dificultad == "MEDIUM" ? 'bg-state-warning' : 'bg-state-error'}`}>
-        <p className="font-bold">{dificultad}</p>
+export default function Dificultad({ dificultad }: DifProps) {
+  const normalizedDifficulty = normalizeTaskPriority(dificultad);
+  const label = getTaskPriorityLabel(normalizedDifficulty);
+  const backgroundClass =
+    normalizedDifficulty === 0
+      ? "bg-state-success"
+      : normalizedDifficulty === 1
+        ? "bg-state-warning"
+        : "bg-state-error";
+
+  return (
+    <div className={`rounded-xs px-2 font-['Space_Grotesk'] text-primary-900 shadow-xs shadow-primary-900 ${backgroundClass}`}>
+      <p className="font-bold">{label}</p>
     </div>
-  )
+  );
 }
