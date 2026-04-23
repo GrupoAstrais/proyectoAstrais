@@ -40,6 +40,7 @@ fun Route.storeRoutes() {
                     BuyCosmeticResponse.COSMETIC_NOT_FOUND -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "The cosmetic was not found"))
                     BuyCosmeticResponse.INSUFICIENT_CURRENCY -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Insuficient funds"))
                     BuyCosmeticResponse.ALREADY_HAS_OBJECT -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEALREADYEXISTS.ordinal, "Cosmetic was already bought"))
+                    else -> call.respond("what?")
                 }
             }
             post("/equip/{id}") {
@@ -52,6 +53,7 @@ fun Route.storeRoutes() {
                     BuyCosmeticResponse.COSMETIC_NOT_FOUND -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "The cosmetic was not found"))
                     BuyCosmeticResponse.INSUFICIENT_CURRENCY -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Insuficient funds"))
                     BuyCosmeticResponse.ALREADY_HAS_OBJECT -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "Not owned"))
+                    else -> call.respond("what?")
                 }
             }
         }

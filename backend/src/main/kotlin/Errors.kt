@@ -22,7 +22,9 @@ enum class ErrorCodes {
     /** No se permite el acceso a la ruta */
     EER_FORBIDDEN,
     /** Error interno importante */
-    ERR_INTERNALERROR
+    ERR_INTERNALERROR,
+    /** No se pudo modificar el recurso */
+    ERR_RESOURCENOTMODIFIED
 }
 
 @Serializable

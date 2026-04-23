@@ -26,8 +26,8 @@ fun Route.avatarRoute(){
                 HttpStatusCode.Unauthorized, Errors(
                     ErrorCodes.EER_FORBIDDEN.ordinal, "No UID available")
             )
-            val layer = getDatabaseDaoImpl().retrieveAvatar(uid)
 
+            val layer = getDatabaseDaoImpl().retrieveAvatar(uid)
             call.respond(HttpStatusCode.OK, mapOf("avatarLayers" to layer))
         }
     }

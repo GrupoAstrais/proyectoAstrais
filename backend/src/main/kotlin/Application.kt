@@ -80,7 +80,7 @@ fun Application.module() {
         }
 
         exception<Exception> { call, except ->
-            val msg = "Unknown exception happened while processing. Message: ${except.message}"
+            val msg = "Unknown exception happened while processing. Message: ${except.message}. Except type: ${except.javaClass.name}"
             mainlogger.severe(msg)
             call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, msg))
         }
