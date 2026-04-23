@@ -10,6 +10,7 @@ import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
+import java.time.LocalDate
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -90,7 +91,7 @@ class TaskRepoImpl : TaskRepo{
             val tareasEntidades = getDatabaseDaoImpl().getTareasByGroup(gid)
 
             val tareas = suspendTransaction {
-                tareasEntidades.map { it ->
+                tareasEntidades.map {
                     val typeStr = when (it.tipo) {
                         TaskType.UNICO -> TASKTYPE_UNIQUE
                         TaskType.OBJETIVO -> TASKTYPE_OBJECTIVE
@@ -103,7 +104,7 @@ class TaskRepoImpl : TaskRepo{
 
                     if (it.tipo == TaskType.UNICO) {
                         val unica = EntidadTareaUnica.find { TablaTareaUnica.id_tarea eq it.id }.singleOrNull()
-                        if (unica != null && unica.fecha_vencimiento != null) {
+                        if (unica?.fecha_vencimiento != null) {
                             extraUnico = CreateTareaUniqueData(fechaLimite = unica.fecha_vencimiento.toString())
                         }
                     } else if (it.tipo == TaskType.HABITO) {
@@ -112,7 +113,7 @@ class TaskRepoImpl : TaskRepo{
                             val fEnum = HabitFrequency.entries.find { f -> f.value == habito.frecuencia } ?: HabitFrequency.DAILY
                             extraHabito = CreateTareaHabitData(habito.variacion_freq, fEnum)
 
-                            val hoy = java.time.LocalDate.now().toKotlinLocalDate()
+                            val hoy = LocalDate.now().toKotlinLocalDate()
                             if (habito.ultima_vez_completada == hoy) {
                                 estadoActual = TaskState.COMPLETE.name
                             }
@@ -130,8 +131,12 @@ class TaskRepoImpl : TaskRepo{
                         recompensaLudion = it.recompensa_ludion,
                         extraUnico = extraUnico,
                         extraHabito = extraHabito,
-                        idObjetivo = it.id_objetivo?.value
+                        idObjetivo = it.id_objetivo?.value,
+                        fecha_creacion = it.fecha_creacion.toString(),
+                        fecha_actualizado = it.fecha_actualizado.toString(),
+                        fecha_completado = it.fecha_completado.toString()
                     )
+
                 }
             }
             return Pair(CreateTaskRepoResponse.RESP_OK, tareas)

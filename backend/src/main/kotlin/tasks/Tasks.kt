@@ -71,6 +71,10 @@ data class TareaResponse(
     val recompensaXp: Int,
     val recompensaLudion: Int,
 
+    val fecha_creacion : String,
+    val fecha_actualizado : String,
+    val fecha_completado : String?,
+
     val extraUnico : CreateTareaUniqueData? = null,
     val extraHabito : CreateTareaHabitData? = null,
     val idObjetivo: Int? = null
