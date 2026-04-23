@@ -15,7 +15,9 @@ enum class SSEEventType(val value : String) {
     /** Evento global de recarga de tienda */
     RELOAD_STORE("RELOAD.STORE"),
     /** Evento por persona de agregar tarea */
-    ADD_TASK("ADDED.TASK")
+    ADD_TASK("ADDED.TASK"),
+    /** Evento por persona para hacerle cerrar sesion */
+    SIGN_OFF("SIGN.OFF")
     ;
 
     companion object {
@@ -97,6 +99,17 @@ object UserBusSSE {
         message = SSEMessage(
             event = SSEEventType.ADD_TASK,
             data = Json.encodeToString(data)
+        )
+    )
+
+    /**
+     * Shortcut para el evento de agregar tareas
+     */
+    public suspend fun publishSignOff(uid : Int) = publish(
+        uid = uid,
+        message = SSEMessage(
+            event = SSEEventType.SIGN_OFF,
+            data = ""
         )
     )
 }
