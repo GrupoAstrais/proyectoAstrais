@@ -4,6 +4,7 @@ import AvatarLayer
 import CosmeticResponseDTO
 import LANG_CODE_ENGLISH
 import avatar.AvatarLayerDTO
+import com.astrais.mainlogger
 import java.time.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import org.jetbrains.exposed.v1.core.*
@@ -34,6 +35,50 @@ class DatabaseDAOImpl : DatabaseDAO {
                     }
                     .id
                     .value
+        }
+    }
+
+    override suspend fun editUser(
+        uid : Int,
+        nombreusu: String?,
+        lang: String?,
+        utcOffset: Float?,
+    ): Boolean {
+        return suspendTransaction {
+            val user = EntidadUsuario.findById(uid) ?: return@suspendTransaction false
+
+            if (nombreusu != null){
+                user.nombre = nombreusu
+            }
+            if (lang != null){
+                user.idioma = lang
+            }
+            if (utcOffset != null){
+                user.zona_horaria = utcOffset
+            }
+
+            true
+
+        }
+    }
+
+    override suspend fun setupUserEmail(uid: Int, newEmail: String?, newPassword: String?) : Boolean {
+        return suspendTransaction {
+            val user = EntidadUsuario.findById(uid) ?: return@suspendTransaction false
+
+            // Pone nuevo correo y se asegura de tener que confirmar otra vez.
+            if (newEmail != null){
+                user.email = newEmail
+                user.esta_confirmado = 0
+                mainlogger.info("User ${user.id} changed email!")
+            }
+
+            if (newPassword != null){
+                user.contrasenia = newPassword
+                mainlogger.info("User ${user.id} changed password!")
+            }
+
+            true
         }
     }
 
@@ -123,6 +168,56 @@ class DatabaseDAOImpl : DatabaseDAO {
             } else {
                 Pair(notExistUser[TablaCredencialesAuth.uid].value, false)
             }
+        }
+    }
+
+    override suspend fun addOauthToAccount(uid: Int, provider_uid: String, auth: AuthProvider): BuyCosmeticResponse {
+        return suspendTransaction {
+            // Comprobacion de si el usuario existe
+            if (TablaUsuario.selectAll().where {
+                    TablaUsuario.id.eq(uid)
+                }.empty()){
+                return@suspendTransaction BuyCosmeticResponse.USER_NOT_FOUND
+            }
+
+            // No deberia tener mas de uno por cada tipo de oauth vinculados en una cuenta
+            val existCred = !TablaCredencialesAuth.selectAll().where {
+                (TablaCredencialesAuth.provider.eq(auth))
+            }.empty()
+            if (existCred) {
+                return@suspendTransaction BuyCosmeticResponse.ALREADY_HAS_OBJECT
+            }
+
+            // Añade metodo oauth
+            TablaCredencialesAuth.insert {
+                it[TablaCredencialesAuth.uid] = uid
+                it[TablaCredencialesAuth.provider] = auth
+                it[TablaCredencialesAuth.provider_uid] = provider_uid
+            }
+
+            return@suspendTransaction BuyCosmeticResponse.OKAY
+        }
+    }
+
+    override suspend fun deleteOauthFromAccount(uid: Int, auth: AuthProvider) : BuyCosmeticResponse{
+        return suspendTransaction {
+            // Comprobacion de si el usuario existe
+            if (TablaUsuario.selectAll().where {
+                    TablaUsuario.id.eq(uid)
+                }.empty()){
+                return@suspendTransaction BuyCosmeticResponse.USER_NOT_FOUND
+            }
+
+            val methodCheck = countUserLoginMehods(uid)
+            if (methodCheck <= 1){
+                return@suspendTransaction BuyCosmeticResponse.NO_METHOD_REMAIN
+            }
+
+            TablaCredencialesAuth.deleteWhere {
+                TablaCredencialesAuth.uid.eq(uid).and(TablaCredencialesAuth.provider.eq(auth))
+            }
+
+            return@suspendTransaction BuyCosmeticResponse.OKAY
         }
     }
 
@@ -606,5 +701,26 @@ class DatabaseDAOImpl : DatabaseDAO {
             val user = EntidadUsuario.find { TablaUsuario.email eq email }.singleOrNull()
             user?.esta_confirmado == 1
         }
+    }
+}
+
+/**
+ * Cuenta los metodos de login disponibles para el usuario en este momento, eso incluye Oauth y por correo
+ * @param uid ID del usuario
+ */
+suspend fun countUserLoginMehods(uid : Int) : Int {
+    return suspendTransaction {
+        val data = EntidadUsuario.findById(uid) ?: return@suspendTransaction -1
+        var contador = 0
+
+        if (data.email != null && data.contrasenia != null){
+            contador++
+        }
+
+        contador += TablaCredencialesAuth.selectAll().where {
+            TablaCredencialesAuth.uid.eq(uid)
+        }.count().toInt()
+
+        return@suspendTransaction contador
     }
 }

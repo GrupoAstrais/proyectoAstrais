@@ -1,7 +1,7 @@
 package com.astrais.auth
 
 import com.astrais.db.AuthProvider
-import com.astrais.db.EntidadUsuario
+import auth.types.*
 
 interface AuthRepo {
     /**
@@ -38,6 +38,21 @@ interface AuthRepo {
      * @return Un par con el uid (-1 si hubo error) y el otro booleano que dice si se tuvo que registrar un usuario
      */
     suspend fun tryLoginOrRegisterOauth(provider_uid : String, auth: AuthProvider) : Pair<Int, Boolean>
+
+    /**
+     * Intenta editar datos poco relevantes del usuario como la contraseña o el nombre
+     * @param uid ID de usuario
+     * @param data Los datos mandados con la request
+     */
+    suspend fun editUserData(uid : Int, data : EditUserResponse) : EditUserReturn
+
+    /**
+     * Hace que el usuario se pueda loguear por un nuevo mail, se tendria que hacer mejor sinceramente el proceso.
+     * @param uid ID de usuario
+     * @param email Mail de usuario, si nulo, no cambiara el correo.
+     * @param rawPassword La contraseña sin hashear, si nulo, no se cambiara la contraseña.
+     */
+    suspend fun setUserMailLogin(uid: Int, email : String?, rawPassword : String?) : Boolean
 }
 
 fun getAuthRepoImpl() :AuthRepo {

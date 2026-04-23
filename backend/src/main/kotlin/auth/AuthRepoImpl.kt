@@ -1,16 +1,22 @@
 package com.astrais.auth
 
-import com.astrais.auth.*
+import OK_MESSAGE_RESPONSE
+import UserBusSSE
+import auth.types.*
+import com.astrais.ErrorCodes
+import com.astrais.Errors
 import com.astrais.db.AuthProvider
 import com.astrais.db.DatabaseDAO
-import com.astrais.db.EntidadUsuario
 import com.astrais.db.getDatabaseDaoImpl
+import io.ktor.http.*
+import io.ktor.server.response.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.mail.DefaultAuthenticator
 import org.apache.commons.mail.HtmlEmail
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.slf4j.LoggerFactory
+import supportedLanguages
 
 private val log = LoggerFactory.getLogger(AuthRepoImpl::class.java)
 
@@ -143,5 +149,44 @@ class AuthRepoImpl : AuthRepo {
             log.error("Couldn't create account for $provider_uid (${auth.name})! Message: ${e.message}")
             return Pair(-1, false)
         }
+    }
+
+    override suspend fun editUserData(uid: Int, data: EditUserResponse) : EditUserReturn {
+        if (data.lang != null && !supportedLanguages.contains(data.lang)){
+            return EditUserReturn.INVALID_LANGUAGE
+        }
+
+        val res = getDatabaseDaoImpl().editUser(
+            uid = uid,
+            nombreusu = data.nombreusu,
+            lang = data.lang,
+            utcOffset = data.utcOffset
+        )
+
+        if (res){
+            return EditUserReturn.ERROR
+        }else{
+            return EditUserReturn.INVALID_LANGUAGE
+        }
+    }
+
+    override suspend fun setUserMailLogin(uid: Int, email: String?, rawPassword: String?) : Boolean {
+        val passwd = if (rawPassword.isNullOrEmpty()){
+            null
+        } else {
+            hashPassword(rawPassword)
+        }
+
+        val resp = getDatabaseDaoImpl().setupUserEmail(
+            uid = uid,
+            newEmail = email,
+            newPassword = passwd
+        )
+
+        if (resp) {
+            // Pide que te desloguees
+            UserBusSSE.publishSignOff(uid)
+        }
+        return resp
     }
 }

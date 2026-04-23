@@ -1,5 +1,6 @@
 package com.astrais.groups
 
+import groups.types.*
 
 val ADDUSEROP_OK = 0
 val ADDUSEROP_NOGROUP = -1

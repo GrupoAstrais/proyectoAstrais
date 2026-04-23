@@ -11,7 +11,8 @@ enum class BuyCosmeticResponse{
     USER_NOT_FOUND,
     COSMETIC_NOT_FOUND,
     INSUFICIENT_CURRENCY,
-    ALREADY_HAS_OBJECT
+    ALREADY_HAS_OBJECT,
+    NO_METHOD_REMAIN
 }
 
 data class TareaUniqueData(
@@ -38,6 +39,19 @@ interface DatabaseDAO {
         utcOffset: Float = 0f,
         role: UserRoles = UserRoles.NORMAL_USER
     ): Int
+
+    suspend fun editUser(
+        uid : Int,
+        nombreusu: String?,
+        lang: String?,
+        utcOffset: Float?,
+    ) : Boolean
+
+    suspend fun setupUserEmail(
+        uid: Int,
+        newEmail : String?,
+        newPassword : String?
+    ) : Boolean
 
     /**
      * Buscamos un usuario por su email.
@@ -81,6 +95,25 @@ interface DatabaseDAO {
         provider_uid : String,
         auth : AuthProvider
         ) : Pair<Int, Boolean>
+
+    /**
+     * Añade oauth a una cuenta ya existente
+     * @return OKAY si esta bien, USER_NOT_FOUND si el uid es incorrecto, ALREADY_HAS_OBJECT si ya hay vinculado un metodo oauth del mismo tipo
+     */
+    suspend fun addOauthToAccount(
+        uid : Int,
+        provider_uid: String,
+        auth: AuthProvider
+    ) : BuyCosmeticResponse
+
+    /**
+     * Borra un metodo oauth de una cuenta. Si la cuenta tuviera la posibilidad de quedarse sin forma de acceder (sin oauth ni correo) no lo permite.
+     * @return OKAY si bien, USER_NOT_FOUND si el uid es incorrecto, NO_METHOD_REMAIN si al borrar la cuenta se fuera a quedar sin metodo de logueo
+     */
+    suspend fun deleteOauthFromAccount(
+        uid : Int,
+        auth: AuthProvider
+    ) : BuyCosmeticResponse
 
     /**
      * Se crea un grupo para el usuario indicado

@@ -7,6 +7,7 @@ import com.astrais.db.GroupRoles
 import com.astrais.db.getDatabaseDaoImpl
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.slf4j.LoggerFactory
+import groups.types.*
 
 private val log = LoggerFactory.getLogger(GroupRepoImpl::class.java)
 

@@ -4,6 +4,7 @@ import at.favre.lib.crypto.bcrypt.BCrypt
 import com.astrais.ErrorCodes
 import com.astrais.Errors
 import OK_MESSAGE_RESPONSE
+import auth.types.*
 import com.astrais.db.EntidadCosmetico
 import com.astrais.db.getDatabaseDaoImpl
 import supportedLanguages
@@ -17,23 +18,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-
-@Serializable data class LoginRequest(val email: String, val passwd: String)
-
-@Serializable data class LoginResponse(val jwtAccessToken: String, val jwtRefreshToken: String)
-
-@Serializable
-data class RegisterRequest(
-        val name: String,
-        val email: String,
-        val passwd: String,
-        val lang: String,
-        val utcOffset: Float = 0f
-)
-
-@Serializable data class MailVerifierRequest(val email: String, val code: String)
-
-@Serializable data class RegenAccessResponse(val newAccessToken: String)
 
 fun Application.installAuth() {
     install(Authentication) {
@@ -263,12 +247,12 @@ fun Route.authRoutes() {
     authenticate("access-jwt") {
         get("/auth/me") {
             val uid =
-                    call.principal<JWTPrincipal>()!!.subject?.toInt()
-                            ?: return@get call.respond(HttpStatusCode.Unauthorized)
+                call.principal<JWTPrincipal>()!!.subject?.toInt()
+                ?: return@get call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "That UID is not valid!"))
 
             val user =
-                    getDatabaseDaoImpl().getUsuarioByID(uid)
-                            ?: return@get call.respond(HttpStatusCode.NotFound)
+                getDatabaseDaoImpl().getUsuarioByID(uid)
+                ?: return@get call.respond(HttpStatusCode.NotFound)
 
             val grupos = getDatabaseDaoImpl().getGroupsOfUser(uid)
             val gidPersonal = grupos.firstOrNull { it.es_grupo_personal }?.id?.value
@@ -292,6 +276,35 @@ fun Route.authRoutes() {
                             themeColors = user.themeColors
                     )
             )
+        }
+
+        patch("/auth/editUser") {
+            val uid =
+                call.principal<JWTPrincipal>()!!.subject?.toInt()
+                ?: return@patch call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "That UID is not valid!"))
+
+            val data = call.receive<EditUserResponse>()
+            val resp = getAuthRepoImpl().editUserData(uid, data)
+
+            when (resp) {
+                EditUserReturn.OK -> call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
+                EditUserReturn.ERROR -> call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_RESOURCENOTMODIFIED.ordinal, "Couldn't edit user for unknown reasons."))
+                EditUserReturn.INVALID_LANGUAGE -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_BADVALUE.ordinal, "Selected language is not supported"))
+            }
+        }
+
+        patch("/auth/setEmailLogin") {
+            val uid =
+                call.principal<JWTPrincipal>()!!.subject?.toInt()
+                    ?: return@patch call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "That UID is not valid!"))
+
+            val data = call.receive<SetMailUserRequest>()
+
+            if (getAuthRepoImpl().setUserMailLogin(uid = uid, email = data.email, rawPassword = data.passwd)){
+                call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
+            }else{
+                call.respond(HttpStatusCode.Conflict, Errors(ErrorCodes.ERR_RESOURCENOTMODIFIED.ordinal, "Couldn't edit mail login"))
+            }
         }
     }
 }

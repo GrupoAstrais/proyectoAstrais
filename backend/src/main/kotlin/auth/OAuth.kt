@@ -1,9 +1,13 @@
 package com.astrais.auth
 
+import OK_MESSAGE_RESPONSE
+import auth.types.*
 import com.astrais.ErrorCodes
 import com.astrais.Errors
 import com.astrais.db.AuthProvider
+import com.astrais.db.BuyCosmeticResponse
 import com.astrais.db.getDatabaseDaoImpl
+import com.astrais.mainlogger
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
@@ -14,32 +18,15 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.receive
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.serialization.Serializable
 
-@Serializable
-data class GoogleUserInfo(
-    val sub: String,
-    val name: String? = null,
-    val given_name: String? = null,
-    val family_name: String? = null,
-    val picture: String? = null
-)
-
-@Serializable
-data class OauthLoginResponse(
-    val uid : Int,
-    val hadToRegister : Boolean
-)
-
-@Serializable
-data class AndroidGoogleLoginRequest(val idToken: String)
 
 fun Application.initOauth(authenticationConfig: AuthenticationConfig){
     authenticationConfig.oauth("oauth-google") {
-        urlProvider = { "http://localhost:5684/auth/googlecallback" }
+        urlProvider = { "http://localhost:5684/auth/google/callback" }
         providerLookup = {
             OAuthServerSettings.OAuth2ServerSettings(
                 name = "google",
@@ -72,17 +59,28 @@ fun Route.oauthRoutes() {
             if (user.first == -1){
                 call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Couldn't do oauth"))
             } else {
-                call.respond(HttpStatusCode.OK, OauthLoginResponse(uid = user.first, hadToRegister = user.second))
+                val dbUser = getDatabaseDaoImpl().getUsuarioByID(user.first)
+                if (dbUser != null) {
+                    val loginResponse = OauthLoginResponse(
+                        uid = user.first,
+                        hadToRegister = user.second,
+                        jwtAccessToken = generateAccessToken(dbUser),
+                        jwtRefreshToken = generateRefreshToken(dbUser)
+                    )
+                    getDatabaseDaoImpl().setUserLastLogin(dbUser)
+
+                    call.respond(HttpStatusCode.OK, loginResponse)
+                } else {
+                    call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "Missing user account"))
+                }
             }
         }
 
-        // TODO: Que android haga su oauth y le mande los datos al servidor
-
-
         get("/auth/testHTML") {
-            call.respondText("<h1>Hola mundo!</h1><br><a href=\"/auth/googlelogin\">Presiona para oauth de google</a>", ContentType.Text.Html)
+            call.respondText("<h1>Hola mundo!</h1><br><a href=\"/auth/google/login\">Presiona para oauth de google</a>", ContentType.Text.Html)
         }
     }
+
     post("/auth/google/androidlogin") {
         val req = call.receive<AndroidGoogleLoginRequest>()
 
@@ -100,7 +98,7 @@ fun Route.oauthRoutes() {
             val user = getAuthRepoImpl().tryLoginOrRegisterOauth(userId, AuthProvider.GOOGLE)
 
             if (user.first == -1) {
-                call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Error al crear cuenta"))
+                call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Error creating account"))
             } else {
                 // generar jwt
                 val dbUser = getDatabaseDaoImpl().getUsuarioByID(user.first)
@@ -109,13 +107,73 @@ fun Route.oauthRoutes() {
                         jwtAccessToken = generateAccessToken(dbUser),
                         jwtRefreshToken = generateRefreshToken(dbUser)
                     )
+                    getDatabaseDaoImpl().setUserLastLogin(dbUser)
+
                     call.respond(HttpStatusCode.OK, loginResponse)
                 } else {
-                    call.respond(HttpStatusCode.InternalServerError)
+                    call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "Missing user account"))
                 }
             }
         } else {
-            call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "Token de Google inválido"))
+            call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "Invalid Google token"))
+        }
+    }
+
+    authenticate("access-jwt") {
+
+        // TODO: Esto esta mal, en el setOauth deberia llevar a la misma que /auth/{prov}/login para mas seguridad, y que el callback llame a addOauthToAccount.
+
+        post("/auth/setOauth"){
+            val uid =
+                call.principal<JWTPrincipal>()!!.subject?.toInt()
+                    ?: return@post call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "That UID is not valid!"))
+
+            val data = call.receive<SetOauthResponse>()
+
+            try {
+                val out = getDatabaseDaoImpl().addOauthToAccount(
+                    uid = uid,
+                    provider_uid = data.providerUid,
+                    auth = AuthProvider.valueOf(data.authProvider)
+                )
+
+                when (out) {
+                    BuyCosmeticResponse.OKAY -> call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
+                    BuyCosmeticResponse.USER_NOT_FOUND -> call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "That UID is not valid!"))
+                    BuyCosmeticResponse.ALREADY_HAS_OBJECT -> call.respond(HttpStatusCode.NotModified, Errors(ErrorCodes.ERR_RESOURCEALREADYEXISTS.ordinal, "Error! There's an oauth of the same provided linked."))
+                    else -> call.respond("what")
+                }
+
+            } catch (e : IllegalArgumentException) {
+                mainlogger.severe("Error! User $uid tried to register auth ${data.authProvider}, and it couldn't be parsed")
+                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "${data.authProvider} isn't a permited auth provider."))
+            }
+        }
+
+        post("/auth/deleteOauth") {
+            val uid =
+                call.principal<JWTPrincipal>()!!.subject?.toInt()
+                    ?: return@post call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "That UID is not valid!"))
+
+            val data = call.receive<DeleteOauthResponse>()
+
+            try {
+                val out = getDatabaseDaoImpl().deleteOauthFromAccount(
+                    uid = uid,
+                    auth = AuthProvider.valueOf(data.authProvider)
+                )
+
+                when (out) {
+                    BuyCosmeticResponse.OKAY -> call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
+                    BuyCosmeticResponse.USER_NOT_FOUND -> call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "That UID is not valid!"))
+                    BuyCosmeticResponse.NO_METHOD_REMAIN -> call.respond(HttpStatusCode.NotModified, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "If the method was deleted, the account would be orphan!"))
+                    else -> call.respond("what")
+                }
+
+            } catch (e : IllegalArgumentException) {
+                mainlogger.severe("Error! User $uid tried to delete auth ${data.authProvider}, and it couldn't be parsed")
+                call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "${data.authProvider} isn't a permited auth provider."))
+            }
         }
     }
 }
