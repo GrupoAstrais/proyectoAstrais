@@ -156,6 +156,8 @@ class TaskViewModel @Inject constructor(
 
             onSuccess()
 
+            if (com.mm.astraisandroid.data.preferences.SessionManager.isGuest()) return@launch
+
             try {
                 repository.completarTarea(tid)
                 Log.d("AstraisTasks", "ÉXITO en red: Tarea $tid completada en el servidor.")
@@ -192,6 +194,8 @@ class TaskViewModel @Inject constructor(
                 }
 
                 onSuccess()
+
+                if (com.mm.astraisandroid.data.preferences.SessionManager.isGuest()) return@launch
 
                 try {
                     repository.uncompleteTarea(tid)
@@ -252,6 +256,19 @@ class TaskViewModel @Inject constructor(
                 idObjetivo = currentParentId
             )
 
+            if (com.mm.astraisandroid.data.preferences.SessionManager.isGuest()) {
+                val tempId = -(System.currentTimeMillis() % 100000).toInt()
+                tareaDao.insertTareas(listOf(
+                    TareaEntity(
+                        id = tempId, titulo = titulo, descripcion = descripcion, tipo = tipo.name,
+                        estado = "ACTIVE", prioridad = prioridad.ordinal, recompensaXp = 0, recompensaLudion = 0, isPendingSync = false,
+                        idObjetivo = currentParentId
+                    )
+                ))
+                _state.update { it.copy(showCreateDialog = false, isLoading = false) }
+                return@launch
+            }
+
             try {
                 repository.createTareaDirect(request)
 
@@ -286,6 +303,8 @@ class TaskViewModel @Inject constructor(
         viewModelScope.launch {
             tareaDao.deleteTareaById(tid)
 
+            if (com.mm.astraisandroid.data.preferences.SessionManager.isGuest()) return@launch
+
             try {
                 repository.eliminarTarea(tid)
             } catch (e: Exception) {
@@ -309,7 +328,7 @@ class TaskViewModel @Inject constructor(
         frecuencia: String? = null
     ) {
         viewModelScope.launch {
-            tareaDao.updateTareaDetails(titulo, descripcion, prioridad, tid)
+            tareaDao.updateTareaDetails(titulo, descripcion, prioridad.ordinal, tid)
 
             val habitFrequencyEnum = try {
                 frecuencia?.let { HabitFrequency.valueOf(it) }
@@ -322,6 +341,8 @@ class TaskViewModel @Inject constructor(
                 extraUnico = fechaLimite?.let { CreateTareaUniqueData(it) },
                 extraHabito = habitFrequencyEnum?.let { CreateTareaHabitData(1, it) }
             )
+
+            if (com.mm.astraisandroid.data.preferences.SessionManager.isGuest()) return@launch
 
             try {
                 repository.editarTarea(tid, titulo, descripcion, prioridad, fechaLimite, habitFrequencyEnum)

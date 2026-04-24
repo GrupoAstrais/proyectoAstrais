@@ -2,7 +2,6 @@ package com.mm.astraisandroid.data.local.dao
 
 import androidx.room.*
 import com.mm.astraisandroid.data.local.entities.TareaEntity
-import com.mm.astraisandroid.data.models.TaskPriority
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -29,7 +28,7 @@ interface TareaDao {
     suspend fun deleteTareaById(tid: Int)
 
     @Query("UPDATE tareas SET titulo = :titulo, descripcion = :desc, prioridad = :prio WHERE id = :tid")
-    suspend fun updateTareaDetails(titulo: String, desc: String, prio: TaskPriority, tid: Int)
+    suspend fun updateTareaDetails(titulo: String, desc: String, prio: Int, tid: Int)
 
     /**
      * Elimina todas las tareas

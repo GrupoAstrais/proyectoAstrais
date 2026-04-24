@@ -18,6 +18,9 @@ object SessionManager {
     private val _isSessionActive = MutableStateFlow(true)
     val isSessionActive: StateFlow<Boolean> = _isSessionActive.asStateFlow()
 
+    private val _isGuestSession = MutableStateFlow(false)
+    val isGuestSession: StateFlow<Boolean> = _isGuestSession.asStateFlow()
+
     fun init(context: Context) {
         if (sharedPreferences != null) return
 
@@ -33,16 +36,25 @@ object SessionManager {
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )
 
-        _isSessionActive.value = hasSession()
+        _isGuestSession.value = sharedPreferences?.getBoolean("is_guest", false) ?: false
+        _isSessionActive.value = hasAnySession()
     }
 
     fun saveTokens(access: String, refresh: String) {
         sharedPreferences?.edit()?.apply {
             putString(ACCESS_KEY, access)
             putString(REFRESH_KEY, refresh)
+            putBoolean("is_guest", false)
             apply()
         }
 
+        _isGuestSession.value = false
+        _isSessionActive.value = true
+    }
+
+    fun startGuestSession() {
+        sharedPreferences?.edit()?.putBoolean("is_guest", true)?.apply()
+        _isGuestSession.value = true
         _isSessionActive.value = true
     }
 
@@ -59,9 +71,12 @@ object SessionManager {
     }
 
     fun hasSession(): Boolean = getAccessToken() != null
+    fun isGuest(): Boolean = _isGuestSession.value
+    fun hasAnySession(): Boolean = hasSession() || isGuest()
 
     fun clear() {
         sharedPreferences?.edit()?.clear()?.apply()
+        _isGuestSession.value = false
         _isSessionActive.value = false
     }
 }

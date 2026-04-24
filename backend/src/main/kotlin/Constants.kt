@@ -15,11 +15,11 @@ const val ROLE_USERMOD      = 1
 const val ROLE_USEROWNER    = 2
 
 /** Tipo de tarea unica */
-const val TASKTYPE_UNIQUE = "UNIQUE"
+const val TASKTYPE_UNIQUE = "UNICO"
 /** Tipo de tarea habito */
-const val TASKTYPE_HABIT = "HABIT"
+const val TASKTYPE_HABIT = "HABITO"
 /** Tipo de tarea objetivo */
-const val TASKTYPE_OBJECTIVE = "OBJECTIVE"
+const val TASKTYPE_OBJECTIVE = "OBJETIVO"
 
 /** Mensaje de Ok a las rutas que no devuelve nada */
 val OK_MESSAGE_RESPONSE = mapOf("aknowledged" to true)

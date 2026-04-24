@@ -72,15 +72,10 @@ data class TareaResponse(
     val prioridad: Int,
     val recompensaXp: Int,
     val recompensaLudion: Int,
-<<<<<<< Updated upstream
-
-    val fecha_creacion : String,
-    val fecha_actualizado : String,
-    val fecha_completado : String?,
-
-=======
+    val fecha_creacion: String? = null,
+    val fecha_actualizado: String? = null,
+    val fecha_completado: String? = null,
     val fechaValida: String? = null,
->>>>>>> Stashed changes
     val extraUnico : CreateTareaUniqueData? = null,
     val extraHabito : CreateTareaHabitData? = null,
     val idObjetivo: Int? = null

@@ -54,6 +54,7 @@ data class ActivityItem(val text: String, val time: String)
 @Composable
 fun PerfilTab(user: User?, onBack: () -> Unit = {}, onLogout: () -> Unit = {}) {
     val context = LocalContext.current
+    val userViewModel: com.mm.astraisandroid.ui.features.profile.UserViewModel = androidx.hilt.navigation.compose.hiltViewModel()
     val achievements = listOf(
         Achievement("Primer logro",     true),
         Achievement("7 días seguidos",  true),
@@ -114,13 +115,14 @@ fun PerfilTab(user: User?, onBack: () -> Unit = {}, onLogout: () -> Unit = {}) {
 
             // Hero
             ProfileHeroCard(
-                name         = user?.name ?: "Cargando...",
-                username     = "@${user?.name?.lowercase() ?: "..."}",
+                name         = user?.name ?: "Invitado",
+                username     = "@${user?.name?.lowercase() ?: "invitado"}",
                 level        = user?.level ?: 0,
                 currentXp    = user?.currentXp ?: 0,
                 maxXp        = if (user != null) (user.level + 1) * 100 else 100,
                 registerDate = "Miembro activo",
-                onShare      = { shareProfileText() }
+                onShare      = { shareProfileText() },
+                onNameChange = { newName -> userViewModel.updateUsername(newName) }
             )
 
             // Stats
@@ -135,10 +137,12 @@ fun PerfilTab(user: User?, onBack: () -> Unit = {}, onLogout: () -> Unit = {}) {
             // Actividad
             //ActivityCard(items = activity)
 
+            val isGuest = com.mm.astraisandroid.data.preferences.SessionManager.isGuest()
+
             Button(
                 onClick = onLogout,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFF4C4C)
+                    containerColor = if (isGuest) Color(0xFFC172FF) else Color(0xFFFF4C4C)
                 ),
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
@@ -146,7 +150,7 @@ fun PerfilTab(user: User?, onBack: () -> Unit = {}, onLogout: () -> Unit = {}) {
                     .height(50.dp)
             ) {
                 Text(
-                    text = "CERRAR SESIÓN",
+                    text = if (isGuest) "REGISTRARSE O INICIAR SESIÓN" else "CERRAR SESIÓN",
                     color = Color.White,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
@@ -214,9 +218,12 @@ fun ProfileHeroCard(
     currentXp: Int,
     maxXp: Int,
     registerDate: String,
-    onShare: () -> Unit = {}
+    onShare: () -> Unit = {},
+    onNameChange: (String) -> Unit = {}
 ) {
     var editing by remember { mutableStateOf(false) }
+    var editingName by remember { mutableStateOf(false) }
+    var newName by remember { mutableStateOf(name) }
     var description by remember { mutableStateOf("") }
     val shape = RoundedCornerShape(20.dp)
 
@@ -251,13 +258,67 @@ fun ProfileHeroCard(
             }
 
             Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(
-                    text = name,
-                    color = Color.White,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Black,
-                    fontFamily = FontFamily.Monospace
-                )
+                if (editingName) {
+                    TextField(
+                        value = newName,
+                        onValueChange = { newName = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor   = Color.White.copy(alpha = 0.1f),
+                            unfocusedContainerColor = Color.White.copy(alpha = 0.05f),
+                            focusedTextColor        = Color.White,
+                            unfocusedTextColor      = Color.White,
+                            focusedIndicatorColor   = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            cursorColor             = Color.White
+                        ),
+                        textStyle = TextStyle(
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        trailingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Guardar",
+                                tint = Color.White,
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .clickable {
+                                        editingName = false
+                                        if (newName.isNotBlank() && newName != name) {
+                                            onNameChange(newName)
+                                        }
+                                    }
+                            )
+                        }
+                    )
+                } else {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.clickable {
+                            newName = name
+                            editingName = true
+                        }
+                    ) {
+                        Text(
+                            text = name,
+                            color = Color.White,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Black,
+                            fontFamily = FontFamily.Monospace
+                        )
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Editar",
+                            tint = Color.White.copy(alpha = 0.5f),
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                }
                 Text(
                     text = username,
                     color = Color.White.copy(alpha = 0.4f),

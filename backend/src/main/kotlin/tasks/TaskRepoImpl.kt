@@ -32,8 +32,7 @@ class TaskRepoImpl : TaskRepo{
                 TASKTYPE_UNIQUE -> {
                     if (req.extraUnico != null){
                         extraUnica = TareaUniqueData(
-                            fechaLimite = kotlinx.datetime.Instant.parse(req.extraUnico.fechaLimite).toLocalDateTime(TimeZone.UTC),
-                            idObjetivo = req.idObjetivo
+                            fechaLimite = kotlinx.datetime.Instant.parse(req.extraUnico.fechaLimite).toLocalDateTime(TimeZone.UTC)
                         )
                     }else{
                         return Pair(CreateTaskRepoResponse.RESP_MISSINGDATA, -2)
@@ -65,6 +64,7 @@ class TaskRepoImpl : TaskRepo{
                 recompensaLudion = calcularLudiones(tipo, req.prioridad, extraHabito?.let { HabitFrequency.fromValue(it.frequency) }),
                 extraUnico = extraUnica,
                 extraHabito = extraHabito,
+                idObjetivo = req.idObjetivo
             )
             return Pair(CreateTaskRepoResponse.RESP_OK, tid)
         } catch (e : ExposedSQLException) {
@@ -84,15 +84,6 @@ class TaskRepoImpl : TaskRepo{
 
             val tareas = suspendTransaction {
                 tareasEntidades.map {
-<<<<<<< Updated upstream
-                    val typeStr = when (it.tipo) {
-                        TaskType.UNICO -> TASKTYPE_UNIQUE
-                        TaskType.OBJETIVO -> TASKTYPE_OBJECTIVE
-                        TaskType.HABITO -> TASKTYPE_HABIT
-                    }
-
-=======
->>>>>>> Stashed changes
                     var extraUnico : CreateTareaUniqueData? = null
                     var extraHabito : CreateTareaHabitData? = null
                     var estadoActual = it.estado.name
@@ -135,14 +126,10 @@ class TaskRepoImpl : TaskRepo{
                         fechaValida = extraUnico?.fechaLimite,
                         extraUnico = extraUnico,
                         extraHabito = extraHabito,
-<<<<<<< Updated upstream
-                        idObjetivo = it.id_objetivo?.value,
+                        idObjetivo = idObjetivoPadreTid ?: it.id_objetivo?.value,
                         fecha_creacion = it.fecha_creacion.toString(),
                         fecha_actualizado = it.fecha_actualizado.toString(),
-                        fecha_completado = it.fecha_completado.toString()
-=======
-                        idObjetivo = idObjetivoPadreTid
->>>>>>> Stashed changes
+                        fecha_completado = it.fecha_completado?.toString()
                     )
 
                 }

@@ -16,8 +16,7 @@ enum class BuyCosmeticResponse{
 }
 
 data class TareaUniqueData(
-    val fechaLimite : LocalDateTime,
-    val idObjetivo : Int?
+    val fechaLimite : LocalDateTime
 )
 
 data class TareaHabitData(
@@ -187,6 +186,7 @@ interface DatabaseDAO {
         recompensaLudion: Int = 0,
         extraUnico : TareaUniqueData? = null,
         extraHabito : TareaHabitData? = null,
+        idObjetivo : Int? = null
     ): Int
 
     suspend fun getGroupByTask(tid : Int) : EntidadGrupo?

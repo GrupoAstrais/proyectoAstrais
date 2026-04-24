@@ -11,6 +11,7 @@ import io.ktor.client.plugins.sse.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
+import io.ktor.server.auth.authenticate
 import io.ktor.server.engine.*
 import io.ktor.server.http.content.*
 import io.ktor.server.netty.*
@@ -100,9 +101,12 @@ fun Application.module() {
     routing {
         authRoutes()
         oauthRoutes()
-        groupRoutes()
-        tareaRoutes()
-        storeRoutes()
+        authenticate("access-jwt") {
+            groupRoutes()
+            tareaRoutes()
+            storeRoutes()
+
+        }
         adminRoutes()
         sseRoutes()
 

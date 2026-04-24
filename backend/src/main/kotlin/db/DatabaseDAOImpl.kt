@@ -291,7 +291,8 @@ class DatabaseDAOImpl : DatabaseDAO {
 
     override suspend fun createTarea(
         gid: Int, titulo: String, descripcion: String, tipo: TaskType, prioridad: Int,
-        recompensaXp: Int, recompensaLudion: Int, extraUnico: TareaUniqueData?, extraHabito: TareaHabitData?
+        recompensaXp: Int, recompensaLudion: Int, extraUnico: TareaUniqueData?, extraHabito: TareaHabitData?,
+        idObjetivo: Int?
     ): Int {
         return suspendTransaction {
             if (tipo == TaskType.UNICO && extraUnico == null) return@suspendTransaction -1
@@ -309,9 +310,9 @@ class DatabaseDAOImpl : DatabaseDAO {
                 this.fecha_creacion = LocalDate.now().toKotlinLocalDate()
                 this.fecha_actualizado = this.fecha_creacion
 
-                if (extraUnico?.idObjetivo != null) {
+                if (idObjetivo != null) {
                     val objetivoPadre = EntidadTareaObjetivo.find {
-                        TablaTareaObjetivo.id_tarea eq extraUnico.idObjetivo
+                        TablaTareaObjetivo.id_tarea eq idObjetivo
                     }.singleOrNull()
 
                     if (objetivoPadre != null) {
@@ -649,7 +650,7 @@ class DatabaseDAOImpl : DatabaseDAO {
             layer : AvatarLayer?
     ): Boolean {
         return suspendTransaction {
-            if (type == CosmeticType.AVATAR_PART && layer != null){
+            if (type == CosmeticType.AVATAR_PART && layer == null){
                 return@suspendTransaction false
             }
 

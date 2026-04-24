@@ -52,4 +52,21 @@ class UserViewModel @Inject constructor(
             }
         }
     }
+
+    fun updateUsername(newName: String) {
+        viewModelScope.launch {
+            val user = state.value.user ?: return@launch
+            try {
+                if (!com.mm.astraisandroid.data.preferences.SessionManager.isGuest()) {
+                    repository.updateUsername(user.id, newName)
+                }
+                // Update local state immediately
+                _state.update {
+                    it.copy(user = user.copy(name = newName))
+                }
+            } catch (e: Exception) {
+                _state.update { it.copy(error = e.message) }
+            }
+        }
+    }
 }

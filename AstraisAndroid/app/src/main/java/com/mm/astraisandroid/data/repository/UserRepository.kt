@@ -11,4 +11,8 @@ class UserRepository @Inject constructor(
     suspend fun getMe(): User {
         return api.getMe().toDomain()
     }
+
+    suspend fun updateUsername(uid: Int, newName: String) {
+        api.updateUsername(uid, newName)
+    }
 }

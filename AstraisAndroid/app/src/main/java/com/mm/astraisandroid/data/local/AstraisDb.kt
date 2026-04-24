@@ -8,6 +8,8 @@ import com.mm.astraisandroid.data.local.dao.ActionDao
 import com.mm.astraisandroid.data.local.dao.TareaDao
 import com.mm.astraisandroid.data.local.entities.PendingAction
 import com.mm.astraisandroid.data.local.entities.TareaEntity
+import com.mm.astraisandroid.data.local.entities.GrupoEntity
+import com.mm.astraisandroid.data.local.dao.GrupoDao
 
 /**
  * Punto de acceso principal a la base de datos local utilizando Room.
@@ -19,7 +21,7 @@ import com.mm.astraisandroid.data.local.entities.TareaEntity
  * @see TareaDao
  * @see ActionDao
  */
-@Database(entities = [TareaEntity::class, PendingAction::class], version = 1, exportSchema = false)
+@Database(entities = [TareaEntity::class, PendingAction::class, GrupoEntity::class], version = 2, exportSchema = false)
 abstract class AstraisDb : RoomDatabase() {
 
     /**
@@ -27,6 +29,8 @@ abstract class AstraisDb : RoomDatabase() {
      * @return El DAO encargado de la gestión de tareas.
      */
     abstract fun tareaDao(): TareaDao
+
+    abstract fun grupoDao(): GrupoDao
 
     /**
      * Acceso a las operaciones de datos para la cola de acciones pendientes.
@@ -57,7 +61,8 @@ abstract class AstraisDb : RoomDatabase() {
                     context.applicationContext,
                     AstraisDb::class.java,
                     "astrais.db"
-                ).build()
+                ).fallbackToDestructiveMigration()
+                .build()
                 INSTANCE = instance
                 instance
             }
