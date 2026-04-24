@@ -71,6 +71,15 @@ fun Application.module() {
 
 
     install(StatusPages) {
+        exception<Throwable> { call, cause ->
+            cause.printStackTrace()
+
+            call.respond(
+                HttpStatusCode.InternalServerError,
+                mapOf("errorText" to "Fallo crítico en Backend: ${cause.message}")
+            )
+        }
+
         exception<BadRequestException> { call, _ ->
             call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "The data sent by the client was not in the accepted format"))
         }

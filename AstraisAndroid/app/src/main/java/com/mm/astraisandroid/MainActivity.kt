@@ -97,6 +97,15 @@ class MainActivity : ComponentActivity() {
 fun AppNavigation(initialHasSession: Boolean, userViewModel: UserViewModel) {
     val navController = rememberNavController()
     val coroutineScope = rememberCoroutineScope()
+    val isSessionActive by SessionManager.isSessionActive.collectAsStateWithLifecycle()
+
+    LaunchedEffect(isSessionActive) {
+        if (!isSessionActive && navController.currentDestination?.route != Route.Login::class.qualifiedName && navController.currentDestination?.route != Route.Register::class.qualifiedName) {
+            navController.navigate(Route.Login) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
 
     NavHost(
         navController = navController,
@@ -248,36 +257,36 @@ fun HomeScreen(userViewModel: UserViewModel, onNavigateToProfile: () -> Unit) {
         ) { paddingValues ->
             NavHost(
                 navController = navController,
-                startDestination = "home_tab",
+                startDestination = Route.Home,
                 modifier = Modifier.padding(paddingValues)
             ) {
-                composable("home_tab") {
+                composable<Route.Home> {
                     HomeTab(
                         user = userData,
                         onNavigateToProfile = onNavigateToProfile,
                         onNavigateToTasks = {
-                            navController.navigate("tasks_tab") {
+                            navController.navigate(Route.TasksTab) {
                                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
                             }
                         },
                         onNavigateToInventory = {
-                            navController.navigate("inventory_tab") {
+                            navController.navigate(Route.Inventory) {
                                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
                             }
                         },
                         onNavigateToStore = {
-                            navController.navigate("store_tab") {
+                            navController.navigate(Route.StoreTab) {
                                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
                             }
                         },
                         onNavigateToGroups = {
-                            navController.navigate("group_tab") {
+                            navController.navigate(Route.GroupTab) {
                                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
@@ -285,19 +294,19 @@ fun HomeScreen(userViewModel: UserViewModel, onNavigateToProfile: () -> Unit) {
                         }
                     )
                 }
-                composable("tasks_tab") {
+                composable<Route.TasksTab> {
                     TasksTab(
                         viewModel = taskViewModel,
                         onTaskCompleted = { userViewModel.fetchUser() }
                     )
                 }
-                composable("group_tab") { GrupoTab() }
+                composable<Route.GroupTab> { GrupoTab() }
 
-                composable("store_tab") {
+                composable<Route.StoreTab> {
                     TiendaTab(ludiones = userData?.ludiones ?: 0, onCosmeticChanged = { userViewModel.fetchUser() })
                 }
 
-                composable("inventory_tab") {
+                composable<Route.Inventory> {
                     InventarioTab(onCosmeticChanged = { userViewModel.fetchUser() })
                 }
             }
@@ -306,6 +315,7 @@ fun HomeScreen(userViewModel: UserViewModel, onNavigateToProfile: () -> Unit) {
 
     if (taskState.showCreateDialog) {
         CreateTareaDialog(
+            parentId = taskState.parentIdForNewTask,
             onDismiss = { taskViewModel.closeCreateDialog() },
             onCreate = { titulo, desc, tipoStr, prioridadInt, frecuencia, fechaLimite ->
                 val userGid = SessionManager.getPersonalGid()
@@ -325,7 +335,8 @@ fun HomeScreen(userViewModel: UserViewModel, onNavigateToProfile: () -> Unit) {
                         descripcion = desc,
                         tipo = tipoEnum,
                         prioridad = prioridadEnum,
-                        fechaLimite = fechaLimite
+                        fechaLimite = fechaLimite,
+                        frecuencia = frecuencia
                     )
                 } else {
                     Toast.makeText(context, "Error: Usuario sin grupo personal.", Toast.LENGTH_LONG).show()

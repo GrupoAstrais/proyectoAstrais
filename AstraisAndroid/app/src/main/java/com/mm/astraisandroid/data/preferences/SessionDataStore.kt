@@ -4,6 +4,9 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 object SessionManager {
     private var sharedPreferences: SharedPreferences? = null
@@ -11,6 +14,9 @@ object SessionManager {
     private const val ACCESS_KEY = "access_token"
     private const val REFRESH_KEY = "refresh_token"
     private const val GID_KEY = "personal_gid"
+
+    private val _isSessionActive = MutableStateFlow(true)
+    val isSessionActive: StateFlow<Boolean> = _isSessionActive.asStateFlow()
 
     fun init(context: Context) {
         if (sharedPreferences != null) return
@@ -26,6 +32,8 @@ object SessionManager {
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )
+
+        _isSessionActive.value = hasSession()
     }
 
     fun saveTokens(access: String, refresh: String) {
@@ -34,6 +42,8 @@ object SessionManager {
             putString(REFRESH_KEY, refresh)
             apply()
         }
+
+        _isSessionActive.value = true
     }
 
     fun savePersonalGid(gid: Int) {
@@ -52,5 +62,6 @@ object SessionManager {
 
     fun clear() {
         sharedPreferences?.edit()?.clear()?.apply()
+        _isSessionActive.value = false
     }
 }

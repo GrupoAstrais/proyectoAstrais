@@ -6,6 +6,7 @@ package com.mm.astraisandroid.data.models
 enum class TaskState {
     ACTIVE,   // Tarea activa y pendiente de realizar
     COMPLETE, // Tarea ya finalizada
+    DUE,
     UNKNOWN
 }
 

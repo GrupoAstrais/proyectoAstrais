@@ -9,12 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,28 +21,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.mm.astraisandroid.data.models.TaskPriority
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateTareaDialog(
-    parentId: Int? = null,
+fun EditTaskDialog(
+    task: TaskUIModel,
     onDismiss: () -> Unit,
-    onCreate: (titulo: String, desc: String, tipo: String, prioridad: Int, frecuencia: String?, fechaLimite: String?) -> Unit
+    onEdit: (titulo: String, descripcion: String, prioridad: TaskPriority, fechaLimite: String?, frecuencia: String?) -> Unit
 ) {
+    var titulo by remember { mutableStateOf(task.title) }
+    var desc by remember { mutableStateOf(task.description) }
+    var prioridadInt by remember { mutableIntStateOf(task.priority.ordinal) }
+
+    var frecuencia by remember { mutableStateOf(task.habitFrequency ?: "DAILY") }
     var fechaLimite by remember { mutableStateOf("") }
-    var titulo by remember { mutableStateOf("") }
-    var desc by remember { mutableStateOf("") }
-
-    var tipo by remember { mutableStateOf(if (parentId != null) "UNICO" else "UNICO") }
-
-    var prioridad by remember { mutableStateOf(0) }
-    var frecuencia by remember { mutableStateOf("DAILY") }
     var showDatePicker by remember { mutableStateOf(false) }
 
-    val tipos = listOf("UNICO", "OBJETIVO", "HABITO")
     val prioridades = listOf("BAJA", "MEDIA", "ALTA")
     val frecuencias = listOf("DAILY" to "Diario", "WEEKLY" to "Semanal", "MONTHLY" to "Mensual")
 
@@ -63,7 +56,7 @@ fun CreateTareaDialog(
                 .padding(20.dp),
         ) {
             Text(
-                text = if (parentId != null) "Nueva subtarea" else "Nueva tarea",
+                text = "Editar Tarea",
                 color = Color.White,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Black,
@@ -78,8 +71,7 @@ fun CreateTareaDialog(
                     value = titulo,
                     onValueChange = { titulo = it },
                     modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color.White.copy(alpha = 0.07f)).border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(10.dp)).padding(horizontal = 14.dp, vertical = 10.dp),
-                    textStyle = TextStyle(color = Color.White, fontSize = 13.sp, fontFamily = FontFamily.Monospace),
-                    decorationBox = { inner -> if (titulo.isEmpty()) Text("Nombre de la tarea...", color = Color.White.copy(alpha = 0.2f), fontSize = 13.sp, fontFamily = FontFamily.Monospace); inner() }
+                    textStyle = TextStyle(color = Color.White, fontSize = 13.sp, fontFamily = FontFamily.Monospace)
                 )
             }
 
@@ -91,33 +83,18 @@ fun CreateTareaDialog(
                     value = desc,
                     onValueChange = { desc = it },
                     modifier = Modifier.fillMaxWidth().heightIn(min = 60.dp, max = 150.dp).clip(RoundedCornerShape(10.dp)).background(Color.White.copy(alpha = 0.07f)).border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(10.dp)).padding(horizontal = 14.dp, vertical = 10.dp),
-                    textStyle = TextStyle(color = Color.White, fontSize = 13.sp, fontFamily = FontFamily.Monospace),
-                    decorationBox = { inner -> if (desc.isEmpty()) Text("Detalles adicionales...", color = Color.White.copy(alpha = 0.2f), fontSize = 13.sp, fontFamily = FontFamily.Monospace); inner() }
+                    textStyle = TextStyle(color = Color.White, fontSize = 13.sp, fontFamily = FontFamily.Monospace)
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            AnimatedVisibility(visible = parentId == null) {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(bottom = 12.dp)) {
-                    Text("TIPO", color = Color.White.copy(alpha = 0.4f), fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.5.sp)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                        tipos.forEach { t ->
-                            val isSelected = tipo == t
-                            Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).background(if (isSelected) Color.White.copy(alpha = 0.15f) else Color.Transparent).border(1.dp, if (isSelected) Color.White.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.1f), RoundedCornerShape(8.dp)).clickable { tipo = t }.padding(vertical = 7.dp), contentAlignment = Alignment.Center) {
-                                Text(text = t, color = if (isSelected) Color.White else Color.White.copy(alpha = 0.4f), fontSize = 11.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal, fontFamily = FontFamily.Monospace)
-                            }
-                        }
-                    }
-                }
-            }
-
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("PRIORIDAD", color = Color.White.copy(alpha = 0.4f), fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.5.sp)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                     prioridades.forEachIndexed { index, p ->
-                        val isSelected = prioridad == index
-                        Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).background(if (isSelected) Color.White.copy(alpha = 0.15f) else Color.Transparent).border(1.dp, if (isSelected) Color.White.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.1f), RoundedCornerShape(8.dp)).clickable { prioridad = index }.padding(vertical = 7.dp), contentAlignment = Alignment.Center) {
+                        val isSelected = prioridadInt == index
+                        Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).background(if (isSelected) Color.White.copy(alpha = 0.15f) else Color.Transparent).border(1.dp, if (isSelected) Color.White.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.1f), RoundedCornerShape(8.dp)).clickable { prioridadInt = index }.padding(vertical = 7.dp), contentAlignment = Alignment.Center) {
                             Text(text = p, color = if (isSelected) Color.White else Color.White.copy(alpha = 0.4f), fontSize = 11.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal, fontFamily = FontFamily.Monospace)
                         }
                     }
@@ -126,9 +103,9 @@ fun CreateTareaDialog(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            AnimatedVisibility(visible = tipo == "HABITO") {
+            AnimatedVisibility(visible = task.tipo == "HABITO") {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(bottom = 12.dp)) {
-                    Text("FRECUENCIA", color = Color.White.copy(alpha = 0.4f), fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.5.sp)
+                    Text("NUEVA FRECUENCIA", color = Color.White.copy(alpha = 0.4f), fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.5.sp)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                         frecuencias.forEach { (clave, etiqueta) ->
                             val isSelected = frecuencia == clave
@@ -140,14 +117,14 @@ fun CreateTareaDialog(
                 }
             }
 
-            AnimatedVisibility(visible = tipo == "UNICO") {
+            AnimatedVisibility(visible = task.tipo == "UNICO") {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(bottom = 12.dp)) {
-                    Text("FECHA LÍMITE", color = Color.White.copy(alpha = 0.4f), fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.5.sp)
+                    Text("NUEVA FECHA LÍMITE (Opcional)", color = Color.White.copy(alpha = 0.4f), fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.5.sp)
                     Box(
                         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color.White.copy(alpha = 0.07f)).border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(10.dp)).clickable { showDatePicker = true }.padding(horizontal = 14.dp, vertical = 12.dp)
                     ) {
                         Text(
-                            text = if (fechaLimite.isEmpty()) "Seleccionar fecha..." else fechaLimite,
+                            text = if (fechaLimite.isEmpty()) "Dejar sin cambios..." else fechaLimite,
                             color = if (fechaLimite.isEmpty()) Color.White.copy(alpha = 0.2f) else Color.White,
                             fontSize = 13.sp,
                             fontFamily = FontFamily.Monospace
@@ -164,10 +141,14 @@ fun CreateTareaDialog(
                 }
                 Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(10.dp)).background(if (titulo.isNotBlank()) Color.White else Color.White.copy(alpha = 0.1f))
                     .clickable(enabled = titulo.isNotBlank()) {
-                        onCreate(titulo, desc, tipo, prioridad, if (tipo == "HABITO") frecuencia else null, if (tipo == "UNICO") fechaLimite else null)
+                        val prio = TaskPriority.entries.getOrElse(prioridadInt) { TaskPriority.LOW }
+                        val freqFinal = if (task.tipo == "HABITO") frecuencia else null
+                        val fechaFinal = if (task.tipo == "UNICO" && fechaLimite.isNotBlank()) "${fechaLimite}T23:59:59Z" else null
+
+                        onEdit(titulo, desc, prio, fechaFinal, freqFinal)
                     }
                     .padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
-                    Text("Crear", color = if (titulo.isNotBlank()) Color.Black else Color.White.copy(alpha = 0.3f), fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                    Text("Guardar", color = if (titulo.isNotBlank()) Color.Black else Color.White.copy(alpha = 0.3f), fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
                 }
             }
         }

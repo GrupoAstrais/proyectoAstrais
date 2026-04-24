@@ -37,11 +37,8 @@ interface TaskRepo {
      * Se intenta editar la tarea
      * @param uid ID del usuario que quiere editar la tarea
      * @param tid ID de la tarea a editar
-     * @param titulo Titulo de la tarea, si no se quiere editar se deja nulo o vacio
-     * @param desc Descripcion de la tarea, si no se quiere editar se deja nulo o vacio
-     * @param prio Prioridad de la tarea, si no se quiere editar se deja nulo o vacio
      */
-    suspend fun editTask(uid : Int, tid : Int, titulo : String?, desc : String?, prio : Int?) : CreateTaskRepoResponse
+    suspend fun editTask(uid: Int, tid: Int, request: EditTareaRequest): CreateTaskRepoResponse
 
     /**
      * Se intenta borrar la tarea
@@ -49,6 +46,8 @@ interface TaskRepo {
      * @param uid ID del usuario que intenta borrar la tarea
      */
     suspend fun deleteTask(tid : Int, uid : Int) : CreateTaskRepoResponse
+
+    suspend fun uncompleteTask(tid: Int, uid: Int): Boolean
 }
 
 fun getTaskDaoImpl() : TaskRepo{

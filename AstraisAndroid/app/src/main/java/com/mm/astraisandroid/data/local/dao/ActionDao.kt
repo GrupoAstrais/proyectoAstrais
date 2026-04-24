@@ -22,4 +22,7 @@ interface ActionDao {
      */
     @Delete
     suspend fun removeAction(action: PendingAction): Int
+
+    @Query("UPDATE pending_actions SET targetId = :newId WHERE targetId = :oldId")
+    suspend fun updateTargetIds(oldId: Int, newId: Int)
 }
