@@ -118,136 +118,146 @@ export default function Games() {
   return (
     <div
       style={{ backgroundImage: `url(${bgImage})` }}
-      className="relative h-screen overflow-hidden bg-cover bg-center font-['Space_Grotesk'] text-white"
+      className="relative h-screen w-screen overflow-hidden bg-cover bg-center font-['Space_Grotesk'] text-white"
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.30),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.24),transparent_40%)]" />
       <div className="pointer-events-none absolute inset-0 bg-black/60" />
       <div className="scanlines pointer-events-none absolute inset-0 opacity-25" />
 
-      <div className="relative z-10 flex h-full min-h-0 flex-col">
+      <div className="relative z-10 flex h-full w-full min-h-0 flex-col">
         <Navbar />
 
         <main className="flex min-h-0 flex-1 px-3 pb-3 pt-1 md:px-4 md:pb-4 xl:px-6 xl:pb-5">
-          <section className="games-stage mx-auto hidden h-full w-full max-w-365 gap-3 lg:grid lg:grid-cols-[minmax(0,1.18fr)_minmax(18.5rem,0.88fr)] min-[1400px]:gap-4 min-[1400px]:grid-cols-[minmax(0,1.36fr)_minmax(21rem,0.92fr)]">
-            <article className="panel-glow relative grid min-h-0 grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden rounded-[28px] border border-white/15 bg-[linear-gradient(150deg,rgba(15,23,42,0.86),rgba(76,29,149,0.62),rgba(30,74,99,0.74))] p-3.5 shadow-[0_20px_60px_rgba(7,12,24,0.52)] min-[1400px]:p-5">
+          <section className="games-stage mx-auto hidden h-full w-full gap-3 lg:grid lg:grid-cols-[minmax(0,1.18fr)_minmax(18.5rem,0.88fr)] min-[1400px]:gap-4 min-[1400px]:grid-cols-[minmax(0,1.36fr)_minmax(21rem,0.92fr)]">
+            <article className="relative grid grid-cols-12 overflow-hidden rounded-[28px] 
+            border border-white/15 
+            bg-[linear-gradient(150deg,rgba(15,23,42,0.86),rgba(76,29,149,0.62),rgba(30,74,99,0.74))] 
+            shadow-[0_20px_60px_rgba(7,12,24,0.52)] min-[1400px]:p-5">
               <div className="retro-grid absolute inset-0 opacity-35" />
               <div className="pointer-events-none absolute -left-16 top-5 h-44 w-44 rounded-full bg-secondary-500/18 blur-3xl" />
               <div className="pointer-events-none absolute bottom-0 right-0 h-48 w-48 rounded-full bg-primary-500/18 blur-3xl" />
 
-              <header className="relative z-10 grid grid-cols-[minmax(0,1fr)_15.5rem] gap-3 min-[1400px]:grid-cols-[minmax(0,1fr)_18rem] min-[1400px]:gap-4">
-                <div>
-                  <p className="inline-flex items-center rounded-full border border-accent-beige-300/30 bg-white/8 px-3 py-1 text-[0.64rem] font-semibold uppercase tracking-[0.28em] text-accent-beige-300">
-                    Arcade Astrais
-                  </p>
-                  <h1 className="mt-3 font-['Press_Start_2P'] text-[clamp(1rem,1.6vw,1.4rem)] leading-tight text-white">
-                    Atrapa Ludiones
-                  </h1>
-                  <p className="mt-3 max-w-xl text-[0.84rem] leading-5 text-slate-200 xl:text-[0.92rem] xl:leading-6">
-                    Una cabina arcade corta y directa para estas ventanas de escritorio. Diez segundos, ritmo alto y
-                    recompensa instantanea sin salir del panel.
-                  </p>
-                </div>
+              <div className='col-span-3 h-full'>
+                Sección de videojuegos
+              </div>
 
-                <div className="grid grid-cols-2 gap-2.5 min-[1400px]:gap-3">
-                  <div className="rounded-2xl border border-white/10 bg-black/22 px-3 py-3">
-                    <p className="text-[0.62rem] uppercase tracking-[0.24em] text-slate-300">Tiempo</p>
-                    <p className="mt-2 font-['Press_Start_2P'] text-[0.88rem] text-accent-beige-300 xl:text-[1rem]">{timeLeft}s</p>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-black/22 px-3 py-3">
-                    <p className="text-[0.62rem] uppercase tracking-[0.24em] text-slate-300">Estado</p>
-                    <p className="mt-2 text-[0.75rem] font-semibold uppercase tracking-[0.14em] text-white xl:text-[0.82rem]">
-                      {status === 'playing' ? 'Activo' : status === 'finished' ? 'Finalizado' : 'Listo'}
+              <div className='col-span-9 h-full grid content-between'>
+                <header className="relativ z-10 grid grid-cols-[minmax(0,1fr)_15.5rem] gap-3 min-[1400px]:grid-cols-[minmax(0,1fr)_18rem] min-[1400px]:gap-4">
+                  <div>
+                    <p className="inline-flex items-center rounded-full border border-accent-beige-300/30 bg-white/8 px-3 py-1 text-[0.64rem] font-semibold uppercase tracking-[0.28em] text-accent-beige-300">
+                      Arcade Astrais
+                    </p>
+                    <h1 className="mt-3 font-['Press_Start_2P'] text-[clamp(1rem,1.6vw,1.4rem)] leading-tight text-white">
+                      Atrapa Ludiones
+                    </h1>
+                    <p className="mt-3 max-w-xl text-[0.84rem] leading-5 text-slate-200 xl:text-[0.92rem] xl:leading-6">
+                      Una cabina arcade corta y directa para estas ventanas de escritorio. Diez segundos, ritmo alto y
+                      recompensa instantanea sin salir del panel.
                     </p>
                   </div>
-                </div>
-              </header>
 
-              <div className="relative z-10 mt-3 grid grid-cols-3 gap-2.5 min-[1400px]:gap-3">
-                <div className="rounded-2xl border border-white/10 bg-white/8 px-3 py-3">
-                  <p className="text-[0.62rem] uppercase tracking-[0.22em] text-slate-300">Puntuacion</p>
-                  <p className={`mt-2 font-['Press_Start_2P'] text-[1rem] text-white xl:text-[1.2rem] ${scorePulse ? 'score-pulse' : ''}`}>
-                    {score}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-white/8 px-3 py-3">
-                  <p className="text-[0.62rem] uppercase tracking-[0.22em] text-slate-300">Ritmo</p>
-                  <p className="mt-2 text-[0.95rem] font-semibold text-accent-mint-300 xl:text-[1.05rem]">{clicksPerSecond} cps</p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-white/8 px-3 py-3">
-                  <p className="text-[0.62rem] uppercase tracking-[0.22em] text-slate-300">Rango</p>
-                  <p className="mt-2 text-[0.92rem] font-semibold text-[#f5c6ff] xl:text-[1rem]">{roundRank}</p>
-                </div>
-              </div>
+                  <div className="grid grid-cols-2 my-auto text-center gap-2.5 min-[1400px]:gap-3">
+                    <div className="rounded-2xl border border-white/10 bg-black/22 px-3 py-3">
+                      <p className="text-[0.62rem] uppercase tracking-[0.24em] text-slate-300">Tiempo</p>
+                      <p className="mt-2 font-['Press_Start_2P'] text-[0.88rem] text-accent-beige-300 xl:text-[1rem]">{timeLeft}s</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-black/22 px-3 py-3">
+                      <p className="text-[0.62rem] uppercase tracking-[0.24em] text-slate-300">Estado</p>
+                      <p className="mt-2 text-[0.75rem] font-semibold uppercase tracking-[0.14em] text-white xl:text-[0.82rem]">
+                        {status === 'playing' ? 'Activo' : status === 'finished' ? 'Finalizado' : 'Listo'}
+                      </p>
+                    </div>
+                  </div>
+                </header>
 
-              <div className="relative z-10 mt-3 flex min-h-0 items-center justify-center">
-                <img
-                  src={astra}
-                  alt="Mascota Astrais"
-                  className="pointer-events-none absolute -bottom-7 right-10 hidden h-[clamp(6.5rem,15vh,9rem)] opacity-75 drop-shadow-[0_14px_26px_rgba(15,23,42,0.55)] min-[1400px]:block"
-                />
-                <div className="pointer-events-none absolute bottom-4 left-1/2 h-14 w-60 -translate-x-1/2 rounded-full bg-secondary-500/18 blur-3xl" />
-
-                <button
-                  type="button"
-                  onClick={handleArenaAction}
-                  disabled={status === 'finished'}
-                  className={`arena-ring relative flex h-[clamp(12.5rem,29vh,17rem)] w-[clamp(12.5rem,29vh,17rem)] flex-col items-center justify-center rounded-full border px-4 text-center transition duration-200 ${
-                    status === 'finished'
-                      ? 'cursor-not-allowed border-white/15 bg-black/25 text-slate-300'
-                      : 'cursor-pointer border-accent-beige-300/35 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.22),rgba(139,92,246,0.30),rgba(15,23,42,0.92))] text-white hover:scale-[1.015] active:scale-[0.985]'
-                  }`}
-                >
-                  <img src={logo} alt="Astrais token" className="mb-3 h-12 w-12 drop-shadow-[0_0_14px_rgba(255,255,255,0.35)] xl:h-14 xl:w-14" />
-                  <span className="font-['Press_Start_2P'] text-[0.72rem] leading-5 xl:text-[0.78rem]">
-                    {status === 'idle' && 'Pulsa para empezar'}
-                    {status === 'playing' && '+1 ludion'}
-                    {status === 'finished' && 'Partida cerrada'}
-                  </span>
-                  <span className="mt-3 max-w-44 text-[0.6rem] uppercase tracking-[0.22em] text-slate-200 xl:text-[0.64rem]">
-                    {status === 'playing'
-                      ? 'Mantente en ritmo'
-                      : status === 'finished'
-                        ? 'Lanza otra ronda'
-                        : 'Primer toque inicia el contador'}
-                  </span>
-                </button>
-              </div>
-
-              <footer className="relative z-10 mt-3 flex items-end justify-between gap-2.5 min-[1400px]:gap-3">
-                <div className="max-w-88 rounded-2xl border border-white/10 bg-black/18 px-4 py-3 text-[0.8rem] leading-5 text-slate-200 xl:text-[0.88rem] xl:leading-6">
-                  {status === 'playing' && 'La ronda esta en marcha. Cada clic empuja tu calor de sesion y tu premio final.'}
-                  {status === 'idle' && 'Todo listo para que empieces la partida.'}
-                  {status === 'finished' &&
-                    `Sesion completada. Premio actual: ${roundReward} ludiones. Mejor marca guardada: ${careerStats.bestScore}.`}
+                <div className="relative z-10 mt-3 grid grid-cols-3 gap-2.5 min-[1400px]:gap-3">
+                  <div className="rounded-2xl border border-white/10 bg-white/8 px-3 py-3">
+                    <p className="text-[0.62rem] uppercase tracking-[0.22em] text-slate-300">Puntuacion</p>
+                    <p className={`mt-2 font-['Press_Start_2P'] text-[1rem] text-white xl:text-[1.2rem] ${scorePulse ? 'score-pulse' : ''}`}>
+                      {score}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-white/8 px-3 py-3">
+                    <p className="text-[0.62rem] uppercase tracking-[0.22em] text-slate-300">Ritmo</p>
+                    <p className="mt-2 text-[0.95rem] font-semibold text-accent-mint-300 xl:text-[1.05rem]">{clicksPerSecond} cps</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-white/8 px-3 py-3">
+                    <p className="text-[0.62rem] uppercase tracking-[0.22em] text-slate-300">Rango</p>
+                    <p className="mt-2 text-[0.92rem] font-semibold text-[#f5c6ff] xl:text-[1rem]">{roundRank}</p>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2.5 min-[1400px]:gap-3">
-                  {status !== 'playing' ? (
-                    <button
-                      type="button"
-                      onClick={startRound}
-                      className="rounded-2xl border border-transparent bg-linear-to-r from-[#f97316] via-[#ec4899] to-[#8b5cf6] px-4 py-3 text-[0.78rem] font-semibold text-white shadow-[0_16px_28px_rgba(236,72,153,0.24)] transition hover:-translate-y-0.5"
-                    >
-                      {status === 'finished' ? 'Nueva ronda' : 'Salida rapida'}
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={resetRound}
-                      className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-[0.78rem] font-semibold text-white transition hover:bg-white/15"
-                    >
-                      Cancelar
-                    </button>
-                  )}
+                <div className="relative z-10 mt-3 flex min-h-0 items-center justify-center">
+                  <img
+                    src={astra}
+                    alt="Mascota Astrais"
+                    className="pointer-events-none absolute -bottom-24 right-10 hidden h-[clamp(6.5rem,15vh,9rem)] opacity-75 drop-shadow-[0_14px_26px_rgba(15,23,42,0.55)] min-[1400px]:block"
+                  />
+                  <div className="pointer-events-none absolute bottom-4 left-1/2 h-14 w-60 -translate-x-1/2 rounded-full bg-secondary-500/18 blur-3xl" />
 
-                  <NavLink
-                    to="/achievements"
-                    className="rounded-2xl border border-white/20 bg-black/18 px-4 py-3 text-[0.78rem] font-semibold text-white transition hover:border-accent-beige-300/50 hover:bg-white/10"
+                  <button
+                    type="button"
+                    onClick={handleArenaAction}
+                    disabled={status === 'finished'}
+                    className={`arena-ring relative flex h-[clamp(12.5rem,29vh,17rem)] w-[clamp(12.5rem,29vh,17rem)] flex-col items-center justify-center rounded-full border px-4 text-center transition duration-200 ${
+                      status === 'finished'
+                        ? 'cursor-not-allowed border-white/15 bg-black/25 text-slate-300'
+                        : 'cursor-pointer border-accent-beige-300/35 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.22),rgba(139,92,246,0.30),rgba(15,23,42,0.92))] text-white hover:scale-[1.015] active:scale-[0.985]'
+                    }`}
                   >
-                    Ver logros
-                  </NavLink>
+                    <img src={logo} alt="Astrais token" className="mb-3 h-12 w-12 drop-shadow-[0_0_14px_rgba(255,255,255,0.35)] xl:h-14 xl:w-14" />
+                    <span className="font-['Press_Start_2P'] text-[0.72rem] leading-5 xl:text-[0.78rem]">
+                      {status === 'idle' && 'Pulsa para empezar'}
+                      {status === 'playing' && '+1 ludion'}
+                      {status === 'finished' && 'Partida cerrada'}
+                    </span>
+                    <span className="mt-3 max-w-44 text-[0.6rem] uppercase tracking-[0.22em] text-slate-200 xl:text-[0.64rem]">
+                      {status === 'playing'
+                        ? 'Mantente en ritmo'
+                        : status === 'finished'
+                          ? 'Lanza otra ronda'
+                          : 'Primer toque inicia el contador'}
+                    </span>
+                  </button>
                 </div>
-              </footer>
+
+                <footer className="relative z-10 mt-3 flex items-end justify-between gap-2.5 min-[1400px]:gap-3">
+                  <div className="max-w-88 rounded-2xl border border-white/10 bg-black/18 px-4 py-3 text-[0.8rem] leading-5 text-slate-200 xl:text-[0.88rem] xl:leading-6">
+                    {status === 'playing' && 'La ronda esta en marcha. Cada clic empuja tu calor de sesion y tu premio final.'}
+                    {status === 'idle' && 'Todo listo para que empieces la partida.'}
+                    {status === 'finished' &&
+                      `Sesion completada. Premio actual: ${roundReward} ludiones. Mejor marca guardada: ${careerStats.bestScore}.`}
+                  </div>
+
+                  <div className="flex items-center gap-2.5 min-[1400px]:gap-3">
+                    {status !== 'playing' ? (
+                      <button
+                        type="button"
+                        onClick={startRound}
+                        className="rounded-2xl border border-transparent bg-linear-to-r from-[#f97316] via-[#ec4899] to-[#8b5cf6] px-4 py-3 text-[0.78rem] font-semibold text-white shadow-[0_16px_28px_rgba(236,72,153,0.24)] transition hover:-translate-y-0.5"
+                      >
+                        {status === 'finished' ? 'Nueva ronda' : 'Salida rapida'}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={resetRound}
+                        className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-[0.78rem] font-semibold text-white transition hover:bg-white/15"
+                      >
+                        Cancelar
+                      </button>
+                    )}
+
+                    <NavLink
+                      to="/achievements"
+                      className="rounded-2xl border border-white/20 bg-black/18 px-4 py-3 text-[0.78rem] font-semibold text-white transition hover:border-accent-beige-300/50 hover:bg-white/10"
+                    >
+                      Ver logros
+                    </NavLink>
+                  </div>
+                </footer>
+              </div>
+              
             </article>
 
             <aside className="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-3 min-[1400px]:gap-4">
