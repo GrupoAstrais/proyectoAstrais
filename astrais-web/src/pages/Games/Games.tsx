@@ -191,7 +191,7 @@ export default function Games() {
                   <img
                     src={astra}
                     alt="Mascota Astrais"
-                    className="pointer-events-none absolute -bottom-24 right-10 hidden h-[clamp(6.5rem,15vh,9rem)] opacity-75 drop-shadow-[0_14px_26px_rgba(15,23,42,0.55)] min-[1400px]:block"
+                    className="pointer-events-none absolute -bottom-24 right-8 hidden h-[clamp(6.5rem,15vh,9rem)] opacity-75 drop-shadow-[0_14px_26px_rgba(15,23,42,0.55)] min-[1400px]:block"
                   />
                   <div className="pointer-events-none absolute bottom-4 left-1/2 h-14 w-60 -translate-x-1/2 rounded-full bg-secondary-500/18 blur-3xl" />
 
@@ -223,10 +223,10 @@ export default function Games() {
 
                 <footer className="relative z-10 mt-3 flex items-end justify-between gap-2.5 min-[1400px]:gap-3">
                   <div className="max-w-88 rounded-2xl border border-white/10 bg-black/18 px-4 py-3 text-[0.8rem] leading-5 text-slate-200 xl:text-[0.88rem] xl:leading-6">
-                    {status === 'playing' && 'La ronda esta en marcha. Cada clic empuja tu calor de sesion y tu premio final.'}
+                    {status === 'playing' && 'La ronda esta en marcha. Cada clic cuenta.'}
                     {status === 'idle' && 'Todo listo para que empieces la partida.'}
                     {status === 'finished' &&
-                      `Sesion completada. Premio actual: ${roundReward} ludiones. Mejor marca guardada: ${careerStats.bestScore}.`}
+                      `Premio actual: ${roundReward} ludiones.`}
                   </div>
 
                   <div className="flex items-center gap-2.5 min-[1400px]:gap-3">
@@ -234,9 +234,9 @@ export default function Games() {
                       <button
                         type="button"
                         onClick={startRound}
-                        className="rounded-2xl border border-transparent bg-linear-to-r from-[#f97316] via-[#ec4899] to-[#8b5cf6] px-4 py-3 text-[0.78rem] font-semibold text-white shadow-[0_16px_28px_rgba(236,72,153,0.24)] transition hover:-translate-y-0.5"
+                        className="rounded-2xl border-0 bg-linear-to-r from-[#f97316] via-[#ec4899] to-[#8b5cf6] px-4 py-3 text-[0.78rem] font-semibold text-white shadow-[0_16px_28px_rgba(236,72,153,0.24)] transition hover:-translate-y-0.5"
                       >
-                        {status === 'finished' ? 'Nueva ronda' : 'Salida rapida'}
+                        {status === 'finished' ? 'Nueva ronda' : '¡Empezar!'}
                       </button>
                     ) : (
                       <button
