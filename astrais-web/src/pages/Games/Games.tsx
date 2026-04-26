@@ -183,7 +183,7 @@ export default function Games() {
                 <img
                   src={astra}
                   alt="Mascota Astrais"
-                  className="pointer-events-none absolute -bottom-12.5 right-15 hidden h-[clamp(6.5rem,15vh,9rem)] opacity-75 drop-shadow-[0_14px_26px_rgba(15,23,42,0.55)] min-[1400px]:block"
+                  className="pointer-events-none absolute -bottom-7 right-10 hidden h-[clamp(6.5rem,15vh,9rem)] opacity-75 drop-shadow-[0_14px_26px_rgba(15,23,42,0.55)] min-[1400px]:block"
                 />
                 <div className="pointer-events-none absolute bottom-4 left-1/2 h-14 w-60 -translate-x-1/2 rounded-full bg-secondary-500/18 blur-3xl" />
 
