@@ -1,6 +1,5 @@
 package com.astrais.db
 
-import AvatarLayer
 import CosmeticResponseDTO
 import LANG_CODE_ENGLISH
 import admin.RarityType
@@ -239,15 +238,14 @@ interface DatabaseDAO {
         assetRef: String,
         theme: String,
         coleccion: String,
-        layer : AvatarLayer?,
         rarity: RarityType
     ): Boolean
-
-    suspend fun retrieveAvatar(uid: Int) : List<AvatarLayerDTO>
 
     suspend fun saveConfirmationCode(uid: Int, code: String)
     suspend fun verifyConfirmationCode(email: String, code: String): Boolean
     suspend fun isUserConfirmed(email: String): Boolean
+
+    suspend fun getUserEquippedAvatar(uid: Int) : EntidadCosmetico?
 
 
 
@@ -259,7 +257,6 @@ interface DatabaseDAO {
                                     assetRef: String,
                                     theme: String,
                                     coleccion: String,
-                                    layer : AvatarLayer?,
                                     rarity: RarityType) : Boolean
     suspend fun admindeleteCosmetic(cid : Int) : Boolean
     suspend fun adminGetAllUsers() : List<DatosSimpleUsuarios>

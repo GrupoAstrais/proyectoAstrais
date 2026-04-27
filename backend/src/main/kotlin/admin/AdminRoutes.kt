@@ -1,6 +1,5 @@
 package admin
 
-import AvatarLayer
 import OK_MESSAGE_RESPONSE
 import com.astrais.ErrorCodes
 import com.astrais.Errors
@@ -53,7 +52,6 @@ enum class RarityType(val multiplier: Double) {
 fun calculateCosmeticPrice(type: CosmeticType, rarity: RarityType): Int {
     val baseCost = when (type) {
         CosmeticType.AVATAR_PART -> 100
-        CosmeticType.PET_SKIN -> 300
         CosmeticType.APP_THEME -> 500
         CosmeticType.PET -> 1000
     }
@@ -92,7 +90,7 @@ fun Route.adminRoutes() {
                 val multipart = call.receiveMultipart()
                 val data = receiveFormDataFromClient(multipart)
 
-                if (data.fileBytes == null || data.fileName.isBlank() || !data.fileName.endsWith(".json")) {
+                if (data.type == CosmeticType.PET && (data.fileBytes == null || data.fileName.isBlank() || !data.fileName.endsWith(".json"))) {
                     call.respond(
                         HttpStatusCode.BadRequest,
                         Errors(
@@ -101,17 +99,27 @@ fun Route.adminRoutes() {
                         )
                     )
                     return@post
+                } else if (data.type == CosmeticType.APP_THEME && (data.theme == null)){
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        Errors(
+                            ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal,
+                            "No se envio el JSON de tema"
+                        )
+                    )
+                    return@post
                 }
 
                 try {
-                    val uploadsubdir = "pets"
+                    val uploadsubdir = if (data.type == CosmeticType.PET) {"pets" } else { "avatar" }
 
-                    saveFileIntoCosmetics(
-                        uploadDir = uploadsubdir,
-                        filename = data.fileName,
-                        data = data.fileBytes!!
-                    )
-
+                    if (data.type == CosmeticType.PET || data.type == CosmeticType.AVATAR_PART) {
+                        saveFileIntoCosmetics(
+                            uploadDir = uploadsubdir,
+                            filename = data.fileName,
+                            data = data.fileBytes!!
+                        )
+                    }
 
                     val finalPrice = if (data.price == 0) {
                         calculateCosmeticPrice(data.type, data.rarity)
@@ -126,9 +134,8 @@ fun Route.adminRoutes() {
                         type = data.type,
                         price = finalPrice,
                         assetRef = data.fileName,
-                        theme = data.theme,
+                        theme = data.theme ?: "",
                         coleccion = data.collection,
-                        layer = data.layer,
                         rarity = data.rarity
                     )
 
@@ -150,7 +157,9 @@ fun Route.adminRoutes() {
                         )
                     }
                 } catch (e: Exception) {
+                    println("Exception! Tipo: ${e.javaClass.name}. Message ${e.message}")
                     e.printStackTrace()
+
                     call.respond(
                         HttpStatusCode.InternalServerError,
                         mapOf("error" to "Error al escribir el archivo")
@@ -200,20 +209,17 @@ fun Route.adminRoutes() {
                 }
 
                 try {
-                    val uploadsubdir = "pets"
+                    val uploadsubdir = if (data.type == CosmeticType.PET) {"pets" } else { "avatar" }
 
-                    saveFileIntoCosmetics(
-                        uploadDir = uploadsubdir,
-                        filename = data.fileName,
-                        data = data.fileBytes!!
-                    )
-
-
-                    val finalPrice = if (data.price == 0) {
-                        calculateCosmeticPrice(data.type, data.rarity)
-                    } else{
-                        data.price
+                    if ((data.fileBytes != null || data.fileName.isBlank() || !data.fileName.endsWith(".json")) && (data.type == CosmeticType.PET || data.type == CosmeticType.AVATAR_PART)) {
+                        saveFileIntoCosmetics(
+                            uploadDir = uploadsubdir,
+                            filename = data.fileName,
+                            data = data.fileBytes!!
+                        )
                     }
+
+
                     val success = getDatabaseDaoImpl().adminUpdateCosmetic(
                         cid = cid,
                         name = Json.encodeToString(
@@ -224,11 +230,10 @@ fun Route.adminRoutes() {
                         )),
                         desc = data.desc,
                         type = data.type,
-                        price = finalPrice,
+                        price = data.price,
                         assetRef = data.fileName,
-                        theme = data.theme,
+                        theme = data.theme ?: "",
                         coleccion = data.collection,
-                        layer = data.layer,
                         rarity = data.rarity
                     )
 
@@ -250,7 +255,9 @@ fun Route.adminRoutes() {
                         )
                     }
                 } catch (e: Exception) {
+                    println("Exception! Tipo: ${e.javaClass.name}. Message ${e.message}")
                     e.printStackTrace()
+
                     call.respond(
                         HttpStatusCode.InternalServerError,
                         mapOf("error" to "Error al escribir el archivo")
@@ -402,11 +409,10 @@ data class FormClientData(
     var desc : String,
     var type : CosmeticType,
     var price : Int,
-    var theme : String,
+    var theme : String?,
     var fileName : String,
     var fileBytes: ByteArray?,
     var collection : String,
-    var layer : AvatarLayer?
 )
 
 suspend fun receiveFormDataFromClient(multipart : MultiPartData) : FormClientData {
@@ -421,7 +427,6 @@ suspend fun receiveFormDataFromClient(multipart : MultiPartData) : FormClientDat
     var fileName : String = ""
     var fileBytes: ByteArray? = null
     var collection : String = "DEFAULT"
-    var layer : AvatarLayer? = null
 
     multipart.forEachPart { part ->
         when (part) {
@@ -436,7 +441,6 @@ suspend fun receiveFormDataFromClient(multipart : MultiPartData) : FormClientDat
                     "theme" -> theme = part.value
                     "collection" -> collection = part.value
                     "rarity" -> rarityStr = part.value
-                    "layer" -> layer = AvatarLayer.valueOf(part.value)
                 }
             }
             is PartData.FileItem -> {
@@ -463,8 +467,7 @@ suspend fun receiveFormDataFromClient(multipart : MultiPartData) : FormClientDat
         theme = theme,
         fileName = fileName,
         fileBytes = fileBytes,
-        collection = collection,
-        layer = layer
+        collection = collection
     )
 }
 

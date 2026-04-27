@@ -1,6 +1,7 @@
 package com.astrais
 
 import admin.adminRoutes
+import avatar.avatarRoute
 import com.astrais.auth.authRoutes
 import com.astrais.auth.installAuth
 import com.astrais.auth.oauthRoutes
@@ -116,11 +117,12 @@ fun Application.module() {
 
     routing {
         authRoutes()
+        adminRoutes()
+        avatarRoute()
         oauthRoutes()
         groupRoutes()
         tareaRoutes()
         storeRoutes()
-        adminRoutes()
         sseRoutes()
 
         staticResources("/static", "static") {}

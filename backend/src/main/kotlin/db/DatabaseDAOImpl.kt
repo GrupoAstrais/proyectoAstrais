@@ -1,13 +1,11 @@
 package com.astrais.db
 
-import AvatarLayer
 import CosmeticResponseDTO
 import LANG_CODE_ENGLISH
 import LANG_CODE_RUSSIAN
 import LANG_CODE_SPANISH
 import admin.NamesCosmetic
 import admin.RarityType
-import avatar.AvatarLayerDTO
 import com.astrais.mainlogger
 import java.time.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
@@ -649,20 +647,10 @@ class DatabaseDAOImpl : DatabaseDAO {
                         usuario.themeColors = cosmetico.tema
                     }
                 } else if (cosmetico.tipo == CosmeticType.AVATAR_PART) {
-                    val noLoPuso = (TablaAvatarEquipado.innerJoin(
-                        TablaCosmetico
-                    )).selectAll().where {
-                        TablaCosmetico.layer.isNotNull().and(TablaCosmetico.layer.eq(cosmetico.layer))
-                    }.singleOrNull()
-
-                    if (noLoPuso != null){
-                        TablaAvatarEquipado.deleteWhere {
-                            id.eq(noLoPuso[id])
-                        }
-                    }
-                    EntidadAvatarEquipado.new {
-                        this.id_usuario = EntityID(uid, TablaUsuario)
-                        this.id_cosmetico = EntityID(cosmeticId, TablaCosmetico)
+                    if (usuario.id_avatar_equipado?.value == cosmeticId) {
+                        usuario.id_avatar_equipado = null
+                    } else {
+                        usuario.id_avatar_equipado = EntityID(cosmeticId, TablaCosmetico)
                     }
                 }
 
@@ -681,14 +669,9 @@ class DatabaseDAOImpl : DatabaseDAO {
             assetRef: String,
             theme: String,
             coleccion: String,
-            layer : AvatarLayer?,
             rarity: RarityType
     ): Boolean {
         return suspendTransaction {
-            if (type == CosmeticType.AVATAR_PART && layer == null){
-                return@suspendTransaction false
-            }
-
             EntidadCosmetico.new {
                 this.nombre = name
                 this.descripcion = desc
@@ -697,25 +680,9 @@ class DatabaseDAOImpl : DatabaseDAO {
                 this.assetRef = assetRef
                 this.tema = theme
                 this.coleccion = coleccion
-                this.layer = layer
                 this.rareza = rarity
             }
             true
-        }
-    }
-
-    override suspend fun retrieveAvatar(uid: Int) : List<AvatarLayerDTO> {
-        return suspendTransaction {
-            (TablaInventario.innerJoin(TablaCosmetico)).selectAll().where {
-                (TablaInventario.id_usuario eq uid).and(TablaCosmetico.tipo eq CosmeticType.AVATAR_PART)
-            }.orderBy(TablaCosmetico.layer).map {
-                AvatarLayerDTO(
-                    slot = it[TablaCosmetico.tema],
-                    layer = it[TablaCosmetico.layer]!!,
-                    assetRef = it[TablaCosmetico.assetRef],
-                    cosmeticId = it[TablaCosmetico.id].value
-                )
-            }
         }
     }
 
@@ -752,6 +719,13 @@ class DatabaseDAOImpl : DatabaseDAO {
         }
     }
 
+    override suspend fun getUserEquippedAvatar(uid: Int): EntidadCosmetico? {
+        return suspendTransaction {
+            val id = TablaUsuario.select(TablaUsuario.id_avatar_equipado).singleOrNull()?.get(TablaUsuario.id_avatar_equipado) ?: return@suspendTransaction null
+            return@suspendTransaction EntidadCosmetico.findById(id)
+        }
+    }
+
     override suspend fun adminUpdateCosmetic(
         cid: Int,
         name: String,
@@ -761,13 +735,9 @@ class DatabaseDAOImpl : DatabaseDAO {
         assetRef: String,
         theme: String,
         coleccion: String,
-        layer: AvatarLayer?,
         rarity: RarityType
     ) : Boolean {
         return suspendTransaction {
-            if (type == CosmeticType.AVATAR_PART && layer != null){
-                return@suspendTransaction false
-            }
 
             val identity = EntidadCosmetico.findById(cid) ?: return@suspendTransaction false
             identity.nombre = name
@@ -777,7 +747,6 @@ class DatabaseDAOImpl : DatabaseDAO {
             identity.assetRef = assetRef
             identity.tema = theme
             identity.coleccion = coleccion
-            identity.layer = layer
             identity.rareza = rarity
             true
         }
