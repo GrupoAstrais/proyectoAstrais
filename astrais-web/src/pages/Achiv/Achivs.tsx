@@ -11,7 +11,7 @@ import {
   type AchievementFilter,
   type AchievementRarity,
 } from './achievementCatalog'
-import { readClickerStats } from '../Games/gameStorage'
+import { readArcadeStats } from '../Games/gameStorage'
 
 const CLAIMED_ACHIEVEMENTS_STORAGE_KEY = 'astrais.achievements.claimed'
 const SELECTED_ACHIEVEMENT_STORAGE_KEY = 'astrais.achievements.selected'
@@ -103,7 +103,7 @@ export default function Achivs() {
   const [activeFilter, setActiveFilter] = React.useState<AchievementFilter>('all')
   const [claimedIds, setClaimedIds] = React.useState<string[]>(() => readClaimedAchievements())
   const [selectedId, setSelectedId] = React.useState(() => readSelectedAchievement())
-  const [gameStats] = React.useState(() => readClickerStats())
+  const [gameStats] = React.useState(() => readArcadeStats())
 
   const achievements = buildAchievements(gameStats, claimedIds)
   const filteredAchievements = achievements.filter((achievement) => matchesAchievementFilter(achievement, activeFilter))
@@ -227,73 +227,75 @@ export default function Achivs() {
                 </div>
               </article>
 
-              <section className="grid min-h-0 grid-cols-2 grid-rows-2 gap-3 min-[1400px]:grid-cols-3 min-[1400px]:gap-4">
-                {filteredAchievements.map((achievement) => (
-                  <button
-                    key={achievement.id}
-                    type="button"
-                    onClick={() => setSelectedId(achievement.id)}
-                    className={`achievement-card flex h-full min-h-0 flex-col rounded-[22px] border p-3 text-left transition min-[1400px]:p-4 ${
-                      selectedAchievement?.id === achievement.id
-                        ? 'border-accent-beige-300/40 bg-[linear-gradient(160deg,rgba(255,255,255,0.12),rgba(129,140,248,0.12))] shadow-[0_16px_38px_rgba(15,23,42,0.36)]'
-                        : achievement.unlocked
-                          ? 'border-accent-mint-300/22 bg-[rgba(15,23,42,0.8)] hover:border-accent-mint-300/36 hover:bg-white/8'
-                          : 'border-white/10 bg-[rgba(15,23,42,0.74)] hover:border-white/18 hover:bg-white/8'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2.5">
-                        <div className={`flex h-10 w-10 items-center justify-center rounded-2xl border ${rarityClasses(achievement.rarity)}`}>
-                          {glyphForCategory(achievement.category)}
+              <section className="achievements-scroll min-h-0 overflow-y-auto pr-1">
+                <div className="grid auto-rows-[minmax(10.75rem,auto)] grid-cols-2 gap-3 min-[1400px]:grid-cols-3 min-[1400px]:gap-4">
+                  {filteredAchievements.map((achievement) => (
+                    <button
+                      key={achievement.id}
+                      type="button"
+                      onClick={() => setSelectedId(achievement.id)}
+                      className={`achievement-card flex min-h-43 flex-col rounded-[22px] border p-3 text-left transition min-[1400px]:p-4 ${
+                        selectedAchievement?.id === achievement.id
+                          ? 'border-accent-beige-300/40 bg-[linear-gradient(160deg,rgba(255,255,255,0.12),rgba(129,140,248,0.12))] shadow-[0_16px_38px_rgba(15,23,42,0.36)]'
+                          : achievement.unlocked
+                            ? 'border-accent-mint-300/22 bg-[rgba(15,23,42,0.8)] hover:border-accent-mint-300/36 hover:bg-white/8'
+                            : 'border-white/10 bg-[rgba(15,23,42,0.74)] hover:border-white/18 hover:bg-white/8'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2.5">
+                          <div className={`flex h-10 w-10 items-center justify-center rounded-2xl border ${rarityClasses(achievement.rarity)}`}>
+                            {glyphForCategory(achievement.category)}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[0.58rem] uppercase tracking-[0.18em] text-slate-400">{achievement.category}</p>
+                            <h2 className="mt-1 truncate text-[0.8rem] font-semibold text-white min-[1400px]:text-[0.9rem]">{achievement.title}</h2>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-[0.58rem] uppercase tracking-[0.18em] text-slate-400">{achievement.category}</p>
-                          <h2 className="mt-1 truncate text-[0.8rem] font-semibold text-white min-[1400px]:text-[0.9rem]">{achievement.title}</h2>
-                        </div>
-                      </div>
 
-                      <span className={`rounded-full border px-2 py-1 text-[0.52rem] uppercase tracking-[0.18em] ${rarityClasses(achievement.rarity)}`}>
-                        {achievement.rarity}
-                      </span>
-                    </div>
-
-                    <p className="mt-3 text-[0.72rem] leading-5 text-slate-300 line-clamp-achievement min-[1400px]:text-[0.8rem]">
-                      {achievement.description}
-                    </p>
-
-                    <div className="mt-3">
-                      <div className="mb-2 flex items-center justify-between text-[0.56rem] uppercase tracking-[0.18em] text-slate-400">
-                        <span>{achievement.progress}/{achievement.goal}</span>
-                        <span>
-                          {achievement.claimed
-                            ? 'Reclamado'
-                            : achievement.unlocked
-                              ? 'Listo'
-                              : achievement.progress > 0
-                                ? 'Avance'
-                                : 'Bloqueado'}
+                        <span className={`rounded-full border px-2 py-1 text-[0.52rem] uppercase tracking-[0.18em] ${rarityClasses(achievement.rarity)}`}>
+                          {achievement.rarity}
                         </span>
                       </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-white/10">
-                        <div
-                          className={`h-full rounded-full transition-all duration-300 ${
-                            achievement.claimed
-                              ? 'bg-linear-to-r from-accent-mint-300 to-[#10b981]'
-                              : achievement.unlocked
-                                ? 'bg-linear-to-r from-[#f59e0b] to-[#ec4899]'
-                                : 'bg-linear-to-r from-secondary-500 to-primary-500'
-                          }`}
-                          style={{ width: `${achievement.percent}%` }}
-                        />
-                      </div>
-                    </div>
 
-                    <div className="mt-auto flex items-center justify-between pt-3">
-                      <span className="text-[0.72rem] font-semibold text-[#f8d089] min-[1400px]:text-[0.82rem]">+{achievement.reward} ludiones</span>
-                      <span className="text-[0.58rem] uppercase tracking-[0.16em] text-slate-400">{achievement.percent}%</span>
-                    </div>
-                  </button>
-                ))}
+                      <p className="mt-3 text-[0.72rem] leading-5 text-slate-300 line-clamp-achievement min-[1400px]:text-[0.8rem]">
+                        {achievement.description}
+                      </p>
+
+                      <div className="mt-3">
+                        <div className="mb-2 flex items-center justify-between text-[0.56rem] uppercase tracking-[0.18em] text-slate-400">
+                          <span>{achievement.progress}/{achievement.goal}</span>
+                          <span>
+                            {achievement.claimed
+                              ? 'Reclamado'
+                              : achievement.unlocked
+                                ? 'Listo'
+                                : achievement.progress > 0
+                                  ? 'Avance'
+                                  : 'Bloqueado'}
+                          </span>
+                        </div>
+                        <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                          <div
+                            className={`h-full rounded-full transition-all duration-300 ${
+                              achievement.claimed
+                                ? 'bg-linear-to-r from-accent-mint-300 to-[#10b981]'
+                                : achievement.unlocked
+                                  ? 'bg-linear-to-r from-[#f59e0b] to-[#ec4899]'
+                                  : 'bg-linear-to-r from-secondary-500 to-primary-500'
+                            }`}
+                            style={{ width: `${achievement.percent}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mt-auto flex items-center justify-between pt-3">
+                        <span className="text-[0.72rem] font-semibold text-[#f8d089] min-[1400px]:text-[0.82rem]">+{achievement.reward} ludiones</span>
+                        <span className="text-[0.58rem] uppercase tracking-[0.16em] text-slate-400">{achievement.percent}%</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </section>
             </div>
 
@@ -475,6 +477,16 @@ export default function Achivs() {
 
         .achievement-card {
           box-shadow: 0 14px 30px rgba(7, 12, 24, 0.22);
+        }
+
+        .achievements-scroll {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+          overscroll-behavior: contain;
+        }
+
+        .achievements-scroll::-webkit-scrollbar {
+          display: none;
         }
 
         .line-clamp-achievement {

@@ -3,6 +3,7 @@ import Login from './pages/Auth/Login'
 import Register from './pages/Auth/Register'
 import Achivs from './pages/Achiv/Achivs'
 import Home from './pages/Dashboard/Home'
+import GameEmbed from './pages/Games/GameEmbed'
 import Games from './pages/Games/Games'
 import Group from './pages/Groups/Groups'
 import Shop from './pages/Shop/Shop'
@@ -30,6 +31,7 @@ export default function App() {
       <Route path="/tasks" element={<Tasks />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/shop" element={<Shop />} />
+      <Route path="/games/embed/:gameId" element={<GameEmbed />} />
       <Route path="/games" element={<Games />} />
       <Route path="/achievements" element={<Achivs />} />
       <Route path="*" element={<Placeholder title="Pagina no encontrada" />} />

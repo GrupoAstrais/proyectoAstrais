@@ -1,4 +1,4 @@
-import type { ClickerStats } from '../Games/gameStorage'
+import { getGameStats, PRIMARY_CLICKER_GAME_ID, type ArcadeStats } from '../Games/gameStorage'
 
 export type AchievementCategory = 'Minijuegos' | 'Exploracion' | 'Constancia' | 'Coleccion'
 export type AchievementRarity = 'Comun' | 'Raro' | 'Epico' | 'Legendario'
@@ -13,7 +13,7 @@ interface AchievementDefinition {
   goal: number
   reward: number
   hint: string
-  getProgress: (stats: ClickerStats) => number
+  getProgress: (stats: ArcadeStats) => number
 }
 
 export interface AchievementViewModel {
@@ -52,7 +52,7 @@ const achievementCatalog: AchievementDefinition[] = [
     goal: 1,
     reward: 40,
     hint: 'Juega una partida completa en la pestana de minijuegos.',
-    getProgress: (stats) => stats.gamesPlayed,
+    getProgress: (stats) => getGameStats(stats, PRIMARY_CLICKER_GAME_ID).gamesPlayed,
   },
   {
     id: 'cazador-de-ludiones',
@@ -63,7 +63,7 @@ const achievementCatalog: AchievementDefinition[] = [
     goal: 18,
     reward: 70,
     hint: 'Apunta a una racha de clics rapida durante los diez segundos.',
-    getProgress: (stats) => stats.bestScore,
+    getProgress: (stats) => getGameStats(stats, PRIMARY_CLICKER_GAME_ID).bestScore,
   },
   {
     id: 'reactor-estable',
@@ -73,8 +73,8 @@ const achievementCatalog: AchievementDefinition[] = [
     rarity: 'Raro',
     goal: 75,
     reward: 90,
-    hint: 'Cada clic cuenta. Varias partidas cortas tambien sirven.',
-    getProgress: (stats) => stats.totalClicks,
+    hint: 'Cada punto cuenta. Varias partidas cortas tambien sirven.',
+    getProgress: (stats) => stats.totalScore,
   },
   {
     id: 'coleccionista-curioso',
@@ -98,9 +98,53 @@ const achievementCatalog: AchievementDefinition[] = [
     hint: 'Las recompensas del minijuego se acumulan automaticamente entre sesiones.',
     getProgress: (stats) => stats.totalLudionsEarned,
   },
+  {
+    id: 'selector-de-cabinas',
+    title: 'Selector de cabinas',
+    description: 'Activa el nuevo catalogo y revisa una cabina del arcade.',
+    category: 'Exploracion',
+    rarity: 'Comun',
+    goal: 1,
+    reward: 20,
+    hint: 'Abre la seccion de minijuegos y carga cualquier cabina en el visor.',
+    getProgress: () => 1,
+  },
+  {
+    id: 'maraton-breve',
+    title: 'Maraton breve',
+    description: 'Completa varias rondas desde el iframe del catalogo.',
+    category: 'Constancia',
+    rarity: 'Raro',
+    goal: 5,
+    reward: 80,
+    hint: 'Termina cinco partidas en cualquier cabina disponible.',
+    getProgress: (stats) => stats.gamesPlayed,
+  },
+  {
+    id: 'pulso-constante',
+    title: 'Pulso constante',
+    description: 'Suma puntuacion total entre distintas sesiones del arcade.',
+    category: 'Minijuegos',
+    rarity: 'Epico',
+    goal: 220,
+    reward: 140,
+    hint: 'Acumula puntos jugando rondas completas en el visor.',
+    getProgress: (stats) => stats.totalScore,
+  },
+  {
+    id: 'reserva-prometida',
+    title: 'Reserva prometida',
+    description: 'Guarda una bolsa amplia de ludiones gracias a tus partidas.',
+    category: 'Coleccion',
+    rarity: 'Legendario',
+    goal: 300,
+    reward: 220,
+    hint: 'Las recompensas se calculan al finalizar cada ronda jugable.',
+    getProgress: (stats) => stats.totalLudionsEarned,
+  },
 ]
 
-export function buildAchievements(stats: ClickerStats, claimedIds: string[]): AchievementViewModel[] {
+export function buildAchievements(stats: ArcadeStats, claimedIds: string[]): AchievementViewModel[] {
   return achievementCatalog.map((achievement) => {
     const rawProgress = achievement.getProgress(stats)
     const progress = Math.max(0, Math.min(rawProgress, achievement.goal))
