@@ -40,7 +40,20 @@ export default function CreateGroupModal({
             tasks: [],
             role: 2
         });
+        cleanModal();
     };
+
+    const handleClose = () => {
+        cleanModal();
+        onClose();
+    }
+
+    const cleanModal = () => {
+        setName("");
+        setDescription("");
+        setPhoto(null);
+        setPreviewUrl(null);
+    }
 
     const triggerFileInput = () => {
         fileInputRef.current?.click();
@@ -116,7 +129,7 @@ export default function CreateGroupModal({
 
                 <div className="border-t border-gray-700 p-4 flex justify-end gap-3">
                     <button
-                        onClick={onClose}
+                        onClick={handleClose}
                         className="px-6 py-2 border border-gray-600 rounded-md text-white hover:bg-gray-700 transition-colors"
                     >
                         Cancelar

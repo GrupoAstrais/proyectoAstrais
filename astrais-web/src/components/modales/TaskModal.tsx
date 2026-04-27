@@ -103,7 +103,7 @@ export default function Modal({
     input.value = "";
   };
 
-  const updateSubtaskName = (subtaskId: number | string, name: string) => {
+  const updateSubtaskName = (subtaskId: number, name: string) => {
     setFormData((prev) => ({
       ...prev,
       subtasks: prev.subtasks.map((subtask) =>
@@ -117,7 +117,7 @@ export default function Modal({
     }));
   };
 
-  const removeSubtask = (subtaskId: number | string) => {
+  const removeSubtask = (subtaskId: number) => {
     setFormData((prev) => ({
       ...prev,
       subtasks: prev.subtasks.filter((subtask) => subtask.id !== subtaskId)
@@ -302,12 +302,12 @@ export default function Modal({
                     <input
                       type="text"
                       value={subtask.name}
-                      onChange={(e) => updateSubtaskName(subtask.id, e.target.value)}
+                      onChange={(e) => updateSubtaskName(subtask.id as number, e.target.value)}
                       className="flex-1 bg-transparent outline-none"
                     />
                     <button
                       type="button"
-                      onClick={() => removeSubtask(subtask.id)}
+                      onClick={() => removeSubtask(subtask.id as number)}
                       className="font-bold text-red-600 hover:text-red-800"
                     >
                       x
@@ -353,7 +353,7 @@ export default function Modal({
             <button
               type="button"
               onClick={onCancel}
-              className="min-w-25 rounded-md border border-primary-900 bg-white p-2 font-bold text-primary-900"
+              className="min-w-25 rounded-md border border-primary-900 bg-state-error p-2 font-bold text-primary-900"
             >
               Cancelar
             </button>

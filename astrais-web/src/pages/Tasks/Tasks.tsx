@@ -118,7 +118,12 @@ export default function Tasks() {
       );
     }
 
-    setTasks((prevTasks) => [...prevTasks, ...createdTasks]);
+    if (tasks == undefined) {
+      setTasks(createdTasks);
+    } else {
+      setTasks((prevTasks) => [...prevTasks, ...createdTasks]);
+    }
+
   };
 
   const recreateTaskWithChanges = async (currentTask: ITarea, currentSubtasks: ITarea[], data: ITaskFormData) => {

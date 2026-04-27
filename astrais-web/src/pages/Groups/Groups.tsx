@@ -165,7 +165,7 @@ export default function Groups() {
             group.gid === activeGroup
               ? {
                   ...group,
-                  tasks: serverTasks
+                  tasks: serverTasks ?? []
                 }
               : group
           )

@@ -62,6 +62,7 @@ export default function Home() {
         setPersonalGroupId(userData.personalGid);
 
         const serverTasks = await getTasksFromGroup(userData.personalGid);
+        console.log("use effect funciona confirmo");
         setTasks(serverTasks);
       } catch (loadError) {
         console.error("Error al cargar las tareas del dashboard:", loadError);
