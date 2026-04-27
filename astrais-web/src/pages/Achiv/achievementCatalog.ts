@@ -1,4 +1,10 @@
-import { getGameStats, PRIMARY_CLICKER_GAME_ID, type ArcadeStats } from '../Games/gameStorage'
+import {
+  ASTRA_MEMORY_GAME_ID,
+  getGameStats,
+  NEBULA_DASH_GAME_ID,
+  PRIMARY_CLICKER_GAME_ID,
+  type ArcadeStats,
+} from '../Games/gameStorage'
 
 export type AchievementCategory = 'Minijuegos' | 'Exploracion' | 'Constancia' | 'Coleccion'
 export type AchievementRarity = 'Comun' | 'Raro' | 'Epico' | 'Legendario'
@@ -141,6 +147,50 @@ const achievementCatalog: AchievementDefinition[] = [
     reward: 220,
     hint: 'Las recompensas se calculan al finalizar cada ronda jugable.',
     getProgress: (stats) => stats.totalLudionsEarned,
+  },
+  {
+    id: 'primer-dash-nebular',
+    title: 'Primer dash nebular',
+    description: 'Completa tu primera carrera en Nebula Dash.',
+    category: 'Minijuegos',
+    rarity: 'Comun',
+    goal: 1,
+    reward: 45,
+    hint: 'Entra en Nebula Dash y termina una carrera, aunque pierdas los escudos.',
+    getProgress: (stats) => getGameStats(stats, NEBULA_DASH_GAME_ID).gamesPlayed,
+  },
+  {
+    id: 'piloto-de-meteoros',
+    title: 'Piloto de meteoros',
+    description: 'Firma una carrera de alto rendimiento esquivando y recogiendo fragmentos.',
+    category: 'Minijuegos',
+    rarity: 'Epico',
+    goal: 90,
+    reward: 135,
+    hint: 'Mueve la nave por carriles y prioriza sobrevivir hasta el final.',
+    getProgress: (stats) => getGameStats(stats, NEBULA_DASH_GAME_ID).bestScore,
+  },
+  {
+    id: 'primer-patron-astra',
+    title: 'Primer patron astra',
+    description: 'Completa tu primera secuencia en Astra Memory.',
+    category: 'Minijuegos',
+    rarity: 'Comun',
+    goal: 1,
+    reward: 45,
+    hint: 'Juega una partida de Astra Memory y repite el patron de pads.',
+    getProgress: (stats) => getGameStats(stats, ASTRA_MEMORY_GAME_ID).gamesPlayed,
+  },
+  {
+    id: 'memoria-de-cristal',
+    title: 'Memoria de cristal',
+    description: 'Alcanza una puntuacion alta encadenando varias rondas de memoria.',
+    category: 'Constancia',
+    rarity: 'Epico',
+    goal: 80,
+    reward: 135,
+    hint: 'Mantente atento durante la fase de muestra antes de pulsar.',
+    getProgress: (stats) => getGameStats(stats, ASTRA_MEMORY_GAME_ID).bestScore,
   },
 ]
 

@@ -1,7 +1,9 @@
 import { useParams } from 'react-router'
+import AstraMemoryGame from './AstraMemoryGame'
 import LudionClickerGame from './LudionClickerGame'
+import NebulaDashGame from './NebulaDashGame'
 import { getGameById } from './gameCatalog'
-import { PRIMARY_CLICKER_GAME_ID } from './gameStorage'
+import { ASTRA_MEMORY_GAME_ID, NEBULA_DASH_GAME_ID, PRIMARY_CLICKER_GAME_ID } from './gameStorage'
 
 function ComingSoonGame({ title, description }: { title: string; description: string }) {
   return (
@@ -21,6 +23,14 @@ export default function GameEmbed() {
 
   if (game?.id === PRIMARY_CLICKER_GAME_ID) {
     return <LudionClickerGame gameId={game.id} />
+  }
+
+  if (game?.id === NEBULA_DASH_GAME_ID) {
+    return <NebulaDashGame gameId={game.id} />
+  }
+
+  if (game?.id === ASTRA_MEMORY_GAME_ID) {
+    return <AstraMemoryGame gameId={game.id} />
   }
 
   return (

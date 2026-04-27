@@ -162,9 +162,9 @@ export default function Shop() {
                       key={category}
                       type="button"
                       onClick={() => setActiveCategory(category)}
-                      className={`rounded-2xl border px-3 py-2.5 text-left text-[0.76rem] font-semibold transition xl:text-[0.82rem] ${
+                      className={`rounded-2xl border px-3 py-2.5 text-left text-[0.76rem] font-semibold xl:text-[0.82rem] ${
                         activeCategory === category
-                          ? 'border-transparent bg-linear-to-r from-[#f97316] via-[#ec4899] to-[#8b5cf6] text-white shadow-[0_10px_24px_rgba(236,72,153,0.20)]'
+                          ? 'border-0 bg-linear-to-r from-[#f97316] via-[#ec4899] to-[#8b5cf6] text-white shadow-[0_10px_24px_rgba(236,72,153,0.20)]'
                           : 'border-white/12 bg-white/6 text-slate-200 hover:bg-white/10'
                       }`}
                     >

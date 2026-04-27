@@ -385,11 +385,11 @@ export default function Achivs() {
                           type="button"
                           onClick={handleClaimReward}
                           disabled={!selectedAchievement.unlocked || selectedAchievement.claimed}
-                          className={`rounded-2xl px-4 py-3 text-[0.72rem] font-semibold transition min-[1400px]:text-[0.82rem] ${
+                          className={`rounded-2xl px-4 py-3 text-[0.72rem] font-semibold min-[1400px]:text-[0.82rem] ${
                             selectedAchievement.claimed
                               ? 'cursor-default border border-accent-mint-300/25 bg-accent-mint-300/12 text-accent-mint-300'
                               : selectedAchievement.unlocked
-                                ? 'border border-transparent bg-linear-to-r from-[#f59e0b] via-[#ec4899] to-[#8b5cf6] text-white shadow-[0_14px_28px_rgba(236,72,153,0.24)] hover:-translate-y-0.5'
+                                ? '<border-0></border-0> bg-linear-to-r from-[#f59e0b] via-[#ec4899] to-[#8b5cf6] text-white shadow-[0_14px_28px_rgba(236,72,153,0.24)] hover:-translate-y-0.5'
                                 : 'cursor-not-allowed border border-white/10 bg-white/8 text-slate-400'
                           }`}
                         >
