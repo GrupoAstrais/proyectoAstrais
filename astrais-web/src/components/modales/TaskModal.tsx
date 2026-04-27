@@ -1,15 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { ITarea } from "../../types/Interfaces";
 import {
   buildTaskFormData,
   formatTaskDate,
   type ITaskFormData,
-  type ITaskFormSubtask,
   type THabitFrequency,
   type TTaskPriority
 } from "../../data/Api";
 import DifficultyModal from "../ui/DifficultyModal";
-import TaskType from "../ui/TaskType";
 import DiaryHabit from "../ui/DiaryHabit";
 
 interface ModalProps {
@@ -18,6 +16,7 @@ interface ModalProps {
   onDelete?: (() => void | Promise<void>) | null;
   initialData?: ITarea | null;
   subtasks?: ITarea[];
+  tareasObjetivos: ITarea[];
 }
 
 const getDefaultFormData = (): ITaskFormData => ({
@@ -25,8 +24,6 @@ const getDefaultFormData = (): ITaskFormData => ({
   description: "",
   difficulty: 1,
   taskType: "daily",
-  isComposed: false,
-  subtasks: [],
   habitFrequency: null,
   taskDate: formatTaskDate(new Date())
 });
@@ -36,36 +33,21 @@ export default function Modal({
   onCancel,
   onDelete,
   initialData,
-  subtasks = []
+  tareasObjetivos
 }: ModalProps) {
   const [formData, setFormData] = useState<ITaskFormData>(getDefaultFormData);
-  const subtaskInputRef = useRef<HTMLInputElement>(null);
+  const [objetivo, setObjetivo] = useState<number>(-1);
 
   useEffect(() => {
     if (!initialData) {
       setFormData(getDefaultFormData());
-      if (subtaskInputRef.current) {
-        subtaskInputRef.current.value = "";
-      }
       return;
     }
 
-    setFormData(buildTaskFormData(initialData, subtasks));
+    setFormData(buildTaskFormData(initialData));
 
-    if (subtaskInputRef.current) {
-      subtaskInputRef.current.value = "";
-    }
-  }, [initialData, subtasks]);
+  }, [initialData]);
 
-  useEffect(() => {
-    if (formData.taskType === "habit" && formData.isComposed) {
-      setFormData((prev) => ({
-        ...prev,
-        isComposed: false,
-        subtasks: []
-      }));
-    }
-  }, [formData.isComposed, formData.taskType]);
 
   const setDifficulty = (difficulty: TTaskPriority) => {
     setFormData((prev) => ({
@@ -77,52 +59,10 @@ export default function Modal({
   const setTaskType = (taskType: ITaskFormData["taskType"]) => {
     setFormData((prev) => ({
       ...prev,
-      taskType,
-      isComposed: taskType === "habit" ? false : prev.isComposed,
-      subtasks: taskType === "habit" ? [] : prev.subtasks
+      taskType
     }));
   };
 
-  const addSubtask = () => {
-    const input = subtaskInputRef.current;
-
-    if (!input || !input.value.trim()) {
-      return;
-    }
-
-    const nextSubtask: ITaskFormSubtask = {
-      id: `new-${Date.now()}`,
-      name: input.value.trim()
-    };
-
-    setFormData((prev) => ({
-      ...prev,
-      subtasks: [...prev.subtasks, nextSubtask]
-    }));
-
-    input.value = "";
-  };
-
-  const updateSubtaskName = (subtaskId: number | string, name: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      subtasks: prev.subtasks.map((subtask) =>
-        subtask.id === subtaskId
-          ? {
-              ...subtask,
-              name
-            }
-          : subtask
-      )
-    }));
-  };
-
-  const removeSubtask = (subtaskId: number | string) => {
-    setFormData((prev) => ({
-      ...prev,
-      subtasks: prev.subtasks.filter((subtask) => subtask.id !== subtaskId)
-    }));
-  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -137,21 +77,12 @@ export default function Modal({
       return;
     }
 
-    if (formData.isComposed && formData.subtasks.length === 0) {
-      alert("Las tareas compuestas necesitan al menos una subtarea.");
-      return;
-    }
 
     void onSubmit({
       ...formData,
       name: formData.name.trim(),
       description: formData.description.trim(),
-      subtasks: formData.subtasks
-        .map((subtask) => ({
-          ...subtask,
-          name: subtask.name.trim()
-        }))
-        .filter((subtask) => subtask.name.length > 0)
+      idObjetivo: objetivo
     });
   };
 
@@ -245,77 +176,33 @@ export default function Modal({
           <DiaryHabit
             handleActive={() => setTaskType("habit")}
             titulo="Habito"
-            esOtroActivo={formData.taskType === "habit" ? "Habito" : ""}
+            esOtroActivo={formData.taskType === "habit" ? "Habito" : formData.taskType === "daily" ? "Diaria" : "Objetivo"}
           />
           <DiaryHabit
             handleActive={() => setTaskType("daily")}
             titulo="Diaria"
-            esOtroActivo={formData.taskType === "daily" ? "Diaria" : ""}
+            esOtroActivo={formData.taskType === "daily" ? "Diaria" : formData.taskType === "habit" ? "Habito" : "Objetivo"}
+          />
+          <DiaryHabit
+            handleActive={() => setTaskType("objetivo")}
+            titulo="Objetivo"
+            esOtroActivo={formData.taskType === "daily" ? "Diaria" : formData.taskType === "habit" ? "Habito" : "Objetivo"}
           />
         </div>
 
-        {formData.taskType === "daily" && (
-          <div className="flex flex-row justify-around rounded-md border border-white/15 bg-accent-beige-300/80 px-2 py-4">
-            <TaskType
-              active={formData.isComposed}
-              handleActive={(active) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  isComposed: active,
-                  subtasks: active ? prev.subtasks : []
-                }))
-              }
-            />
-          </div>
-        )}
-
-        {formData.isComposed && (
+        {formData.taskType == "objetivo" && (
           <div className="rounded-md bg-accent-beige-300 p-3">
-            <h3 className="mb-2 font-bold text-primary-900">Subtareas</h3>
+            <h3 className="mb-2 font-bold text-primary-900">Elegir objetivo</h3>
             <div className="mb-3 flex gap-2">
-              <input
-                ref={subtaskInputRef}
-                type="text"
-                placeholder="Nueva subtarea"
-                className="flex-1 rounded border border-primary-900 px-3 py-1 text-primary-900"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addSubtask();
-                  }
-                }}
-              />
-              <button
-                type="button"
-                onClick={addSubtask}
-                className="rounded border border-primary-900 bg-state-success px-3 py-1 text-sm font-bold text-[#00371A]"
-              >
-                +
-              </button>
+              <select  className="text-primary-900"  id="objetivos" name="tareasObjetivos" value={objetivo ?? -1} onChange={(e) => setObjetivo(Number(e.target.value))}>
+                <option  key={-1} value={-1}>Elige tu objetivo</option>
+                {
+                  tareasObjetivos && tareasObjetivos.map((obj) => (
+                    <option  key={obj.id} value={obj.id}>{obj.titulo}</option>
+                  ))
+                }
+              </select>
             </div>
-            <ul className="max-h-40 space-y-2 overflow-y-auto">
-              {formData.subtasks.length === 0 ? (
-                <li className="text-sm italic text-gray-600">No hay subtareas</li>
-              ) : (
-                formData.subtasks.map((subtask) => (
-                  <li key={subtask.id} className="flex items-center gap-2 rounded bg-white/60 p-2 text-primary-900">
-                    <input
-                      type="text"
-                      value={subtask.name}
-                      onChange={(e) => updateSubtaskName(subtask.id, e.target.value)}
-                      className="flex-1 bg-transparent outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeSubtask(subtask.id)}
-                      className="font-bold text-red-600 hover:text-red-800"
-                    >
-                      x
-                    </button>
-                  </li>
-                ))
-              )}
-            </ul>
           </div>
         )}
 
@@ -353,7 +240,7 @@ export default function Modal({
             <button
               type="button"
               onClick={onCancel}
-              className="min-w-25 rounded-md border border-primary-900 bg-white p-2 font-bold text-primary-900"
+              className="min-w-25 rounded-md border border-primary-900 bg-state-error p-2 font-bold text-primary-900"
             >
               Cancelar
             </button>

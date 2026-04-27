@@ -3,8 +3,8 @@ import type { AddUserToGroup, CreateGroup, CreateTask, EditGroup, EditTask, Logi
 import type { IGroup, ITarea } from '../types/Interfaces';
 
 
-// export const API_BASE_URL = 'http://192.168.3.148:5684'
-export const API_BASE_URL = 'http://192.168.56.1:5684'
+ export const API_BASE_URL = 'http://192.168.3.148:5684' //url desde las practicas
+// export const API_BASE_URL = 'http://192.168.56.1:5684' //url desde casa
 
 
 let jwtToken: string | null = null
@@ -18,8 +18,14 @@ const instance = axios.create({
     headers: { 'Content-Type': 'application/json' }
 })
 
+const refreshInstance = axios.create({
+    baseURL: API_BASE_URL,
+    timeout: 10_000,
+    headers: { 'Content-Type': 'application/json' }
+});
+
 instance.interceptors.request.use(config => {
-    if (localStorage.getItem('jwtToken')) {
+    if (localStorage.getItem('jwtToken') && !config.url?.includes('/auth/regenAccess')) {
         config.headers.Authorization = `Bearer ${localStorage.getItem('jwtToken')}` // 
     }
     return config
@@ -28,15 +34,14 @@ instance.interceptors.request.use(config => {
 instance.interceptors.response.use(response => response, async error => {
     const originalRequest = error.config;
     const status = error.response?.status;
-    const errorCode = error.response?.data?.errorCode;
 
-    if (status === 401 && errorCode === 0 &&  !originalRequest._retry) {
+    if (status === 401 &&  !originalRequest._retry) {
             originalRequest._retry = true;
 
             const refreshToken = localStorage.getItem('jwtRefreshToken');
 
             try {
-                const res = await instance.post('/auth/regenAccess', {
+                const res = await refreshInstance.post('/auth/regenAccess', {
                     refreshToken
                 });
 
@@ -292,6 +297,8 @@ export async function addUserToGroup(req: AddUserToGroup) : Promise<void> {
 
 export async function createTask(req: CreateTask) : Promise<number> {
     try {
+            console.error(req);
+
         const data = await instance.post("/tasks", req);
         if (data.status >= 200 && data.status < 300) {
 
@@ -315,13 +322,14 @@ export async function createTask(req: CreateTask) : Promise<number> {
 export async function getTasksFromGroup(gid: number) : Promise<ITarea[]> {
     try {
 
-        const data = await instance.get("/tasks/"+{gid});
+        const data = await instance.post("/tasks/"+gid);
         if (data.status >= 200 && data.status < 300) {
-            console.error("Successful user group retrieval! ");
+            console.error("Successful user tasks page retrieval! ");
 
             const res = data.data as UserTasksResponse;
-
-            return res.tasksList;
+            
+            console.error(data.data);
+            return res.taskList;
         } else {
             console.error("Error en el log! " + data.data["error"]);
             return Promise.reject();
@@ -339,8 +347,8 @@ export async function getTasksFromGroup(gid: number) : Promise<ITarea[]> {
 
 export async function editTask(tid: number, req: EditTask) : Promise<void> {
     try {
-
-        const data = await instance.patch("/tasks/"+{tid}+"/edit", req);
+        console.log(tid);
+        const data = await instance.patch("/tasks/"+tid+"/edit", req);
         if (data.status >= 200 && data.status < 300) {
             console.error("Successful user task edit! ");
 
@@ -362,7 +370,7 @@ export async function editTask(tid: number, req: EditTask) : Promise<void> {
 
 export async function completeTask(tid: number) : Promise<void> {
     try {
-        const data = await instance.patch("/tasks/"+{tid}+"/complete");
+        const data = await instance.patch("/tasks/"+tid+"/complete");
 
         if (data.status >= 200 && data.status < 300) {
             console.error("Successful user task complete! ");
@@ -385,7 +393,7 @@ export async function completeTask(tid: number) : Promise<void> {
 
 export async function deleteTask(tid: number) : Promise<void> {
     try {
-        const data = await instance.patch("/tasks/"+{tid}+"/delete");
+        const data = await instance.delete("/tasks/"+tid+"/delete");
 
         if (data.status >= 200 && data.status < 300) {
             console.error("Successful user task delete! ");
@@ -411,8 +419,8 @@ export async function deleteTask(tid: number) : Promise<void> {
 
 export type TTaskTimeFilter = "Today" | "Tomorrow" | "All";
 export type TTaskPriority = 0 | 1 | 2;
-export type TTaskFormType = "habit" | "daily";
-export type THabitFrequency = "daily" | "weekly" | "monthly";
+export type TTaskFormType = "habit" | "daily" | "objetivo";
+export type THabitFrequency = "daily" | "weekly" | "monthly" | "hourly" | "yearly";
 
 export interface ITaskFormSubtask {
     id: number | string;
@@ -424,10 +432,9 @@ export interface ITaskFormData {
     description: string;
     difficulty: TTaskPriority;
     taskType: TTaskFormType;
-    isComposed: boolean;
-    subtasks: ITaskFormSubtask[];
     habitFrequency: THabitFrequency | null;
     taskDate: string;
+    idObjetivo?: number
 }
 
 interface ITaskCompletedFilters {
@@ -473,14 +480,18 @@ export const getTaskPriorityLabel = (priority: number): string => {
     }
 }
 
-const mapUiFrequencyToServer = (frequency: THabitFrequency | null): NonNullable<CreateTask["extraHabito"]>[1] => {
+const mapUiFrequencyToServer = (frequency: THabitFrequency | null): THabitFrequency => {
     switch (frequency) {
         case "weekly":
-            return "WEEKLY";
+            return "WEEKLY" as THabitFrequency;
         case "monthly":
-            return "MONTHLY";
+            return "MONTHLY" as THabitFrequency;
+        case "hourly":
+            return "HOURLY" as THabitFrequency;
+        case "yearly":
+            return "YEARLY" as THabitFrequency;
         default:
-            return "DAILY";
+            return "DAILY" as THabitFrequency;
     }
 }
 
@@ -582,6 +593,9 @@ export const isComposedTask = (task: ITarea, tasks: ITarea[]): boolean => {
 }
 
 export const getRootTasks = (tasks: ITarea[]): ITarea[] => {
+    if(tasks === undefined) {
+        return [];
+    }
     return tasks.filter((task) => !isTaskSubtask(task));
 }
 
@@ -593,44 +607,40 @@ export const getHabitTasks = (tasks: ITarea[]): ITarea[] => {
     return getRootTasks(tasks).filter((task) => task.tipo === "HABIT");
 }
 
-export const buildTaskFormData = (task: ITarea, subtasks: ITarea[] = []): ITaskFormData => {
+export const buildTaskFormData = (task: ITarea): ITaskFormData => {
     return {
         name: task.titulo,
         description: task.descripcion,
         difficulty: normalizeTaskPriority(task.prioridad),
         taskType: task.tipo === "HABIT" ? "habit" : "daily",
-        isComposed: isComposedTask(task, [task, ...subtasks]),
-        subtasks: subtasks.map((subtask) => ({
-            id: subtask.id,
-            name: subtask.titulo
-        })),
+        idObjetivo: task.idObjetivo,
         habitFrequency: getTaskHabitFrequency(task),
         taskDate: getTaskDate(task)
     };
 }
 
 export const buildCreateTaskRequest = (gid: number, data: ITaskFormData, parentTaskId?: number): CreateTask => {
-    const taskType: CreateTask["tipo"] =
-        typeof parentTaskId === "number"
-            ? "UNIQUE"
-            : data.taskType === "habit"
-                ? "HABIT"
-                : data.isComposed
-                    ? "OBJECTIVE"
-                    : "UNIQUE";
+    const taskType: 'UNICO' | 'HABITO' | 'OBJETIVO' =
+        data.idObjetivo ? 'OBJETIVO' : data.taskType === "habit"
+                ? 'HABITO' 
+                : 'UNICO';
 
     const request: CreateTask = {
         gid,
         titulo: data.name.trim(),
         descripcion: data.description.trim(),
-        tipo: taskType,
+        tipo: taskType as 'UNICO' | 'HABITO' | 'OBJETIVO',
         prioridad: normalizeTaskPriority(data.difficulty)
     };
 
-    if (taskType === "HABIT") {
-        request.extraHabito = [1, mapUiFrequencyToServer(data.habitFrequency)];
-    } else {
-        request.extraUnico = [normalizeTaskDateString(data.taskDate)];
+    if (taskType === "HABITO") {
+        request.extraHabito = {
+            numeroFrecuencia: 1, 
+            frequency: mapUiFrequencyToServer(data.habitFrequency) as 'HOURLY' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
+        };
+    } else if (taskType === "UNICO") {
+        request.extraUnico = {
+            fechaLimite: new Date(data.taskDate).toISOString()};
     }
 
     if (typeof parentTaskId === "number") {
@@ -648,11 +658,11 @@ export const buildEditTaskRequest = (data: ITaskFormData): EditTask => {
     };
 }
 
-export const shouldRecreateTaskOnEdit = (task: ITarea, subtasks: ITarea[], data: ITaskFormData): boolean => {
+export const shouldRecreateTaskOnEdit = (task: ITarea, data: ITaskFormData): boolean => {
     const nextTaskType =
         data.taskType === "habit"
             ? "HABIT"
-            : data.isComposed
+            : data.idObjetivo
                 ? "OBJECTIVE"
                 : "UNIQUE";
 
@@ -668,7 +678,7 @@ export const shouldRecreateTaskOnEdit = (task: ITarea, subtasks: ITarea[], data:
         return true;
     }
 
-    if (data.isComposed !== (subtasks.length > 0 || task.tipo === "OBJECTIVE")) {
+    if (data.idObjetivo || task.tipo === "OBJECTIVE") {
         return true;
     }
 
@@ -679,7 +689,7 @@ export const createLocalTask = (
     data: ITaskFormData,
     options: {
         gid: number;
-        id?: number;
+        id: number;
         idObjetivo?: number;
         estado?: ITarea["estado"];
         tipo?: ITarea["tipo"];
@@ -692,19 +702,19 @@ export const createLocalTask = (
             ? "UNIQUE"
             : data.taskType === "habit"
                 ? "HABIT"
-                : data.isComposed
+                : data.idObjetivo
                     ? "OBJECTIVE"
                     : "UNIQUE");
 
     return {
-        id: options.id ?? Date.now(),
+        id: options.id,
         gid: options.gid,
         titulo: data.name.trim(),
         descripcion: data.description.trim(),
         tipo: taskType,
         prioridad: priority,
-        extraUnico: taskType === "HABIT" ? undefined : [normalizeTaskDateString(data.taskDate)],
-        extraHabito: taskType === "HABIT" ? [1, mapUiFrequencyToServer(data.habitFrequency)] : undefined,
+        extraUnico: taskType === "UNIQUE" ? undefined : [normalizeTaskDateString(data.taskDate)],
+        extraHabito: taskType === "HABIT" ? [1, data.habitFrequency as "HOURLY" | "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY" | undefined] : undefined,
         idObjetivo: options.idObjetivo,
         estado: options.estado ?? "ACTIVE",
         recompensaXp: getTaskXpReward(priority),

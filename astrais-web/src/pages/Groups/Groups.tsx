@@ -12,6 +12,7 @@ import type { IGroup, ITarea } from "../../types/Interfaces";
 import {
   buildCreateTaskRequest,
   buildEditTaskRequest,
+  buildTaskFormData,
   completeTask,
   createLocalTask,
   createGroup,
@@ -33,8 +34,7 @@ import {
   sortTasksByCompleted,
   toggleSubtaskCompleted,
   toggleTaskCompleted,
-  type ITaskFormData,
-  type ITaskFormSubtask
+  type ITaskFormData
 } from "../../data/Api";
 
 const compareGroupsAlphabetically = (firstGroup: IGroup, secondGroup: IGroup): number => {
@@ -71,16 +71,34 @@ const getSortedGroups = (groups: IGroup[], activeGroup: number): IGroup[] => {
   });
 };
 
-const createSubtaskFormData = (data: ITaskFormData, subtask: ITaskFormSubtask): ITaskFormData => ({
-  name: subtask.name,
-  description: "",
-  difficulty: data.difficulty,
-  taskType: "daily",
-  isComposed: false,
-  subtasks: [],
-  habitFrequency: null,
-  taskDate: data.taskDate
+const normalizeObjectiveId = (idObjetivo?: number): number | undefined => {
+  return typeof idObjetivo === "number" && idObjetivo >= 0 ? idObjetivo : undefined;
+};
+
+const normalizeTaskFormData = (data: ITaskFormData, fallbackObjetivoId?: number): ITaskFormData => ({
+  ...data,
+  idObjetivo: normalizeObjectiveId(data.idObjetivo) ?? normalizeObjectiveId(fallbackObjetivoId)
 });
+
+const recreateTaskChildren = async (gid: number, parentTaskId: number, subtasks: ITarea[]): Promise<ITarea[]> => {
+  const recreatedSubtasks: ITarea[] = [];
+
+  for (const subtask of subtasks) {
+    const subtaskData = buildTaskFormData(subtask);
+    const subtaskId = await createTask(buildCreateTaskRequest(gid, subtaskData, parentTaskId));
+
+    recreatedSubtasks.push(
+      createLocalTask(subtaskData, {
+        gid,
+        id: subtaskId,
+        idObjetivo: parentTaskId,
+        tipo: "UNIQUE"
+      })
+    );
+  }
+
+  return recreatedSubtasks;
+};
 
 export default function Groups() {
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
@@ -165,7 +183,7 @@ export default function Groups() {
             group.gid === activeGroup
               ? {
                   ...group,
-                  tasks: serverTasks
+                  tasks: serverTasks ?? []
                 }
               : group
           )
@@ -199,7 +217,7 @@ export default function Groups() {
   const filteredGroupTasks = sortTasksByCompleted(
     filterTasksByCompleted(getRootTasks(activeGroupData?.tasks ?? []), groupTaskFilters)
   );
-  const selectedTaskSubtasks = initialDataModal && activeGroupData ? getTaskSubtasks(activeGroupData.tasks, initialDataModal.id) : [];
+  const availableObjectives = getRootTasks(activeGroupData?.tasks ?? []).filter((task) => task.id !== initialDataModal?.id);
 
   const updateActiveGroupTasks = (updater: (tasks: ITarea[]) => ITarea[]) => {
     setGroups((prevGroups) =>
@@ -235,122 +253,84 @@ export default function Groups() {
       return;
     }
 
-    const parentTaskId = await createTask(buildCreateTaskRequest(activeGroup, data));
-    const createdTasks: ITarea[] = [
-      createLocalTask(data, {
+    const normalizedData = normalizeTaskFormData(data);
+    const createdTaskId = await createTask(buildCreateTaskRequest(activeGroup, normalizedData));
+
+    updateActiveGroupTasks((groupTasks) => [
+      ...groupTasks,
+      createLocalTask(normalizedData, {
         gid: activeGroup,
-        id: parentTaskId
+        id: createdTaskId,
+        idObjetivo: normalizedData.idObjetivo
       })
-    ];
-
-    for (const subtask of data.isComposed ? data.subtasks : []) {
-      const subtaskData = createSubtaskFormData(data, subtask);
-      const subtaskId = await createTask(buildCreateTaskRequest(activeGroup, subtaskData, parentTaskId));
-
-      createdTasks.push(
-        createLocalTask(subtaskData, {
-          gid: activeGroup,
-          id: subtaskId,
-          idObjetivo: parentTaskId,
-          tipo: "UNIQUE"
-        })
-      );
-    }
-
-    updateActiveGroupTasks((groupTasks) => [...groupTasks, ...createdTasks]);
+    ]);
   };
 
   const recreateTaskWithChanges = async (currentTask: ITarea, currentSubtasks: ITarea[], data: ITaskFormData) => {
-    await createTaskWithSubtasks(data);
+    const normalizedData = normalizeTaskFormData(data, currentTask.idObjetivo);
+    const createdTaskId = await createTask(buildCreateTaskRequest(activeGroup, normalizedData));
+    const recreatedTasks: ITarea[] = [
+      createLocalTask(normalizedData, {
+        gid: activeGroup,
+        id: createdTaskId,
+        idObjetivo: normalizedData.idObjetivo
+      })
+    ];
+
+    if (typeof normalizedData.idObjetivo !== "number") {
+      recreatedTasks.push(...(await recreateTaskChildren(activeGroup, createdTaskId, currentSubtasks)));
+    }
 
     for (const subtask of currentSubtasks) {
       await deleteTask(subtask.id);
     }
 
     await deleteTask(currentTask.id);
-    updateActiveGroupTasks((groupTasks) => removeTaskWithSubtasks(groupTasks, currentTask.id));
+    updateActiveGroupTasks((groupTasks) => [...removeTaskWithSubtasks(groupTasks, currentTask.id), ...recreatedTasks]);
   };
 
-  const editTaskWithSubtasks = async (currentTask: ITarea, currentSubtasks: ITarea[], data: ITaskFormData) => {
-    await editTask(currentTask.id, buildEditTaskRequest(data));
+  const editTaskWithSubtasks = async (currentTask: ITarea, data: ITaskFormData) => {
+    const normalizedData = normalizeTaskFormData(data, currentTask.idObjetivo);
+    await editTask(currentTask.id, buildEditTaskRequest(normalizedData));
 
-    let nextTasks = (activeGroupData?.tasks ?? []).map((task) =>
+    const nextTasks = (activeGroupData?.tasks ?? []).map((task) =>
       task.id === currentTask.id
         ? {
             ...task,
-            titulo: data.name.trim(),
-            descripcion: data.description.trim(),
-            prioridad: data.difficulty,
-            recompensaXp: getTaskXpReward(data.difficulty)
+            titulo: normalizedData.name.trim(),
+            descripcion: normalizedData.description.trim(),
+            prioridad: normalizedData.difficulty,
+            recompensaXp: getTaskXpReward(normalizedData.difficulty)
           }
         : task
     );
-
-    const nextSubtasksById = new Map(data.subtasks.map((subtask) => [`${subtask.id}`, subtask]));
-
-    for (const subtask of currentSubtasks) {
-      if (!nextSubtasksById.has(`${subtask.id}`)) {
-        await deleteTask(subtask.id);
-        nextTasks = nextTasks.filter((task) => task.id !== subtask.id);
-      }
-    }
-
-    for (const subtask of data.subtasks) {
-      const existingSubtask = currentSubtasks.find((currentSubtask) => `${currentSubtask.id}` === `${subtask.id}`);
-
-      if (existingSubtask) {
-        if (existingSubtask.titulo !== subtask.name.trim() || existingSubtask.prioridad !== data.difficulty) {
-          await editTask(existingSubtask.id, {
-            titulo: subtask.name.trim(),
-            descripcion: existingSubtask.descripcion,
-            prioridad: `${data.difficulty}`
-          });
-        }
-
-        nextTasks = nextTasks.map((task) =>
-          task.id === existingSubtask.id
-            ? {
-                ...task,
-                titulo: subtask.name.trim(),
-                prioridad: data.difficulty,
-                recompensaXp: getTaskXpReward(data.difficulty)
-              }
-            : task
-        );
-        continue;
-      }
-
-      const subtaskData = createSubtaskFormData(data, subtask);
-      const newSubtaskId = await createTask(buildCreateTaskRequest(activeGroup, subtaskData, currentTask.id));
-
-      nextTasks = [
-        ...nextTasks,
-        createLocalTask(subtaskData, {
-          gid: activeGroup,
-          id: newSubtaskId,
-          idObjetivo: currentTask.id,
-          tipo: "UNIQUE"
-        })
-      ];
-    }
 
     updateActiveGroupTasks(() => nextTasks);
   };
 
   const handleModalSubmit = async (data: ITaskFormData) => {
+    const normalizedData = normalizeTaskFormData(data, initialDataModal?.idObjetivo);
+
+    if (data.taskType === "objetivo" && typeof normalizedData.idObjetivo !== "number") {
+      setError("Selecciona un objetivo.");
+      return;
+    }
+
     try {
+      setError(null);
+
       if (!initialDataModal) {
-        await createTaskWithSubtasks(data);
+        await createTaskWithSubtasks(normalizedData);
         closeTaskModalHandle();
         return;
       }
 
       const currentSubtasks = activeGroupData ? getTaskSubtasks(activeGroupData.tasks, initialDataModal.id) : [];
 
-      if (shouldRecreateTaskOnEdit(initialDataModal, currentSubtasks, data)) {
-        await recreateTaskWithChanges(initialDataModal, currentSubtasks, data);
+      if (shouldRecreateTaskOnEdit(initialDataModal, normalizedData)) {
+        await recreateTaskWithChanges(initialDataModal, currentSubtasks, normalizedData);
       } else {
-        await editTaskWithSubtasks(initialDataModal, currentSubtasks, data);
+        await editTaskWithSubtasks(initialDataModal, normalizedData);
       }
 
       closeTaskModalHandle();
@@ -577,7 +557,7 @@ export default function Groups() {
           onCancel={closeTaskModalHandle}
           onDelete={initialDataModal ? handleDeleteTask : null}
           initialData={initialDataModal}
-          subtasks={selectedTaskSubtasks}
+          tareasObjetivos={availableObjectives}
         />
       </div>
 
