@@ -39,10 +39,9 @@ const createSubtaskFormData = (data: ITaskFormData, subtask: ITaskFormSubtask): 
   description: "",
   difficulty: data.difficulty,
   taskType: "daily",
-  isComposed: false,
-  subtasks: [],
   habitFrequency: null,
-  taskDate: data.taskDate
+  taskDate: data.taskDate,
+  idObjetivo: data.idObjetivo != -1 && data.idObjetivo != undefined ? data.idObjetivo : undefined
 });
 
 export default function Tasks() {
@@ -54,6 +53,7 @@ export default function Tasks() {
   const [activeHabitos, setActiveHabitos] = useState<TTaskTimeFilter>("Today");
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [objetivos, setObjetivos] = useState<ITarea[]>([]);
   const [diariasCompletedFilters, setDiariasCompletedFilters] = useState({
     completed: false,
     pending: false
@@ -104,19 +104,6 @@ export default function Tasks() {
       })
     ];
 
-    for (const subtask of data.isComposed ? data.subtasks : []) {
-      const subtaskData = createSubtaskFormData(data, subtask);
-      const subtaskId = await createTask(buildCreateTaskRequest(personalGroupId, subtaskData, parentTaskId));
-
-      createdTasks.push(
-        createLocalTask(subtaskData, {
-          gid: personalGroupId,
-          id: subtaskId,
-          idObjetivo: parentTaskId,
-          tipo: "UNIQUE"
-        })
-      );
-    }
 
     if (tasks == undefined) {
       setTasks(createdTasks);
@@ -153,7 +140,6 @@ export default function Tasks() {
         : task
     );
 
-    const nextSubtasksById = new Map(data.subtasks.map((subtask) => [`${subtask.id}`, subtask]));
 
     for (const subtask of currentSubtasks) {
       if (!nextSubtasksById.has(`${subtask.id}`)) {
@@ -363,6 +349,7 @@ export default function Tasks() {
           onDelete={initialDataModal ? handleDeleteTask : null}
           initialData={initialDataModal}
           subtasks={selectedTaskSubtasks}
+          tareasObjetivos={objetivos}
         />
       </div>
 

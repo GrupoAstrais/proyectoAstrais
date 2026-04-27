@@ -419,7 +419,7 @@ export async function deleteTask(tid: number) : Promise<void> {
 
 export type TTaskTimeFilter = "Today" | "Tomorrow" | "All";
 export type TTaskPriority = 0 | 1 | 2;
-export type TTaskFormType = "habit" | "daily";
+export type TTaskFormType = "habit" | "daily" | "objetivo";
 export type THabitFrequency = "daily" | "weekly" | "monthly" | "hourly" | "yearly";
 
 export interface ITaskFormSubtask {
@@ -432,10 +432,9 @@ export interface ITaskFormData {
     description: string;
     difficulty: TTaskPriority;
     taskType: TTaskFormType;
-    isComposed: boolean;
-    subtasks: ITaskFormSubtask[];
     habitFrequency: THabitFrequency | null;
     taskDate: string;
+    idObjetivo?: number
 }
 
 interface ITaskCompletedFilters {
@@ -608,17 +607,13 @@ export const getHabitTasks = (tasks: ITarea[]): ITarea[] => {
     return getRootTasks(tasks).filter((task) => task.tipo === "HABIT");
 }
 
-export const buildTaskFormData = (task: ITarea, subtasks: ITarea[] = []): ITaskFormData => {
+export const buildTaskFormData = (task: ITarea): ITaskFormData => {
     return {
         name: task.titulo,
         description: task.descripcion,
         difficulty: normalizeTaskPriority(task.prioridad),
         taskType: task.tipo === "HABIT" ? "habit" : "daily",
-        isComposed: isComposedTask(task, [task, ...subtasks]),
-        subtasks: subtasks.map((subtask) => ({
-            id: subtask.id,
-            name: subtask.titulo
-        })),
+        idObjetivo: task.idObjetivo,
         habitFrequency: getTaskHabitFrequency(task),
         taskDate: getTaskDate(task)
     };
@@ -626,7 +621,7 @@ export const buildTaskFormData = (task: ITarea, subtasks: ITarea[] = []): ITaskF
 
 export const buildCreateTaskRequest = (gid: number, data: ITaskFormData, parentTaskId?: number): CreateTask => {
     const taskType: 'UNICO' | 'HABITO' | 'OBJETIVO' =
-        data.isComposed ? 'OBJETIVO' : data.taskType === "habit"
+        data.idObjetivo ? 'OBJETIVO' : data.taskType === "habit"
                 ? 'HABITO' 
                 : 'UNICO';
 
@@ -663,11 +658,11 @@ export const buildEditTaskRequest = (data: ITaskFormData): EditTask => {
     };
 }
 
-export const shouldRecreateTaskOnEdit = (task: ITarea, subtasks: ITarea[], data: ITaskFormData): boolean => {
+export const shouldRecreateTaskOnEdit = (task: ITarea, data: ITaskFormData): boolean => {
     const nextTaskType =
         data.taskType === "habit"
             ? "HABIT"
-            : data.isComposed
+            : data.idObjetivo
                 ? "OBJECTIVE"
                 : "UNIQUE";
 
@@ -683,7 +678,7 @@ export const shouldRecreateTaskOnEdit = (task: ITarea, subtasks: ITarea[], data:
         return true;
     }
 
-    if (data.isComposed !== (subtasks.length > 0 || task.tipo === "OBJECTIVE")) {
+    if (data.idObjetivo || task.tipo === "OBJECTIVE") {
         return true;
     }
 
@@ -707,7 +702,7 @@ export const createLocalTask = (
             ? "UNIQUE"
             : data.taskType === "habit"
                 ? "HABIT"
-                : data.isComposed
+                : data.idObjetivo
                     ? "OBJECTIVE"
                     : "UNIQUE");
 
