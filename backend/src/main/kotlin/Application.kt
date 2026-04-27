@@ -91,7 +91,7 @@ fun Application.module() {
         }
 
         exception<TokenExpiredException> { call, cause ->
-            mainlogger.
+            mainlogger.info("Token exception? ${cause.message}")
             call.respond(
                 HttpStatusCode.Unauthorized,
                 Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "Invalid/expired token")
