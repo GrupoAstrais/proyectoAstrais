@@ -1,3 +1,6 @@
+package old
+/*
+
 import com.astrais.db.CosmeticType
 import com.astrais.db.getDatabaseDaoImpl
 import io.ktor.http.HttpStatusCode
@@ -40,7 +43,7 @@ fun calculateCosmeticPrice(type: CosmeticType, rarity: RarityType): Int {
     return (baseCost * rarity.multiplier).toInt()
 }
 
-fun Route.adminRoutes() {
+fun Route.adminRoutesOld() {
     route("/admin") {
         post("/cosmetic/upload") {
             val multipart = call.receiveMultipart()
@@ -151,3 +154,4 @@ fun Route.adminRoutes() {
         }
     }
 }
+*/

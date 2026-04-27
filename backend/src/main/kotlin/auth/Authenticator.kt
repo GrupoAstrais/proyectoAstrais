@@ -6,6 +6,7 @@ import com.astrais.Errors
 import OK_MESSAGE_RESPONSE
 import auth.types.*
 import com.astrais.db.EntidadCosmetico
+import com.astrais.db.UserRoles
 import com.astrais.db.getDatabaseDaoImpl
 import supportedLanguages
 import io.ktor.http.*
@@ -37,15 +38,6 @@ fun Route.authRoutes() {
                 call.respond(
                         HttpStatusCode.BadRequest,
                         Errors(ErrorCodes.ERR_BLANKVALUE.ordinal, "One of the strings is blank")
-                )
-                return@post
-            }
-
-            val isConfirmed = getDatabaseDaoImpl().isUserConfirmed(request.email)
-            if (!isConfirmed) {
-                call.respond(
-                    HttpStatusCode.Forbidden,
-                    Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Please, verify your email before logging in.")
                 )
                 return@post
             }
@@ -273,7 +265,8 @@ fun Route.authRoutes() {
                             ludiones = user.ludiones,
                             personalGid = gidPersonal,
                             equippedPetRef = mascotaEquipadaAsset,
-                            themeColors = user.themeColors
+                            themeColors = user.themeColors,
+                            isAdmin = user.rol == UserRoles.ADMIN_USER
                     )
             )
         }
@@ -319,13 +312,14 @@ fun checkPassword(passwd: String, hash: String): Boolean {
 
 @Serializable
 data class UserMeResponse(
-        val id: Int,
-        val nombre: String,
-        val nivel: Int,
-        val xpActual: Int,
-        val xpTotal: Int,
-        val ludiones: Int,
-        val personalGid: Int?,
-        val equippedPetRef: String?,
-        val themeColors: String? = null
+    val id: Int,
+    val nombre: String,
+    val nivel: Int,
+    val xpActual: Int,
+    val xpTotal: Int,
+    val ludiones: Int,
+    val personalGid: Int?,
+    val equippedPetRef: String?,
+    val themeColors: String? = null,
+    val isAdmin : Boolean
 )
