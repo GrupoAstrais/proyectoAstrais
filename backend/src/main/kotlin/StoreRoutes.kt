@@ -28,7 +28,15 @@ fun Route.storeRoutes() {
         route("/store") {
             get("/items") {
                 val uid = call.principal<JWTPrincipal>()!!.subject?.toInt() ?: return@get call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "No UID available"))
-                call.respond(HttpStatusCode.OK, getDatabaseDaoImpl().getStoreItems(uid))
+                call.respond(HttpStatusCode.OK, getDatabaseDaoImpl().getStoreItems(uid, true))
+            }
+            get("/items/admin") {
+                val uid = call.principal<JWTPrincipal>()!!.subject?.toInt() ?: return@get call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "No UID available"))
+                if (getDatabaseDaoImpl().checkIfUserIsServerAdmin(uid)){
+                    call.respond(HttpStatusCode.OK, getDatabaseDaoImpl().getStoreItems(uid, false))
+                }else {
+                    call.respond(HttpStatusCode.Forbidden, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "You are not administrator"))
+                }
             }
             post("/buy/{id}") {
                 val uid = call.principal<JWTPrincipal>()!!.subject?.toInt() ?: return@post call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "No UID available"))

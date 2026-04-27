@@ -10,6 +10,7 @@ import ButtonComplete from "../../components/ui/ButtonComplete";
 import {
   buildCreateTaskRequest,
   buildEditTaskRequest,
+  buildTaskFormData,
   completeTask,
   createLocalTask,
   createTask,
@@ -19,6 +20,7 @@ import {
   filterTasksByTime,
   getDailyTasks,
   getHabitTasks,
+  getRootTasks,
   getTaskSubtasks,
   getTaskXpReward,
   getTasksFromGroup,
@@ -30,20 +32,37 @@ import {
   toggleSubtaskCompleted,
   toggleTaskCompleted,
   type ITaskFormData,
-  type ITaskFormSubtask,
   type TTaskTimeFilter
 } from "../../data/Api";
 
-const createSubtaskFormData = (data: ITaskFormData, subtask: ITaskFormSubtask): ITaskFormData => ({
-  name: subtask.name,
-  description: "",
-  difficulty: data.difficulty,
-  taskType: "daily",
-  isComposed: false,
-  subtasks: [],
-  habitFrequency: null,
-  taskDate: data.taskDate
+const normalizeObjectiveId = (idObjetivo?: number): number | undefined => {
+  return typeof idObjetivo === "number" && idObjetivo >= 0 ? idObjetivo : undefined;
+};
+
+const normalizeTaskFormData = (data: ITaskFormData, fallbackObjetivoId?: number): ITaskFormData => ({
+  ...data,
+  idObjetivo: normalizeObjectiveId(data.idObjetivo) ?? normalizeObjectiveId(fallbackObjetivoId)
 });
+
+const recreateTaskChildren = async (gid: number, parentTaskId: number, subtasks: ITarea[]): Promise<ITarea[]> => {
+  const recreatedSubtasks: ITarea[] = [];
+
+  for (const subtask of subtasks) {
+    const subtaskData = buildTaskFormData(subtask);
+    const subtaskId = await createTask(buildCreateTaskRequest(gid, subtaskData, parentTaskId));
+
+    recreatedSubtasks.push(
+      createLocalTask(subtaskData, {
+        gid,
+        id: subtaskId,
+        idObjetivo: parentTaskId,
+        tipo: "UNIQUE"
+      })
+    );
+  }
+
+  return recreatedSubtasks;
+};
 
 export default function Tasks() {
   const [tasks, setTasks] = useState<ITarea[]>([]);
@@ -96,33 +115,37 @@ export default function Tasks() {
       return;
     }
 
-    const parentTaskId = await createTask(buildCreateTaskRequest(personalGroupId, data));
-    const createdTasks: ITarea[] = [
-      createLocalTask(data, {
+    const normalizedData = normalizeTaskFormData(data);
+    const createdTaskId = await createTask(buildCreateTaskRequest(personalGroupId, normalizedData));
+
+    setTasks((prevTasks) => [
+      ...prevTasks,
+      createLocalTask(normalizedData, {
         gid: personalGroupId,
-        id: parentTaskId
+        id: createdTaskId,
+        idObjetivo: normalizedData.idObjetivo
       })
-    ];
-
-    for (const subtask of data.isComposed ? data.subtasks : []) {
-      const subtaskData = createSubtaskFormData(data, subtask);
-      const subtaskId = await createTask(buildCreateTaskRequest(personalGroupId, subtaskData, parentTaskId));
-
-      createdTasks.push(
-        createLocalTask(subtaskData, {
-          gid: personalGroupId,
-          id: subtaskId,
-          idObjetivo: parentTaskId,
-          tipo: "UNIQUE"
-        })
-      );
-    }
-
-    setTasks((prevTasks) => [...prevTasks, ...createdTasks]);
+    ]);
   };
 
   const recreateTaskWithChanges = async (currentTask: ITarea, currentSubtasks: ITarea[], data: ITaskFormData) => {
-    await createTaskWithSubtasks(data);
+    if (personalGroupId === null) {
+      return;
+    }
+
+    const normalizedData = normalizeTaskFormData(data, currentTask.idObjetivo);
+    const createdTaskId = await createTask(buildCreateTaskRequest(personalGroupId, normalizedData));
+    const recreatedTasks: ITarea[] = [
+      createLocalTask(normalizedData, {
+        gid: personalGroupId,
+        id: createdTaskId,
+        idObjetivo: normalizedData.idObjetivo
+      })
+    ];
+
+    if (typeof normalizedData.idObjetivo !== "number") {
+      recreatedTasks.push(...(await recreateTaskChildren(personalGroupId, createdTaskId, currentSubtasks)));
+    }
 
     for (const subtask of currentSubtasks) {
       await deleteTask(subtask.id);
@@ -130,93 +153,51 @@ export default function Tasks() {
 
     await deleteTask(currentTask.id);
 
-    setTasks((prevTasks) => removeTaskWithSubtasks(prevTasks, currentTask.id));
+    setTasks((prevTasks) => [...removeTaskWithSubtasks(prevTasks, currentTask.id), ...recreatedTasks]);
   };
 
-  const editTaskWithSubtasks = async (currentTask: ITarea, currentSubtasks: ITarea[], data: ITaskFormData) => {
-    await editTask(currentTask.id, buildEditTaskRequest(data));
+  const editTaskWithSubtasks = async (currentTask: ITarea, data: ITaskFormData) => {
+    const normalizedData = normalizeTaskFormData(data, currentTask.idObjetivo);
+    await editTask(currentTask.id, buildEditTaskRequest(normalizedData));
 
-    let nextTasks = tasks.map((task) =>
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
       task.id === currentTask.id
         ? {
             ...task,
-            titulo: data.name.trim(),
-            descripcion: data.description.trim(),
-            prioridad: data.difficulty,
-            recompensaXp: getTaskXpReward(data.difficulty)
+            titulo: normalizedData.name.trim(),
+            descripcion: normalizedData.description.trim(),
+            prioridad: normalizedData.difficulty,
+            recompensaXp: getTaskXpReward(normalizedData.difficulty)
           }
         : task
+      )
     );
-
-    const nextSubtasksById = new Map(data.subtasks.map((subtask) => [`${subtask.id}`, subtask]));
-
-    for (const subtask of currentSubtasks) {
-      if (!nextSubtasksById.has(`${subtask.id}`)) {
-        await deleteTask(subtask.id);
-        nextTasks = nextTasks.filter((task) => task.id !== subtask.id);
-      }
-    }
-
-    for (const subtask of data.subtasks) {
-      const existingSubtask = currentSubtasks.find((currentSubtask) => `${currentSubtask.id}` === `${subtask.id}`);
-
-      if (existingSubtask) {
-        if (existingSubtask.titulo !== subtask.name.trim() || existingSubtask.prioridad !== data.difficulty) {
-          await editTask(existingSubtask.id, {
-            titulo: subtask.name.trim(),
-            descripcion: existingSubtask.descripcion,
-            prioridad: `${data.difficulty}`
-          });
-        }
-
-        nextTasks = nextTasks.map((task) =>
-          task.id === existingSubtask.id
-            ? {
-                ...task,
-                titulo: subtask.name.trim(),
-                prioridad: data.difficulty,
-                recompensaXp: getTaskXpReward(data.difficulty)
-              }
-            : task
-        );
-        continue;
-      }
-
-      if (personalGroupId === null) {
-        continue;
-      }
-
-      const subtaskData = createSubtaskFormData(data, subtask);
-      const newSubtaskId = await createTask(buildCreateTaskRequest(personalGroupId, subtaskData, currentTask.id));
-
-      nextTasks = [
-        ...nextTasks,
-        createLocalTask(subtaskData, {
-          gid: personalGroupId,
-          id: newSubtaskId,
-          idObjetivo: currentTask.id,
-          tipo: "UNIQUE"
-        })
-      ];
-    }
-
-    setTasks(nextTasks);
   };
 
   const handleModalSubmit = async (data: ITaskFormData) => {
+    const normalizedData = normalizeTaskFormData(data, initialDataModal?.idObjetivo);
+
+    if (data.taskType === "objetivo" && typeof normalizedData.idObjetivo !== "number") {
+      setError("Selecciona un objetivo.");
+      return;
+    }
+
     try {
+      setError(null);
+
       if (!initialDataModal) {
-        await createTaskWithSubtasks(data);
+        await createTaskWithSubtasks(normalizedData);
         closeModalHandle();
         return;
       }
 
       const currentSubtasks = getTaskSubtasks(tasks, initialDataModal.id);
 
-      if (shouldRecreateTaskOnEdit(initialDataModal, currentSubtasks, data)) {
-        await recreateTaskWithChanges(initialDataModal, currentSubtasks, data);
+      if (shouldRecreateTaskOnEdit(initialDataModal, normalizedData)) {
+        await recreateTaskWithChanges(initialDataModal, currentSubtasks, normalizedData);
       } else {
-        await editTaskWithSubtasks(initialDataModal, currentSubtasks, data);
+        await editTaskWithSubtasks(initialDataModal, normalizedData);
       }
 
       closeModalHandle();
@@ -333,7 +314,7 @@ export default function Tasks() {
     filterTasksByCompleted(filterTasksByTime(habitosTasks, activeHabitos, selectedDate), habitosCompletedFilters)
   );
 
-  const selectedTaskSubtasks = initialDataModal ? getTaskSubtasks(tasks, initialDataModal.id) : [];
+  const availableObjectives = getRootTasks(tasks).filter((task) => task.id !== initialDataModal?.id);
 
   const editTaskHandle = (id: number) => {
     const taskToEdit = tasks.find((task) => task.id === id);
@@ -357,7 +338,7 @@ export default function Tasks() {
           onCancel={closeModalHandle}
           onDelete={initialDataModal ? handleDeleteTask : null}
           initialData={initialDataModal}
-          subtasks={selectedTaskSubtasks}
+          tareasObjetivos={availableObjectives}
         />
       </div>
 
@@ -435,7 +416,9 @@ export default function Tasks() {
                   <Task
                     key={task.id}
                     data={task}
+                    subtasks={getTaskSubtasks(tasks, task.id)}
                     onComplete={handleToggleTaskCompleted}
+                    onToggleSubtask={handleToggleSubtaskCompleted}
                     onToggleConfig={editTaskHandle}
                   />
                 ))

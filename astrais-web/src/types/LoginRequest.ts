@@ -62,20 +62,20 @@ export interface CreateTask {
   gid: number;
   titulo: string;
   descripcion: string;
-  tipo: 'UNIQUE' | 'HABIT' | 'OBJECTIVE';
+  tipo: 'UNICO' | 'HABITO' | 'OBJETIVO';
   prioridad: number;
-  extraUnico?: [
+  extraUnico?: {
     fechaLimite: string, // Formato ISO (date.toISOString()
-    ]
-  extraHabito?: [
-    numeroFrecuencia?: number,
-    frequency?: 'HOURLY' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
-  ]
+  }
+  extraHabito?: {
+    numeroFrecuencia: number,
+    frequency: 'HOURLY' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
+  }
   idObjetivo?: number,
 }
 
 export interface UserTasksResponse {
-  tasksList: ITarea[];
+  taskList: ITarea[];
 };
 
 export interface EditTask {

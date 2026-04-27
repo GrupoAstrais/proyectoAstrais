@@ -1,17 +1,17 @@
 package com.astrais
 
-import adminRoutes
+import admin.adminRoutes
 import com.astrais.auth.authRoutes
 import com.astrais.auth.installAuth
 import com.astrais.auth.oauthRoutes
 import com.astrais.db.initDatabase
 import com.astrais.groups.groupRoutes
+import com.auth0.jwt.exceptions.TokenExpiredException
 import installSSE
 import io.ktor.client.plugins.sse.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
-import io.ktor.server.auth.authenticate
 import io.ktor.server.engine.*
 import io.ktor.server.http.content.*
 import io.ktor.server.netty.*
@@ -81,12 +81,21 @@ fun Application.module() {
             )
         }
 
-        exception<BadRequestException> { call, _ ->
+        exception<BadRequestException> { call, except ->
+            mainlogger.severe("Bad request exception! Message: ${except.message}")
             call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "The data sent by the client was not in the accepted format"))
         }
 
         exception<NumberFormatException> { call, _ ->
             call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "Couldn't parse to int (Likely the UID)"))
+        }
+
+        exception<TokenExpiredException> { call, cause ->
+            mainlogger.info("Token exception? ${cause.message}")
+            call.respond(
+                HttpStatusCode.Unauthorized,
+                Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "Invalid/expired token")
+            )
         }
 
         exception<Exception> { call, except ->
@@ -101,12 +110,9 @@ fun Application.module() {
     routing {
         authRoutes()
         oauthRoutes()
-        authenticate("access-jwt") {
-            groupRoutes()
-            tareaRoutes()
-            storeRoutes()
-
-        }
+        groupRoutes()
+        tareaRoutes()
+        storeRoutes()
         adminRoutes()
         sseRoutes()
 

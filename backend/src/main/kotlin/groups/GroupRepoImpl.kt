@@ -88,14 +88,14 @@ class GroupRepoImpl : GroupRepo{
     }
 
     override suspend fun deleteGroup(gid: Int, uid: Int): Boolean {
-        if (getDatabaseDaoImpl().checkIfUserIsAdmin(uid = uid, gid = gid)){
+        if (getDatabaseDaoImpl().checkIfUserIsGroupAdmin(uid = uid, gid = gid)){
             return getDatabaseDaoImpl().deleteGroup(gid)
         }
         return false
     }
 
     override suspend fun editGroup(gid: Int, uid: Int, name: String?, desc: String?): Boolean {
-        if (getDatabaseDaoImpl().checkIfUserIsAdmin(uid = uid, gid = gid) || getDatabaseDaoImpl().getUserRoleOnGroup(uid,gid) == GroupRoles.MOD){
+        if (getDatabaseDaoImpl().checkIfUserIsGroupAdmin(uid = uid, gid = gid) || getDatabaseDaoImpl().getUserRoleOnGroup(uid,gid) == GroupRoles.MOD){
             return getDatabaseDaoImpl().editGroup(gid = gid, name = name, desc = desc)
         }
         return false
