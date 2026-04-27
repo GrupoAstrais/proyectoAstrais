@@ -65,8 +65,10 @@ public fun createRefreshVerifier(): JWTVerifier {
 public suspend fun validateAccessToken(cred: JWTCredential): Boolean {
     try {
         // Comprueba que el usuario de verdad existe
-        val uid = cred.subject?.toInt() ?: 0
-        return getDatabaseDaoImpl().getUsuarioByID(uid) != null
+        //val uid = cred.subject?.toInt() ?: 0
+        //return getDatabaseDaoImpl().getUsuarioByID(uid) != null
+        val uid = cred.subject?.toIntOrNull()
+        return uid != null && uid > 0
     } catch (e: NumberFormatException) {
         return false
     }
@@ -74,7 +76,9 @@ public suspend fun validateAccessToken(cred: JWTCredential): Boolean {
 
 public suspend fun validateRefreshToken(cred: JWTCredential): Boolean {
     // Ahora es lo mismo, pero se deberian de meter condicionales adicionales
-    return validateAccessToken(cred)
+    //return validateAccessToken(cred)
+    val uid = cred.subject?.toIntOrNull()
+    return uid != null && uid > 0
 }
 
 public fun Application.initJWT(authenticationConfig: AuthenticationConfig) {

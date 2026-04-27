@@ -9,8 +9,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class TaskResponse(
     val id: Int,
-    val gid: Int,
-    val uid: Int,
+    val gid: Int?,
+    val uid: Int?,
     val titulo: String,
     val descripcion: String,
     val tipo: String,
@@ -74,7 +74,7 @@ enum class HabitFrequency(val value: String) {
  */
 @Serializable
 data class CreateTareaRequest(
-    val gid: Int,
+    val gid: Int?,
     val titulo: String,
     val descripcion: String = "",
     val tipo: String = "UNICO",
@@ -89,8 +89,8 @@ data class CreateTareaRequest(
  */
 @Serializable
 data class CreateTareaHabitData(
-    val numeroFrecuencia : Int,
-    val frequency : HabitFrequency = HabitFrequency.DAILY
+    val numeroFrecuencia: Int = 1,
+    val frequency: HabitFrequency = HabitFrequency.DAILY
 )
 
 /**
@@ -99,4 +99,14 @@ data class CreateTareaHabitData(
 @Serializable
 data class CreateTareaUniqueData(
     val fechaLimite: String
+)
+
+@Serializable
+data class EditTareaRequest(
+    val titulo: String? = null,
+    val descripcion: String? = null,
+    val prioridad: Int? = null,
+    val extraUnico: CreateTareaUniqueData? = null,
+    val extraHabito: CreateTareaHabitData? = null,
+    val idObjetivo: Int? = null
 )

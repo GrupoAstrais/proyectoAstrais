@@ -8,6 +8,7 @@ import com.astrais.db.initDatabase
 import com.astrais.groups.groupRoutes
 import com.auth0.jwt.exceptions.TokenExpiredException
 import installSSE
+import io.ktor.client.plugins.sse.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -71,6 +72,15 @@ fun Application.module() {
 
 
     install(StatusPages) {
+        exception<Throwable> { call, cause ->
+            cause.printStackTrace()
+
+            call.respond(
+                HttpStatusCode.InternalServerError,
+                mapOf("errorText" to "Fallo crítico en Backend: ${cause.message}")
+            )
+        }
+
         exception<BadRequestException> { call, except ->
             mainlogger.severe("Bad request exception! Message: ${except.message}")
             call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "The data sent by the client was not in the accepted format"))
@@ -81,6 +91,7 @@ fun Application.module() {
         }
 
         exception<TokenExpiredException> { call, cause ->
+            mainlogger.
             call.respond(
                 HttpStatusCode.Unauthorized,
                 Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "Invalid/expired token")

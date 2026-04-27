@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,9 +25,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mm.astraisandroid.util.LottiePetRenderer
 import com.mm.astraisandroid.data.api.UserMeResponse
 import com.mm.astraisandroid.data.models.User
+import com.mm.astraisandroid.ui.features.tasks.TaskViewModel
 
 private val ColorDinamico   = Color(0xFF7EB8F7)
 private val ColorPersona    = Color(0xFF6EF77E)
@@ -37,32 +41,79 @@ private val ColorDark       = Color.White.copy(alpha = 0.06f)
 @Composable
 fun HomeTab(
     user: User?,
+    taskViewModel: TaskViewModel = hiltViewModel(),
     onNavigateToProfile: () -> Unit = {},
     onNavigateToTasks: () -> Unit = {},
     onNavigateToStore: () -> Unit = {},
     onNavigateToInventory: () -> Unit = {},
     onNavigateToGroups: () -> Unit = {}
 ) {
+    val taskState by taskViewModel.state.collectAsStateWithLifecycle()
+    val pendingTasks = taskState.tasks.filter { !it.isCompleted }
+    val topTasks = pendingTasks.take(3)
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        HomeHeader(username = user?.name ?: "Viajero", onNavigateToProfile)
+        val isGuest = com.mm.astraisandroid.data.preferences.SessionManager.isGuest()
 
-        BannerCard(user = user)
+        HomeHeader(username = if (isGuest) "Invitado" else (user?.name ?: "Viajero"), onNavigateToProfile)
 
-        BentoGrid(
-            user = user,
-            modifier = Modifier.weight(1f),
-            onTasksClick = onNavigateToTasks,
-            onInventoryClick = onNavigateToInventory,
-            onStoreClick = onNavigateToStore,
-            onGroupsClick = onNavigateToGroups
-        )
+        if (isGuest) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(ColorDark)
+                    .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(20.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = null,
+                        tint = Color.White.copy(alpha = 0.5f),
+                        modifier = Modifier.size(64.dp)
+                    )
+                    Text(
+                        text = "Modo Invitado",
+                        color = Color.White,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace
+                    )
+                    Text(
+                        text = "Tus tareas se guardan de forma local. Ve al perfil para registrarte y sincronizar tu progreso.",
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 14.sp,
+                        fontFamily = FontFamily.Monospace,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        } else {
+            BannerCard(user = user)
 
-        NotificationsBar(count = 8)
+            BentoGrid(
+                user = user,
+                topTasks = topTasks,
+                totalPending = pendingTasks.size,
+                modifier = Modifier.weight(1f),
+                onTasksClick = onNavigateToTasks,
+                onInventoryClick = onNavigateToInventory,
+                onStoreClick = onNavigateToStore,
+                onGroupsClick = onNavigateToGroups
+            )
+
+            NotificationsBar(count = 8)
+        }
     }
 }
 
@@ -156,6 +207,8 @@ fun BannerCard(user: User?) {
 @Composable
 fun BentoGrid(
     user: User?,
+    topTasks: List<com.mm.astraisandroid.ui.features.tasks.TaskUIModel>,
+    totalPending: Int,
     modifier: Modifier = Modifier,
     onTasksClick: () -> Unit,
     onInventoryClick: () -> Unit,
@@ -183,7 +236,7 @@ fun BentoGrid(
                     letterSpacing = 1.sp
                 )
 
-                repeat(3) { index ->
+                topTasks.forEach { tarea ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -194,10 +247,11 @@ fun BentoGrid(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Tarea ${index + 1}",
+                            text = tarea.title,
                             color = Color.White.copy(alpha = 0.7f),
                             fontSize = 11.sp,
-                            fontFamily = FontFamily.Monospace
+                            fontFamily = FontFamily.Monospace,
+                            maxLines = 1
                         )
                         Box(
                             modifier = Modifier
@@ -211,7 +265,7 @@ fun BentoGrid(
                 Spacer(modifier = Modifier.weight(1f))
 
                 Text(
-                    text = "3 pendientes",
+                    text = if (totalPending > 0) "$totalPending pendientes" else "¡Todo al día!",
                     color = Color.White.copy(alpha = 0.3f),
                     fontSize = 10.sp,
                     fontFamily = FontFamily.Monospace

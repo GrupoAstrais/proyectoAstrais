@@ -12,22 +12,16 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
-@Serializable
-private data class CreateTaskResponse(val id: Int)
 
-@Serializable
-private data class GetTasksResponse(val taskList: List<TaskResponse>)
+class GroupApi @Inject constructor(private val client: HttpClient) {
 
-class TaskApi @Inject constructor(private val client: HttpClient) {
-
-    suspend fun getTareas(gid: Int): List<TaskResponse> {
-        val req = client.post("$BASE_URL/tasks/$gid") {
+    suspend fun getGroups(): AllGroupsResponse {
+        val req = client.get("$BASE_URL/group/userGroups") {
             contentType(ContentType.Application.Json)
         }
-        if (req.status != HttpStatusCode.OK && req.status != HttpStatusCode.Created) {
+        if (req.status != HttpStatusCode.OK) {
             val rawText = req.bodyAsText()
             val errMessage = try {
                 val errResponse = Json { ignoreUnknownKeys = true }.decodeFromString<ServerErrorResponse>(rawText)
@@ -37,11 +31,11 @@ class TaskApi @Inject constructor(private val client: HttpClient) {
             }
             error(errMessage)
         }
-        return req.body<GetTasksResponse>().taskList
+        return req.body<AllGroupsResponse>()
     }
 
-    suspend fun createTarea(request: CreateTareaRequest): Int {
-        val req = client.post("$BASE_URL/tasks") {
+    suspend fun createGroup(request: CreateGroupRequest): Int {
+        val req = client.post("$BASE_URL/groups/createGroup") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }
@@ -55,45 +49,15 @@ class TaskApi @Inject constructor(private val client: HttpClient) {
             }
             error(errMessage)
         }
-        return req.body<CreateTaskResponse>().id
+        return req.body<CreateGroupResponse>().groupId
     }
 
-    suspend fun completarTarea(tid: Int) {
-        val req = client.patch("$BASE_URL/tasks/$tid/complete") {
-            contentType(ContentType.Application.Json)
-        }
-        if (req.status != HttpStatusCode.OK && req.status != HttpStatusCode.Created) {
-            val rawText = req.bodyAsText()
-            val errMessage = try {
-                val errResponse = Json { ignoreUnknownKeys = true }.decodeFromString<ServerErrorResponse>(rawText)
-                errResponse.errorText ?: errResponse.error ?: "Error en servidor: $rawText"
-            } catch (e: Exception) {
-                "HTTP ${req.status.value}: $rawText"
-            }
-            error(errMessage)
-        }
-    }
-
-    suspend fun deleteTarea(tid: Int) {
-        val req = client.delete("$BASE_URL/tasks/$tid/delete")
-        if (req.status != HttpStatusCode.OK && req.status != HttpStatusCode.Created) {
-            val rawText = req.bodyAsText()
-            val errMessage = try {
-                val errResponse = Json { ignoreUnknownKeys = true }.decodeFromString<ServerErrorResponse>(rawText)
-                errResponse.errorText ?: errResponse.error ?: "Error en servidor: $rawText"
-            } catch (e: Exception) {
-                "HTTP ${req.status.value}: $rawText"
-            }
-            error(errMessage)
-        }
-    }
-
-    suspend fun editarTarea(tid: Int, request: EditTareaRequest) {
-        val req = client.patch("$BASE_URL/tasks/$tid/edit") {
+    suspend fun deleteGroup(request: DeleteGroupRequest) {
+        val req = client.delete("$BASE_URL/groups/deleteGroup") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }
-        if (req.status != HttpStatusCode.OK && req.status != HttpStatusCode.Created) {
+        if (req.status != HttpStatusCode.OK) {
             val rawText = req.bodyAsText()
             val errMessage = try {
                 val errResponse = Json { ignoreUnknownKeys = true }.decodeFromString<ServerErrorResponse>(rawText)
@@ -105,11 +69,12 @@ class TaskApi @Inject constructor(private val client: HttpClient) {
         }
     }
 
-    suspend fun uncompleteTarea(tid: Int) {
-        val req = client.patch("$BASE_URL/tasks/$tid/uncomplete") {
+    suspend fun editGroup(request: EditGroupRequest) {
+        val req = client.patch("$BASE_URL/groups/editGroup") {
             contentType(ContentType.Application.Json)
+            setBody(request)
         }
-        if (req.status != HttpStatusCode.OK && req.status != HttpStatusCode.Created) {
+        if (req.status != HttpStatusCode.OK) {
             val rawText = req.bodyAsText()
             val errMessage = try {
                 val errResponse = Json { ignoreUnknownKeys = true }.decodeFromString<ServerErrorResponse>(rawText)

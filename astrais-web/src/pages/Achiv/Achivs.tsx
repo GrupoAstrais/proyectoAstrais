@@ -185,7 +185,7 @@ export default function Achivs() {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2.5 min-[1400px]:gap-3">
+                  <div className="grid grid-cols-3 gap-2.5 my-auto min-[1400px]:gap-3">
                     <div className="rounded-2xl border border-white/10 bg-black/18 p-3">
                       <p className="text-[0.58rem] uppercase tracking-[0.22em] text-slate-400">Desbloq.</p>
                       <p className="mt-2 text-[1rem] font-semibold text-white xl:text-[1.14rem]">{unlockedCount}</p>
@@ -212,7 +212,7 @@ export default function Achivs() {
                         onClick={() => setActiveFilter(filter.key)}
                         className={`rounded-full border px-4 py-2 text-[0.76rem] font-semibold transition xl:text-[0.82rem] ${
                           activeFilter === filter.key
-                            ? 'border-transparent bg-linear-to-r from-[#f97316] via-[#ec4899] to-[#8b5cf6] text-white shadow-[0_10px_24px_rgba(236,72,153,0.22)]'
+                            ? 'border-0 bg-linear-to-r from-[#f97316] via-[#ec4899] to-[#8b5cf6] text-white shadow-[0_10px_24px_rgba(236,72,153,0.22)]'
                             : 'border-white/15 bg-white/6 text-slate-200 hover:bg-white/10'
                         }`}
                       >
@@ -227,7 +227,7 @@ export default function Achivs() {
                 </div>
               </article>
 
-              <section className="grid min-h-0 grid-cols-2 gap-3 min-[1400px]:grid-cols-3 min-[1400px]:gap-4">
+              <section className="grid min-h-0 grid-cols-2 grid-rows-2 gap-3 min-[1400px]:grid-cols-3 min-[1400px]:gap-4">
                 {filteredAchievements.map((achievement) => (
                   <button
                     key={achievement.id}

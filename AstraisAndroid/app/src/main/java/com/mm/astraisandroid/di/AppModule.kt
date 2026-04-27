@@ -13,6 +13,10 @@ import com.mm.astraisandroid.data.repository.AuthRepository
 import com.mm.astraisandroid.data.repository.StoreRepository
 import com.mm.astraisandroid.data.repository.TaskRepository
 import com.mm.astraisandroid.data.repository.UserRepository
+import com.mm.astraisandroid.data.api.services.GroupApi
+import com.mm.astraisandroid.data.local.dao.GrupoDao
+import com.mm.astraisandroid.data.repository.GroupRepository
+import com.mm.astraisandroid.data.repository.SseRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -57,6 +61,12 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideGroupApi(httpClient: HttpClient): GroupApi {
+        return GroupApi(httpClient)
+    }
+
+    @Provides
+    @Singleton
     fun provideTaskRepository(api: TaskApi, dao: TareaDao): TaskRepository {
         return TaskRepository(api, dao)
     }
@@ -81,6 +91,18 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideGroupRepository(api: GroupApi, dao: GrupoDao): GroupRepository {
+        return GroupRepository(api, dao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSseRepository(client: HttpClient, taskRepo: TaskRepository, storeRepo: StoreRepository): SseRepository {
+        return SseRepository(client, taskRepo, storeRepo)
+    }
+
+    @Provides
+    @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AstraisDb {
         return AstraisDb.getInstance(context)
     }
@@ -93,5 +115,10 @@ object AppModule {
     @Provides
     fun provideActionDao(db: AstraisDb): ActionDao {
         return db.actionDao()
+    }
+
+    @Provides
+    fun provideGrupoDao(db: AstraisDb): GrupoDao {
+        return db.grupoDao()
     }
 }

@@ -24,7 +24,10 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,34 +56,11 @@ data class Grupo(
 )
 
 @Composable
-fun GrupoTab(onBack: () -> Unit = {}) {
+fun GrupoTab(onBack: () -> Unit = {}, viewModel: GroupViewModel = hiltViewModel()) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
     var query by remember { mutableStateOf("") }
 
-    val grupos = listOf(
-        Grupo(
-            id = 1,
-            name = "Grupo Astrais",
-            subtitle = "TFG project",
-            avatarRes = R.drawable.gato1,
-            avatarColor = Color(0xFFE8F5C0)
-        ),
-        Grupo(
-            id = 2,
-            name = "Grupo No Astrais",
-            subtitle = "TFG project",
-            avatarRes = R.drawable.gato2,
-            avatarColor = Color(0xFF4A6741)
-        ),
-        Grupo(
-            id = 3,
-            name = "Grupo Locura",
-            subtitle = "TFG project",
-            avatarRes = R.drawable.gato3,
-            avatarColor = Color(0xFFE8F5C0)
-        ),
-    )
-
-    val filtered = grupos.filter {
+    val filtered = state.groups.filter {
         query.isBlank() || it.name.contains(query, ignoreCase = true)
     }
 
@@ -98,10 +78,20 @@ fun GrupoTab(onBack: () -> Unit = {}) {
             // Buscador
             SearchBar(query = query, onQueryChange = { query = it })
 
-            // Lista
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                items(filtered, key = { it.id }) { grupo ->
-                    GrupoCard(grupo = grupo)
+            if (state.isLoading && state.groups.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = Color.White)
+                }
+            } else if (state.groups.isEmpty() && !state.isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No estás en ningún grupo.", color = Color.White.copy(alpha = 0.5f), fontFamily = FontFamily.Monospace)
+                }
+            } else {
+                // Lista
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    items(filtered, key = { it.id }) { grupo ->
+                        GrupoCard(grupo = grupo)
+                    }
                 }
             }
         }

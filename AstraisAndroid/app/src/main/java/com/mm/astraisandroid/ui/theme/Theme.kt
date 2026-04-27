@@ -8,9 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.core.graphics.toColorInt
-import com.mm.astraisandroid.data.api.ThemeConfig
 import com.mm.astraisandroid.data.models.Theme
-import kotlinx.serialization.json.Json
 
 private val DefaultDarkColorScheme = darkColorScheme(
     primary = IndigoGalaxia,

@@ -74,6 +74,7 @@ fun TiendaTab(
 
     val storePets = state.items.filter { it.type.name.contains("PET") }
     val storeThemes = state.items.filter { it.type.name == "APP_THEME" }
+    val storeAccessories = state.items.filter { it.type.name == "AVATAR_PART" }
 
     AuthBackground {
         Column(
@@ -130,8 +131,9 @@ fun TiendaTab(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 StoreTabSelector("Todos", selectedTab == 0, Modifier.weight(1f)) { selectedTab = 0 }
-                StoreTabSelector("Compañeros", selectedTab == 1, Modifier.weight(1f)) { selectedTab = 1 }
-                StoreTabSelector("Temas", selectedTab == 2, Modifier.weight(1f)) { selectedTab = 2 }
+                StoreTabSelector("Compañeros", selectedTab == 1, Modifier.weight(1.3f)) { selectedTab = 1 }
+                StoreTabSelector("Accesorios", selectedTab == 2, Modifier.weight(1.2f)) { selectedTab = 2 }
+                StoreTabSelector("Temas", selectedTab == 3, Modifier.weight(1f)) { selectedTab = 3 }
             }
 
             if (state.isLoading) {
@@ -173,7 +175,7 @@ fun TiendaTab(
                                                     contentPadding = PaddingValues(horizontal = 4.dp)
                                                 ) {
                                                     items(itemsInTheme, key = { it.id }) { item ->
-                                                        if (item.type.name == "PET_SKIN" || item.type.name == "PET_BASE") {
+                                                        if (item.type.name != "APP_THEME") {
                                                             PetStoreCard(item, Modifier.width(160.dp)) { selectedCosmetic = item }
                                                         } else {
                                                             ThemeStoreCard(item, Modifier.width(160.dp)) { selectedCosmetic = item }
@@ -197,16 +199,27 @@ fun TiendaTab(
                                 }
                             }
                             2 -> {
-                                LazyVerticalGrid(
-                                    columns = GridCells.Fixed(2),
-                                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                                    contentPadding = PaddingValues(bottom = 90.dp),
-                                    modifier = Modifier.fillMaxSize()
-                                ) {
-                                    items(storeThemes, key = { it.id }) { item -> ThemeStoreCard(item) { selectedCosmetic = item } }
-                                }
-                            }
+                                                LazyVerticalGrid(
+                                                    columns = GridCells.Fixed(2),
+                                                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                                                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                                    contentPadding = PaddingValues(bottom = 90.dp),
+                                                    modifier = Modifier.fillMaxSize()
+                                                ) {
+                                                    items(storeAccessories, key = { it.id }) { item -> PetStoreCard(item) { selectedCosmetic = item } }
+                                                }
+                                            }
+                                            3 -> {
+                                                LazyVerticalGrid(
+                                                    columns = GridCells.Fixed(2),
+                                                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                                                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                                    contentPadding = PaddingValues(bottom = 90.dp),
+                                                    modifier = Modifier.fillMaxSize()
+                                                ) {
+                                                    items(storeThemes, key = { it.id }) { item -> ThemeStoreCard(item) { selectedCosmetic = item } }
+                                                }
+                                            }
                         }
                     }
                 }
@@ -277,10 +290,6 @@ fun PetStoreCard(item: Cosmetic, modifier: Modifier = Modifier, onClick: () -> U
         Spacer(modifier = Modifier.height(12.dp))
         Text(text = item.name, color = MaterialTheme.colorScheme.onBackground, fontSize = 14.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, maxLines = 1)
         Text(text = item.coleccion.uppercase(), color = if (isOwned) Color.White.copy(alpha=0.4f) else rarityColor, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
-
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(text = item.name, color = MaterialTheme.colorScheme.onBackground, fontSize = 14.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, maxLines = 1)
-        Text(text = item.coleccion.uppercase(), color = if (isOwned) Color.White.copy(alpha=0.4f) else MaterialTheme.colorScheme.tertiary, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -398,7 +407,7 @@ fun StoreDetailDialog(item: Cosmetic, ludiones: Int, onDismiss: () -> Unit, onBu
                 modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(16.dp)).background(Color.Black.copy(alpha = 0.3f)),
                 contentAlignment = Alignment.Center
             ) {
-                if (item.type.name.contains("PET")) {
+                if (item.type.name != "APP_THEME") {
                     LottiePetRenderer(assetRef = item.assetRef, modifier = Modifier.size(120.dp))
                 } else {
                     val parsedConfig = remember(item.theme) {

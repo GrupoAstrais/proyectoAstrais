@@ -192,22 +192,27 @@ fun LoginScreen(
                 ) {
                     Text("Continuar con Google", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = {
+                        com.mm.astraisandroid.data.preferences.SessionManager.startGuestSession()
+                        onNavigateToHome()
+                    },
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape = RoundedCornerShape(50),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = Color.White
+                    ),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.5f))
+                ) {
+                    Text("Continuar como Invitado", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                }
             }
 
-            Button(
-                onClick = { onNavigateToHome() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(50),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF0D0D0D),
-                    contentColor = Color.White,
-                    disabledContainerColor = Color(0xFF0D0D0D).copy(alpha = 0.5f)
-                )
-            ) {
-
-            }
+            Spacer(modifier = Modifier.weight(1f))
 
             // Footer
             Row(

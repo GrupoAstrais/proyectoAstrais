@@ -59,6 +59,7 @@ fun InventarioTab(
 
     val myItems = state.items.filter { it.owned }
     val myPets = myItems.filter { it.type.name.contains("PET") }
+    val myAccessories = myItems.filter { it.type.name == "AVATAR_PART" }
     val myThemes = myItems.filter { it.type.name == "APP_THEME" }
 
     AuthBackground {
@@ -86,7 +87,8 @@ fun InventarioTab(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TabSelector("Compañeros", selectedTab == 0, Modifier.weight(1f)) { selectedTab = 0 }
-                TabSelector("Temas y Fondos", selectedTab == 1, Modifier.weight(1f)) { selectedTab = 1 }
+                TabSelector("Accesorios", selectedTab == 1, Modifier.weight(1f)) { selectedTab = 1 }
+                TabSelector("Temas y Fondos", selectedTab == 2, Modifier.weight(1f)) { selectedTab = 2 }
             }
 
             if (state.isLoading) {
@@ -99,26 +101,34 @@ fun InventarioTab(
                 }
             } else {
                 Crossfade(targetState = selectedTab, label = "tab_fade") { tab ->
-                    val currentList = if (tab == 0) myPets else myThemes
+                    val currentList = when (tab) {
+                        0 -> myPets
+                        1 -> myAccessories
+                        else -> myThemes
+                    }
 
                     if (currentList.isEmpty()) {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text(
-                                text = if (tab == 0) "No tienes compañeros aún." else "No tienes fondos desbloqueados.",
+                                text = when (tab) {
+                                    0 -> "No tienes compañeros aún."
+                                    1 -> "No tienes accesorios aún."
+                                    else -> "No tienes fondos desbloqueados."
+                                },
                                 color = Color.White.copy(alpha = 0.5f),
                                 fontFamily = FontFamily.Monospace
                             )
                         }
                     } else {
                         LazyVerticalGrid(
-                            columns = GridCells.Fixed(if (tab == 0) 3 else 2),
+                            columns = GridCells.Fixed(if (tab == 2) 2 else 3),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             contentPadding = PaddingValues(bottom = 90.dp),
                             modifier = Modifier.fillMaxSize()
                         ) {
                             items(currentList, key = { it.id }) { item ->
-                                if (tab == 0) {
+                                if (tab == 0 || tab == 1) {
                                     PetInventoryCard(item) { selectedCosmetic = item }
                                 } else {
                                     ThemeInventoryCard(item) { selectedCosmetic = item }
@@ -303,7 +313,7 @@ fun CosmeticDetailDialog(
                     .background(Color.Black.copy(alpha = 0.3f)),
                 contentAlignment = Alignment.Center
             ) {
-                if (item.type.name.contains("PET")) {
+                if (item.type.name != "APP_THEME") {
                     LottiePetRenderer(assetRef = item.assetRef ?: "", modifier = Modifier.size(120.dp))
                 } else {
                     val parsedConfig = remember(item.theme) {
@@ -354,8 +364,11 @@ fun CosmeticDetailDialog(
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
                 Text(
-                    // OJO: Comprobamos el ENUM
-                    text = if(item.type.name.contains("PET")) "TIPO: COMPAÑERO" else "TIPO: TEMA",
+                    text = when {
+                        item.type.name.contains("PET") -> "TIPO: COMPAÑERO"
+                        item.type.name == "APP_THEME" -> "TIPO: TEMA"
+                        else -> "TIPO: ACCESORIO"
+                    },
                     color = Color.White.copy(alpha = 0.4f),
                     fontSize = 10.sp,
                     fontFamily = FontFamily.Monospace

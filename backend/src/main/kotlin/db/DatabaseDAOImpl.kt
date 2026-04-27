@@ -306,45 +306,45 @@ class DatabaseDAOImpl : DatabaseDAO {
     }
 
     override suspend fun createTarea(
-        gid: Int,
-        titulo: String,
-        descripcion: String,
-        tipo: TaskType,
-        prioridad: Int,
-        recompensaXp: Int,
-        recompensaLudion: Int,
-        extraUnico : TareaUniqueData?,
-        extraHabito : TareaHabitData?,
+        gid: Int, titulo: String, descripcion: String, tipo: TaskType, prioridad: Int,
+        recompensaXp: Int, recompensaLudion: Int, extraUnico: TareaUniqueData?, extraHabito: TareaHabitData?,
+        idObjetivo: Int?
     ): Int {
         return suspendTransaction {
-            if (tipo == TaskType.UNICO && extraUnico == null){
-                return@suspendTransaction -1
-            } else if (tipo == TaskType.HABITO && extraHabito == null){
-                return@suspendTransaction -2
-            } else{
-                val nuevaTarea = EntidadTarea.new {
-                    this.id_grupo = EntityID(gid, TablaGrupo)
-                    this.titulo = titulo
-                    this.descripcion = descripcion
-                    this.tipo = tipo
-                    this.estado = TaskState.ACTIVE
-                    this.prioridad = prioridad
-                    this.recompensa_xp = recompensaXp
-                    this.recompensa_ludion = recompensaLudion
-                    this.fecha_creacion = LocalDate.now().toKotlinLocalDate()
-                    this.fecha_actualizado = this.fecha_creacion
+            if (tipo == TaskType.UNICO && extraUnico == null) return@suspendTransaction -1
+            if (tipo == TaskType.HABITO && extraHabito == null) return@suspendTransaction -2
 
-                    if (extraUnico?.idObjetivo != null) {
-                        this.id_objetivo = EntityID(extraUnico.idObjetivo, TablaTareaObjetivo)
+            val nuevaTarea = EntidadTarea.new {
+                this.id_grupo = EntityID(gid, TablaGrupo)
+                this.titulo = titulo
+                this.descripcion = descripcion
+                this.tipo = tipo
+                this.estado = TaskState.ACTIVE
+                this.prioridad = prioridad
+                this.recompensa_xp = recompensaXp
+                this.recompensa_ludion = recompensaLudion
+                this.fecha_creacion = LocalDate.now().toKotlinLocalDate()
+                this.fecha_actualizado = this.fecha_creacion
+
+                if (idObjetivo != null) {
+                    val objetivoPadre = EntidadTareaObjetivo.find {
+                        TablaTareaObjetivo.id_tarea eq idObjetivo
+                    }.singleOrNull()
+
+                    if (objetivoPadre != null) {
+                        this.id_objetivo = objetivoPadre.id
                     }
                 }
+            }
 
-                if (tipo == TaskType.UNICO){
+            when (tipo) {
+                TaskType.UNICO -> {
                     EntidadTareaUnica.new {
                         this.id_tarea = nuevaTarea.id
                         this.fecha_vencimiento = extraUnico!!.fechaLimite
                     }
-                } else if (tipo == TaskType.HABITO){
+                }
+                TaskType.HABITO -> {
                     EntidadTareaHabito.new {
                         this.id_tarea = nuevaTarea.id
                         this.variacion_freq = extraHabito!!.numeroFrecuencia
@@ -352,16 +352,22 @@ class DatabaseDAOImpl : DatabaseDAO {
                         this.ultima_vez_completada = null
                     }
                 }
-
-                nuevaTarea.id.value
+                TaskType.OBJETIVO -> {
+                    EntidadTareaObjetivo.new {
+                        this.id_tarea = nuevaTarea.id
+                    }
+                }
             }
+            nuevaTarea.id.value
         }
     }
+
+
 
     override suspend fun getGroupByTask(tid: Int): EntidadGrupo? {
         return suspendTransaction {
             val gid = TablaTarea.select(TablaTarea.id_grupo).where {
-                TablaTarea.id_grupo.eq(tid)
+                TablaTarea.id.eq(tid)
             }.firstOrNull()?.get(TablaTarea.id_grupo)
 
             gid?.let {
@@ -385,6 +391,11 @@ class DatabaseDAOImpl : DatabaseDAO {
             if (!descripcion.isNullOrEmpty()) {
                 grp.descripcion = descripcion
             }
+            if (prioridad != null) {
+                grp.prioridad = prioridad
+                // TODO: Recalcular recompensas
+            }
+
             grp.fecha_actualizado = LocalDate.now().toKotlinLocalDate()
 
             return@suspendTransaction true
@@ -523,9 +534,11 @@ class DatabaseDAOImpl : DatabaseDAO {
 
     override suspend fun deleteTarea(tid: Int): Boolean {
         return suspendTransaction {
-            TablaTarea.deleteWhere {
-                id.eq(tid)
-            } > 0
+            TablaTareaUnica.deleteWhere { TablaTareaUnica.id_tarea eq tid }
+            TablaTareaHabito.deleteWhere { TablaTareaHabito.id_tarea eq tid }
+            TablaTareaObjetivo.deleteWhere { TablaTareaObjetivo.id_tarea eq tid }
+
+            TablaTarea.deleteWhere { TablaTarea.id eq tid } > 0
         }
     }
 
@@ -672,7 +685,7 @@ class DatabaseDAOImpl : DatabaseDAO {
             rarity: RarityType
     ): Boolean {
         return suspendTransaction {
-            if (type == CosmeticType.AVATAR_PART && layer != null){
+            if (type == CosmeticType.AVATAR_PART && layer == null){
                 return@suspendTransaction false
             }
 

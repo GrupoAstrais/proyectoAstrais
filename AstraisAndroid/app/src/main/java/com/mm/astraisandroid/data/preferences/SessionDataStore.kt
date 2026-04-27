@@ -4,6 +4,9 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 object SessionManager {
     private var sharedPreferences: SharedPreferences? = null
@@ -11,6 +14,12 @@ object SessionManager {
     private const val ACCESS_KEY = "access_token"
     private const val REFRESH_KEY = "refresh_token"
     private const val GID_KEY = "personal_gid"
+
+    private val _isSessionActive = MutableStateFlow(true)
+    val isSessionActive: StateFlow<Boolean> = _isSessionActive.asStateFlow()
+
+    private val _isGuestSession = MutableStateFlow(false)
+    val isGuestSession: StateFlow<Boolean> = _isGuestSession.asStateFlow()
 
     fun init(context: Context) {
         if (sharedPreferences != null) return
@@ -26,14 +35,27 @@ object SessionManager {
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )
+
+        _isGuestSession.value = sharedPreferences?.getBoolean("is_guest", false) ?: false
+        _isSessionActive.value = hasAnySession()
     }
 
     fun saveTokens(access: String, refresh: String) {
         sharedPreferences?.edit()?.apply {
             putString(ACCESS_KEY, access)
             putString(REFRESH_KEY, refresh)
+            putBoolean("is_guest", false)
             apply()
         }
+
+        _isGuestSession.value = false
+        _isSessionActive.value = true
+    }
+
+    fun startGuestSession() {
+        sharedPreferences?.edit()?.putBoolean("is_guest", true)?.apply()
+        _isGuestSession.value = true
+        _isSessionActive.value = true
     }
 
     fun savePersonalGid(gid: Int) {
@@ -49,8 +71,12 @@ object SessionManager {
     }
 
     fun hasSession(): Boolean = getAccessToken() != null
+    fun isGuest(): Boolean = _isGuestSession.value
+    fun hasAnySession(): Boolean = hasSession() || isGuest()
 
     fun clear() {
         sharedPreferences?.edit()?.clear()?.apply()
+        _isGuestSession.value = false
+        _isSessionActive.value = false
     }
 }

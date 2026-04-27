@@ -4,6 +4,11 @@ import com.mm.astraisandroid.data.api.*
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.request.patch
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import javax.inject.Inject
 
@@ -16,5 +21,20 @@ class UserApi @Inject constructor(private val client: HttpClient) {
             error(errResponse.errorText ?: errResponse.error ?: "Error desconocido")
         }
         return req.body<UserMeResponse>()
+    }
+
+    suspend fun updateUsername(uid: Int, newName: String) {
+        val req = client.patch("$BASE_URL/auth/editUser") {
+            setBody(
+                mapOf(
+                    "uid" to uid,
+                    "nombreusu" to newName
+                )
+            )
+            header(HttpHeaders.ContentType, ContentType.Application.Json)
+        }
+        if (req.status != HttpStatusCode.OK) {
+            error("Fallo al actualizar el nombre")
+        }
     }
 }

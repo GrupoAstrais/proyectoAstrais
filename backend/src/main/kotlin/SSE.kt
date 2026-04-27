@@ -4,8 +4,10 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.routing.*
 import io.ktor.server.sse.*
 import io.ktor.sse.*
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.isActive
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.util.concurrent.ConcurrentHashMap
@@ -64,31 +66,14 @@ object GlobalBusSSE {
 }
 
 object UserBusSSE {
-    private val _events = ConcurrentHashMap<Int, MutableSharedFlow<SSEMessage>>()
-
-    /**
-     * Intenta subscribir a un usuario a un canal SSE.
-     * @param uid Usuario a agregar.
-     * @return El flow de notificaciones.
-     */
-    public fun subscribeChannel(uid : Int) : MutableSharedFlow<SSEMessage>{
-        // A veces amo kotlin, esto es una maldita linea
-        _events.putIfAbsent(uid, MutableSharedFlow(extraBufferCapacity = USER_BUFFER_CAPACITY))
-        return _events[uid]!!
-    }
-
-    /**
-     * Se borra un canal SSE de la lista
-     */
-    public fun unsubscribeChannel(uid: Int) {
-        _events.remove(uid)
-    }
+    private val _events = MutableSharedFlow<Pair<Int, SSEMessage>>(extraBufferCapacity = USER_BUFFER_CAPACITY * 10)
+    public val events: SharedFlow<Pair<Int, SSEMessage>> = _events
 
     /**
      * Se emite un mensaje para un usuario en especifico
      */
     public suspend fun publish(uid: Int, message: SSEMessage) {
-        _events[uid]?.emit(message)
+        _events.emit(uid to message)
     }
 
     /**
@@ -121,13 +106,18 @@ fun Application.installSSE(){
 
 fun Route.sseRoutes() {
     sse("/events/global") {
-        GlobalBusSSE.events.collect { msg->
-            send(
-                ServerSentEvent(
-                    data = msg.data,
-                    event = msg.event.value
+        try {
+            GlobalBusSSE.events.collect { msg ->
+                if (!currentCoroutineContext().isActive) return@collect
+                send(
+                    ServerSentEvent(
+                        data = msg.data,
+                        event = msg.event.value
+                    )
                 )
-            )
+            }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // Desconectar cliente
         }
     }
     authenticate("access-jwt") {
@@ -138,18 +128,20 @@ fun Route.sseRoutes() {
                 return@sse
             }
 
-            val flow = UserBusSSE.subscribeChannel(uid)
             try {
-                flow.collect { msg->
-                    send(
-                        ServerSentEvent(
-                            data = msg.data,
-                            event = msg.event.value
+                UserBusSSE.events.collect { (targetUid, msg) ->
+                    if (!currentCoroutineContext().isActive) return@collect
+                    if (targetUid == uid) {
+                        send(
+                            ServerSentEvent(
+                                data = msg.data,
+                                event = msg.event.value
+                            )
                         )
-                    )
+                    }
                 }
-            } finally {
-                UserBusSSE.unsubscribeChannel(uid)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                // Desconectar cliente
             }
         }
     }

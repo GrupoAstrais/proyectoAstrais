@@ -2,6 +2,7 @@ package com.mm.astraisandroid.data.api
 
 import com.mm.astraisandroid.data.models.Theme
 import com.mm.astraisandroid.data.models.User
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -60,14 +61,14 @@ data class ThemeConfig(
 @Serializable
 data class UserMeResponse(
     val id: Int,
-    val name: String,
-    val level: Int,
-    val currentXp: Int,
-    val totalXp: Int,
+    @SerialName("nombre") val name: String,
+    @SerialName("nivel") val level: Int,
+    @SerialName("xpActual") val currentXp: Int,
+    @SerialName("xpTotal") val totalXp: Int,
     val ludiones: Int,
     val personalGid: Int?,
     val equippedPetRef: String?,
-    val themeColors: String?
+    val themeColors: String? = null
 )
 
 /**

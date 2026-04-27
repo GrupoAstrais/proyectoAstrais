@@ -43,7 +43,7 @@ enum class HabitFrequency(val value: String) {
 
 @Serializable
 data class CreateTareaHabitData(
-    val numeroFrecuencia : Int,
+    val numeroFrecuencia : Int = 1,
     val frequency : HabitFrequency = HabitFrequency.DAILY
 )
 
@@ -63,6 +63,8 @@ data class CreateTareaRequest(
 @Serializable
 data class TareaResponse(
     val id: Int,
+    val gid: Int?,
+    val uid: Int?,
     val titulo: String,
     val descripcion: String,
     val tipo: String,
@@ -70,11 +72,10 @@ data class TareaResponse(
     val prioridad: Int,
     val recompensaXp: Int,
     val recompensaLudion: Int,
-
-    val fecha_creacion : String,
-    val fecha_actualizado : String,
-    val fecha_completado : String?,
-
+    val fecha_creacion: String? = null,
+    val fecha_actualizado: String? = null,
+    val fecha_completado: String? = null,
+    val fechaValida: String? = null,
     val extraUnico : CreateTareaUniqueData? = null,
     val extraHabito : CreateTareaHabitData? = null,
     val idObjetivo: Int? = null
@@ -82,25 +83,37 @@ data class TareaResponse(
 
 @Serializable
 data class EditTareaRequest(
-    val titulo : String? = null,
+    val titulo: String? = null,
     val descripcion: String? = null,
-    val prioridad: Int? = null
+    val prioridad: Int? = null,
+    val extraUnico: CreateTareaUniqueData? = null,
+    val extraHabito: CreateTareaHabitData? = null,
+    val idObjetivo: Int? = null
 )
 
 fun Route.tareaRoutes() {
     post("/tasks") {
-        val uid = call.principal<JWTPrincipal>()!!.subject?.toInt() ?: return@post call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "No UID available"))
-        val body = call.receive<CreateTareaRequest>()
+        try {
+            val uid = call.principal<JWTPrincipal>()!!.subject?.toInt() ?: return@post call.respond(HttpStatusCode.Unauthorized)
+            val requestData = call.receive<CreateTareaRequest>()
+            val response = getTaskDaoImpl().createTask(requestData, uid)
 
-        val resp = getTaskDaoImpl().createTask(body, uid)
-        when (resp.first){
-            CreateTaskRepoResponse.RESP_OK -> call.respond(HttpStatusCode.OK, mapOf("taskId" to resp.second))
-            CreateTaskRepoResponse.RESP_NOTMEMBER -> call.respond(HttpStatusCode.Forbidden, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Not a member of this group"))
-            CreateTaskRepoResponse.RESP_EXPOSEDERR -> call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Exposed error"))
-            CreateTaskRepoResponse.RESP_INVALIDTYPE -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "Invalid task type"))
-            CreateTaskRepoResponse.RESP_NOPERMISSION -> call.respond(HttpStatusCode.Forbidden, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "No permission to do the action"))
-            CreateTaskRepoResponse.RESP_INVALIDDATE -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_BADVALUE.ordinal, "The date couldn't be parsed"))
-            CreateTaskRepoResponse.RESP_MISSINGDATA -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "Missing extra task data"))
+            when (response.first) {
+                CreateTaskRepoResponse.RESP_OK -> {
+                    call.respond(HttpStatusCode.Created, mapOf("id" to response.second))
+                }
+                CreateTaskRepoResponse.RESP_NOTMEMBER -> call.respond(HttpStatusCode.Forbidden, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Not a member"))
+                CreateTaskRepoResponse.RESP_EXPOSEDERR -> call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Database error"))
+                CreateTaskRepoResponse.RESP_MISSINGDATA -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "Missing data"))
+                CreateTaskRepoResponse.RESP_INVALIDTYPE -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "Invalid task type"))
+                else -> call.respond(HttpStatusCode.BadRequest)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            call.respond(
+                HttpStatusCode.InternalServerError,
+                mapOf("errorText" to "Fallo en Ktor: ${e.stackTraceToString()}")
+            )
         }
     }
 
@@ -138,7 +151,7 @@ fun Route.tareaRoutes() {
 
 
         val data = call.receive<EditTareaRequest>()
-        val response = getTaskDaoImpl().editTask(uid, tid, data.titulo, data.descripcion, data.prioridad)
+        val response = getTaskDaoImpl().editTask(uid, tid, data)
         when (response){
             CreateTaskRepoResponse.RESP_OK -> call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
             CreateTaskRepoResponse.RESP_NOTMEMBER -> call.respond(HttpStatusCode.Forbidden, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Not a member of this group"))
@@ -164,6 +177,15 @@ fun Route.tareaRoutes() {
             CreateTaskRepoResponse.RESP_INVALIDDATE -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_BADVALUE.ordinal, "The date couldn't be parsed"))
             CreateTaskRepoResponse.RESP_MISSINGDATA -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "Missing extra task data"))
         }
+    }
+
+    patch("/tasks/{tid}/uncomplete") {
+        val uid = call.principal<JWTPrincipal>()!!.subject?.toInt() ?: return@patch call.respond(HttpStatusCode.Unauthorized)
+        val tid = call.parameters["tid"]?.toInt() ?: return@patch call.respond(HttpStatusCode.BadRequest)
+
+        val ok = getTaskDaoImpl().uncompleteTask(tid, uid)
+        if (ok) call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
+        else call.respond(HttpStatusCode.NotFound, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "Couldn't uncomplete task"))
     }
 }
 

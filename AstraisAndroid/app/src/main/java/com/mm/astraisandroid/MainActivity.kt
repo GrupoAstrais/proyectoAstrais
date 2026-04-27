@@ -69,11 +69,17 @@ import com.mm.astraisandroid.ui.features.store.InventarioTab
 import com.mm.astraisandroid.ui.theme.AstraisandroidTheme
 import com.mm.astraisandroid.ui.features.tasks.TaskViewModel
 import com.mm.astraisandroid.ui.features.profile.UserViewModel
+import com.mm.astraisandroid.data.repository.SseRepository
 import com.mm.astraisandroid.util.ConnectivityObserver
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    
+    @Inject
+    lateinit var sseRepository: SseRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -85,7 +91,11 @@ class MainActivity : ComponentActivity() {
 
             AstraisandroidTheme(userTheme = userData?.theme) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    AppNavigation(initialHasSession = SessionManager.hasSession(), userViewModel = userViewModel)
+                    val coroutineScope = rememberCoroutineScope()
+                    LaunchedEffect(Unit) {
+                        sseRepository.startListening(coroutineScope)
+                    }
+                    AppNavigation(initialHasSession = SessionManager.hasAnySession(), userViewModel = userViewModel)
                     OcultarBotonesSistema()
                 }
             }
@@ -97,6 +107,15 @@ class MainActivity : ComponentActivity() {
 fun AppNavigation(initialHasSession: Boolean, userViewModel: UserViewModel) {
     val navController = rememberNavController()
     val coroutineScope = rememberCoroutineScope()
+    val isSessionActive by SessionManager.isSessionActive.collectAsStateWithLifecycle()
+
+    LaunchedEffect(isSessionActive) {
+        if (!isSessionActive && navController.currentDestination?.route != Route.Login::class.qualifiedName && navController.currentDestination?.route != Route.Register::class.qualifiedName) {
+            navController.navigate(Route.Login) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
 
     NavHost(
         navController = navController,
@@ -178,12 +197,16 @@ fun HomeScreen(userViewModel: UserViewModel, onNavigateToProfile: () -> Unit) {
     val userData = userState.user
     val isOffline = userState.isOffline
 
+    val isGuest = SessionManager.isGuest()
+
     LaunchedEffect(Unit) {
-        userViewModel.fetchUser()
+        if (!isGuest) {
+            userViewModel.fetchUser()
+        }
     }
 
-    LaunchedEffect(deviceHasInternet) {
-        if (deviceHasInternet) {
+    LaunchedEffect(deviceHasInternet, isGuest) {
+        if (deviceHasInternet && !isGuest) {
             userViewModel.fetchUser()
             val gid = SessionManager.getPersonalGid()
             if (gid != null) {
@@ -203,7 +226,7 @@ fun HomeScreen(userViewModel: UserViewModel, onNavigateToProfile: () -> Unit) {
         else -> 0
     }
 
-    val isEffectivelyOffline = !deviceHasInternet || isOffline
+    val isEffectivelyOffline = !deviceHasInternet || isOffline || isGuest
 
     AuthBackground {
         Scaffold(
@@ -223,9 +246,15 @@ fun HomeScreen(userViewModel: UserViewModel, onNavigateToProfile: () -> Unit) {
             bottomBar = {
                 NavBottomBar(
                     selected = selectedIndex,
+                    isGuest = isGuest,
                     onSelect = { index ->
                         if (index == 2) {
                             taskViewModel.openCreateDialog()
+                            return@NavBottomBar
+                        }
+
+                        if (isGuest && (index == 3 || index == 4)) {
+                            Toast.makeText(context, "Regístrate para acceder a esta función", Toast.LENGTH_SHORT).show()
                             return@NavBottomBar
                         }
 
@@ -248,36 +277,36 @@ fun HomeScreen(userViewModel: UserViewModel, onNavigateToProfile: () -> Unit) {
         ) { paddingValues ->
             NavHost(
                 navController = navController,
-                startDestination = "home_tab",
+                startDestination = Route.Home,
                 modifier = Modifier.padding(paddingValues)
             ) {
-                composable("home_tab") {
+                composable<Route.Home> {
                     HomeTab(
                         user = userData,
                         onNavigateToProfile = onNavigateToProfile,
                         onNavigateToTasks = {
-                            navController.navigate("tasks_tab") {
+                            navController.navigate(Route.TasksTab) {
                                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
                             }
                         },
                         onNavigateToInventory = {
-                            navController.navigate("inventory_tab") {
+                            navController.navigate(Route.Inventory) {
                                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
                             }
                         },
                         onNavigateToStore = {
-                            navController.navigate("store_tab") {
+                            navController.navigate(Route.StoreTab) {
                                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
                             }
                         },
                         onNavigateToGroups = {
-                            navController.navigate("group_tab") {
+                            navController.navigate(Route.GroupTab) {
                                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
@@ -285,19 +314,19 @@ fun HomeScreen(userViewModel: UserViewModel, onNavigateToProfile: () -> Unit) {
                         }
                     )
                 }
-                composable("tasks_tab") {
+                composable<Route.TasksTab> {
                     TasksTab(
                         viewModel = taskViewModel,
                         onTaskCompleted = { userViewModel.fetchUser() }
                     )
                 }
-                composable("group_tab") { GrupoTab() }
+                composable<Route.GroupTab> { GrupoTab() }
 
-                composable("store_tab") {
+                composable<Route.StoreTab> {
                     TiendaTab(ludiones = userData?.ludiones ?: 0, onCosmeticChanged = { userViewModel.fetchUser() })
                 }
 
-                composable("inventory_tab") {
+                composable<Route.Inventory> {
                     InventarioTab(onCosmeticChanged = { userViewModel.fetchUser() })
                 }
             }
@@ -306,9 +335,10 @@ fun HomeScreen(userViewModel: UserViewModel, onNavigateToProfile: () -> Unit) {
 
     if (taskState.showCreateDialog) {
         CreateTareaDialog(
+            parentId = taskState.parentIdForNewTask,
             onDismiss = { taskViewModel.closeCreateDialog() },
             onCreate = { titulo, desc, tipoStr, prioridadInt, frecuencia, fechaLimite ->
-                val userGid = SessionManager.getPersonalGid()
+                val userGid = SessionManager.getPersonalGid() ?: if (SessionManager.isGuest()) -1 else null
 
                 if (userGid != null) {
                     val tipoEnum = runCatching { TaskType.valueOf(tipoStr) }.getOrDefault(TaskType.UNICO)
@@ -325,7 +355,8 @@ fun HomeScreen(userViewModel: UserViewModel, onNavigateToProfile: () -> Unit) {
                         descripcion = desc,
                         tipo = tipoEnum,
                         prioridad = prioridadEnum,
-                        fechaLimite = fechaLimite
+                        fechaLimite = fechaLimite,
+                        frecuencia = frecuencia
                     )
                 } else {
                     Toast.makeText(context, "Error: Usuario sin grupo personal.", Toast.LENGTH_LONG).show()
@@ -374,7 +405,7 @@ fun HomeHeader(username: String) {
 }
 
 @Composable
-fun NavBottomBar(selected: Int, onSelect: (Int) -> Unit) {
+fun NavBottomBar(selected: Int, isGuest: Boolean = false, onSelect: (Int) -> Unit) {
     val items = listOf(
         NavItem("Home", Icons.Filled.Home),
         NavItem("Tasks", Icons.Filled.CheckCircle),
@@ -395,6 +426,7 @@ fun NavBottomBar(selected: Int, onSelect: (Int) -> Unit) {
         items.forEachIndexed { index, item ->
             val isSelected = selected == index
             val isCenter = index == 2
+            val isDisabled = isGuest && (index == 3 || index == 4)
 
             Box(
                 modifier = Modifier
@@ -434,6 +466,7 @@ fun NavBottomBar(selected: Int, onSelect: (Int) -> Unit) {
                             imageVector = item.icon,
                             contentDescription = item.title,
                             tint = when {
+                                isDisabled -> Color.White.copy(alpha = 0.2f)
                                 isCenter -> Color.Black
                                 else -> Color.White.copy(alpha = 0.5f)
                             },
