@@ -3,8 +3,11 @@ package com.astrais.db
 import AvatarLayer
 import CosmeticResponseDTO
 import LANG_CODE_ENGLISH
+import admin.RarityType
 import avatar.AvatarLayerDTO
 import kotlinx.datetime.LocalDateTime
+import kotlinx.serialization.Serializable
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
 
 enum class BuyCosmeticResponse{
     OKAY,
@@ -25,6 +28,21 @@ data class TareaHabitData(
     val frequency : String
 )
 
+@Serializable
+data class DatosSimpleUsuarios(
+    val id: Int,
+    val nombre: String,
+    val rol: String,
+    val nivel: Int
+)
+
+@Serializable
+data class DatosSimpleGrupo(
+    val id: Int,
+    val nombre: String,
+    val descripcion: String,
+    val ownerNombre: String,
+)
 
 interface DatabaseDAO {
     /**
@@ -79,6 +97,11 @@ interface DatabaseDAO {
      * @param ent El usuario concreto
      */
     suspend fun setUserLastLogin(ent: EntidadUsuario)
+
+    /**
+     * Comprueba si el usuario es admin del servidor entero
+     */
+    suspend fun checkIfUserIsServerAdmin(uid: Int) : Boolean
 
     /**
      * Mira si le UID del provider ya esta asignado a una cuenta
@@ -160,7 +183,7 @@ interface DatabaseDAO {
     /**
      * Comprueba si el usuario indicado es admin del grupo
      */
-    suspend fun checkIfUserIsAdmin(uid : Int, gid : Int) : Boolean
+    suspend fun checkIfUserIsGroupAdmin(uid : Int, gid : Int) : Boolean
 
     suspend fun editGroup(gid: Int, name: String?, desc: String?) : Boolean
 
@@ -205,7 +228,7 @@ interface DatabaseDAO {
     suspend fun deleteTarea(tid : Int) : Boolean
 
     // madre mia el formatter este
-    suspend fun getStoreItems(uid: Int): List<CosmeticResponseDTO>
+    suspend fun getStoreItems(uid: Int, translated : Boolean = true): List<CosmeticResponseDTO>
     suspend fun buyCosmetic(uid: Int, cosmeticId: Int): BuyCosmeticResponse
     suspend fun equipCosmetic(uid: Int, cosmeticId: Int): BuyCosmeticResponse
     suspend fun createCosmetic(
@@ -216,7 +239,8 @@ interface DatabaseDAO {
         assetRef: String,
         theme: String,
         coleccion: String,
-        layer : AvatarLayer?
+        layer : AvatarLayer?,
+        rarity: RarityType
     ): Boolean
 
     suspend fun retrieveAvatar(uid: Int) : List<AvatarLayerDTO>
@@ -224,6 +248,22 @@ interface DatabaseDAO {
     suspend fun saveConfirmationCode(uid: Int, code: String)
     suspend fun verifyConfirmationCode(email: String, code: String): Boolean
     suspend fun isUserConfirmed(email: String): Boolean
+
+
+
+    suspend fun adminUpdateCosmetic(cid: Int,
+                                    name: String,
+                                    desc: String,
+                                    type: CosmeticType,
+                                    price: Int,
+                                    assetRef: String,
+                                    theme: String,
+                                    coleccion: String,
+                                    layer : AvatarLayer?,
+                                    rarity: RarityType) : Boolean
+    suspend fun admindeleteCosmetic(cid : Int) : Boolean
+    suspend fun adminGetAllUsers() : List<DatosSimpleUsuarios>
+    suspend fun adminGetAllGroups() : List<DatosSimpleGrupo>
 }
 
 fun getDatabaseDaoImpl(): DatabaseDAO {

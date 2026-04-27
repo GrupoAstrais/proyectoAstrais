@@ -19,7 +19,7 @@ class TaskRepoImpl : TaskRepo{
     override suspend fun createTask(req : CreateTareaRequest, uid : Int) : Pair<CreateTaskRepoResponse, Int> {
         try {
             val role = getDatabaseDaoImpl().getUserRoleOnGroup(uid, req.gid)
-            val isOwner = getDatabaseDaoImpl().checkIfUserIsAdmin(uid = uid, req.gid)
+            val isOwner = getDatabaseDaoImpl().checkIfUserIsGroupAdmin(uid = uid, req.gid)
 
             if (role == null && !isOwner) {
                 return Pair(CreateTaskRepoResponse.RESP_NOTMEMBER, -1)
@@ -83,7 +83,7 @@ class TaskRepoImpl : TaskRepo{
     override suspend fun getGroupTasks(gid: Int, uid: Int): Pair<CreateTaskRepoResponse, List<TareaResponse>> {
         try {
             val role = getDatabaseDaoImpl().getUserRoleOnGroup(uid, gid)
-            val isOwner = getDatabaseDaoImpl().checkIfUserIsAdmin(uid = uid, gid)
+            val isOwner = getDatabaseDaoImpl().checkIfUserIsGroupAdmin(uid = uid, gid)
             if (role == null && !isOwner) {
                 return Pair(CreateTaskRepoResponse.RESP_NOTMEMBER, emptyList())
             }

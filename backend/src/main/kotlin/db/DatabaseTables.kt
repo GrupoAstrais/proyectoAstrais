@@ -1,6 +1,7 @@
 package com.astrais.db
 
 import AvatarLayer
+import admin.RarityType
 import java.time.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import org.jetbrains.exposed.v1.core.ReferenceOption
@@ -287,13 +288,14 @@ class EntidadTareaHabito(id : EntityID<Int>) : IntEntity(id) {
 }
 
 object TablaCosmetico : IntIdTable("Cosmetic") {
-    val nombre = varchar("name", 50)
+    val nombre = varchar("name", 512)
     val descripcion = varchar("desc", 255)
     val tipo = enumerationByName<CosmeticType>("type", 20)
     val precioLudiones = integer("price_ludions").default(0)
     val assetRef = varchar("asset_ref", 100)
     val tema = varchar("theme", 255).default("DEFAULT")
     val coleccion = varchar("coleccion", 50).default("DEFAULT")
+    val rareza = enumeration<RarityType>("rarity")
 
     val layer = enumeration<AvatarLayer>("layer").nullable()
 }
@@ -308,6 +310,7 @@ class EntidadCosmetico(id: EntityID<Int>) : IntEntity(id) {
     var assetRef by TablaCosmetico.assetRef
     var tema by TablaCosmetico.tema
     var coleccion by TablaCosmetico.coleccion
+    var rareza by TablaCosmetico.rareza
 
     var layer by TablaCosmetico.layer
 }

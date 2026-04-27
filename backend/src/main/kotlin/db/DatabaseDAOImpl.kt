@@ -3,10 +3,15 @@ package com.astrais.db
 import AvatarLayer
 import CosmeticResponseDTO
 import LANG_CODE_ENGLISH
+import LANG_CODE_RUSSIAN
+import LANG_CODE_SPANISH
+import admin.NamesCosmetic
+import admin.RarityType
 import avatar.AvatarLayerDTO
 import com.astrais.mainlogger
 import java.time.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.jdbc.*
@@ -129,6 +134,17 @@ class DatabaseDAOImpl : DatabaseDAO {
         suspendTransaction { ent.ultimo_login = LocalDate.now().toKotlinLocalDate() }
     }
 
+    override suspend fun checkIfUserIsServerAdmin(uid: Int) : Boolean {
+        return suspendTransaction {
+            //val user = EntidadUsuario.findById(uid) ?: return@suspendTransaction false
+            val user = TablaUsuario.select(listOf(TablaUsuario.rol)).where {
+                TablaUsuario.id.eq(uid)
+            }.singleOrNull() ?: return@suspendTransaction false
+
+            return@suspendTransaction user.get(TablaUsuario.rol) == UserRoles.ADMIN_USER
+        }
+    }
+
     override suspend fun checkForOauth(provider_uid : String, auth : AuthProvider) : Boolean {
         return suspendTransaction {
             !TablaCredencialesAuth.selectAll().where {
@@ -191,7 +207,7 @@ class DatabaseDAOImpl : DatabaseDAO {
             // Añade metodo oauth
             TablaCredencialesAuth.insert {
                 it[TablaCredencialesAuth.uid] = uid
-                it[TablaCredencialesAuth.provider] = auth
+                it[provider] = auth
                 it[TablaCredencialesAuth.provider_uid] = provider_uid
             }
 
@@ -214,7 +230,7 @@ class DatabaseDAOImpl : DatabaseDAO {
             }
 
             TablaCredencialesAuth.deleteWhere {
-                TablaCredencialesAuth.uid.eq(uid).and(TablaCredencialesAuth.provider.eq(auth))
+                TablaCredencialesAuth.uid.eq(uid).and(provider.eq(auth))
             }
 
             return@suspendTransaction BuyCosmeticResponse.OKAY
@@ -375,7 +391,7 @@ class DatabaseDAOImpl : DatabaseDAO {
         }
     }
 
-    override suspend fun checkIfUserIsAdmin(uid: Int, gid: Int): Boolean {
+    override suspend fun checkIfUserIsGroupAdmin(uid: Int, gid: Int): Boolean {
         return suspendTransaction {
             !TablaGrupo.selectAll().where { TablaGrupo.id.eq(gid).and(TablaGrupo.owner.eq(uid)) }.empty()
         }
@@ -541,7 +557,7 @@ class DatabaseDAOImpl : DatabaseDAO {
         }
     }
 
-    override suspend fun getStoreItems(uid: Int): List<CosmeticResponseDTO> {
+    override suspend fun getStoreItems(uid: Int, translated : Boolean): List<CosmeticResponseDTO> {
         return suspendTransaction {
             val inventarioUsuario =
                     EntidadInventario.find { TablaInventario.id_usuario eq uid }.map {
@@ -557,9 +573,27 @@ class DatabaseDAOImpl : DatabaseDAO {
                             usuario?.themeColors == cosmetico.tema
                         } else false
 
+                val finalName = if (translated) {
+                    val fname = Json.decodeFromString<NamesCosmetic>(cosmetico.nombre)
+
+                    when (usuario?.idioma) {
+                        LANG_CODE_SPANISH -> {
+                            fname.espName
+                        }
+                        LANG_CODE_RUSSIAN -> {
+                            fname.rusName
+                        }
+                        else -> {
+                            fname.engName
+                        }
+                    }
+                }else {
+                    cosmetico.nombre
+                }
+
                 CosmeticResponseDTO(
                         id = cosmetico.id.value,
-                        name = cosmetico.nombre,
+                        name = finalName,
                         desc = cosmetico.descripcion,
                         type = cosmetico.tipo.name,
                         price = cosmetico.precioLudiones,
@@ -634,7 +668,8 @@ class DatabaseDAOImpl : DatabaseDAO {
             assetRef: String,
             theme: String,
             coleccion: String,
-            layer : AvatarLayer?
+            layer : AvatarLayer?,
+            rarity: RarityType
     ): Boolean {
         return suspendTransaction {
             if (type == CosmeticType.AVATAR_PART && layer != null){
@@ -650,6 +685,7 @@ class DatabaseDAOImpl : DatabaseDAO {
                 this.tema = theme
                 this.coleccion = coleccion
                 this.layer = layer
+                this.rareza = rarity
             }
             true
         }
@@ -700,6 +736,79 @@ class DatabaseDAOImpl : DatabaseDAO {
         return suspendTransaction {
             val user = EntidadUsuario.find { TablaUsuario.email eq email }.singleOrNull()
             user?.esta_confirmado == 1
+        }
+    }
+
+    override suspend fun adminUpdateCosmetic(
+        cid: Int,
+        name: String,
+        desc: String,
+        type: CosmeticType,
+        price: Int,
+        assetRef: String,
+        theme: String,
+        coleccion: String,
+        layer: AvatarLayer?,
+        rarity: RarityType
+    ) : Boolean {
+        return suspendTransaction {
+            if (type == CosmeticType.AVATAR_PART && layer != null){
+                return@suspendTransaction false
+            }
+
+            val identity = EntidadCosmetico.findById(cid) ?: return@suspendTransaction false
+            identity.nombre = name
+            identity.descripcion = desc
+            identity.tipo = type
+            identity.precioLudiones = price
+            identity.assetRef = assetRef
+            identity.tema = theme
+            identity.coleccion = coleccion
+            identity.layer = layer
+            identity.rareza = rarity
+            true
+        }
+    }
+
+    override suspend fun admindeleteCosmetic(cid: Int) : Boolean {
+        return suspendTransaction {
+            TablaCosmetico.deleteWhere {
+                TablaCosmetico.id.eq(cid)
+            } > 0
+        }
+    }
+
+    override suspend fun adminGetAllUsers() : List<DatosSimpleUsuarios> {
+        return suspendTransaction {
+            TablaUsuario.select(listOf(TablaUsuario.id, TablaUsuario.nombre, TablaUsuario.rol, TablaUsuario.nivel)).map {
+
+                val rolFinal = if (it.get(TablaUsuario.rol) == UserRoles.ADMIN_USER){
+                    "Admin"
+                } else {
+                    "Usuario"
+                }
+
+                DatosSimpleUsuarios(
+                    id = it.get(TablaUsuario.id).value,
+                    nombre = it.get(TablaUsuario.nombre),
+                    rol = rolFinal,
+                    nivel = it.get(TablaUsuario.nivel),
+                )
+            }
+        }
+    }
+
+    override suspend fun adminGetAllGroups(): List<DatosSimpleGrupo> {
+        return suspendTransaction {
+            TablaGrupo.select(listOf(TablaGrupo.id, TablaGrupo.nombre, TablaGrupo.descripcion, TablaGrupo.owner)).where { TablaGrupo.es_grupo_personal.eq(false) }.map {
+                val ownerName = TablaUsuario.select(TablaUsuario.nombre).where { TablaUsuario.id.eq(it.get(TablaGrupo.owner)) }.singleOrNull()?.get(TablaUsuario.nombre) ?: "No hay owner"
+                DatosSimpleGrupo(
+                    id = it.get(TablaGrupo.id).value,
+                    nombre = it.get(TablaGrupo.nombre),
+                    descripcion = it.get(TablaGrupo.descripcion),
+                    ownerNombre = ownerName
+                )
+            }
         }
     }
 }
