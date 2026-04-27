@@ -58,7 +58,7 @@ fun Route.groupRoutes(){
                 AddUserReturn.OK -> call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
                 AddUserReturn.NOGROUP -> call.respond(HttpStatusCode.NotFound, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "GID invalid"))
                 AddUserReturn.ALREADYJOINED -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEALREADYEXISTS.ordinal, "User already joined the group"))
-                AddUserReturn.NOPERMISSION -> call.respond(HttpStatusCode.Forbidden, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "User doesn't have the permission to add people"))
+                AddUserReturn.NOPERMISSION -> call.respond(HttpStatusCode.Forbidden, Errors(ErrorCodes.ERR_FORBIDDEN.ordinal, "User doesn't have the permission to add people"))
                 AddUserReturn.CONNERR -> call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Error with the database"))
             }
         }
@@ -76,7 +76,7 @@ fun Route.groupRoutes(){
             if (getGroupRepoImpl().editGroup(gid = data.gid, uid = uid, name = data.name, desc = data.desc)){
                 call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
             }else{
-                call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Doesn't have enough privileges to edit the group"))
+                call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_FORBIDDEN.ordinal, "Doesn't have enough privileges to edit the group"))
             }
 
         }
@@ -98,7 +98,7 @@ fun Route.groupRoutes(){
             if (getGroupRepoImpl().deleteGroup(uid = uid, gid = data.gid)){
                 call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
             }else{
-                call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Doesn't have enough privileges to delete the group"))
+                call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_FORBIDDEN.ordinal, "Doesn't have enough privileges to delete the group"))
             }
         }
 

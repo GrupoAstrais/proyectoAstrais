@@ -64,20 +64,26 @@ fun Application.module() {
         allowCredentials = true
         allowNonSimpleContentTypes = true
 
-        allowHeader(HttpHeaders.ContentType)
         allowHeader(HttpHeaders.Authorization)
+        allowHeader(HttpHeaders.ContentType)
 
         anyMethod()
     }
 
 
     install(StatusPages) {
-        exception<Throwable> { call, cause ->
-            cause.printStackTrace()
+        exception<com.auth0.jwt.exceptions.JWTVerificationException> { call, cause ->
+            println("JWT FAILED: ${cause.javaClass.simpleName}")
+            println("MESSAGE: ${cause.message}")
 
+            call.respond(HttpStatusCode.Unauthorized)
+        }
+
+        exception<TokenExpiredException> { call, cause ->
+            //mainlogger.info("Token exception? ${cause.message}")
             call.respond(
-                HttpStatusCode.InternalServerError,
-                mapOf("errorText" to "Fallo crítico en Backend: ${cause.message}")
+                HttpStatusCode.Unauthorized,
+                Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "Invalid/expired token")
             )
         }
 
@@ -90,19 +96,20 @@ fun Application.module() {
             call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "Couldn't parse to int (Likely the UID)"))
         }
 
-        exception<TokenExpiredException> { call, cause ->
-            mainlogger.info("Token exception? ${cause.message}")
-            call.respond(
-                HttpStatusCode.Unauthorized,
-                Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "Invalid/expired token")
-            )
-        }
-
-        exception<Exception> { call, except ->
+        /*exception<Exception> { call, except ->
             val msg = "Unknown exception happened while processing. Message: ${except.message}. Except type: ${except.javaClass.name}"
             mainlogger.severe(msg)
             call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, msg))
         }
+
+        exception<Throwable> { call, cause ->
+            cause.printStackTrace()
+
+            call.respond(
+                HttpStatusCode.InternalServerError,
+                mapOf("errorText" to "Fallo crítico en Backend: ${cause.message}")
+            )
+        }*/
     }
 
     installSSE()

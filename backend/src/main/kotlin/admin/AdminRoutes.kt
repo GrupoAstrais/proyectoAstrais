@@ -81,7 +81,7 @@ fun Route.adminRoutes() {
                     call.respond(
                         HttpStatusCode.Forbidden,
                         Errors(
-                            ErrorCodes.EER_FORBIDDEN.ordinal,
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
                             "Forbidden, you are not admin"
                         )
                     )
@@ -171,13 +171,13 @@ fun Route.adminRoutes() {
                     )
                     return@post
                 }
-                val cid = call.parameters["cid"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "CID invalid"))
+                val cid = call.parameters["cid"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_FORBIDDEN.ordinal, "CID invalid"))
 
                 if (!getDatabaseDaoImpl().checkIfUserIsServerAdmin(token)){
                     call.respond(
                         HttpStatusCode.Forbidden,
                         Errors(
-                            ErrorCodes.EER_FORBIDDEN.ordinal,
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
                             "Forbidden, you are not admin"
                         )
                     )
@@ -271,13 +271,13 @@ fun Route.adminRoutes() {
                     )
                     return@delete
                 }
-                val cid = call.parameters["cid"]?.toInt() ?: return@delete call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "CID invalid"))
+                val cid = call.parameters["cid"]?.toInt() ?: return@delete call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_FORBIDDEN.ordinal, "CID invalid"))
 
                 if (!getDatabaseDaoImpl().checkIfUserIsServerAdmin(token)){
                     call.respond(
                         HttpStatusCode.Forbidden,
                         Errors(
-                            ErrorCodes.EER_FORBIDDEN.ordinal,
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
                             "Forbidden, you are not admin"
                         )
                     )
@@ -311,7 +311,7 @@ fun Route.adminRoutes() {
                     call.respond(
                         HttpStatusCode.Forbidden,
                         Errors(
-                            ErrorCodes.EER_FORBIDDEN.ordinal,
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
                             "Forbidden, you are not admin"
                         )
                     )
@@ -341,7 +341,7 @@ fun Route.adminRoutes() {
                     call.respond(
                         HttpStatusCode.Forbidden,
                         Errors(
-                            ErrorCodes.EER_FORBIDDEN.ordinal,
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
                             "Forbidden, you are not admin"
                         )
                     )
@@ -369,7 +369,7 @@ fun Route.adminRoutes() {
                     call.respond(
                         HttpStatusCode.Forbidden,
                         Errors(
-                            ErrorCodes.EER_FORBIDDEN.ordinal,
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
                             "Forbidden, you are not admin"
                         )
                     )

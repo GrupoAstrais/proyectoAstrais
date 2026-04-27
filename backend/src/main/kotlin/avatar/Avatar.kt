@@ -24,7 +24,7 @@ fun Route.avatarRoute(){
         post("/avatar/") {
             val uid = call.principal<JWTPrincipal>()!!.subject?.toInt() ?: return@post call.respond(
                 HttpStatusCode.Unauthorized, Errors(
-                    ErrorCodes.EER_FORBIDDEN.ordinal, "No UID available")
+                    ErrorCodes.ERR_FORBIDDEN.ordinal, "No UID available")
             )
 
             val layer = getDatabaseDaoImpl().retrieveAvatar(uid)

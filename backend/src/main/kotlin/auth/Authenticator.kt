@@ -145,7 +145,7 @@ fun Route.authRoutes() {
     // Se protege la ruta requiriendo el refresh token para poder entrar
     authenticate("refresh-jwt") {
         post("/auth/regenAccess") {
-            // Regenera un AccessToken
+            // Regenera un Refresh token
             try {
                 val token = call.principal<JWTPrincipal>()
                 if (token == null) {
