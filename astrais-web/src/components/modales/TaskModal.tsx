@@ -41,11 +41,12 @@ export default function Modal({
   useEffect(() => {
     if (!initialData) {
       setFormData(getDefaultFormData());
+      setObjetivo(undefined);
       return;
     }
 
     setFormData(buildTaskFormData(initialData));
-
+    setObjetivo(initialData.idObjetivo);
   }, [initialData]);
 
 
@@ -190,12 +191,12 @@ export default function Modal({
           />
         </div>
 
-        {formData.taskType == "objetivo" && (
+        {formData.taskType == "daily" && (
           <div className="rounded-md bg-accent-beige-300 p-3">
             <h3 className="mb-2 font-bold text-primary-900">Elegir objetivo</h3>
             <div className="mb-3 flex gap-2">
-              <select  className="text-primary-900"  id="objetivos" name="tareasObjetivos" value={objetivo ?? undefined} onChange={(e) => setObjetivo(Number(e.target.value))}>
-                <option  key={-1} value={undefined}>Elige tu objetivo</option>
+              <select  className="text-primary-900"  id="objetivos" name="tareasObjetivos" value={objetivo ?? ""} onChange={(e) => setObjetivo(Number(e.target.value))}>
+                <option  key={-1} value={""}>Elige tu objetivo</option>
                 {
                   tareasObjetivos && tareasObjetivos.map((obj) => (
                     <option  key={obj.id} value={obj.id}>{obj.titulo}</option>

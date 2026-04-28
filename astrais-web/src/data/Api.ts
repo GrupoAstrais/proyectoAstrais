@@ -31,40 +31,67 @@ instance.interceptors.request.use(config => {
     return config
 })
 
-instance.interceptors.response.use(response => response, async error => {
-    const originalRequest = error.config;
-    const status = error.response?.status;
+let isRefreshing = false;
+let failedQueue: Array<{
+    resolve: (token: string) => void;
+    reject: (err: unknown) => void;
+}> = [];
 
-    if (status === 401 &&  !originalRequest._retry) {
-            originalRequest._retry = true;
+const processQueue = (error: unknown, token: string | null = null) => {
+    failedQueue.forEach(({ resolve, reject }) => {
+        if (error) reject(error);
+        else resolve(token!);
+    });
+    failedQueue = [];
+};
 
-            const refreshToken = localStorage.getItem('jwtRefreshToken');
+instance.interceptors.response.use(
+    response => response,
+    async error => {
+        const originalRequest = error.config;
+        const status = error.response?.status;
 
-            try {
-                const res = await refreshInstance.post('/auth/regenAccess', {
-                    refreshToken
-                });
-
-                const newToken = res.data.accessToken;
-
-                localStorage.setItem('jwtToken', newToken);
-
-                originalRequest.headers.Authorization = `Bearer ${newToken}`;
-
-                console.log("Desde regenAccess");
-                console.log("TOKEN: ", localStorage.getItem('jwtToken'));
-                console.log("REFRESH TOKEN: ", localStorage.getItem('jwtRefreshToken'));
-
-
-                return instance(originalRequest);
-            } catch (e) {
-                localStorage.removeItem('jwtToken');
-                localStorage.removeItem('jwtRefreshToken');
-                window.location.href = '/login';
-            }
+        if (status !== 401 || originalRequest._retry) {
+            return Promise.reject(error);
         }
 
-        return Promise.reject(error);
+        if (isRefreshing) {
+            // Ставим в очередь, ждём пока первый обновит токен
+            return new Promise((resolve, reject) => {
+                failedQueue.push({ resolve, reject });
+            }).then(token => {
+                originalRequest.headers.Authorization = `Bearer ${token}`;
+                return instance(originalRequest);
+            }).catch(err => Promise.reject(err));
+        }
+
+        originalRequest._retry = true;
+        isRefreshing = true;
+
+        const refreshToken = localStorage.getItem('jwtRefreshToken');
+
+        try {
+            const res = await refreshInstance.post('/auth/regenAccess', {}, {
+                headers: {
+                    Authorization: `Bearer ${refreshToken}`
+                }
+            });
+            const newToken = res.data.newAccessToken;
+
+            localStorage.setItem('jwtToken', newToken);
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+
+            processQueue(null, newToken);
+            return instance(originalRequest);
+        } catch (e) {
+            processQueue(e, null);
+            localStorage.removeItem('jwtToken');
+            localStorage.removeItem('jwtRefreshToken');
+            window.location.href = '/login';
+            return Promise.reject(e);
+        } finally {
+            isRefreshing = false;
+        }
     }
 );
 
@@ -297,13 +324,13 @@ export async function addUserToGroup(req: AddUserToGroup) : Promise<void> {
 
 export async function createTask(req: CreateTask) : Promise<number> {
     try {
-            console.error(req);
+        console.error(req);
 
         const data = await instance.post("/tasks", req);
         if (data.status >= 200 && data.status < 300) {
-
+            console.log("createTask REQUEST:", JSON.stringify(req))
             console.error("Successful task created! ");
-            return data.data["taskId"] as number;
+            return data.data["id"] as number;
         } else {
             console.error("Error en el log! " + data.data["error"]);
             return Promise.reject();
@@ -612,7 +639,7 @@ export const buildTaskFormData = (task: ITarea): ITaskFormData => {
         name: task.titulo,
         description: task.descripcion,
         difficulty: normalizeTaskPriority(task.prioridad),
-        taskType: task.tipo === "HABIT" ? "habit" : "daily",
+        taskType: task.tipo === "HABIT" ? "habit" : task.tipo == "UNIQUE" ? "daily" : "objetivo" ,
         idObjetivo: task.idObjetivo,
         habitFrequency: getTaskHabitFrequency(task),
         taskDate: getTaskDate(task)
@@ -620,31 +647,34 @@ export const buildTaskFormData = (task: ITarea): ITaskFormData => {
 }
 
 export const buildCreateTaskRequest = (gid: number, data: ITaskFormData, parentTaskId?: number): CreateTask => {
+    const resolvedParentId = parentTaskId ?? data.idObjetivo; // ← добавь это
+
     const taskType: 'UNICO' | 'HABITO' | 'OBJETIVO' =
-        data.idObjetivo ? 'OBJETIVO' : data.taskType === "habit"
-                ? 'HABITO' 
-                : 'UNICO';
+        data.taskType === "habit"
+                ? 'HABITO'
+                : data.taskType === "daily" ? 'UNICO' : 'OBJETIVO';
 
     const request: CreateTask = {
         gid,
         titulo: data.name.trim(),
         descripcion: data.description.trim(),
-        tipo: taskType as 'UNICO' | 'HABITO' | 'OBJETIVO',
+        tipo: taskType,
         prioridad: normalizeTaskPriority(data.difficulty)
     };
 
     if (taskType === "HABITO") {
         request.extraHabito = {
-            numeroFrecuencia: 1, 
+            numeroFrecuencia: 1,
             frequency: mapUiFrequencyToServer(data.habitFrequency) as 'HOURLY' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
         };
     } else if (taskType === "UNICO") {
         request.extraUnico = {
-            fechaLimite: new Date(data.taskDate).toISOString()};
+            fechaLimite: new Date(data.taskDate).toISOString()
+        };
     }
 
-    if (typeof parentTaskId === "number") {
-        request.idObjetivo = parentTaskId;
+    if (typeof resolvedParentId === "number") {
+        request.idObjetivo = resolvedParentId; // ← теперь отправляется
     }
 
     return request;
@@ -662,7 +692,7 @@ export const shouldRecreateTaskOnEdit = (task: ITarea, data: ITaskFormData): boo
     const nextTaskType =
         data.taskType === "habit"
             ? "HABIT"
-            : data.idObjetivo
+            : data.taskType === "objetivo"
                 ? "OBJECTIVE"
                 : "UNIQUE";
 
@@ -698,13 +728,9 @@ export const createLocalTask = (
     const priority = normalizeTaskPriority(data.difficulty);
     const taskType =
         options.tipo ??
-        (typeof options.idObjetivo === "number"
-            ? "UNIQUE"
-            : data.taskType === "habit"
-                ? "HABIT"
-                : data.idObjetivo
-                    ? "OBJECTIVE"
-                    : "UNIQUE");
+        (data.taskType === "habit"
+            ? "HABIT" : data.taskType === "objetivo"
+                    ? "OBJECTIVE" : "UNIQUE");
 
     return {
         id: options.id,
@@ -713,7 +739,7 @@ export const createLocalTask = (
         descripcion: data.description.trim(),
         tipo: taskType,
         prioridad: priority,
-        extraUnico: taskType === "UNIQUE" ? undefined : [normalizeTaskDateString(data.taskDate)],
+        extraUnico: taskType === "UNIQUE" ? [normalizeTaskDateString(data.taskDate)] : undefined,
         extraHabito: taskType === "HABIT" ? [1, data.habitFrequency as "HOURLY" | "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY" | undefined] : undefined,
         idObjetivo: options.idObjetivo,
         estado: options.estado ?? "ACTIVE",
