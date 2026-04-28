@@ -126,6 +126,7 @@ fun Application.module() {
         sseRoutes()
 
         staticResources("/static", "static") {}
+        staticResources("/admin", "admin") {}
 
         val externalUploadsDir = System.getenv("UPLOAD_DIR") ?: "uploads"
         staticFiles("/assets", File(externalUploadsDir))

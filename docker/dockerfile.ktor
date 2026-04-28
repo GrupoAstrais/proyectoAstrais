@@ -5,7 +5,7 @@ COPY --chown=gradle:gradle backend /home/gradle/src
 RUN echo "Building server..."
 RUN gradle buildFatJar --no-daemon
 
-FROM amazoncorretto:22 AS runtime
+FROM eclipse-temurin:22 AS runtime
 EXPOSE 5684
 # RUN mkdir /app
 RUN mkdir -p /app/uploads
