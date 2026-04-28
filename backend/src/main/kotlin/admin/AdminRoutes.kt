@@ -4,6 +4,8 @@ import OK_MESSAGE_RESPONSE
 import com.astrais.ErrorCodes
 import com.astrais.Errors
 import com.astrais.db.CosmeticType
+import com.astrais.db.DatosSimpleUsuarios
+import com.astrais.db.UserRoles
 import com.astrais.db.getDatabaseDaoImpl
 import io.ktor.http.*
 import io.ktor.http.content.*
@@ -15,6 +17,7 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.File
+import kotlin.reflect.jvm.internal.impl.types.error.ErrorEntity
 
 @Serializable
 data class CreateCosmeticRequest(
@@ -40,6 +43,16 @@ data class CreateGroupAdmin(
     val name : String,
     val uid : Int,
     val desc : String
+)
+
+@Serializable
+data class CreateUserAdmin(
+    val name : String,
+    val email : String,
+    val password : String,
+    val lang : String,
+    val utcOffset : Float,
+    val role : String
 )
 
 enum class RarityType(val multiplier: Double) {
@@ -327,6 +340,46 @@ fun Route.adminRoutes() {
 
                 val users = getDatabaseDaoImpl().adminGetAllUsers()
                 call.respond(HttpStatusCode.OK, users)
+            }
+
+            get("/users/{uid}") {
+                val token = call.principal<JWTPrincipal>()?.subject?.toInt()
+                if (token == null) {
+                    // No deberia ser null, pero se hace la comprobacion por si acaso
+                    call.respond(
+                        HttpStatusCode.Unauthorized,
+                        Errors(
+                            ErrorCodes.ERR_INVALIDTOKEN.ordinal,
+                            "Invalid/Missing refresh token"
+                        )
+                    )
+                    return@get
+                }
+
+                if (!getDatabaseDaoImpl().checkIfUserIsServerAdmin(token)){
+                    call.respond(
+                        HttpStatusCode.Forbidden,
+                        Errors(
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
+                            "Forbidden, you are not admin"
+                        )
+                    )
+                    return@get
+                }
+
+                val uid = call.parameters["uid"]?.toInt() ?: return@get call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "No GID"))
+
+                val data = getDatabaseDaoImpl().getUsuarioByID(id = uid)
+                if (data != null){
+                    call.respond(HttpStatusCode.OK, DatosSimpleUsuarios(
+                        id = data.id.value,
+                        nombre = data.nombre,
+                        rol = if (data.rol == UserRoles.ADMIN_USER) {"Admin"} else {"User"},
+                        nivel = data.nivel
+                    ))
+                }else{
+                    call.respond(HttpStatusCode.NotFound, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "User doesn't exists"))
+                }
 
             }
 
@@ -395,6 +448,114 @@ fun Route.adminRoutes() {
                     call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCENOTCREATED.ordinal, "Couldn't create group"))
                 }else{
                     call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
+                }
+            }
+            delete("/groups/delete/{gid}"){
+                val token = call.principal<JWTPrincipal>()?.subject?.toInt()
+                if (token == null) {
+                    // No deberia ser null, pero se hace la comprobacion por si acaso
+                    call.respond(
+                        HttpStatusCode.Unauthorized,
+                        Errors(
+                            ErrorCodes.ERR_INVALIDTOKEN.ordinal,
+                            "Invalid/Missing refresh token"
+                        )
+                    )
+                    return@delete
+                }
+
+                if (!getDatabaseDaoImpl().checkIfUserIsServerAdmin(token)){
+                    call.respond(
+                        HttpStatusCode.Forbidden,
+                        Errors(
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
+                            "Forbidden, you are not admin"
+                        )
+                    )
+                    return@delete
+                }
+                val gid = call.parameters["gid"]?.toInt() ?: return@delete call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "No GID"))
+
+                if (getDatabaseDaoImpl().deleteGroup(gid)){
+                    call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
+                }else {
+                    call.respond(HttpStatusCode.NotModified, Errors(ErrorCodes.ERR_RESOURCENOTMODIFIED.ordinal, "Couldn't delete!"))
+                }
+            }
+
+            post("/user/create"){
+                val token = call.principal<JWTPrincipal>()?.subject?.toInt()
+                if (token == null) {
+                    // No deberia ser null, pero se hace la comprobacion por si acaso
+                    call.respond(
+                        HttpStatusCode.Unauthorized,
+                        Errors(
+                            ErrorCodes.ERR_INVALIDTOKEN.ordinal,
+                            "Invalid/Missing refresh token"
+                        )
+                    )
+                    return@post
+                }
+
+                if (!getDatabaseDaoImpl().checkIfUserIsServerAdmin(token)){
+                    call.respond(
+                        HttpStatusCode.Forbidden,
+                        Errors(
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
+                            "Forbidden, you are not admin"
+                        )
+                    )
+                    return@post
+                }
+
+                val data = call.receive<CreateUserAdmin>()
+
+                val d = getDatabaseDaoImpl().createUser(
+                    nombreusu = data.name,
+                    emailusu = data.email,
+                    passwordusu = data.password,
+                    lang = data.lang,
+                    utcOffset = data.utcOffset,
+                    role = if (data.role == "ADMIN") {UserRoles.ADMIN_USER} else {UserRoles.NORMAL_USER}
+                )
+                if (d != -1){
+                    call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
+                }else {
+                    call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCENOTCREATED.ordinal, "Couldn't create user"))
+                }
+            }
+            post("/user/delete/{cid}"){
+                val token = call.principal<JWTPrincipal>()?.subject?.toInt()
+                if (token == null) {
+                    // No deberia ser null, pero se hace la comprobacion por si acaso
+                    call.respond(
+                        HttpStatusCode.Unauthorized,
+                        Errors(
+                            ErrorCodes.ERR_INVALIDTOKEN.ordinal,
+                            "Invalid/Missing refresh token"
+                        )
+                    )
+                    return@post
+                }
+
+                if (!getDatabaseDaoImpl().checkIfUserIsServerAdmin(token)){
+                    call.respond(
+                        HttpStatusCode.Forbidden,
+                        Errors(
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
+                            "Forbidden, you are not admin"
+                        )
+                    )
+                    return@post
+                }
+
+                val data = call.parameters["cid"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "No CID"))
+
+                val d = getDatabaseDaoImpl().deleteUsuario(data)
+                if (d){
+                    call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
+                }else {
+                    call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCENOTCREATED.ordinal, "Couldn't create user"))
                 }
             }
         }

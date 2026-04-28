@@ -788,6 +788,7 @@ class DatabaseDAOImpl : DatabaseDAO {
                     id = it.get(TablaGrupo.id).value,
                     nombre = it.get(TablaGrupo.nombre),
                     descripcion = it.get(TablaGrupo.descripcion),
+                    ownerId = it.get(TablaGrupo.owner).value,
                     ownerNombre = ownerName
                 )
             }

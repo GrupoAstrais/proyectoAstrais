@@ -39,6 +39,7 @@ data class DatosSimpleGrupo(
     val id: Int,
     val nombre: String,
     val descripcion: String,
+    val ownerId : Int,
     val ownerNombre: String,
 )
 
