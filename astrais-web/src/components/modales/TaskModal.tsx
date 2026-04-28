@@ -36,7 +36,7 @@ export default function Modal({
   tareasObjetivos
 }: ModalProps) {
   const [formData, setFormData] = useState<ITaskFormData>(getDefaultFormData);
-  const [objetivo, setObjetivo] = useState<number>(-1);
+  const [objetivo, setObjetivo] = useState<number>();
 
   useEffect(() => {
     if (!initialData) {
@@ -194,8 +194,8 @@ export default function Modal({
           <div className="rounded-md bg-accent-beige-300 p-3">
             <h3 className="mb-2 font-bold text-primary-900">Elegir objetivo</h3>
             <div className="mb-3 flex gap-2">
-              <select  className="text-primary-900"  id="objetivos" name="tareasObjetivos" value={objetivo ?? -1} onChange={(e) => setObjetivo(Number(e.target.value))}>
-                <option  key={-1} value={-1}>Elige tu objetivo</option>
+              <select  className="text-primary-900"  id="objetivos" name="tareasObjetivos" value={objetivo ?? undefined} onChange={(e) => setObjetivo(Number(e.target.value))}>
+                <option  key={-1} value={undefined}>Elige tu objetivo</option>
                 {
                   tareasObjetivos && tareasObjetivos.map((obj) => (
                     <option  key={obj.id} value={obj.id}>{obj.titulo}</option>

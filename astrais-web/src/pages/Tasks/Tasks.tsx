@@ -416,7 +416,7 @@ export default function Tasks() {
                   <Task
                     key={task.id}
                     data={task}
-                    subtasks={getTaskSubtasks(tasks, task.id)}
+                    subtasks={[]}
                     onComplete={handleToggleTaskCompleted}
                     onToggleSubtask={handleToggleSubtaskCompleted}
                     onToggleConfig={editTaskHandle}
