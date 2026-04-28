@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Astrais Admin Panel</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --sidebar: #0f172a;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            margin: 0;
+            display: flex;
+            color: var(--text-main);
+        }
+
+        nav {
+            width: 260px;
+            background: var(--sidebar);
+            color: white;
+            padding: 1.5rem;
+            position: fixed;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        nav h2 {
+            color: var(--primary);
+            margin-bottom: 2rem;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        nav li {
+            padding: 0.8rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #94a3b8;
+            transition: 0.2s;
+        }
+
+        nav li.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-left: 4px solid var(--primary);
+        }
+
+        main {
+            margin-left: 260px;
+            padding: 2.5rem;
+            width: calc(100% - 260px);
+        }
+
+        .view-section {
+            display: none;
+        }
+
+        .view-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .card-preview {
+            background: #f1f5f9;
+            height: 140px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            width: 450px;
+            border-radius: 20px;
+            padding: 2rem;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <h2>Astrais</h2>
+        <ul>
+            <li id="menu-users" class="active" onclick="showSection('users-view')">Usuarios</li>
+            <li id="menu-cosmetics" onclick="showSection('cosmetics-view')">Cosméticos</li>
+            <li id="menu-groups" onclick="showSection('groups-view')">Grupos</li>
+            <li onclick="logout()" style="margin-top:2rem; color:var(--danger)">Salir</li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="users-view" class="view-section active">
+            <div style="display:flex; justify-content:space-between; margin-bottom:2rem">
+                <h1>Usuarios</h1>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn" style="background:#e2e8f0" onclick="fetchUsers()">Refrescar</button>
+                    <button class="btn btn-primary" onclick="openUserModal()">+ Nuevo Usuario</button>
+                </div>
+            </div>
+            <div class="card" style="padding:0; overflow:hidden">
+                <table style="width:100%; border-collapse:collapse">
+                    <thead style="background:#f1f5f9">
+                        <tr>
+                            <th style="padding:1rem; text-align:left">Usuario</th>
+                            <th style="padding:1rem; text-align:left">Rol</th>
+                            <th style="padding:1rem; text-align:left">Nivel</th>
+                            <th style="padding:1rem; text-align:right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body"></tbody>
+                </table>
+            </div>
+            <div id="user-modal" class="modal">
+                <div class="modal-content" style="width: 500px;">
+                    <h2 id="user-modal-title">Nuevo Usuario</h2>
+                    <form id="user-form" onsubmit="saveUser(event)">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div style="grid-column: span 2;">
+                                <label style="display:block; margin-bottom:0.4rem; font-weight:600;">Nombre Completo</label>
+                                <input type="text" id="user-name" required placeholder="Ej: Juan Pérez"
+                                    style="width:100%; box-sizing:border-box; padding:0.6rem; border:1px solid var(--border); border-radius:8px;">
+                            </div>
+                            
+                            <div style="grid-column: span 2;">
+                                <label style="display:block; margin-bottom:0.4rem; font-weight:600;">Email / Usuario</label>
+                                <input type="text" id="user-email" required placeholder="usuario@astrais.com"
+                                    style="width:100%; box-sizing:border-box; padding:0.6rem; border:1px solid var(--border); border-radius:8px;">
+                            </div>
+
+                            <div style="grid-column: span 2;">
+                                <label style="display:block; margin-bottom:0.4rem; font-weight:600;">Contraseña</label>
+                                <input type="password" id="user-password" required
+                                    style="width:100%; box-sizing:border-box; padding:0.6rem; border:1px solid var(--border); border-radius:8px;">
+                            </div>
+
+                            <div>
+                                <label style="display:block; margin-bottom:0.4rem; font-weight:600;">Idioma</label>
+                                <select id="user-lang" style="width:100%; padding:0.6rem; border:1px solid var(--border); border-radius:8px;">
+                                    <option value="ESP">Español (ESP)</option>
+                                    <option value="ENG">Inglés (ENG)</option>
+                                    <option value="RUS">Ruso (RUS)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label style="display:block; margin-bottom:0.4rem; font-weight:600;">UTC Offset</label>
+                                <input type="number" id="user-utc" step="0.5" value="0"
+                                    style="width:100%; box-sizing:border-box; padding:0.6rem; border:1px solid var(--border); border-radius:8px;">
+                            </div>
+
+                            <div style="grid-column: span 2;">
+                                <label style="display:block; margin-bottom:0.4rem; font-weight:600;">Rol del Sistema</label>
+                                <select id="user-role" style="width:100%; padding:0.6rem; border:1px solid var(--border); border-radius:8px;">
+                                    <option value="USER">Usuario</option>
+                                    <option value="ADMIN">Administrador</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                            <button type="button" class="btn" onclick="closeUserModal()" style="background:#e2e8f0">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Crear Cuenta</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <section id="cosmetics-view" class="view-section">
+            <div style="display:flex; justify-content:space-between; margin-bottom:2rem">
+                <h1>Tienda</h1>
+                <button class="btn btn-primary" onclick="openModal('create')">+ Nuevo</button>
+            </div>
+            <div id="cosmetics-grid" class="grid"></div>
+
+            <div id="cosmetic-modal" class="modal">
+                <div class="modal-content" style="width: 600px; max-height: 90vh; overflow-y: auto;">
+                    <h2 id="modal-title" style="margin-top: 0;">Nuevo Cosmético</h2>
+                    <form id="cosmetic-form" onsubmit="saveCosmetic(event)">
+                        <input type="hidden" id="item-id">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div style="grid-column: span 2;">
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Nombre
+                                    (Multi-idioma)</label>
+                                <div style="display: flex; gap: 5px; margin-bottom: 5px;">
+                                    <input type="text" id="name-en" placeholder="Name (EN)" required
+                                        style="flex:1; padding:0.6rem; border:1px solid var(--border); border-radius:8px;">
+                                    <input type="text" id="name-es" placeholder="Nombre (ES)"
+                                        style="flex:1; padding:0.6rem; border:1px solid var(--border); border-radius:8px;">
+                                    <input type="text" id="name-ru" placeholder="Nombre (RU)"
+                                        style="flex:1; padding:0.6rem; border:1px solid var(--border); border-radius:8px;">
+                                </div>
+                            </div>
+                            <div style="grid-column: span 2;">
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Descripción</label>
+                                <textarea id="item-desc"
+                                    style="width:100%; box-sizing:border-box; padding:0.6rem; border:1px solid var(--border); border-radius:8px; min-height:60px;"></textarea>
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Tipo</label>
+                                <select id="item-type" onchange="toggleTypeFields()" required
+                                    style="width:100%; padding:0.6rem; border:1px solid var(--border); border-radius:8px;">
+                                    <option value="PET">Mascota</option>
+                                    <option value="APP_THEME">Tema App</option>
+                                    <option value="AVATAR_PART">Avatar</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Precio</label>
+                                <input type="number" id="item-price" value="0" required
+                                    style="width:100%; box-sizing:border-box; padding:0.6rem; border:1px solid var(--border); border-radius:8px;">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Colección</label>
+                                <input type="text" id="item-collection" placeholder="Ej: DEFAULT"
+                                    style="width:100%; box-sizing:border-box; padding:0.6rem; border:1px solid var(--border); border-radius:8px;" required>
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Rareza</label>
+                                <select id="item-rarity"
+                                    style="width:100%; padding:0.6rem; border:1px solid var(--border); border-radius:8px;">
+                                    <option value="COMMON">Común</option>
+                                    <option value="RARE">Raro</option>
+                                    <option value="EPIC">Épico</option>
+                                    <option value="LEGENDARY">Legendario</option>
+                                </select>
+                            </div>
+                            <div id="field-theme" style="display:none; grid-column: span 2;">
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Configuración de
+                                    Colores</label>
+                                <div id="theme-inputs-container"
+                                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f1f5f9; padding: 1rem; border-radius: 12px;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="field-lottie" style="display:none; grid-column: span 2;">
+                            <!--<label style="display:block; margin-bottom:0.5rem; font-weight:600;">Archivo Lottie (.json)</label>
+                            <input type="file" id="item-lottie-file" accept=".json"> -->
+
+                            <label id="label-asset" style="display:block; margin-bottom:0.5rem; font-weight:600;">Archivo Lottie (.json)</label>
+                            <div style="border: 2px dashed var(--border); padding: 1rem; border-radius: 12px; text-align: center; background: #f8fafc;">
+                                <input type="file" id="item-lottie-file" accept=".json" style="cursor: pointer;">
+                                <p id="asset-hint" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">
+                                    Selecciona el json correspondiente.
+                                </p>
+                            </div>
+                        </div>
+                        <div id="field-asset" style="display:none; grid-column: span 2;">
+                            <label id="label-asset" style="display:block; margin-bottom:0.5rem; font-weight:600;">Archivo</label>
+                            <div style="border: 2px dashed var(--border); padding: 1rem; border-radius: 12px; text-align: center; background: #f8fafc;">
+                                <input type="file" id="item-file" accept=".png,.jpg"
+                                    style="cursor: pointer;">
+                                <p id="asset-hint" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">
+                                    Selecciona una imagen de avatar (png o jpg).
+                                </p>
+                            </div>
+                        </div>
+                        <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                            <button type="button" class="btn" onclick="closeModal()"
+                                style="background:#e2e8f0">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <section id="groups-view" class="view-section">
+            <div style="display:flex; justify-content:space-between; margin-bottom:2rem">
+                <h1>Gestión de Grupos</h1>
+                <button class="btn btn-primary" onclick="openGroupModal('create')">+ Crear Grupo</button>
+            </div>
+            <div class="grid" id="groups-grid"></div>
+
+            <div id="group-modal" class="modal">
+                <div class="modal-content">
+                    <h2 id="group-modal-title">Nuevo Grupo</h2>
+                    <form id="group-form" onsubmit="saveGroup(event)">
+                        <input type="hidden" id="group-id">
+                        <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Nombre del Grupo</label>
+                        <input type="text" id="group-name" required
+                            style="width:100%; padding:0.6rem; border:1px solid var(--border); border-radius:8px; margin-bottom:1rem;">
+
+                        <label style="display:block; margin-bottom:0.5rem; font-weight:600;">ID del Owner</label>
+                        <div style="display:flex; gap:8px; margin-bottom:0.5rem;">
+                            <input type="number" id="group-leader" required placeholder="ID del usuario"
+                                style="flex:1; padding:0.6rem; border:1px solid var(--border); border-radius:8px;">
+                            <button type="button" class="btn" style="background:var(--bg); border:1px solid var(--border);" onclick="verifyLeader()">
+                                Verificar
+                            </button>
+                        </div>
+                        <div id="group-leader-verify" style="font-size:0.85rem; margin-bottom:1rem; min-height:1.2rem;"></div>
+
+                        <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Descripción</label>
+                        <textarea id="group-desc"
+                            style="width:100%; padding:0.6rem; border:1px solid var(--border); border-radius:8px; min-height:80px; margin-bottom:1rem;"></textarea>
+
+                        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                            <button type="button" class="btn" onclick="closeGroupModal()"
+                                style="background:#e2e8f0">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="constant.js"></script>
+    <script>
+        if (!localStorage.getItem(STORAGE_ACCESS)) window.location.href = 'login.html';
+
+        const DEFAULT_PALETTE = {
+            primary: "#8B5CF6",
+            secondary: "#38BDF8",
+            tertiary: "#10B981",
+            background: "#0D1117",
+            onPrimary: "#F8FAFC",
+            onSecondary: "#0D1117",
+            onTertiary: "#0D1117",
+            onBackground: "#F8FAFC",
+            onSurface: "#F8FAFC"
+        };
+
+        const API = {
+            USERS: API_URL + '/admin/users',
+            COSMETICS: API_URL + '/store/items/admin',
+            UPLOAD_COSMETIC: API_URL + '/admin/cosmetic/upload',
+            DELETE_COSMETIC: API_URL + '/admin/cosmetic/delete',
+            GROUPS: API_URL + '/admin/groups',
+            ADD_GROUP: API_URL + '/admin/groups/add',
+            CREATE_USER: API_URL + '/admin/user/create',
+            DELETE_USER: API_URL + '/admin/user/delete'
+        };
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        function showSection(id) {
+            document.querySelectorAll('.view-section').forEach(s => s.classList.toggle('active', s.id === id));
+            document.querySelectorAll('nav li').forEach(l => l.classList.toggle('active', l.id === `menu-${id.split('-')[0]}`));
+
+            if (id === 'cosmetics-view') fetchCosmetics();
+            if (id === 'users-view') fetchUsers();
+            if (id === 'groups-view') fetchGroups();
+        }
+
+        async function fetchUsers() {
+            const tbody = document.getElementById('user-table-body');
+            try {
+                const res = await requestServerProtected(API.USERS, { method: 'POST' });
+                if (res.ok) {
+                    const users = await res.json();
+                    tbody.innerHTML = users.map(u => `
+                        <tr>
+                            <td style="padding:1rem; border-top:1px solid var(--border)">${u.nombre}</td>
+                            <td style="padding:1rem; border-top:1px solid var(--border)">${u.rol}</td>
+                            <td style="padding:1rem; border-top:1px solid var(--border)">${u.nivel}</td>
+                            <td style="padding:1rem; border-top:1px solid var(--border); text-align:right">
+                                <button class="btn btn-danger" onclick="deleteUser(${u.id})">Borrar</button>
+                            </td>
+                        </tr>`).join('');
+                }
+            } catch (e) { console.log(e); }
+        }
+
+        function openUserModal() {
+            document.getElementById('user-form').reset();
+            document.getElementById('user-modal').style.display = 'flex';
+        }
+
+        function closeUserModal() {
+            document.getElementById('user-modal').style.display = 'none';
+        }
+
+        async function saveUser(e) {
+            e.preventDefault();
+            
+            const payload = {
+                name: document.getElementById('user-name').value,
+                email: document.getElementById('user-email').value,
+                password: document.getElementById('user-password').value,
+                lang: document.getElementById('user-lang').value,
+                utcOffset: parseFloat(document.getElementById('user-utc').value),
+                role: document.getElementById('user-role').value
+            };
+
+            try {
+                const res = await requestServerProtected(API.CREATE_USER, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    alert("Usuario creado con éxito");
+                    closeUserModal();
+                    fetchUsers();
+                } else {
+                    const err = await res.text();
+                    alert("Error al crear: " + err);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Error de red");
+            }
+        }
+
+        async function deleteUser(id) {
+            if (confirm("¿Estás seguro de que deseas eliminar a este usuario?")) {
+                try {
+                    const res = await requestServerProtected(`${API.DELETE_USER}/${id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (res.ok) {
+                        alert("Usuario eliminado");
+                        fetchUsers();
+                    } else {
+                        const err = await res.text();
+                        alert("Error: " + err);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert("Error de conexión");
+                }
+            }
+        }
+
+        async function fetchGroups() {
+            const grid = document.getElementById('groups-grid');
+            try {
+                const token = localStorage.getItem(STORAGE_ACCESS);
+                const res = await requestServerProtected(API.GROUPS, { 'method': 'POST' });
+                if (res.ok) {
+                    const groups = await res.json();
+                    grid.innerHTML = groups.map(g => `
+                        <div class="card">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem">
+                                <h3 style="margin:0">${g.nombre}</h3>
+                                <span style="background:var(--primary); color:white; padding:2px 8px; border-radius:12px; font-size:0.75rem;">ID: ${g.id}</span>
+                            </div>
+                            <p style="color:var(--text-muted); font-size:0.9rem; min-height:40px;">${g.descripcion || 'Sin descripción'}</p>
+                            <div style="background:var(--bg); border-radius:8px; padding:0.8rem; margin-bottom:1.5rem;">
+                                <div style="font-size:0.8rem; color:var(--text-muted)">Líder: </div>
+                                <div style="font-weight:600;">${g.ownerNombre}</div>
+                            </div>
+                            <div style="display:flex; gap:8px;">
+                                <button class="btn" style="flex:1; border:1px solid var(--border)" onclick='openGroupModal("edit", ${JSON.stringify(g)})'>Configurar</button>
+                                <button class="btn btn-danger" onclick="deleteGroup(${g.id})">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle-fill" viewBox="0 0 16 16">
+                                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>`).join('');
+                }
+            } catch (e) { grid.innerHTML = '<p>Error al cargar grupos.</p>'; }
+        }
+
+        async function verifyLeader() {
+            const id = document.getElementById('group-leader').value;
+            const resultDiv = document.getElementById('leader-verify-result');
+            
+            if (!id) {
+                resultDiv.innerHTML = '<span style="color:var(--danger)">Ingresa un ID</span>';
+                return;
+            }
+            resultDiv.innerHTML = '<span style="color:var(--text-muted)">Buscando...</span>';
+
+            try {
+                const res = await requestServerProtected(`${API.USERS}/${id}`, { method: 'GET' });
+                
+                if (res.ok) {
+                    const user = await res.json();
+                    resultDiv.innerHTML = `<span style="color:var(--success)">Usuario: <strong>${user.nombre}</strong></span>`;
+                    return true;
+                } else {
+                    resultDiv.innerHTML = '<span style="color:var(--danger)">Usuario no encontrado</span>';
+                    return false;
+                }
+            } catch (e) {
+                resultDiv.innerHTML = '<span style="color:var(--danger)">Error al conectar</span>';
+                return false;
+            }
+        }
+
+        function openGroupModal(mode, data = null) {
+            document.getElementById('group-modal-title').innerText = mode === 'edit' ? 'Editar Grupo' : 'Nuevo Grupo';
+            document.getElementById('group-form').reset();
+            document.getElementById('group-leader-verify').innerText = '';
+            if (data) {
+                document.getElementById('group-id').value = data.id;
+                document.getElementById('group-name').value = data.nombre;
+                document.getElementById('group-leader').value = data.ownerId;
+                document.getElementById('group-desc').value = data.descripcion || '';
+            }
+            document.getElementById('group-modal').style.display = 'flex';
+        }
+
+        function closeGroupModal() { document.getElementById('group-modal').style.display = 'none'; }
+
+        async function saveGroup(e) {
+            e.preventDefault();
+            const id = document.getElementById('group-id').value;
+            const payload = {
+                name: document.getElementById('group-name').value,
+                uid: parseInt(document.getElementById('group-leader').value),
+                desc: document.getElementById('group-desc').value
+            };
+            try {
+                const res = await requestServerProtected(API.ADD_GROUP, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    closeGroupModal();
+                    fetchGroups();
+                }
+            } catch (error) {
+                console.log(error);
+                alert("Error! " + error)
+            }
+        }
+        async function saveCosmetic(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('item-id').value;
+            console.log("CID: " + id);
+            const type = document.getElementById('item-type').value;
+            const formData = new FormData();
+
+            // Campos base
+            formData.append("espName", document.getElementById('name-es').value);
+            formData.append("engName", document.getElementById('name-en').value);
+            formData.append("rusName", document.getElementById('name-ru').value);
+            formData.append("desc", document.getElementById('item-desc').value);
+            formData.append("type", type);
+            formData.append("price", document.getElementById('item-price').value);
+            formData.append("collection", document.getElementById('item-collection').value || "DEFAULT");
+            formData.append("rarity", document.getElementById('item-rarity').value);
+
+            const fileInput = document.getElementById('item-lottie-file');
+            if (type === 'PET') {
+                if (fileInput.files[0]) {
+                    formData.append("file", fileInput.files[0]);
+                } else if (typeof id !== "string") {
+                    alert("Debes seleccionar un archivo .json para el Pet");
+                    return;
+                }
+            } else if (type === 'AVATAR_PART') {
+                const fileImageInput = document.getElementById('item-file');
+                if (fileImageInput.files[0]) {
+                    formData.append("file", fileImageInput.files[0]);
+                } else if (typeof id !== "string") {
+                    alert("Debes seleccionar un archivo de icono");
+                    return;
+                }
+            } else if (type === 'APP_THEME') {
+                const themeObj = {};
+                
+                Object.keys(DEFAULT_PALETTE).map(key => {
+                    const hexValue = document.getElementById(`hex-${key}`).value;
+                    themeObj[key] = hexValue;
+                });
+
+                formData.append("theme", JSON.stringify(themeObj));
+            }
+
+            try {
+                const res = await requestServerProtected(id ? `${API.UPLOAD_COSMETIC}/${id}` : API.UPLOAD_COSMETIC, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (res.ok) {
+                    alert("¡Cosmético guardado con éxito!");
+                    closeModal();
+                    fetchCosmetics();
+                } else {
+                    const errData = await res.text();
+                    alert("Error al guardar: " + errData);
+                }
+            } catch (err) {
+                console.error("Error de conexión:", err);
+                alert("Error de conexión con el servidor.");
+            }
+        }
+
+        async function deleteGroup(id) {
+            if (confirm("Borrar este grupo?")) {
+                const res = await requestServerProtected(`${API.GROUPS}/delete/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    fetchGroups();
+                    alert("Grupo borrado!");
+                } else {
+                    alert("No se borro el grupo");
+                }
+            }
+        }
+
+        // --- LÓGICA DE COSMÉTICOS (CON LOTTIE) ---
+        async function fetchCosmetics() {
+            const grid = document.getElementById('cosmetics-grid');
+            try {
+                const res = await requestServerProtected(API.COSMETICS);
+                if (res.ok) {
+                    const cosmetics = await res.json();
+                    grid.innerHTML = cosmetics.map(item => {
+                        console.log(item);
+                        const names = JSON.parse(item.name);
+
+                        let preview = '<div style="width:100%; height:100%; background:var(--bg);"></div>';
+                        if (item.type === 'PET'){
+                            preview = `<div class="lottie-player" data-path="${API_URL}/assets/pets/${item.assetRef}" style="width:100%; height:100%"></div>`
+                        } else if (item.type === 'APP_THEME') {
+                            const colors = JSON.parse(item.theme);
+                            preview = `
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; width: 80%; height: 80%; border-radius: 8px; overflow: hidden; border: 1px solid #ddd;">
+                                ${Object.values(colors || {}).map(color => {
+                                    console.log(color)
+                                    return `
+                                    <div style="background: ${color}; width: 100%; height: 100%;"></div>
+                                `
+                                }).join('')}
+                            </div>`;
+                        } else if (item.type == "AVATAR_PART") {
+                            preview = `<img src="${API_URL}/assets/avatar/${item.assetRef}" style="width:100%; height:100%; object-fit:contain; image-rendering:pixelated; padding: 8px;"></img>`
+                        }
+
+                        return `
+                        <div class="card">
+                            <div class="card-preview">
+                                ${preview}
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:start;">
+                                <div>
+                                    <h4 style="margin:0">${names.espName}</h4>
+                                    <div style="display:flex; gap:4px; align-items:center; margin-top:2px;">
+                                        <small style="color:var(--text-muted)">${item.type}</small>
+                                        <span style="font-size: 0.7rem; background: #e2e8f0; color: #475569; padding: 1px 6px; border-radius: 4px; font-weight: 500;">
+                                            ${item.coleccion || 'DEFAULT'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <span style="font-weight:bold; color:var(--primary)">${item.price}$</span>
+                            </div>
+                            <div style="display:flex; gap:8px; margin-top:1rem;">
+                                <button class="btn" style="flex:1; background:var(--bg)" onclick='openModal("edit", ${JSON.stringify(item)})'>Editar</button>
+                                <button class="btn btn-danger" onclick="deleteCosmetic(${item.id})">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle-fill" viewBox="0 0 16 16">
+                                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>`;
+                    }).join('');
+                    renderLotties();
+                } else {
+                    grid.innerHTML = "<h1>couldn't fetch cosmetics</h1>"
+                }
+            } catch (e) { console.log(e); }
+        }
+
+        function renderLotties() {
+            document.querySelectorAll('.lottie-player').forEach(el => {
+                lottie.loadAnimation({
+                    container: el, renderer: 'svg', loop: true, autoplay: true, path: el.dataset.path
+                });
+            });
+        }
+
+        function toggleTypeFields() {
+            const type = document.getElementById('item-type').value;
+            document.getElementById('field-theme').style.display = (type === 'APP_THEME') ? 'block' : 'none';
+            //document.getElementById('field-layer').style.display = (type === 'AVATAR_PART') ? 'block' : 'none';
+            document.getElementById('field-asset').style.display = (type === 'AVATAR_PART') ? 'block' : 'none';
+            document.getElementById('field-lottie').style.display = (type === 'PET') ? 'block' : 'none';
+        }
+
+        function syncHex(picker, textId) {
+            document.getElementById(textId).value = picker.value.toUpperCase();
+        }
+
+        function syncHexToPicker(key) {
+            const hexInput = document.getElementById(`hex-${key}`);
+            const picker = document.getElementById(`theme-${key}`);
+            let val = hexInput.value.trim();
+
+            if (val.length > 0 && !val.startsWith('#')) {
+                val = '#' + val;
+                hexInput.value = val;
+            }
+
+            const isValidHex = /^#[0-9A-F]{6}$/i.test(val);
+
+            if (isValidHex) {
+                picker.value = val;
+            }
+        }
+
+        function syncPickerToHex(key) {
+            const picker = document.getElementById(`theme-${key}`);
+            const hexInput = document.getElementById(`hex-${key}`);
+            hexInput.value = picker.value.toUpperCase();
+        }
+
+        function openModal(mode, data = null) {
+            const modal = document.getElementById('cosmetic-modal');
+            document.getElementById('cosmetic-form').reset();
+            document.getElementById('item-id').value = data ? data.id : '';
+
+            const typeElement = document.getElementById('item-type');
+
+            typeElement.disabled = false;
+
+            const container = document.getElementById('theme-inputs-container');
+            const colors = (data && data.type === 'APP_THEME' && data.theme) ? (JSON.parse(data.theme)) : DEFAULT_PALETTE;
+            
+            container.innerHTML = Object.keys(colors).map(key => `
+                <div>
+                    <small style="display:block; font-weight:600; color:#64748b;">${key.toUpperCase()}</small>
+                    <div style="display:flex; gap:5px;">
+                        <input type="color" id="theme-${key}" value="${colors[key] || '#000000'}" oninput="syncPickerToHex('${key}')" style="width:30px; height:30px; border:none; background:none; cursor:pointer;">
+                        <input type="text" id="hex-${key}" value="${(colors[key] || '#000000').toUpperCase()}" oninput="syncHexToPicker('${key}')" style="flex:1; border:1px solid #e2e8f0; border-radius:4px; padding:2px 5px; font-family:monospace;">
+                    </div>
+                </div>
+            `).join('');
+
+            if (data) {
+                const nombres = JSON.parse(data.name);
+                document.getElementById('name-es').value = nombres.espName;
+                document.getElementById('name-ru').value = nombres.rusName;
+                document.getElementById('name-en').value = nombres.engName;
+                document.getElementById('item-price').value = data.price;
+                document.getElementById('item-collection').value = data.coleccion;
+                typeElement.value = data.type;
+                typeElement.disabled = true;
+            } else {
+                document.getElementById('item-type').value = "PET";
+            }
+            toggleTypeFields();
+            modal.style.display = 'flex';
+        }
+
+        async function deleteCosmetic(id) {
+            // 1. Confirmación de seguridad para evitar borrar por error
+            if (!confirm("¿Estás seguro de que deseas eliminar este cosmético? Esta acción no se puede deshacer.")) {
+                return;
+            }
+
+            try {
+                const res = await requestServerProtected(`${API.DELETE_COSMETIC}/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (res.ok) {
+                    alert("Cosmético eliminado correctamente.");
+                    fetchCosmetics();
+                } else {
+                    const errorText = await res.text();
+                    alert("No se pudo eliminar el cosmético: " + errorText);
+                }
+            } catch (err) {
+                console.error("Error al eliminar:", err);
+                alert("Ocurrió un error de conexión al intentar eliminar el objeto.");
+            }
+        }
+
+        function closeModal() { document.getElementById('cosmetic-modal').style.display = 'none'; }
+
+        // Cerrar modales al hacer click fuera
+        window.onclick = function (e) {
+            if (e.target.className === 'modal') {
+                closeModal();
+                closeGroupModal();
+                closeUserModal(); // Añadir esta línea
+            }
+        }
+
+        window.onload = () => showSection('users-view');
+    </script>
+</body>
+
+</html>
