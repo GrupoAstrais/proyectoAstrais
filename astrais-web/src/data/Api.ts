@@ -3,8 +3,8 @@ import type { AddUserToGroup, CreateGroup, CreateTask, EditGroup, EditTask, Logi
 import type { IGroup, ITarea } from '../types/Interfaces';
 
 
- export const API_BASE_URL = 'http://192.168.3.148:5684' //url desde las practicas
-// export const API_BASE_URL = 'http://192.168.56.1:5684' //url desde casa
+//export const API_BASE_URL = 'http://192.168.3.148:5684' //url desde las practicas
+export const API_BASE_URL = 'http://192.168.56.1:5684' //url desde casa
 
 
 let jwtToken: string | null = null
