@@ -50,3 +50,8 @@ out/
 
 ### Ignora la carpeta de datos de BD
 db-data/
+
+
+astrais-web/dist
+docker/compiledPage
+package-lock.json
