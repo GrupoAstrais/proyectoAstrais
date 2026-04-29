@@ -20,7 +20,6 @@ import {
   filterTasksByTime,
   getDailyTasks,
   getHabitTasks,
-  getRootTasks,
   getTaskSubtasks,
   getTaskXpReward,
   getTasksFromGroup,
@@ -53,7 +52,7 @@ const recreateSubtasks = async (gid: number, parentId: number, subtasks: ITarea[
   for (const subtask of subtasks) {
     const subtaskData = buildTaskFormData(subtask);
     const subtaskId = await createTask(buildCreateTaskRequest(gid, subtaskData, parentId));
-    results.push(createLocalTask(subtaskData, { gid, id: subtaskId, idObjetivo: parentId, tipo: "UNIQUE" }));
+    results.push(createLocalTask(subtaskData, { gid, id: subtaskId, idObjetivo: parentId, tipo: "UNICO" }));
   }
 
   return results;
@@ -95,6 +94,7 @@ export default function Tasks() {
     void loadTasks();
   }, []);
 
+  //console.log("DE TASKS: "+JSON.stringify(tasks, null, 2));
   // ---------------------------------------------------------------------------
   // Modal
   // ---------------------------------------------------------------------------
@@ -243,9 +243,10 @@ export default function Tasks() {
       filterTasksByCompleted(filterTasksByTime(source, timeFilter, selectedDate), completedFilters)
     );
 
-  const filteredDiariasTasks = getFilteredTasks(getDailyTasks(tasks), activeDiarias, diariasCompletedFilters);
+  const filteredDiariasTasks = getFilteredTasks(getDailyTasks(tasks).filter((t) => t.idObjetivo === undefined), activeDiarias, diariasCompletedFilters);
   const filteredHabitosTasks = getFilteredTasks(getHabitTasks(tasks), activeHabitos, habitosCompletedFilters);
-  const availableObjectives = getRootTasks(tasks).filter((t) => t.tipo === "OBJECTIVE");
+  const availableObjectives = tasks.filter((t) => t.tipo === "OBJETIVO");
+  console.log(tasks);
 
   // ---------------------------------------------------------------------------
   // Render helpers
@@ -278,6 +279,11 @@ export default function Tasks() {
   // ---------------------------------------------------------------------------
   // JSX
   // ---------------------------------------------------------------------------
+
+
+
+
+
 
   return (
     <div

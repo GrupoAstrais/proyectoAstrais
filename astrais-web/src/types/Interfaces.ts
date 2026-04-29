@@ -3,11 +3,13 @@ export interface ITarea {
   gid: number;
   titulo: string;
   descripcion: string;
-  tipo: 'UNIQUE' | 'HABIT' | 'OBJECTIVE';
+  tipo: 'UNICO' | 'HABITO' | 'OBJETIVO';
   prioridad: number; //dificultad
-  extraUnico?: [
-    fechaLimite: string, // Formato ISO (date.toISOString()
-    ]
+  extraUnico?: {
+    fechaLimite: string, // Formato ISO (date.toISOString())
+  } | [
+    fechaLimite: string, // Compatibilidad con tareas locales antiguas
+  ]
   extraHabito?: [
     numeroFrecuencia?: number,
     frequency?: 'HOURLY' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
@@ -15,7 +17,9 @@ export interface ITarea {
   idObjetivo?: number,
   estado: 'COMPLETE' | 'ACTIVE'
   recompensaXp: number,
-  recompensaLudion: number
+  recompensaLudion: number,
+  fecha_actualizado?: string,
+  fecha_creacion?: string
 }
 
 export interface IGroup {

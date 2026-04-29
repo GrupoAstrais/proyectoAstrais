@@ -23,12 +23,12 @@ import {
   editGroup,
   editTask,
   filterTasksByCompleted,
-  getRootTasks,
   getTaskSubtasks,
   getTaskXpReward,
   getTasksFromGroup,
   getUserGroup,
   isTaskCompleted,
+  isTaskVisibleInDefaultList,
   removeTaskWithSubtasks,
   shouldRecreateTaskOnEdit,
   sortTasksByCompleted,
@@ -92,7 +92,7 @@ const recreateTaskChildren = async (gid: number, parentTaskId: number, subtasks:
         gid,
         id: subtaskId,
         idObjetivo: parentTaskId,
-        tipo: "UNIQUE"
+        tipo: "UNICO"
       })
     );
   }
@@ -214,10 +214,8 @@ export default function Groups() {
 
   const sortedGroups = getSortedGroups(groups, activeGroup);
   const activeGroupData = groups.find((group) => group.gid === activeGroup);
-  const filteredGroupTasks = sortTasksByCompleted(
-    filterTasksByCompleted(getRootTasks(activeGroupData?.tasks ?? []), groupTaskFilters)
-  );
-  const availableObjectives = getRootTasks(activeGroupData?.tasks ?? []).filter((task) => task.id !== initialDataModal?.id);
+  const filteredGroupTasks = sortTasksByCompleted(filterTasksByCompleted((activeGroupData?.tasks ?? []).filter((task) => isTaskVisibleInDefaultList(task)), groupTaskFilters).filter((t) => t.idObjetivo === undefined));
+  const availableObjectives = (activeGroupData?.tasks ?? []).filter((task) => task.tipo === "OBJETIVO");
 
   const updateActiveGroupTasks = (updater: (tasks: ITarea[]) => ITarea[]) => {
     setGroups((prevGroups) =>
@@ -310,11 +308,6 @@ export default function Groups() {
 
   const handleModalSubmit = async (data: ITaskFormData) => {
     const normalizedData = normalizeTaskFormData(data, initialDataModal?.idObjetivo);
-
-    if (data.taskType === "objetivo" && typeof normalizedData.idObjetivo !== "number") {
-      setError("Selecciona un objetivo.");
-      return;
-    }
 
     try {
       setError(null);
@@ -478,6 +471,10 @@ export default function Groups() {
     setIsOpenModal(true);
   };
 
+
+
+
+  
   return (
     <div style={{ backgroundImage: `url(${bgImage})` }} className="relative flex min-h-screen flex-col gap-4 bg-cover bg-center font-['Space_Grotesk'] text-white">
       <Navbar />

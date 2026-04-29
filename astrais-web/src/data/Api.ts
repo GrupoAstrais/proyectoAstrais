@@ -3,7 +3,7 @@ import type { AddUserToGroup, CreateGroup, CreateTask, EditGroup, EditTask, Logi
 import type { IGroup, ITarea } from '../types/Interfaces';
 
 
- export const API_BASE_URL = 'http://192.168.3.148:5684' //url desde las practicas
+export const API_BASE_URL = 'http://192.168.3.148:5684' //url desde las practicas
 // export const API_BASE_URL = 'http://192.168.56.1:5684' //url desde casa
 
 
@@ -442,11 +442,9 @@ export async function deleteTask(tid: number) : Promise<void> {
 }
 
 
-
-
 export type TTaskTimeFilter = "Today" | "Tomorrow" | "All";
 export type TTaskPriority = 0 | 1 | 2;
-export type TTaskFormType = "habit" | "daily" | "objetivo";
+export type TTaskFormType = "HABITO" | "UNICO" | "OBJETIVO";
 export type THabitFrequency = "daily" | "weekly" | "monthly" | "hourly" | "yearly";
 
 export interface ITaskFormSubtask {
@@ -575,6 +573,10 @@ const parseTaskDateString = (date: string): Date => {
     return new Date(year, (month || 1) - 1, day || 1);
 }
 
+const formatTaskDateAsIso = (date?: string): string => {
+    return new Date(normalizeTaskDateString(date)).toISOString();
+}
+
 const isSameDate = (firstDate: Date, secondDate: Date): boolean => {
     return formatTaskDate(firstDate) === formatTaskDate(secondDate);
 }
@@ -592,19 +594,61 @@ export const getTaskDate = (task: ITarea): string => {
         return normalizeTaskDateString(task.extraUnico[0]);
     }
 
+    if (!Array.isArray(task.extraUnico) && typeof task.extraUnico?.fechaLimite === "string") {
+        return normalizeTaskDateString(task.extraUnico.fechaLimite);
+    }
+
+    // Берём реальную дату создания хабита как базу для подсчёта дней
+    if (task.tipo === "HABITO" && task.fecha_creacion) {
+        return normalizeTaskDateString(task.fecha_creacion);
+    }
+
+    return formatTaskDate(new Date());
+}
+
+const getTaskStartDate = (task: ITarea): string => {
+    if (task.fecha_creacion) {
+        return normalizeTaskDateString(task.fecha_creacion);
+    }
+
     return formatTaskDate(new Date());
 }
 
 export const getTaskHabitFrequency = (task: ITarea): THabitFrequency | null => {
-    if (!Array.isArray(task.extraHabito)) {
-        return task.tipo === "HABIT" ? "daily" : null;
+    if (!task.extraHabito) {
+        return task.tipo === "HABITO" ? "daily" : null;
     }
 
-    return mapServerFrequencyToUi(task.extraHabito[1]);
+    // С сервера приходит объект, не массив
+    if (!Array.isArray(task.extraHabito)) {
+        return mapServerFrequencyToUi((task.extraHabito as any).frequency);
+    }
+
+    // Локально созданная задача — массив [numeroFrecuencia, frequency]
+    if (typeof task.extraHabito[1] === "string") {
+        return mapServerFrequencyToUi(task.extraHabito[1]);
+    }
+
+    return "daily";
 }
 
 export const isTaskCompleted = (task: ITarea): boolean => {
     return task.estado === "COMPLETE";
+}
+
+export const isTaskVisibleInDefaultList = (task: ITarea, referenceDate: Date = new Date()): boolean => {
+    const today = normalizeDate(referenceDate);
+
+    if (task.tipo === "UNICO" && parseTaskDate(getTaskDate(task)) < today) {
+        return false;
+    }
+
+    if (!isTaskCompleted(task)) {
+        return true;
+    }
+
+    const completedDate = parseTaskDate(task.fecha_actualizado ?? getTaskDate(task));
+    return normalizeDate(completedDate) >= today;
 }
 
 export const isTaskSubtask = (task: ITarea): boolean => {
@@ -616,22 +660,16 @@ export const getTaskSubtasks = (tasks: ITarea[], parentTaskId: number): ITarea[]
 }
 
 export const isComposedTask = (task: ITarea, tasks: ITarea[]): boolean => {
-    return task.tipo === "OBJECTIVE" || getTaskSubtasks(tasks, task.id).length > 0;
+    return task.tipo === "OBJETIVO" || getTaskSubtasks(tasks, task.id).length > 0;
 }
 
-export const getRootTasks = (tasks: ITarea[]): ITarea[] => {
-    if(tasks === undefined) {
-        return [];
-    }
-    return tasks.filter((task) => !isTaskSubtask(task));
-}
 
 export const getDailyTasks = (tasks: ITarea[]): ITarea[] => {
-    return getRootTasks(tasks).filter((task) => task.tipo !== "HABIT");
+    return tasks.filter((task) => task.tipo !== "HABITO");
 }
 
 export const getHabitTasks = (tasks: ITarea[]): ITarea[] => {
-    return getRootTasks(tasks).filter((task) => task.tipo === "HABIT");
+    return tasks.filter((task) => task.tipo === "HABITO");
 }
 
 export const buildTaskFormData = (task: ITarea): ITaskFormData => {
@@ -639,7 +677,7 @@ export const buildTaskFormData = (task: ITarea): ITaskFormData => {
         name: task.titulo,
         description: task.descripcion,
         difficulty: normalizeTaskPriority(task.prioridad),
-        taskType: task.tipo === "HABIT" ? "habit" : task.tipo == "UNIQUE" ? "daily" : "objetivo" ,
+        taskType: task.tipo === "HABITO" ? "HABITO" : task.tipo == "UNICO" ? "UNICO" : "OBJETIVO" ,
         idObjetivo: task.idObjetivo,
         habitFrequency: getTaskHabitFrequency(task),
         taskDate: getTaskDate(task)
@@ -650,9 +688,9 @@ export const buildCreateTaskRequest = (gid: number, data: ITaskFormData, parentT
     const resolvedParentId = parentTaskId ?? data.idObjetivo; // ← добавь это
 
     const taskType: 'UNICO' | 'HABITO' | 'OBJETIVO' =
-        data.taskType === "habit"
+        data.taskType === "HABITO"
                 ? 'HABITO'
-                : data.taskType === "daily" ? 'UNICO' : 'OBJETIVO';
+                : data.taskType === "UNICO" ? 'UNICO' : 'OBJETIVO';
 
     const request: CreateTask = {
         gid,
@@ -664,12 +702,12 @@ export const buildCreateTaskRequest = (gid: number, data: ITaskFormData, parentT
 
     if (taskType === "HABITO") {
         request.extraHabito = {
-            numeroFrecuencia: 1,
+            numeroFrecuencia: data.habitFrequency === 'daily' ? 1 : data.habitFrequency === 'monthly' ? 30 : 7,
             frequency: mapUiFrequencyToServer(data.habitFrequency) as 'HOURLY' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
         };
     } else if (taskType === "UNICO") {
         request.extraUnico = {
-            fechaLimite: new Date(data.taskDate).toISOString()
+            fechaLimite: formatTaskDateAsIso(data.taskDate)
         };
     }
 
@@ -690,17 +728,17 @@ export const buildEditTaskRequest = (data: ITaskFormData): EditTask => {
 
 export const shouldRecreateTaskOnEdit = (task: ITarea, data: ITaskFormData): boolean => {
     const nextTaskType =
-        data.taskType === "habit"
-            ? "HABIT"
-            : data.taskType === "objetivo"
-                ? "OBJECTIVE"
-                : "UNIQUE";
+        data.taskType === "HABITO"
+            ? "HABITO"
+            : data.taskType === "OBJETIVO"
+                ? "OBJETIVO"
+                : "UNICO";
 
     if (task.tipo !== nextTaskType) {
         return true;
     }
 
-    if (nextTaskType === "HABIT") {
+    if (nextTaskType === "HABITO") {
         return getTaskHabitFrequency(task) !== data.habitFrequency;
     }
 
@@ -708,7 +746,7 @@ export const shouldRecreateTaskOnEdit = (task: ITarea, data: ITaskFormData): boo
         return true;
     }
 
-    if (data.idObjetivo || task.tipo === "OBJECTIVE") {
+    if (data.idObjetivo || task.tipo === "OBJETIVO") {
         return true;
     }
 
@@ -728,9 +766,9 @@ export const createLocalTask = (
     const priority = normalizeTaskPriority(data.difficulty);
     const taskType =
         options.tipo ??
-        (data.taskType === "habit"
-            ? "HABIT" : data.taskType === "objetivo"
-                    ? "OBJECTIVE" : "UNIQUE");
+        (data.taskType === "HABITO"
+            ? "HABITO" : data.taskType === "OBJETIVO"
+                    ? "OBJETIVO" : "UNICO");
 
     return {
         id: options.id,
@@ -739,12 +777,13 @@ export const createLocalTask = (
         descripcion: data.description.trim(),
         tipo: taskType,
         prioridad: priority,
-        extraUnico: taskType === "UNIQUE" ? [normalizeTaskDateString(data.taskDate)] : undefined,
-        extraHabito: taskType === "HABIT" ? [1, data.habitFrequency as "HOURLY" | "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY" | undefined] : undefined,
+        extraUnico: taskType === "UNICO" ? { fechaLimite: formatTaskDateAsIso(data.taskDate) } : undefined,
+        extraHabito: taskType === "HABITO" ? [data.habitFrequency === 'daily' ? 1 : data.habitFrequency === 'monthly' ? 30 : 7, data.habitFrequency as "HOURLY" | "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY" | undefined] : undefined,
         idObjetivo: options.idObjetivo,
         estado: options.estado ?? "ACTIVE",
         recompensaXp: getTaskXpReward(priority),
-        recompensaLudion: 0
+        recompensaLudion: 0,
+        fecha_creacion: new Date().toISOString()
     };
 }
 
@@ -763,6 +802,7 @@ export const createNewGroup = (data: any, gid: number) : IGroup => {
 export const toggleTaskCompleted = (tasks: ITarea[], taskId: string): ITarea[] => {
     const taskIdAsNumber = Number(taskId);
     const targetTask = tasks.find((task) => task.id === taskIdAsNumber);
+    const updatedAt = new Date().toISOString();
 
     if (!targetTask) {
         return tasks;
@@ -779,7 +819,8 @@ export const toggleTaskCompleted = (tasks: ITarea[], taskId: string): ITarea[] =
         if (task.id === taskIdAsNumber || task.idObjetivo === taskIdAsNumber) {
             return {
                 ...task,
-                estado: nextState
+                estado: nextState,
+                fecha_actualizado: updatedAt
             };
         }
 
@@ -790,6 +831,7 @@ export const toggleTaskCompleted = (tasks: ITarea[], taskId: string): ITarea[] =
 export const toggleSubtaskCompleted = (tasks: ITarea[], taskId: string, subtaskId: string): ITarea[] => {
     const taskIdAsNumber = Number(taskId);
     const subtaskIdAsNumber = Number(subtaskId);
+    const updatedAt = new Date().toISOString();
 
     const toggledTasks: ITarea[] = tasks.map((task) => {
         if (task.id !== subtaskIdAsNumber) {
@@ -800,7 +842,8 @@ export const toggleSubtaskCompleted = (tasks: ITarea[], taskId: string, subtaskI
 
         return {
             ...task,
-            estado: nextSubtaskState
+            estado: nextSubtaskState,
+            fecha_actualizado: updatedAt
         };
     });
 
@@ -816,7 +859,8 @@ export const toggleSubtaskCompleted = (tasks: ITarea[], taskId: string, subtaskI
 
         return {
             ...task,
-            estado: nextParentState
+            estado: nextParentState,
+            fecha_actualizado: task.estado === nextParentState ? task.fecha_actualizado : updatedAt
         };
     });
 }
@@ -857,11 +901,16 @@ export const isTaskAvailableOnDate = (task: ITarea, date: Date): boolean => {
     const selectedDate = normalizeDate(date);
     const taskBaseDate = parseTaskDate(getTaskDate(task));
 
+    if (task.tipo === "UNICO") {
+        const taskStartDate = parseTaskDate(getTaskStartDate(task));
+        return selectedDate >= taskStartDate && selectedDate <= taskBaseDate;
+    }
+
     if (selectedDate < taskBaseDate) {
         return false;
     }
 
-    if (task.tipo !== "HABIT") {
+    if (task.tipo !== "HABITO") {
         return isSameDate(selectedDate, taskBaseDate);
     }
 
@@ -889,16 +938,15 @@ export const filterTasksByTime = (
 
     const today = normalizeDate(new Date());
     const tomorrow = normalizeDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1));
+    const visibleTasks = tasks.filter((task) => isTaskVisibleInDefaultList(task, today));
 
     if (activeFilter === "Tomorrow") {
-        return tasks.filter((task) => isTaskAvailableOnDate(task, tomorrow));
+        return visibleTasks.filter((task) => isTaskAvailableOnDate(task, tomorrow));
     }
 
     if (activeFilter === "All") {
-        return tasks.filter((task) => {
-            return isTaskAvailableOnDate(task, today) || isTaskAvailableOnDate(task, tomorrow);
-        });
+        return visibleTasks;
     }
 
-    return tasks.filter((task) => isTaskAvailableOnDate(task, today));
+    return visibleTasks.filter((task) => isTaskAvailableOnDate(task, today));
 }
