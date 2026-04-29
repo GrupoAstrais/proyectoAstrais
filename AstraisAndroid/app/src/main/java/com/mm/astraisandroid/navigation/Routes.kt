@@ -21,6 +21,12 @@ sealed interface Route {
     data object Register : Route
 
     /**
+     * Ruta hacia la pantalla de configuración inicial del perfil.
+     */
+    @Serializable
+    data object Onboarding : Route
+
+    /**
      * Ruta hacia la pantalla principal de la aplicación.
      * Es el contenedor del `BottomNavigationBar` y los tabs.
      */
@@ -50,6 +56,29 @@ sealed interface Route {
      */
     @Serializable
     data object GroupTab : Route
+
+    /**
+     * Ruta hacia la pantalla de detalle de un grupo.
+     */
+    @Serializable
+    data class GroupDetail(
+        val gid: Int,
+        val role: Int,
+        val name: String,
+        val description: String
+    ) : Route
+
+    /**
+     * Pantalla secundaria con tareas administrativas del grupo:
+     * editar info, invitaciones, historial y abandonar/eliminar.
+     */
+    @Serializable
+    data class GroupSettings(
+        val gid: Int,
+        val role: Int,
+        val name: String,
+        val description: String
+    ) : Route
 
     /**
      * Ruta hacia el tab de la Tienda.

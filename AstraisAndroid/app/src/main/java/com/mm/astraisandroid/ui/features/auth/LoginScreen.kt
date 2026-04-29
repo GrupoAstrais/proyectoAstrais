@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,12 +45,14 @@ import com.mm.astraisandroid.data.api.LoginRequest
 import kotlinx.coroutines.launch
 import com.mm.astraisandroid.BuildConfig
 import kotlinx.coroutines.flow.collectLatest
+import android.widget.Toast
 
 
 @Composable
 fun LoginScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToRegister: () -> Unit,
+    onNavigateToOnboarding: () -> Unit,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     // remember sirve para guardar el valor entre recomposiciones
@@ -71,8 +74,11 @@ fun LoginScreen(
                 is LoginEvent.NavigateToHome -> {
                     onNavigateToHome()
                 }
+                is LoginEvent.NavigateToOnboarding -> {
+                    onNavigateToOnboarding()
+                }
                 is LoginEvent.ShowToast -> {
-                    // TODO: Snackbar
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -87,7 +93,7 @@ fun LoginScreen(
                 val googleIdOption = GetGoogleIdOption.Builder()
                     .setFilterByAuthorizedAccounts(false)
                     .setServerClientId(BuildConfig.GOOGLE_WEB_CLIENT_ID)
-                    .setAutoSelectEnabled(true)
+                    .setAutoSelectEnabled(false) // Desactivado para forzar que salga el selector de cuentas
                     .build()
 
                 val request = GetCredentialRequest.Builder()
@@ -163,9 +169,9 @@ fun LoginScreen(
                         .height(52.dp),
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF0D0D0D),
-                        contentColor = Color.White,
-                        disabledContainerColor = Color(0xFF0D0D0D).copy(alpha = 0.5f)
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                     )
                 ) {
                     if (uiState is LoginUIState.Loading) {
@@ -186,8 +192,8 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White,
-                        contentColor = Color.Black
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.onSurface
                     )
                 ) {
                     Text("Continuar con Google", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)

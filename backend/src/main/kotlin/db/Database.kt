@@ -64,6 +64,8 @@ object DatabaseController {
                 TablaConfirmacionUsuario,
                 TablaGrupo,
                 TablaGrupoUsuario,
+                TablaGrupoInvites,
+                TablaGrupoAuditLog,
                 TablaTarea,
                 TablaTareaUnica,
                 TablaTareaObjetivo,

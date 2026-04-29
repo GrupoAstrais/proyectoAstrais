@@ -22,6 +22,7 @@ sealed class RegisterUIState {
 
 sealed class RegisterEvent {
     object NavigateToLogin : RegisterEvent()
+    object NavigateToOnboarding : RegisterEvent()
     data class ShowToast(val message: String) : RegisterEvent()
 }
 
@@ -35,7 +36,8 @@ class RegisterViewModel @Inject constructor(
     private val _uiEvent = Channel<RegisterEvent>()
     val uiEvent = _uiEvent.receiveAsFlow()
 
-    var registeredEmail = ""
+    private var registeredEmail = ""
+    private var registeredPass = ""
 
     fun register(request: RegisterRequest) {
         viewModelScope.launch {
@@ -43,6 +45,7 @@ class RegisterViewModel @Inject constructor(
             try {
                 repository.register(request)
                 registeredEmail = request.email
+                registeredPass = request.passwd
                 _registerState.value = RegisterUIState.CodeSent
             } catch (e: Exception) {
                 _registerState.value = RegisterUIState.Error(e.message ?: "Error desconocido")
@@ -54,9 +57,8 @@ class RegisterViewModel @Inject constructor(
         viewModelScope.launch {
             _registerState.value = RegisterUIState.Loading
             try {
-                repository.verifyEmail(registeredEmail, code)
-
-                _uiEvent.send(RegisterEvent.NavigateToLogin)
+                repository.verifyEmail(registeredEmail, code, registeredPass)
+                _uiEvent.send(RegisterEvent.NavigateToOnboarding)
             } catch (e: Exception) {
                 _registerState.value = RegisterUIState.Error(e.message ?: "Error de verificación")
             }

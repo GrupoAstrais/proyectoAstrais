@@ -26,12 +26,18 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mm.astraisandroid.util.LottiePetRenderer
-import com.mm.astraisandroid.ui.features.auth.AuthBackground
+import com.mm.astraisandroid.ui.components.AstraisGlassSurface
+import com.mm.astraisandroid.ui.components.AstraisGlassCard
+import com.mm.astraisandroid.ui.components.AstraisScreenHeader
+import com.mm.astraisandroid.ui.components.Glassmorphism
 import com.mm.astraisandroid.data.api.ThemeConfig
-import com.mm.astraisandroid.data.models.Cosmetic // OJO: Importamos DOMINIO
+import com.mm.astraisandroid.data.models.Cosmetic
 import kotlinx.serialization.json.Json
 import kotlinx.coroutines.flow.collectLatest
 import androidx.core.graphics.toColorInt
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import com.mm.astraisandroid.ui.features.auth.AuthBackground
 
 @Composable
 fun InventarioTab(
@@ -39,6 +45,7 @@ fun InventarioTab(
     onCosmeticChanged: () -> Unit = {}
 ) {
     val state by storeViewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -50,7 +57,7 @@ fun InventarioTab(
         storeViewModel.uiEvent.collectLatest { event ->
             when(event) {
                 is StoreEvent.ShowToast -> {
-                    // TODO: Snackbar
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
                 is StoreEvent.BuySuccess -> onCosmeticChanged()
             }
@@ -69,26 +76,25 @@ fun InventarioTab(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                text = "Mi Inventario",
-                color = Color.White,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Black,
-                fontFamily = FontFamily.Monospace
-            )
+            AstraisScreenHeader("Mi Inventario")
 
-            Row(
+            AstraisGlassSurface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(44.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color.White.copy(alpha = 0.08f))
-                    .padding(4.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .height(44.dp),
+                shape = MaterialTheme.shapes.medium,
+                backgroundAlpha = Glassmorphism.BG_SECONDARY
             ) {
-                TabSelector("Compañeros", selectedTab == 0, Modifier.weight(1f)) { selectedTab = 0 }
-                TabSelector("Accesorios", selectedTab == 1, Modifier.weight(1f)) { selectedTab = 1 }
-                TabSelector("Temas y Fondos", selectedTab == 2, Modifier.weight(1f)) { selectedTab = 2 }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TabSelector("Compañeros", selectedTab == 0, Modifier.weight(1f)) { selectedTab = 0 }
+                    TabSelector("Accesorios", selectedTab == 1, Modifier.weight(1f)) { selectedTab = 1 }
+                    TabSelector("Temas y Fondos", selectedTab == 2, Modifier.weight(1f)) { selectedTab = 2 }
+                }
             }
 
             if (state.isLoading) {
@@ -115,7 +121,7 @@ fun InventarioTab(
                                     1 -> "No tienes accesorios aún."
                                     else -> "No tienes fondos desbloqueados."
                                 },
-                                color = Color.White.copy(alpha = 0.5f),
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.TEXT_SECONDARY),
                                 fontFamily = FontFamily.Monospace
                             )
                         }
@@ -167,13 +173,13 @@ fun TabSelector(text: String, isSelected: Boolean, modifier: Modifier = Modifier
         modifier = modifier
             .fillMaxHeight()
             .clip(RoundedCornerShape(8.dp))
-            .background(if (isSelected) Color.White.copy(alpha = 0.15f) else Color.Transparent)
+            .background(if (isSelected) MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.BG_TERTIARY) else Color.Transparent)
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            color = if (isSelected) Color.White else Color.White.copy(alpha = 0.5f),
+            color = if (isSelected) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.TEXT_TERTIARY),
             fontSize = 12.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
             fontFamily = FontFamily.Monospace
@@ -191,27 +197,47 @@ fun PetInventoryCard(item: Cosmetic, onClick: () -> Unit) {
             .background(MaterialTheme.colorScheme.surface)
             .border(
                 width = if (isEquipped) 2.dp else 1.dp,
-                color = if (isEquipped) MaterialTheme.colorScheme.tertiary else Color.White.copy(alpha = 0.1f),
+                color = if (isEquipped) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f),
                 shape = RoundedCornerShape(16.dp)
             )
             .clickable { onClick() }
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(
-            modifier = Modifier.size(60.dp).background(if (isEquipped) MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f) else Color.Black.copy(alpha=0.3f), RoundedCornerShape(12.dp)),
-            contentAlignment = Alignment.Center
+        AstraisGlassSurface(
+            modifier = Modifier.size(60.dp),
+            shape = MaterialTheme.shapes.medium,
+            backgroundAlpha = if (isEquipped) Glassmorphism.BG_TERTIARY else Glassmorphism.BG_SECONDARY
         ) {
-            LottiePetRenderer(assetRef = item.assetRef ?: "", modifier = Modifier.size(50.dp))
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                LottiePetRenderer(assetRef = item.assetRef ?: "", modifier = Modifier.size(50.dp))
+            }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
-        Text(text = item.name, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, textAlign = TextAlign.Center)
+        Text(
+            text = item.name,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+            maxLines = 1,
+            textAlign = TextAlign.Center
+        )
 
         Spacer(modifier = Modifier.height(8.dp))
         if (isEquipped) {
-            Box(modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f), RoundedCornerShape(6.dp)).padding(vertical = 4.dp), contentAlignment = Alignment.Center) {
-                Text("USANDO", color = MaterialTheme.colorScheme.tertiary, fontSize = 9.sp, fontWeight = FontWeight.Black)
+            AstraisGlassSurface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.small,
+                backgroundAlpha = Glassmorphism.BG_TERTIARY
+            ) {
+                Box(modifier = Modifier.padding(vertical = 4.dp), contentAlignment = Alignment.Center) {
+                    Text(
+                        "USANDO",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.tertiary,
+                        fontWeight = FontWeight.Black
+                    )
+                }
             }
         }
     }
@@ -234,7 +260,7 @@ fun ThemeInventoryCard(item: Cosmetic, onClick: () -> Unit) {
             .background(MaterialTheme.colorScheme.surface)
             .border(
                 width = if (isEquipped) 2.dp else 1.dp,
-                color = if (isEquipped) MaterialTheme.colorScheme.tertiary else Color.White.copy(alpha = 0.1f),
+                color = if (isEquipped) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f),
                 shape = RoundedCornerShape(16.dp)
             )
             .clickable { onClick() }
@@ -262,11 +288,11 @@ fun ThemeInventoryCard(item: Cosmetic, onClick: () -> Unit) {
                 }
             }
         } else {
-            Box(modifier = Modifier.fillMaxWidth().height(60.dp).background(Color.Gray, RoundedCornerShape(12.dp)))
+            Box(modifier = Modifier.fillMaxWidth().height(60.dp).background(MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp)))
         }
 
         Spacer(modifier = Modifier.height(12.dp))
-        Text(text = item.name, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+        Text(text = item.name, color = MaterialTheme.colorScheme.onBackground, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1)
 
         Spacer(modifier = Modifier.height(12.dp))
         if (isEquipped) {
@@ -284,7 +310,7 @@ fun ColorCircle(hex: String, size: Int = 16) {
             .size(size.dp)
             .clip(CircleShape)
             .background(Color(hex.toColorInt()))
-            .border(1.dp, Color.White.copy(alpha = 0.5f), CircleShape)
+            .border(1.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f), CircleShape)
     )
 }
 
@@ -300,8 +326,8 @@ fun CosmeticDetailDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(24.dp))
-                .background(Color(0xFF1A1A2E))
-                .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(24.dp))
+                .background(MaterialTheme.colorScheme.surface)
+                .border(1.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f), RoundedCornerShape(24.dp))
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -310,7 +336,7 @@ fun CosmeticDetailDialog(
                     .fillMaxWidth()
                     .height(140.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color.Black.copy(alpha = 0.3f)),
+                    .background(MaterialTheme.colorScheme.background.copy(alpha = 0.3f)),
                 contentAlignment = Alignment.Center
             ) {
                 if (item.type.name != "APP_THEME") {
@@ -329,7 +355,7 @@ fun CosmeticDetailDialog(
                             ColorCircle(parsedConfig.background, size = 32)
                         }
                     } else {
-                        Text("Error de tema", color = Color.White)
+                        Text("Error de tema", color = MaterialTheme.colorScheme.onBackground)
                     }
                 }
             }
@@ -338,7 +364,7 @@ fun CosmeticDetailDialog(
 
             Text(
                 text = item.name,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Black,
                 fontFamily = FontFamily.Monospace,
@@ -349,7 +375,7 @@ fun CosmeticDetailDialog(
 
             Text(
                 text = item.desc,
-                color = Color.White.copy(alpha = 0.6f),
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                 fontSize = 13.sp,
                 fontFamily = FontFamily.Monospace,
                 textAlign = TextAlign.Center
@@ -360,7 +386,7 @@ fun CosmeticDetailDialog(
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
-                    .background(Color.White.copy(alpha = 0.05f))
+                    .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.05f))
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
                 Text(
@@ -369,7 +395,7 @@ fun CosmeticDetailDialog(
                         item.type.name == "APP_THEME" -> "TIPO: TEMA"
                         else -> "TIPO: ACCESORIO"
                     },
-                    color = Color.White.copy(alpha = 0.4f),
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
                     fontSize = 10.sp,
                     fontFamily = FontFamily.Monospace
                 )
@@ -385,15 +411,15 @@ fun CosmeticDetailDialog(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color.White.copy(alpha = 0.06f))
+                        .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.06f))
                         .clickable { onDismiss() }
                         .padding(vertical = 14.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Cerrar", color = Color.White.copy(alpha = 0.6f), fontSize = 14.sp, fontFamily = FontFamily.Monospace)
+                    Text("Cerrar", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f), fontSize = 14.sp, fontFamily = FontFamily.Monospace)
                 }
 
-                val equipBtnColor = if (item.equipped) Color(0xFFFF4C4C).copy(alpha = 0.8f) else Color(0xFFC172FF)
+                val equipBtnColor = if (item.equipped) MaterialTheme.colorScheme.error.copy(alpha = 0.8f) else MaterialTheme.colorScheme.tertiary
 
                 Box(
                     modifier = Modifier
@@ -408,7 +434,7 @@ fun CosmeticDetailDialog(
                 ) {
                     Text(
                         text = if (item.equipped) "Desequipar" else "Equipar",
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onError,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Monospace

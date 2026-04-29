@@ -25,16 +25,21 @@ class UserApi @Inject constructor(private val client: HttpClient) {
 
     suspend fun updateUsername(uid: Int, newName: String) {
         val req = client.patch("$BASE_URL/auth/editUser") {
-            setBody(
-                mapOf(
-                    "uid" to uid,
-                    "nombreusu" to newName
-                )
-            )
+            setBody(EditUserRequest(uid = uid, nombreusu = newName, lang = null, utcOffset = null))
             header(HttpHeaders.ContentType, ContentType.Application.Json)
         }
         if (req.status != HttpStatusCode.OK) {
             error("Fallo al actualizar el nombre")
+        }
+    }
+
+    suspend fun updateProfile(uid: Int, newName: String, language: String) {
+        val req = client.patch("$BASE_URL/auth/editUser") {
+            setBody(EditUserRequest(uid = uid, nombreusu = newName, lang = language, utcOffset = null))
+            header(HttpHeaders.ContentType, ContentType.Application.Json)
+        }
+        if (req.status != HttpStatusCode.OK) {
+            error("Fallo al actualizar el perfil")
         }
     }
 }
