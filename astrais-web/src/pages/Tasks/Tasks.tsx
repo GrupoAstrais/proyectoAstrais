@@ -20,7 +20,6 @@ import {
   filterTasksByTime,
   getDailyTasks,
   getHabitTasks,
-  getRootTasks,
   getTaskSubtasks,
   getTaskXpReward,
   getTasksFromGroup,
@@ -35,52 +34,45 @@ import {
   type TTaskTimeFilter
 } from "../../data/Api";
 
-const normalizeObjectiveId = (idObjetivo?: number): number | undefined => {
-  return typeof idObjetivo === "number" && idObjetivo >= 0 ? idObjetivo : undefined;
-};
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+const normalizeObjectiveId = (id?: number): number | undefined =>
+  typeof id === "number" ? id : undefined;
 
 const normalizeTaskFormData = (data: ITaskFormData, fallbackObjetivoId?: number): ITaskFormData => ({
   ...data,
   idObjetivo: normalizeObjectiveId(data.idObjetivo) ?? normalizeObjectiveId(fallbackObjetivoId)
 });
 
-const recreateTaskChildren = async (gid: number, parentTaskId: number, subtasks: ITarea[]): Promise<ITarea[]> => {
-  const recreatedSubtasks: ITarea[] = [];
+const recreateSubtasks = async (gid: number, parentId: number, subtasks: ITarea[]): Promise<ITarea[]> => {
+  const results: ITarea[] = [];
 
   for (const subtask of subtasks) {
     const subtaskData = buildTaskFormData(subtask);
-    const subtaskId = await createTask(buildCreateTaskRequest(gid, subtaskData, parentTaskId));
-
-    recreatedSubtasks.push(
-      createLocalTask(subtaskData, {
-        gid,
-        id: subtaskId,
-        idObjetivo: parentTaskId,
-        tipo: "UNIQUE"
-      })
-    );
+    const subtaskId = await createTask(buildCreateTaskRequest(gid, subtaskData, parentId));
+    results.push(createLocalTask(subtaskData, { gid, id: subtaskId, idObjetivo: parentId, tipo: "UNICO" }));
   }
 
-  return recreatedSubtasks;
+  return results;
 };
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export default function Tasks() {
   const [tasks, setTasks] = useState<ITarea[]>([]);
   const [personalGroupId, setPersonalGroupId] = useState<number | null>(null);
-  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [activeDiarias, setActiveDiarias] = useState<TTaskTimeFilter>("Today");
   const [activeHabitos, setActiveHabitos] = useState<TTaskTimeFilter>("Today");
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [diariasCompletedFilters, setDiariasCompletedFilters] = useState({
-    completed: false,
-    pending: false
-  });
-  const [habitosCompletedFilters, setHabitosCompletedFilters] = useState({
-    completed: false,
-    pending: false
-  });
+  const [diariasCompletedFilters, setDiariasCompletedFilters] = useState({ completed: false, pending: false });
+  const [habitosCompletedFilters, setHabitosCompletedFilters] = useState({ completed: false, pending: false });
   const [initialDataModal, setInitialDataModal] = useState<ITarea | null>(null);
 
   useEffect(() => {
@@ -91,11 +83,8 @@ export default function Tasks() {
 
         const userData = await getUserData();
         setPersonalGroupId(userData.personalGid);
-
-        const serverTasks = await getTasksFromGroup(userData.personalGid);
-        setTasks(serverTasks);
-      } catch (loadError) {
-        console.error("Error al cargar las tareas:", loadError);
+        setTasks(await getTasksFromGroup(userData.personalGid));
+      } catch {
         setError("No se pudieron cargar las tareas.");
       } finally {
         setLoading(false);
@@ -105,227 +94,196 @@ export default function Tasks() {
     void loadTasks();
   }, []);
 
-  const closeModalHandle = () => {
+  //console.log("DE TASKS: "+JSON.stringify(tasks, null, 2));
+  // ---------------------------------------------------------------------------
+  // Modal
+  // ---------------------------------------------------------------------------
+
+  const closeModal = () => {
     setInitialDataModal(null);
     setIsOpen(false);
   };
 
-  const createTaskWithSubtasks = async (data: ITaskFormData) => {
-    if (personalGroupId === null) {
-      return;
-    }
-
-    const normalizedData = normalizeTaskFormData(data);
-    const createdTaskId = await createTask(buildCreateTaskRequest(personalGroupId, normalizedData));
-
-    setTasks((prevTasks) => [
-      ...prevTasks,
-      createLocalTask(normalizedData, {
-        gid: personalGroupId,
-        id: createdTaskId,
-        idObjetivo: normalizedData.idObjetivo
-      })
-    ]);
+  const openEditModal = (id: number) => {
+    const task = tasks.find((t) => t.id === id);
+    if (!task) return;
+    setInitialDataModal(task);
+    setIsOpen(true);
   };
 
-  const recreateTaskWithChanges = async (currentTask: ITarea, currentSubtasks: ITarea[], data: ITaskFormData) => {
-    if (personalGroupId === null) {
-      return;
-    }
+  // ---------------------------------------------------------------------------
+  // Task mutations
+  // ---------------------------------------------------------------------------
 
-    const normalizedData = normalizeTaskFormData(data, currentTask.idObjetivo);
-    const createdTaskId = await createTask(buildCreateTaskRequest(personalGroupId, normalizedData));
-    const recreatedTasks: ITarea[] = [
-      createLocalTask(normalizedData, {
-        gid: personalGroupId,
-        id: createdTaskId,
-        idObjetivo: normalizedData.idObjetivo
-      })
-    ];
-
-    if (typeof normalizedData.idObjetivo !== "number") {
-      recreatedTasks.push(...(await recreateTaskChildren(personalGroupId, createdTaskId, currentSubtasks)));
-    }
-
-    for (const subtask of currentSubtasks) {
-      await deleteTask(subtask.id);
-    }
-
-    await deleteTask(currentTask.id);
-
-    setTasks((prevTasks) => [...removeTaskWithSubtasks(prevTasks, currentTask.id), ...recreatedTasks]);
+  const handleCreate = async (data: ITaskFormData) => {
+    const id = await createTask(buildCreateTaskRequest(personalGroupId!, data));
+    const localTask = createLocalTask(data, { gid: personalGroupId!, id, idObjetivo: data.idObjetivo });
+    console.log("Created local task:", localTask); // ← добавь это
+    setTasks((prev) => [...prev, localTask]);
   };
 
-  const editTaskWithSubtasks = async (currentTask: ITarea, data: ITaskFormData) => {
-    const normalizedData = normalizeTaskFormData(data, currentTask.idObjetivo);
-    await editTask(currentTask.id, buildEditTaskRequest(normalizedData));
-
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-      task.id === currentTask.id
-        ? {
-            ...task,
-            titulo: normalizedData.name.trim(),
-            descripcion: normalizedData.description.trim(),
-            prioridad: normalizedData.difficulty,
-            recompensaXp: getTaskXpReward(normalizedData.difficulty)
-          }
-        : task
+  const handleEdit = async (currentTask: ITarea, data: ITaskFormData) => {
+    await editTask(currentTask.id, buildEditTaskRequest(data));
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === currentTask.id
+          ? { ...t, titulo: data.name.trim(), descripcion: data.description.trim(), prioridad: data.difficulty, recompensaXp: getTaskXpReward(data.difficulty) }
+          : t
       )
     );
   };
 
-  const handleModalSubmit = async (data: ITaskFormData) => {
-    const normalizedData = normalizeTaskFormData(data, initialDataModal?.idObjetivo);
+  const handleRecreate = async (currentTask: ITarea, currentSubtasks: ITarea[], data: ITaskFormData) => {
+    const newId = await createTask(buildCreateTaskRequest(personalGroupId!, data));
+    const recreated: ITarea[] = [
+      createLocalTask(data, { gid: personalGroupId!, id: newId, idObjetivo: data.idObjetivo })
+    ];
 
-    if (data.taskType === "objetivo" && typeof normalizedData.idObjetivo !== "number") {
-      setError("Selecciona un objetivo.");
-      return;
+    if (typeof data.idObjetivo !== "number") {
+      recreated.push(...(await recreateSubtasks(personalGroupId!, newId, currentSubtasks)));
     }
+
+    await Promise.all([...currentSubtasks.map((s) => deleteTask(s.id)), deleteTask(currentTask.id)]);
+    setTasks((prev) => [...removeTaskWithSubtasks(prev, currentTask.id), ...recreated]);
+  };
+
+  const handleModalSubmit = async (data: ITaskFormData) => {
+    const normalized = normalizeTaskFormData(data, initialDataModal?.idObjetivo);
 
     try {
       setError(null);
 
       if (!initialDataModal) {
-        await createTaskWithSubtasks(normalizedData);
-        closeModalHandle();
-        return;
-      }
-
-      const currentSubtasks = getTaskSubtasks(tasks, initialDataModal.id);
-
-      if (shouldRecreateTaskOnEdit(initialDataModal, normalizedData)) {
-        await recreateTaskWithChanges(initialDataModal, currentSubtasks, normalizedData);
+        await handleCreate(normalized);
       } else {
-        await editTaskWithSubtasks(initialDataModal, normalizedData);
+        const subtasks = getTaskSubtasks(tasks, initialDataModal.id);
+        if (shouldRecreateTaskOnEdit(initialDataModal, normalized)) {
+          await handleRecreate(initialDataModal, subtasks, normalized);
+        } else {
+          await handleEdit(initialDataModal, normalized);
+        }
       }
 
-      closeModalHandle();
-    } catch (submitError) {
-      console.error("Error al guardar la tarea:", submitError);
+      closeModal();
+    } catch {
       setError("No se pudieron guardar los cambios de la tarea.");
     }
   };
 
   const handleDeleteTask = async () => {
-    if (!initialDataModal) {
-      return;
-    }
+    if (!initialDataModal) return;
 
     try {
-      const currentSubtasks = getTaskSubtasks(tasks, initialDataModal.id);
-
-      for (const subtask of currentSubtasks) {
-        await deleteTask(subtask.id);
-      }
-
-      await deleteTask(initialDataModal.id);
-      setTasks((prevTasks) => removeTaskWithSubtasks(prevTasks, initialDataModal.id));
-      closeModalHandle();
-    } catch (deleteError) {
-      console.error("Error al borrar la tarea:", deleteError);
+      const subtasks = getTaskSubtasks(tasks, initialDataModal.id);
+      await Promise.all([...subtasks.map((s) => deleteTask(s.id)), deleteTask(initialDataModal.id)]);
+      setTasks((prev) => removeTaskWithSubtasks(prev, initialDataModal.id));
+      closeModal();
+    } catch {
       setError("No se pudo borrar la tarea.");
     }
   };
 
-  const handleActiveDiarias = (active: string) => {
-    setSelectedDate(null);
-    setActiveDiarias(active as TTaskTimeFilter);
-  };
+  // ---------------------------------------------------------------------------
+  // Toggle completed
+  // ---------------------------------------------------------------------------
 
-  const handleActiveHabitos = (active: string) => {
-    setSelectedDate(null);
-    setActiveHabitos(active as TTaskTimeFilter);
-  };
-
-  const handleActiveDiariasCompleted = (active: string) => {
-    if (active === "Completadas") {
-      setDiariasCompletedFilters((prev) => ({
-        ...prev,
-        completed: !prev.completed
-      }));
-      return;
-    }
-
-    setDiariasCompletedFilters((prev) => ({
-      ...prev,
-      pending: !prev.pending
-    }));
-  };
-
-  const handleActiveHabitosCompleted = (active: string) => {
-    if (active === "Completadas") {
-      setHabitosCompletedFilters((prev) => ({
-        ...prev,
-        completed: !prev.completed
-      }));
-      return;
-    }
-
-    setHabitosCompletedFilters((prev) => ({
-      ...prev,
-      pending: !prev.pending
-    }));
-  };
-
-  const handleToggleTaskCompleted = async (taskId: number) => {
+  const handleToggleTask = async (taskId: number) => {
     try {
       await completeTask(taskId);
-    } catch (completeError) {
-      console.error("Error al cambiar el estado de la tarea:", completeError);
     } finally {
-      setTasks((prevTasks) => toggleTaskCompleted(prevTasks, `${taskId}`));
+      setTasks((prev) => toggleTaskCompleted(prev, `${taskId}`));
     }
   };
 
-  const handleToggleSubtaskCompleted = async (taskId: number, subtaskId: number) => {
-    const subtask = tasks.find((task) => task.id === subtaskId);
-    const shouldSyncParent = subtask ? !isTaskCompleted(subtask) : false;
+  const handleToggleSubtask = async (taskId: number, subtaskId: number) => {
+    const subtask = tasks.find((t) => t.id === subtaskId);
+    const wasIncomplete = subtask ? !isTaskCompleted(subtask) : false;
 
     try {
       await completeTask(subtaskId);
-      if (shouldSyncParent) {
-        const parentTask = tasks.find((task) => task.id === taskId);
-        const siblingSubtasks = getTaskSubtasks(tasks, taskId).filter((task) => task.id !== subtaskId);
 
-        if (parentTask && siblingSubtasks.every((task) => isTaskCompleted(task))) {
+      if (wasIncomplete) {
+        const siblings = getTaskSubtasks(tasks, taskId).filter((t) => t.id !== subtaskId);
+        const parentTask = tasks.find((t) => t.id === taskId);
+        if (parentTask && siblings.every(isTaskCompleted)) {
           await completeTask(taskId);
         }
       }
-    } catch (completeError) {
-      console.error("Error al cambiar el estado de la subtarea:", completeError);
     } finally {
-      setTasks((prevTasks) => toggleSubtaskCompleted(prevTasks, `${taskId}`, `${subtaskId}`));
+      setTasks((prev) => toggleSubtaskCompleted(prev, `${taskId}`, `${subtaskId}`));
     }
   };
 
-  const handleSelectedDate = (date: Date) => {
-    setSelectedDate(date);
+  // ---------------------------------------------------------------------------
+  // Filters
+  // ---------------------------------------------------------------------------
+
+  const handleTimeFilter = (setter: (v: TTaskTimeFilter) => void) => (value: string) => {
+    setSelectedDate(null);
+    setter(value as TTaskTimeFilter);
   };
 
-  const diariasTasks = getDailyTasks(tasks);
-  const habitosTasks = getHabitTasks(tasks);
-
-  const filteredDiariasTasks = sortTasksByCompleted(
-    filterTasksByCompleted(filterTasksByTime(diariasTasks, activeDiarias, selectedDate), diariasCompletedFilters)
-  );
-
-  const filteredHabitosTasks = sortTasksByCompleted(
-    filterTasksByCompleted(filterTasksByTime(habitosTasks, activeHabitos, selectedDate), habitosCompletedFilters)
-  );
-
-  const availableObjectives = getRootTasks(tasks).filter((task) => task.id !== initialDataModal?.id);
-
-  const editTaskHandle = (id: number) => {
-    const taskToEdit = tasks.find((task) => task.id === id);
-
-    if (!taskToEdit) {
-      return;
-    }
-
-    setInitialDataModal(taskToEdit);
-    setIsOpen(true);
+  const toggleCompletedFilter = (
+    setter: React.Dispatch<React.SetStateAction<{ completed: boolean; pending: boolean }>>
+  ) => (value: string) => {
+    const key = value === "Completadas" ? "completed" : "pending";
+    setter((prev) => ({ ...prev, [key]: !prev[key] }));
   };
+
+  // ---------------------------------------------------------------------------
+  // Derived data
+  // ---------------------------------------------------------------------------
+
+  const getFilteredTasks = (
+    source: ITarea[],
+    timeFilter: TTaskTimeFilter,
+    completedFilters: { completed: boolean; pending: boolean }
+  ) =>
+    sortTasksByCompleted(
+      filterTasksByCompleted(filterTasksByTime(source, timeFilter, selectedDate), completedFilters)
+    );
+
+  const filteredDiariasTasks = getFilteredTasks(getDailyTasks(tasks).filter((t) => t.idObjetivo === undefined), activeDiarias, diariasCompletedFilters);
+  const filteredHabitosTasks = getFilteredTasks(getHabitTasks(tasks), activeHabitos, habitosCompletedFilters);
+  const availableObjectives = tasks.filter((t) => t.tipo === "OBJETIVO");
+  console.log(tasks);
+
+  // ---------------------------------------------------------------------------
+  // Render helpers
+  // ---------------------------------------------------------------------------
+
+  const renderTimeFilters = (
+    active: TTaskTimeFilter,
+    handler: (v: string) => void
+  ) =>
+    (["Today", "Tomorrow", "All"] as TTaskTimeFilter[]).map((titulo) => (
+      <ButtonFilter
+        key={titulo}
+        titulo={titulo}
+        active={!selectedDate && active === titulo}
+        esOtroActivo={selectedDate ? "" : active}
+        handleActive={handler}
+      />
+    ));
+
+  const renderCompletedFilters = (
+    filters: { completed: boolean; pending: boolean },
+    handler: (v: string) => void
+  ) => (
+    <>
+      <ButtonComplete title="Completadas" active={filters.completed} handleActive={handler} />
+      <ButtonComplete title="Pendientes" active={filters.pending} handleActive={handler} />
+    </>
+  );
+
+  // ---------------------------------------------------------------------------
+  // JSX
+  // ---------------------------------------------------------------------------
+
+
+
+
+
 
   return (
     <div
@@ -335,7 +293,7 @@ export default function Tasks() {
       <div className={`${isOpen ? "" : "hidden"} fixed inset-0 z-50 flex items-center justify-center`}>
         <Modal
           onSubmit={handleModalSubmit}
-          onCancel={closeModalHandle}
+          onCancel={closeModal}
           onDelete={initialDataModal ? handleDeleteTask : null}
           initialData={initialDataModal}
           tareasObjetivos={availableObjectives}
@@ -346,10 +304,7 @@ export default function Tasks() {
 
       <div className="flex flex-col gap-6 px-2">
         <button
-          onClick={() => {
-            setInitialDataModal(null);
-            setIsOpen(true);
-          }}
+          onClick={() => { setInitialDataModal(null); setIsOpen(true); }}
           className="ml-auto w-full rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm md:w-1/5"
         >
           <span className="text-2xl font-bold">+ Anadir tarea</span>
@@ -358,18 +313,17 @@ export default function Tasks() {
         {error && <p className="px-10 text-center text-sm text-red-200">{error}</p>}
 
         <div className="grid grid-cols-1 gap-4 px-10 pt-5 sm:grid-cols-2 md:flex md:flex-row">
+
+          {/* Diarias */}
           <div className="pb-2 md:w-1/3">
             <h1 className="pb-5 text-3xl">Diarias</h1>
             <div className="flex flex-col justify-center gap-2">
               <div className="flex flex-col gap-2.5">
                 <div className="flex flex-row justify-center gap-2.5">
-                  <ButtonFilter esOtroActivo={selectedDate ? "" : activeDiarias} active={!selectedDate && activeDiarias === "Today"} handleActive={handleActiveDiarias} titulo="Today" />
-                  <ButtonFilter esOtroActivo={selectedDate ? "" : activeDiarias} active={!selectedDate && activeDiarias === "Tomorrow"} handleActive={handleActiveDiarias} titulo="Tomorrow" />
-                  <ButtonFilter esOtroActivo={selectedDate ? "" : activeDiarias} active={!selectedDate && activeDiarias === "All"} handleActive={handleActiveDiarias} titulo="All" />
+                  {renderTimeFilters(activeDiarias, handleTimeFilter(setActiveDiarias))}
                 </div>
                 <div className="flex flex-row justify-center gap-2.5">
-                  <ButtonComplete title="Completadas" active={diariasCompletedFilters.completed} handleActive={handleActiveDiariasCompleted} />
-                  <ButtonComplete title="Pendientes" active={diariasCompletedFilters.pending} handleActive={handleActiveDiariasCompleted} />
+                  {renderCompletedFilters(diariasCompletedFilters, toggleCompletedFilter(setDiariasCompletedFilters))}
                 </div>
               </div>
 
@@ -383,27 +337,25 @@ export default function Tasks() {
                     key={task.id}
                     data={task}
                     subtasks={getTaskSubtasks(tasks, task.id)}
-                    onComplete={handleToggleTaskCompleted}
-                    onToggleSubtask={handleToggleSubtaskCompleted}
-                    onToggleConfig={editTaskHandle}
+                    onComplete={handleToggleTask}
+                    onToggleSubtask={handleToggleSubtask}
+                    onToggleConfig={openEditModal}
                   />
                 ))
               )}
             </div>
           </div>
 
+          {/* Habitos */}
           <div className="pb-2 md:w-1/3">
             <h1 className="pb-5 text-3xl">Habitos</h1>
             <div className="flex flex-col justify-center gap-2">
               <div className="flex flex-col gap-2.5">
                 <div className="flex flex-row justify-center gap-2.5">
-                  <ButtonFilter esOtroActivo={selectedDate ? "" : activeHabitos} active={!selectedDate && activeHabitos === "Today"} handleActive={handleActiveHabitos} titulo="Today" />
-                  <ButtonFilter esOtroActivo={selectedDate ? "" : activeHabitos} active={!selectedDate && activeHabitos === "Tomorrow"} handleActive={handleActiveHabitos} titulo="Tomorrow" />
-                  <ButtonFilter esOtroActivo={selectedDate ? "" : activeHabitos} active={!selectedDate && activeHabitos === "All"} handleActive={handleActiveHabitos} titulo="All" />
+                  {renderTimeFilters(activeHabitos, handleTimeFilter(setActiveHabitos))}
                 </div>
                 <div className="flex flex-row justify-center gap-2.5">
-                  <ButtonComplete title="Completadas" active={habitosCompletedFilters.completed} handleActive={handleActiveHabitosCompleted} />
-                  <ButtonComplete title="Pendientes" active={habitosCompletedFilters.pending} handleActive={handleActiveHabitosCompleted} />
+                  {renderCompletedFilters(habitosCompletedFilters, toggleCompletedFilter(setHabitosCompletedFilters))}
                 </div>
               </div>
 
@@ -416,19 +368,21 @@ export default function Tasks() {
                   <Task
                     key={task.id}
                     data={task}
-                    subtasks={getTaskSubtasks(tasks, task.id)}
-                    onComplete={handleToggleTaskCompleted}
-                    onToggleSubtask={handleToggleSubtaskCompleted}
-                    onToggleConfig={editTaskHandle}
+                    subtasks={[]}
+                    onComplete={handleToggleTask}
+                    onToggleSubtask={handleToggleSubtask}
+                    onToggleConfig={openEditModal}
                   />
                 ))
               )}
             </div>
           </div>
 
+          {/* Calendar */}
           <div className="flex flex-col md:w-1/3">
-            <Calendar selectedDate={selectedDate} onSelectDate={handleSelectedDate} />
+            <Calendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
           </div>
+
         </div>
       </div>
     </div>

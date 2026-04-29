@@ -1,11 +1,9 @@
 package com.astrais.db
 
-import AvatarLayer
 import admin.RarityType
 import java.time.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import org.jetbrains.exposed.v1.core.ReferenceOption
-import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -56,7 +54,6 @@ enum class TaskState {
 
 enum class CosmeticType {
     PET,
-    PET_SKIN,
     APP_THEME,
     AVATAR_PART
 }
@@ -107,7 +104,8 @@ object TablaUsuario : IntIdTable("Users") {
 
     // JSON con los colores
     val themeColors = varchar("theme_colors", 255).nullable()
-    // TODO: Piezas de avatar
+    // Avatar equipado
+    val id_avatar_equipado = optReference("equipped_avatar_id", TablaCosmetico, onDelete = ReferenceOption.SET_NULL)
 }
 
 class EntidadUsuario(id: EntityID<Int>) : IntEntity(id) {
@@ -130,6 +128,7 @@ class EntidadUsuario(id: EntityID<Int>) : IntEntity(id) {
     var esta_confirmado by TablaUsuario.esta_confirmado
     var id_mascota_equipada by TablaUsuario.id_mascota_equipada
     var themeColors by TablaUsuario.themeColors
+    var id_avatar_equipado by TablaUsuario.id_avatar_equipado
     var ludiones_ganados_hoy by TablaUsuario.ludiones_ganados_hoy
     var ultima_fecha_ganancia by TablaUsuario.ultima_fecha_ganancia
 }
@@ -324,8 +323,6 @@ object TablaCosmetico : IntIdTable("Cosmetic") {
     val tema = varchar("theme", 255).default("DEFAULT")
     val coleccion = varchar("coleccion", 50).default("DEFAULT")
     val rareza = enumeration<RarityType>("rarity")
-
-    val layer = enumeration<AvatarLayer>("layer").nullable()
 }
 
 class EntidadCosmetico(id: EntityID<Int>) : IntEntity(id) {
@@ -339,8 +336,6 @@ class EntidadCosmetico(id: EntityID<Int>) : IntEntity(id) {
     var tema by TablaCosmetico.tema
     var coleccion by TablaCosmetico.coleccion
     var rareza by TablaCosmetico.rareza
-
-    var layer by TablaCosmetico.layer
 }
 
 object TablaInventario : IntIdTable("Inventory") {
@@ -355,16 +350,4 @@ class EntidadInventario(id: EntityID<Int>) : IntEntity(id) {
     var id_usuario by TablaInventario.id_usuario
     var id_cosmetico by TablaInventario.id_cosmetico
     var fecha_compra by TablaInventario.fecha_compra
-}
-
-object TablaAvatarEquipado : IntIdTable("AvatarEquipped") {
-    val id_usuario   = reference("user_id", TablaUsuario, onDelete = ReferenceOption.CASCADE)
-    val id_cosmetico = reference("cosmetic_id", TablaCosmetico, onDelete = ReferenceOption.CASCADE)
-}
-
-class EntidadAvatarEquipado(id: EntityID<Int>) : IntEntity(id) {
-    companion object : IntEntityClass<EntidadAvatarEquipado>(TablaAvatarEquipado)
-
-    var id_usuario   by TablaAvatarEquipado.id_usuario
-    var id_cosmetico by TablaAvatarEquipado.id_cosmetico
 }

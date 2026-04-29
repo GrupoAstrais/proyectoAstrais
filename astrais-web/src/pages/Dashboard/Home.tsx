@@ -20,12 +20,12 @@ import {
   editTask,
   getDailyTasks,
   getHabitTasks,
-  getRootTasks,
   getTaskSubtasks,
   getTaskXpReward,
   getTasksFromGroup,
   getUserData,
   isTaskCompleted,
+  isTaskVisibleInDefaultList,
   removeTaskWithSubtasks,
   shouldRecreateTaskOnEdit,
   toggleSubtaskCompleted,
@@ -54,7 +54,7 @@ const recreateTaskChildren = async (gid: number, parentTaskId: number, subtasks:
         gid,
         id: subtaskId,
         idObjetivo: parentTaskId,
-        tipo: "UNIQUE"
+        tipo: "UNICO"
       })
     );
   }
@@ -166,7 +166,7 @@ export default function Home() {
   const handleModalSubmit = async (data: ITaskFormData) => {
     const normalizedData = normalizeTaskFormData(data, initialDataModal?.idObjetivo);
 
-    if (data.taskType === "objetivo" && typeof normalizedData.idObjetivo !== "number") {
+    if (data.taskType === "OBJETIVO" && typeof normalizedData.idObjetivo !== "number") {
       setError("Selecciona un objetivo.");
       return;
     }
@@ -236,8 +236,8 @@ export default function Home() {
     }
   };
 
-  const dashboardTasks = [...getDailyTasks(tasks), ...getHabitTasks(tasks)].filter((task) => !isTaskCompleted(task));
-  const availableObjectives = getRootTasks(tasks).filter((task) => task.id !== initialDataModal?.id);
+  const dashboardTasks = [...getDailyTasks(tasks), ...getHabitTasks(tasks)].filter((task) => isTaskVisibleInDefaultList(task) && !isTaskCompleted(task));
+  const availableObjectives = tasks.filter((task) => task.id !== initialDataModal?.id);
 
   const editTaskHandle = (taskId: number) => {
     const taskToEdit = tasks.find((task) => task.id === taskId);
