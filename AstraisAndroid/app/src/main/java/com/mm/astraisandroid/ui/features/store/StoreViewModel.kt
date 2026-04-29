@@ -3,6 +3,7 @@ package com.mm.astraisandroid.ui.features.store
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mm.astraisandroid.data.models.Cosmetic
+import com.mm.astraisandroid.data.preferences.SessionManager
 import com.mm.astraisandroid.data.repository.StoreRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -37,6 +38,7 @@ class StoreViewModel @Inject constructor(
     val uiEvent = _uiEvent.receiveAsFlow()
 
     fun loadStore() {
+        if (SessionManager.isGuest()) return
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
@@ -49,6 +51,7 @@ class StoreViewModel @Inject constructor(
     }
 
     fun buyItem(id: Int, onSuccess: () -> Unit) {
+        if (SessionManager.isGuest()) return
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             try {
@@ -65,6 +68,7 @@ class StoreViewModel @Inject constructor(
     }
 
     fun equipItem(id: Int, onSuccess: () -> Unit) {
+        if (SessionManager.isGuest()) return
         viewModelScope.launch {
             try {
                 repository.equipCosmetic(id)

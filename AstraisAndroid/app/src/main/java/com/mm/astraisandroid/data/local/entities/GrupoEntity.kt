@@ -17,6 +17,7 @@ fun GrupoEntity.toDomain(): Grupo {
     return Grupo(
         id = id,
         name = name,
-        subtitle = description
+        subtitle = description,
+        role = role
     )
 }

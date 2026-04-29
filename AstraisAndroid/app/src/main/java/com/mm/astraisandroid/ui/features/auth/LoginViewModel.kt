@@ -22,6 +22,7 @@ sealed class LoginUIState {
 
 sealed class LoginEvent {
     object NavigateToHome : LoginEvent()
+    object NavigateToOnboarding : LoginEvent()
     data class ShowToast(val message: String) : LoginEvent()
 }
 
@@ -39,8 +40,12 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             _loginState.value = LoginUIState.Loading
             try {
-                repository.login(request)
-                _uiEvent.send(LoginEvent.NavigateToHome)
+                val needsOnboarding = repository.login(request)
+                if (needsOnboarding) {
+                    _uiEvent.send(LoginEvent.NavigateToOnboarding)
+                } else {
+                    _uiEvent.send(LoginEvent.NavigateToHome)
+                }
             } catch (e: Exception) {
                 _loginState.value = LoginUIState.Error(e.message ?: "Error desconocido")
             }
@@ -51,8 +56,12 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             _loginState.value = LoginUIState.Loading
             try {
-                repository.loginWithGoogle(idToken)
-                _uiEvent.send(LoginEvent.NavigateToHome)
+                val needsOnboarding = repository.loginWithGoogle(idToken)
+                if (needsOnboarding) {
+                    _uiEvent.send(LoginEvent.NavigateToOnboarding)
+                } else {
+                    _uiEvent.send(LoginEvent.NavigateToHome)
+                }
             } catch (e: Exception) {
                 _loginState.value = LoginUIState.Error(e.message ?: "Error desconocido")
             }

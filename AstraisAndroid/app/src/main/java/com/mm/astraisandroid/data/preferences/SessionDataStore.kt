@@ -14,6 +14,11 @@ object SessionManager {
     private const val ACCESS_KEY = "access_token"
     private const val REFRESH_KEY = "refresh_token"
     private const val GID_KEY = "personal_gid"
+    private const val PENDING_DEEP_LINK = "pending_deep_link"
+
+    const val GUEST_GID: Int = -1
+
+    fun getEffectiveGid(): Int = getPersonalGid() ?: GUEST_GID
 
     private val _isSessionActive = MutableStateFlow(true)
     val isSessionActive: StateFlow<Boolean> = _isSessionActive.asStateFlow()
@@ -70,6 +75,18 @@ object SessionManager {
         return if (gid != -1) gid else null
     }
 
+    fun savePendingDeepLink(url: String) {
+        sharedPreferences?.edit()?.putString(PENDING_DEEP_LINK, url)?.apply()
+    }
+
+    fun consumePendingDeepLink(): String? {
+        val value = sharedPreferences?.getString(PENDING_DEEP_LINK, null)
+        if (value != null) {
+            sharedPreferences?.edit()?.remove(PENDING_DEEP_LINK)?.apply()
+        }
+        return value
+    }
+
     fun hasSession(): Boolean = getAccessToken() != null
     fun isGuest(): Boolean = _isGuestSession.value
     fun hasAnySession(): Boolean = hasSession() || isGuest()
@@ -78,5 +95,17 @@ object SessionManager {
         sharedPreferences?.edit()?.clear()?.apply()
         _isGuestSession.value = false
         _isSessionActive.value = false
+    }
+
+    fun promoteGuestToUser(access: String, refresh: String) {
+        sharedPreferences?.edit()?.apply {
+            putString(ACCESS_KEY, access)
+            putString(REFRESH_KEY, refresh)
+            putBoolean("is_guest", false)
+            apply()
+        }
+
+        _isGuestSession.value = false
+        _isSessionActive.value = true
     }
 }

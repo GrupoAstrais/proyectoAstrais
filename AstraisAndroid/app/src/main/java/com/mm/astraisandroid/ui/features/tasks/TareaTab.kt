@@ -1,6 +1,5 @@
 package com.mm.astraisandroid.ui.features.tasks
 
-import TaskCard
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,17 +17,25 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.mm.astraisandroid.data.models.TaskPriority
 import com.mm.astraisandroid.data.preferences.SessionManager
+import com.mm.astraisandroid.ui.components.AstraisScreenHeader
 
 @Composable
 fun TasksTab(viewModel: TaskViewModel = hiltViewModel(), onTaskCompleted: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val rootTasks = state.tasks.filter { it.parentId == null }
+
+    val rootTasks = remember(state.tasks) {
+        state.tasks.filter { it.parentId == null }
+    }
+
+    val subtasksMap = remember(state.tasks) {
+        state.tasks.filter { it.parentId != null }.groupBy { it.parentId }
+    }
 
     var taskToEdit by remember { mutableStateOf<TaskUIModel?>(null) }
 
@@ -44,10 +51,15 @@ fun TasksTab(viewModel: TaskViewModel = hiltViewModel(), onTaskCompleted: () -> 
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text(text = "Mis Tareas", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
+            AstraisScreenHeader("Mis Tareas")
 
             Row(
-                modifier = Modifier.fillMaxWidth().height(44.dp).clip(RoundedCornerShape(12.dp)).background(Color.White.copy(alpha = 0.08f)).padding(4.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(44.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.White.copy(alpha = 0.08f))
+                    .padding(4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TabButton("Pendientes", !state.isShowingCompleted, Modifier.weight(1f)) { viewModel.toggleShowingCompleted(false) }
@@ -71,13 +83,11 @@ fun TasksTab(viewModel: TaskViewModel = hiltViewModel(), onTaskCompleted: () -> 
             }
         }
 
-        if (state.isLoading && state.tasks.isEmpty()) {
+        if (state.isLoading && rootTasks.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = Color.White)
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
-        }
-
-        if (state.tasks.isEmpty() && !state.isLoading) {
+        } else if (rootTasks.isEmpty()) {
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -91,25 +101,30 @@ fun TasksTab(viewModel: TaskViewModel = hiltViewModel(), onTaskCompleted: () -> 
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Todo al día",
+                    text = if (!state.isShowingCompleted) "Todo al día" else "Aún no hay tareas",
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = FontFamily.Monospace
                 )
                 Text(
-                    text = "No tienes tareas en esta categoría.",
+                    text = if (!state.isShowingCompleted) "No tienes tareas pendientes en esta categoría." else "No has completado tareas en esta categoría.",
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                     fontSize = 14.sp,
-                    fontFamily = FontFamily.Monospace
+                    fontFamily = FontFamily.Monospace,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp)
                 )
             }
         } else {
-
             var expandedTaskId by remember { mutableStateOf<Int?>(null) }
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(bottom = 90.dp)) {
+
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(bottom = 90.dp)
+            ) {
                 items(rootTasks, key = { it.id }) { task ->
-                    val subtasks = state.tasks.filter { it.parentId == task.id }
+                    val subtasks = subtasksMap[task.id] ?: emptyList()
 
                     TaskCard(
                         task = task,
@@ -119,22 +134,18 @@ fun TasksTab(viewModel: TaskViewModel = hiltViewModel(), onTaskCompleted: () -> 
                             expandedTaskId = if (expandedTaskId == task.id) null else task.id
                         },
                         onToggleComplete = { clickedTask ->
-                            val gid = SessionManager.getPersonalGid()
-                            if (gid != null) {
-                                viewModel.toggleTaskCompletion(
-                                    tid = clickedTask.id,
-                                    gid = gid,
-                                    isCurrentlyCompleted = clickedTask.isCompleted
-                                ) { onTaskCompleted() }
-                            }
+                            val gid = SessionManager.getPersonalGid() ?: -1
+                            viewModel.toggleTaskCompletion(
+                                tid = clickedTask.id,
+                                gid = gid,
+                                isCurrentlyCompleted = clickedTask.isCompleted
+                            ) { onTaskCompleted() }
                         },
                         onAddSubtask = { viewModel.openCreateDialog(parentId = task.id) },
                         onEdit = { taskToEdit = task },
                         onDelete = {
-                            val gid = SessionManager.getPersonalGid()
-                            if (gid != null) {
-                                viewModel.eliminarTarea(task.id, gid)
-                            }
+                            val gid = SessionManager.getPersonalGid() ?: -1
+                            viewModel.eliminarTarea(task.id, gid)
                         }
                     )
                 }
@@ -147,10 +158,8 @@ fun TasksTab(viewModel: TaskViewModel = hiltViewModel(), onTaskCompleted: () -> 
             task = task,
             onDismiss = { taskToEdit = null },
             onEdit = { titulo, desc, prio, fechaLimite, frecuencia ->
-                val gid = SessionManager.getPersonalGid()
-                if (gid != null) {
-                    viewModel.editarTarea(task.id, gid, titulo, desc, prio, fechaLimite, frecuencia)
-                }
+                val gid = SessionManager.getPersonalGid() ?: -1
+                viewModel.editarTarea(task.id, gid, titulo, desc, prio, fechaLimite, frecuencia)
                 taskToEdit = null
             }
         )
@@ -188,7 +197,7 @@ fun CategoryFilterChip(
             .clip(RoundedCornerShape(20.dp))
             .background(
                 if (isSelected) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.surfaceVariant
+                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
             )
             .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 8.dp),

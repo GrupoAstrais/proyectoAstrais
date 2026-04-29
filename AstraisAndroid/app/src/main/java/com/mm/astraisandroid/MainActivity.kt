@@ -51,6 +51,7 @@ import androidx.navigation.compose.rememberNavController
 import com.mm.astraisandroid.ui.features.auth.AuthBackground
 import com.mm.astraisandroid.ui.features.auth.LoginScreen
 import com.mm.astraisandroid.ui.features.auth.RegisterScreen
+import com.mm.astraisandroid.ui.features.auth.OnboardingScreen
 import com.mm.astraisandroid.ui.features.groups.GrupoTab
 import com.mm.astraisandroid.ui.features.home.HomeTab
 import com.mm.astraisandroid.ui.features.profile.PerfilTab
@@ -63,26 +64,41 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.mm.astraisandroid.data.models.TaskPriority
 import com.mm.astraisandroid.data.models.TaskType
 import com.mm.astraisandroid.data.preferences.SessionManager
+import com.mm.astraisandroid.data.repository.AuthRepository
 import com.mm.astraisandroid.navigation.Route
 import com.mm.astraisandroid.ui.features.tasks.CreateTareaDialog
 import com.mm.astraisandroid.ui.features.store.InventarioTab
+import com.mm.astraisandroid.ui.components.GlobalSnackbarViewModel
 import com.mm.astraisandroid.ui.theme.AstraisandroidTheme
 import com.mm.astraisandroid.ui.features.tasks.TaskViewModel
 import com.mm.astraisandroid.ui.features.profile.UserViewModel
-import com.mm.astraisandroid.data.repository.SseRepository
 import com.mm.astraisandroid.util.ConnectivityObserver
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import androidx.navigation.toRoute
+import com.mm.astraisandroid.ui.features.groups.GroupDetailScreen
+import com.mm.astraisandroid.ui.features.groups.GroupSettingsScreen
+import com.mm.astraisandroid.data.repository.GroupRepository
+import android.content.Intent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    
+
     @Inject
-    lateinit var sseRepository: SseRepository
+    lateinit var authRepository: AuthRepository
+
+    @Inject
+    lateinit var groupRepository: GroupRepository
+
+    private val pendingDeepLinkUrl = mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        pendingDeepLinkUrl.value = intent?.dataString
 
         setContent {
             val userViewModel: UserViewModel = hiltViewModel()
@@ -92,22 +108,57 @@ class MainActivity : ComponentActivity() {
             AstraisandroidTheme(userTheme = userData?.theme) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     val coroutineScope = rememberCoroutineScope()
-                    LaunchedEffect(Unit) {
-                        sseRepository.startListening(coroutineScope)
-                    }
-                    AppNavigation(initialHasSession = SessionManager.hasAnySession(), userViewModel = userViewModel)
+                    AppNavigation(
+                            initialHasSession = SessionManager.hasAnySession(),
+                            userViewModel = userViewModel,
+                            authRepository = authRepository,
+                            groupRepository = groupRepository,
+                            deepLinkUrl = pendingDeepLinkUrl.value,
+                            onDeepLinkConsumed = { pendingDeepLinkUrl.value = null },
+                            onLogout = {
+                                coroutineScope.launch {
+                                    authRepository.logout()
+                                }
+                            }
+                        )
                     OcultarBotonesSistema()
                 }
             }
         }
     }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        pendingDeepLinkUrl.value = intent.dataString
+    }
 }
 
 @Composable
-fun AppNavigation(initialHasSession: Boolean, userViewModel: UserViewModel) {
+fun AppNavigation(
+    initialHasSession: Boolean,
+    userViewModel: UserViewModel,
+    authRepository: AuthRepository,
+    groupRepository: GroupRepository,
+    deepLinkUrl: String?,
+    onDeepLinkConsumed: () -> Unit,
+    onLogout: () -> Unit
+) {
     val navController = rememberNavController()
     val coroutineScope = rememberCoroutineScope()
     val isSessionActive by SessionManager.isSessionActive.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val tryHandleJoinLink: suspend (String) -> Boolean = { url ->
+        val uri = android.net.Uri.parse(url)
+        val code = uri.getQueryParameter("code")
+        runCatching {
+            if (!code.isNullOrBlank()) {
+                groupRepository.joinByCode(code)
+            } else {
+                groupRepository.joinByUrl(url)
+            }
+            true
+        }.getOrDefault(false)
+    }
 
     LaunchedEffect(isSessionActive) {
         if (!isSessionActive && navController.currentDestination?.route != Route.Login::class.qualifiedName && navController.currentDestination?.route != Route.Register::class.qualifiedName) {
@@ -117,9 +168,75 @@ fun AppNavigation(initialHasSession: Boolean, userViewModel: UserViewModel) {
         }
     }
 
+    LaunchedEffect(deepLinkUrl, isSessionActive) {
+        val url = deepLinkUrl ?: return@LaunchedEffect
+
+        val isJoinLink = runCatching { android.net.Uri.parse(url) }.getOrNull()?.let { uri ->
+            val isCustomScheme = uri.scheme == "astrais" && uri.host == "groups" && uri.path?.startsWith("/join") == true
+            val isHttpsAppLink = uri.scheme == "https" && uri.host == "astrais.app" && uri.path?.startsWith("/groups/join") == true
+            isCustomScheme || isHttpsAppLink
+        } ?: false
+
+        if (!isJoinLink) return@LaunchedEffect
+
+        if (!isSessionActive || SessionManager.isGuest()) {
+            SessionManager.savePendingDeepLink(url)
+            Toast.makeText(context, "Inicia sesión para usar la invitación", Toast.LENGTH_SHORT).show()
+            onDeepLinkConsumed()
+            return@LaunchedEffect
+        }
+
+        val ok = tryHandleJoinLink(url)
+
+        if (ok) {
+            Toast.makeText(context, "Te has unido al grupo", Toast.LENGTH_SHORT).show()
+            navController.navigate(Route.GroupTab) {
+                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                launchSingleTop = true
+                restoreState = true
+            }
+        } else {
+            Toast.makeText(context, "No se pudo usar el enlace de invitación", Toast.LENGTH_LONG).show()
+        }
+
+        onDeepLinkConsumed()
+    }
+
+    LaunchedEffect(isSessionActive) {
+        if (!isSessionActive || SessionManager.isGuest()) return@LaunchedEffect
+        val pendingUrl = SessionManager.consumePendingDeepLink() ?: return@LaunchedEffect
+        val ok = tryHandleJoinLink(pendingUrl)
+        if (ok) {
+            Toast.makeText(context, "Invitación aplicada tras iniciar sesión", Toast.LENGTH_SHORT).show()
+            navController.navigate(Route.GroupTab) {
+                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                launchSingleTop = true
+                restoreState = true
+            }
+        } else {
+            Toast.makeText(context, "No se pudo usar la invitación guardada", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    LaunchedEffect(isSessionActive) {
+        if (!isSessionActive || SessionManager.isGuest()) return@LaunchedEffect
+
+        val shouldGoToOnboarding = runCatching { authRepository.needsOnboarding() }.getOrDefault(false)
+        val onboardingRoute = Route.Onboarding::class.qualifiedName
+        val currentRoute = navController.currentDestination?.route
+
+        if (shouldGoToOnboarding && currentRoute != onboardingRoute) {
+            navController.navigate(Route.Onboarding) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
+
     NavHost(
         navController = navController,
-        startDestination = if (initialHasSession) Route.Home else Route.Login
+        startDestination = if (initialHasSession) Route.Home else Route.Login,
+        enterTransition = { EnterTransition.None },
+        exitTransition = { ExitTransition.None }
     ) {
         composable<Route.Login> {
             LoginScreen(
@@ -128,26 +245,53 @@ fun AppNavigation(initialHasSession: Boolean, userViewModel: UserViewModel) {
                         popUpTo(Route.Login) { inclusive = true }
                     }
                 },
-                onNavigateToRegister = {
-                    navController.navigate(Route.Register)
+                onNavigateToRegister = { navController.navigate(Route.Register) },
+                onNavigateToOnboarding = {
+                    navController.navigate(Route.Onboarding) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }
 
-        composable<Route.Register>{
+        composable<Route.Register> {
             RegisterScreen(
-                onNavigateToLogin = {
-                    navController.navigate(Route.Login){
-                        popUpTo(Route.Login) { inclusive = true }
+                onNavigateToLogin = { navController.navigate(Route.Login) },
+                onRegisterSuccess = {
+                    navController.navigate(Route.Onboarding) {
+                        popUpTo(0) { inclusive = true }
                     }
                 },
-                onRegisterSuccess = {
-                    navController.navigate(Route.Login)
+                onNavigateToOnboarding = {
+                    navController.navigate(Route.Onboarding) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
+            )
+        }
+
+        composable<Route.Onboarding> {
+            OnboardingScreen(
+                onFinish = {
+                    navController.navigate(Route.Home) {
+                        popUpTo(Route.Onboarding) { inclusive = true }
+                    }
+                },
+                userViewModel = userViewModel
             )
         }
 
         composable<Route.Home> {
+            LaunchedEffect(Unit) {
+                if (!SessionManager.isGuest()) {
+                    val shouldGoToOnboarding = runCatching { authRepository.needsOnboarding() }.getOrDefault(false)
+                    if (shouldGoToOnboarding) {
+                        navController.navigate(Route.Onboarding) {
+                            popUpTo(Route.Home) { inclusive = true }
+                        }
+                    }
+                }
+            }
             HomeScreen(
                 userViewModel = userViewModel,
                 onNavigateToProfile = {
@@ -170,11 +314,10 @@ fun AppNavigation(initialHasSession: Boolean, userViewModel: UserViewModel) {
                 user = userState.user,
                 onBack = { navController.popBackStack() },
                 onLogout = {
-                    coroutineScope.launch {
-                        SessionManager.clear()
-                        navController.navigate(Route.Login) {
-                            popUpTo(0) { inclusive = true }
-                        }
+                    if (SessionManager.isGuest()) {
+                        navController.navigate(Route.Register)
+                    } else {
+                        onLogout()
                     }
                 }
             )
@@ -183,10 +326,26 @@ fun AppNavigation(initialHasSession: Boolean, userViewModel: UserViewModel) {
 }
 
 @Composable
-fun HomeScreen(userViewModel: UserViewModel, onNavigateToProfile: () -> Unit) {
+fun HomeScreen(
+    userViewModel: UserViewModel,
+    onNavigateToProfile: () -> Unit,
+    snackbarViewModel: GlobalSnackbarViewModel = hiltViewModel()
+) {
     val context = LocalContext.current
     val connectivityObserver = remember { ConnectivityObserver(context) }
     val deviceHasInternet by connectivityObserver.status.collectAsState(initial = true)
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        snackbarViewModel.snackbarEvents.collect { event ->
+            snackbarHostState.showSnackbar(
+                message = event.message,
+                actionLabel = event.actionLabel,
+                duration = SnackbarDuration.Short
+            )
+        }
+    }
 
     val navController = rememberNavController()
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
@@ -207,72 +366,97 @@ fun HomeScreen(userViewModel: UserViewModel, onNavigateToProfile: () -> Unit) {
 
     LaunchedEffect(deviceHasInternet, isGuest) {
         if (deviceHasInternet && !isGuest) {
-            userViewModel.fetchUser()
             val gid = SessionManager.getPersonalGid()
             if (gid != null) {
-                taskViewModel.syncOfflineActions(gid)
+                taskViewModel.syncOfflineActionsAwait(gid)
             }
+            userViewModel.fetchUser()
         }
     }
 
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = currentBackStackEntry?.destination
+    val currentRouteName = currentBackStackEntry?.destination?.route
+
+    val isInGroupSection = currentRouteName?.contains(Route.GroupTab::class.qualifiedName!!) == true ||
+            currentRouteName?.contains(Route.GroupDetail::class.qualifiedName!!) == true ||
+            currentRouteName?.contains(Route.GroupSettings::class.qualifiedName!!) == true
 
     val selectedIndex = when {
-        currentDestination?.route?.contains(Route.Home::class.qualifiedName!!) == true -> 0
-        currentDestination?.route?.contains(Route.TasksTab::class.qualifiedName!!) == true -> 1
-        currentDestination?.route?.contains(Route.GroupTab::class.qualifiedName!!) == true -> 3
-        currentDestination?.route?.contains(Route.StoreTab::class.qualifiedName!!) == true -> 4
+        currentRouteName?.contains(Route.Home::class.qualifiedName!!) == true -> 0
+        currentRouteName?.contains(Route.TasksTab::class.qualifiedName!!) == true -> 1
+        isInGroupSection -> 3
+        currentRouteName?.contains(Route.StoreTab::class.qualifiedName!!) == true -> 4
         else -> 0
     }
+
+    val showBottomBar = currentRouteName?.contains(Route.GroupDetail::class.qualifiedName!!) != true &&
+            currentRouteName?.contains(Route.GroupSettings::class.qualifiedName!!) != true
 
     val isEffectivelyOffline = !deviceHasInternet || isOffline || isGuest
 
     AuthBackground {
         Scaffold(
             modifier = Modifier.statusBarsPadding(),
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             topBar = {
-                if (isEffectivelyOffline) {
+                val bannerText = when {
+                    isGuest -> "MODO INVITADO — Registrate para guardar tus tareas"
+                    !deviceHasInternet -> "SIN CONEXIÓN — Se sincronizará al volver"
+                    isOffline -> "MODO OFFLINE — Acceso local activo"
+                    else -> null
+                }
+
+                if (bannerText != null) {
                     Box(
-                        modifier = Modifier.fillMaxWidth().background(Color(0xFFEF476F)).padding(vertical = 4.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(if (isGuest) Color(0xFFC172FF) else Color(0xFFEF476F))
+                            .padding(vertical = 4.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("Modo sin conexión - Los cambios se sincronizarán después",
-                            color = Color.White, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                        Text(
+                            text = bannerText,
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        )
                     }
                 }
             },
             containerColor = Color.Transparent,
             bottomBar = {
-                NavBottomBar(
-                    selected = selectedIndex,
-                    isGuest = isGuest,
-                    onSelect = { index ->
-                        if (index == 2) {
-                            taskViewModel.openCreateDialog()
-                            return@NavBottomBar
-                        }
+                if (showBottomBar) {
+                    NavBottomBar(
+                        selected = selectedIndex,
+                        isGuest = isGuest,
+                        onSelect = { index ->
+                            if (index == 2) {
+                                taskViewModel.openCreateDialog()
+                                return@NavBottomBar
+                            }
 
-                        if (isGuest && (index == 3 || index == 4)) {
-                            Toast.makeText(context, "Regístrate para acceder a esta función", Toast.LENGTH_SHORT).show()
-                            return@NavBottomBar
-                        }
+                            if (isGuest && (index == 3 || index == 4)) {
+                                Toast.makeText(context, "Regístrate para acceder a esta función", Toast.LENGTH_SHORT).show()
+                                return@NavBottomBar
+                            }
 
-                        val route = when (index) {
-                            0 -> Route.Home
-                            1 -> Route.TasksTab
-                            3 -> Route.GroupTab
-                            4 -> Route.StoreTab
-                            else -> Route.Home
-                        }
+                            val route = when (index) {
+                                0 -> Route.Home
+                                1 -> Route.TasksTab
+                                3 -> Route.GroupTab
+                                4 -> Route.StoreTab
+                                else -> Route.Home
+                            }
 
-                        navController.navigate(route) {
-                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
+                            navController.navigate(route) {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
         ) { paddingValues ->
             NavHost(
@@ -320,7 +504,53 @@ fun HomeScreen(userViewModel: UserViewModel, onNavigateToProfile: () -> Unit) {
                         onTaskCompleted = { userViewModel.fetchUser() }
                     )
                 }
-                composable<Route.GroupTab> { GrupoTab() }
+                composable<Route.GroupTab> {
+                    GrupoTab(
+                        onOpenGroup = { g ->
+                            navController.navigate(
+                                Route.GroupDetail(
+                                    gid = g.id,
+                                    role = g.role,
+                                    name = g.name,
+                                    description = g.subtitle
+                                )
+                            )
+                        }
+                    )
+                }
+
+                composable<Route.GroupDetail> { backStackEntry ->
+                    val args = backStackEntry.toRoute<Route.GroupDetail>()
+                    GroupDetailScreen(
+                        gid = args.gid,
+                        groupName = args.name,
+                        groupDescription = args.description,
+                        groupRole = args.role,
+                        onBack = { navController.popBackStack() },
+                        onUserStateChanged = { userViewModel.fetchUser() },
+                        onOpenSettings = {
+                            navController.navigate(
+                                Route.GroupSettings(
+                                    gid = args.gid,
+                                    role = args.role,
+                                    name = args.name,
+                                    description = args.description
+                                )
+                            )
+                        }
+                    )
+                }
+
+                composable<Route.GroupSettings> { backStackEntry ->
+                    val args = backStackEntry.toRoute<Route.GroupSettings>()
+                    GroupSettingsScreen(
+                        gid = args.gid,
+                        groupName = args.name,
+                        groupDescription = args.description,
+                        groupRole = args.role,
+                        onBack = { navController.popBackStack() }
+                    )
+                }
 
                 composable<Route.StoreTab> {
                     TiendaTab(ludiones = userData?.ludiones ?: 0, onCosmeticChanged = { userViewModel.fetchUser() })

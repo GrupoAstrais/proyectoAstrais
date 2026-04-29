@@ -15,4 +15,8 @@ class UserRepository @Inject constructor(
     suspend fun updateUsername(uid: Int, newName: String) {
         api.updateUsername(uid, newName)
     }
+
+    suspend fun updateProfile(uid: Int, newName: String, language: String) {
+        api.updateProfile(uid, newName, language)
+    }
 }

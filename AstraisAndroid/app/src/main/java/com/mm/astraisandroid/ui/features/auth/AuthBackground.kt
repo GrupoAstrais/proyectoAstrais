@@ -20,10 +20,11 @@ import kotlin.math.sin
 fun AuthBackground(content: @Composable BoxScope.() -> Unit) {
     val backgroundColor = MaterialTheme.colorScheme.background
 
-    val color1 = MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
-    val color2 = MaterialTheme.colorScheme.secondary.copy(alpha = 0.18f)
-    val color3 = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.18f)
-    val color4 = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.12f)
+    val color1 = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f)
+    val color2 = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.38f)
+    val color3 = MaterialTheme.colorScheme.secondary.copy(alpha = 0.32f)
+    val color4 = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
+    val color5 = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.22f)
 
     val infiniteTransition = rememberInfiniteTransition(label = "mesh")
 
@@ -31,7 +32,7 @@ fun AuthBackground(content: @Composable BoxScope.() -> Unit) {
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(18000, easing = LinearEasing),
+            animation = tween(25000, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "progress"
@@ -51,44 +52,73 @@ fun AuthBackground(content: @Composable BoxScope.() -> Unit) {
             // Los multiplicadores dentro del sin/cos DEBEN SER ENTEROS por favor que peta
             // para que el inicio y el final coincidan perfectamente
 
-            // Primario
             val p1 = Offset(
-                x = w * 0.5f + cos(angle) * (w * 0.3f),
-                y = h * 0.5f + sin(angle) * (h * 0.2f)
+                x = w * 0.3f + cos(angle * 0.7f) * (w * 0.4f),
+                y = h * 0.4f + sin(angle * 0.5f) * (h * 0.35f)
             )
             drawCircle(
-                brush = Brush.radialGradient(listOf(color1, Color.Transparent), center = p1, radius = w * 0.9f),
-                center = p1, radius = w * 0.9f
+                brush = Brush.radialGradient(
+                    listOf(color1, color1.copy(alpha = 0.2f), Color.Transparent),
+                    center = p1,
+                    radius = w * 1.2f
+                ),
+                center = p1, radius = w * 1.2f
             )
 
-            //  Secundario (Doble de velocidad, giro opuesto)
+            // Rich tertiary orb - counter movement
             val p2 = Offset(
-                x = w * 0.5f + sin(-angle * 2f) * (w * 0.4f),
-                y = h * 0.5f + cos(angle * 1f) * (h * 0.3f)
+                x = w * 0.7f + sin(-angle * 0.9f) * (w * 0.35f),
+                y = h * 0.6f + cos(angle * 0.8f) * (h * 0.4f)
             )
             drawCircle(
-                brush = Brush.radialGradient(listOf(color2, Color.Transparent), center = p2, radius = w * 0.8f),
-                center = p2, radius = w * 0.8f
+                brush = Brush.radialGradient(
+                    listOf(color2, color2.copy(alpha = 0.15f), Color.Transparent),
+                    center = p2,
+                    radius = w * 1.0f
+                ),
+                center = p2, radius = w * 1.0f
             )
 
-            // Terciario (Movimiento lento en 8)
+            // Secondary accent - figure-8 movement
             val p3 = Offset(
-                x = w * 0.7f + cos(angle) * (w * 0.2f),
-                y = h * 0.8f + sin(angle * 2f) * (h * 0.1f)
+                x = w * 0.5f + cos(angle * 1.3f) * (w * 0.45f),
+                y = h * 0.3f + sin(angle * 2f) * (h * 0.25f)
             )
             drawCircle(
-                brush = Brush.radialGradient(listOf(color3, Color.Transparent), center = p3, radius = w * 0.7f),
-                center = p3, radius = w * 0.7f
+                brush = Brush.radialGradient(
+                    listOf(color3, color3.copy(alpha = 0.1f), Color.Transparent),
+                    center = p3,
+                    radius = w * 0.85f
+                ),
+                center = p3, radius = w * 0.85f
             )
 
-            // Contraste
+            // Primary container - bottom accent
             val p4 = Offset(
-                x = w * 0.3f + sin(angle) * (w * 0.3f),
-                y = h * 0.2f + cos(angle) * (h * 0.15f)
+                x = w * 0.2f + sin(angle * 0.6f) * (w * 0.3f),
+                y = h * 0.8f + cos(angle * 0.4f) * (h * 0.2f)
             )
             drawCircle(
-                brush = Brush.radialGradient(listOf(color4, Color.Transparent), center = p4, radius = w * 0.6f),
-                center = p4, radius = w * 0.6f
+                brush = Brush.radialGradient(
+                    listOf(color4, color4.copy(alpha = 0.15f), Color.Transparent),
+                    center = p4,
+                    radius = w * 0.9f
+                ),
+                center = p4, radius = w * 0.9f
+            )
+
+            // Tertiary container - top right accent
+            val p5 = Offset(
+                x = w * 0.8f + cos(angle * 1.1f) * (w * 0.25f),
+                y = h * 0.2f + sin(angle * 0.7f) * (h * 0.3f)
+            )
+            drawCircle(
+                brush = Brush.radialGradient(
+                    listOf(color5, color5.copy(alpha = 0.1f), Color.Transparent),
+                    center = p5,
+                    radius = w * 0.75f
+                ),
+                center = p5, radius = w * 0.75f
             )
         }
 

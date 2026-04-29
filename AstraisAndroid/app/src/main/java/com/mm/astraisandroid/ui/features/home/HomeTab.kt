@@ -11,18 +11,22 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -30,13 +34,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mm.astraisandroid.util.LottiePetRenderer
 import com.mm.astraisandroid.data.api.UserMeResponse
 import com.mm.astraisandroid.data.models.User
+import com.mm.astraisandroid.data.preferences.SessionManager.isGuest
 import com.mm.astraisandroid.ui.features.tasks.TaskViewModel
-
-private val ColorDinamico   = Color(0xFF7EB8F7)
-private val ColorPersona    = Color(0xFF6EF77E)
-private val ColorLogros     = Color(0xFFD07EF7)
-private val ColorDark       = Color.White.copy(alpha = 0.06f)
-
+import com.mm.astraisandroid.ui.components.AstraisGlassSurface
+import com.mm.astraisandroid.ui.components.AstraisGlassChip
+import com.mm.astraisandroid.ui.components.Glassmorphism
 
 @Composable
 fun HomeTab(
@@ -57,147 +59,188 @@ fun HomeTab(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        val isGuest = com.mm.astraisandroid.data.preferences.SessionManager.isGuest()
+        val isGuest = isGuest()
 
-        HomeHeader(username = if (isGuest) "Invitado" else (user?.name ?: "Viajero"), onNavigateToProfile)
+        WelcomeHeader(
+            username = if (isGuest) "Invitado" else (user?.name ?: "Viajero"),
+            onProfileClick = onNavigateToProfile
+        )
 
         if (isGuest) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(ColorDark)
-                    .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(20.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.padding(24.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = null,
-                        tint = Color.White.copy(alpha = 0.5f),
-                        modifier = Modifier.size(64.dp)
-                    )
-                    Text(
-                        text = "Modo Invitado",
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Monospace
-                    )
-                    Text(
-                        text = "Tus tareas se guardan de forma local. Ve al perfil para registrarte y sincronizar tu progreso.",
-                        color = Color.White.copy(alpha = 0.7f),
-                        fontSize = 14.sp,
-                        fontFamily = FontFamily.Monospace,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
+            GuestWelcomeCard(onRegisterClick = onNavigateToProfile)
         } else {
             BannerCard(user = user)
+        }
 
-            BentoGrid(
-                user = user,
-                topTasks = topTasks,
-                totalPending = pendingTasks.size,
-                modifier = Modifier.weight(1f),
-                onTasksClick = onNavigateToTasks,
-                onInventoryClick = onNavigateToInventory,
-                onStoreClick = onNavigateToStore,
-                onGroupsClick = onNavigateToGroups
-            )
+        BentoGrid(
+            user = user,
+            topTasks = topTasks,
+            totalPending = pendingTasks.size,
+            modifier = Modifier.weight(1f),
+            onTasksClick = onNavigateToTasks,
+            onInventoryClick = { if (!isGuest) onNavigateToInventory() },
+            onStoreClick = { if (!isGuest) onNavigateToStore() },
+            onGroupsClick = { if (!isGuest) onNavigateToGroups() },
+            isGuest = isGuest
+        )
 
+        if (!isGuest) {
             NotificationsBar(count = 8)
         }
     }
 }
 
-
 @Composable
-fun HomeHeader(username: String, onProfileClick: () -> Unit) {
+fun WelcomeHeader(username: String, onProfileClick: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 24.dp, bottom = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = "Hi, $username",
-            color = Color.White,
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Black,
-            fontFamily = FontFamily.Monospace,
-            letterSpacing = 1.sp
-        )
-        Box(
-            modifier = Modifier
-                .size(42.dp)
-                .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.15f))
-                .border(1.5.dp, Color.White.copy(alpha = 0.4f), CircleShape)
-                .clickable { onProfileClick() },
-            contentAlignment = Alignment.Center
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             Text(
-                text = username.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
+                text = "Hi,",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.TEXT_SECONDARY),
                 fontFamily = FontFamily.Monospace
             )
+            Text(
+                text = username,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.TEXT_PRIMARY),
+                fontFamily = FontFamily.Monospace,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
+        AstraisGlassSurface(
+            modifier = Modifier.size(52.dp),
+            shape = CircleShape,
+            backgroundAlpha = Glassmorphism.BG_PREMIUM,
+            borderAlpha = Glassmorphism.BORDER_PRIMARY,
+            onClick = onProfileClick
+        ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(
+                    text = username.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.TEXT_PRIMARY),
+                    fontFamily = FontFamily.Monospace
+                )
+            }
         }
     }
 }
 
 @Composable
 fun BannerCard(user: User?) {
-    Box(
+    AstraisGlassSurface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(70.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(ColorDark)
-            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(20.dp))
-            .clickable { },
-        contentAlignment = Alignment.CenterStart
+            .height(80.dp),
+        shape = MaterialTheme.shapes.extraLarge,
+        backgroundAlpha = Glassmorphism.BG_TERTIARY,
+        onClick = {}
     ) {
-        Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-            Text(
-                text = "Nivel ${user?.level ?: 0}",
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Monospace
-            )
-            Text(
-                text = "${user?.currentXp ?: 0} / ${((user?.level ?: 0) + 1) * 100} XP",
-                color = Color.White.copy(alpha = 0.5f),
-                fontSize = 12.sp,
-                fontFamily = FontFamily.Monospace
-            )
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxHeight()
-                .width(80.dp)
-                .align(Alignment.CenterEnd)
-                .padding(end = 12.dp),
-            contentAlignment = Alignment.Center
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            if (user?.equippedPetRef != null) {
-                LottiePetRenderer(assetRef = user.equippedPetRef)
-            } else {
+            Column(modifier = Modifier.padding(horizontal = 24.dp)) {
                 Text(
-                    text = "SIN MASCOTA",
-                    color = Color.White.copy(alpha = 0.2f),
-                    fontSize = 10.sp,
-                    fontFamily = FontFamily.Monospace,
-                    textAlign = TextAlign.Center
+                    text = "Nivel ${user?.level ?: 0}",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.TEXT_PRIMARY),
+                    fontFamily = FontFamily.Monospace
+                )
+                Text(
+                    text = "${user?.currentXp ?: 0} / ${((user?.level ?: 0) + 1) * 100} XP",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.TEXT_SECONDARY),
+                    fontFamily = FontFamily.Monospace
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(90.dp)
+                    .padding(end = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (user?.equippedPetRef != null) {
+                    LottiePetRenderer(assetRef = user.equippedPetRef, modifier = Modifier.size(70.dp))
+                } else {
+                    Text(
+                        text = "SIN MASCOTA",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.TEXT_TERTIARY),
+                        fontFamily = FontFamily.Monospace,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun GuestWelcomeCard(onRegisterClick: () -> Unit) {
+    AstraisGlassSurface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(110.dp),
+        shape = MaterialTheme.shapes.extraLarge,
+        backgroundAlpha = Glassmorphism.BG_PREMIUM,
+        borderAlpha = Glassmorphism.BORDER_PRIMARY,
+        onClick = onRegisterClick
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            AstraisGlassSurface(
+                modifier = Modifier.size(56.dp),
+                shape = CircleShape,
+                backgroundAlpha = Glassmorphism.BG_PREMIUM
+            ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            }
+            Column {
+                Text(
+                    text = "Bienvenido a Astrais",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.TEXT_PRIMARY),
+                    fontFamily = FontFamily.Monospace
+                )
+                Text(
+                    text = "Toca para registrarte y sincronizar",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.TEXT_SECONDARY),
+                    fontFamily = FontFamily.Monospace
                 )
             }
         }
@@ -214,51 +257,56 @@ fun BentoGrid(
     onInventoryClick: () -> Unit,
     onStoreClick: () -> Unit,
     onGroupsClick: () -> Unit,
+    isGuest: Boolean = false
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        BentoCell(
+        AstraisGlassSurface(
             modifier = Modifier.weight(1f).fillMaxHeight(),
+            shape = MaterialTheme.shapes.large,
             onClick = onTasksClick
         ) {
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
                     text = "Tareas",
-                    color = Color.White,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Black,
-                    fontFamily = FontFamily.Monospace,
-                    letterSpacing = 1.sp
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontFamily = FontFamily.Monospace
                 )
 
                 topTasks.forEach { tarea ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(Color.White.copy(alpha = 0.07f))
-                            .padding(horizontal = 10.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    AstraisGlassChip(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = null
                     ) {
-                        Text(
-                            text = tarea.title,
-                            color = Color.White.copy(alpha = 0.7f),
-                            fontSize = 11.sp,
-                            fontFamily = FontFamily.Monospace,
-                            maxLines = 1
-                        )
-                        Box(
+                        Row(
                             modifier = Modifier
-                                .size(14.dp)
-                                .clip(RoundedCornerShape(4.dp))
-                                .border(1.dp, Color.White.copy(alpha = 0.3f), RoundedCornerShape(4.dp))
-                        )
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = tarea.title,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.TEXT_PRIMARY),
+                                fontFamily = FontFamily.Monospace,
+                                maxLines = 1
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(14.dp)
+                                    .clip(MaterialTheme.shapes.extraSmall)
+                                    .border(1.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.ICON_ALPHA), MaterialTheme.shapes.extraSmall)
+                            )
+                        }
                     }
                 }
 
@@ -266,8 +314,8 @@ fun BentoGrid(
 
                 Text(
                     text = if (totalPending > 0) "$totalPending pendientes" else "¡Todo al día!",
-                    color = Color.White.copy(alpha = 0.3f),
-                    fontSize = 10.sp,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.TEXT_TERTIARY),
                     fontFamily = FontFamily.Monospace
                 )
             }
@@ -275,18 +323,18 @@ fun BentoGrid(
 
         Column(
             modifier = Modifier.weight(1f).fillMaxHeight(),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            BentoCell(
+            AstraisGlassSurface(
                 modifier = Modifier.fillMaxWidth().weight(1.4f),
-                onClick = onInventoryClick
+                shape = MaterialTheme.shapes.large,
+                onClick = if (!isGuest) onInventoryClick else null
             ) {
-                Column(modifier = Modifier.fillMaxSize()) {
+                Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
                     Text(
                         text = "Inventario",
-                        color = Color.White,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Black,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontFamily = FontFamily.Monospace
                     )
 
@@ -303,7 +351,7 @@ fun BentoGrid(
                             Icon(
                                 imageVector = Icons.Default.Inventory,
                                 contentDescription = null,
-                                tint = Color.White.copy(alpha = 0.07f),
+                                tint = MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.BG_SECONDARY),
                                 modifier = Modifier.size(60.dp)
                             )
                         }
@@ -311,103 +359,102 @@ fun BentoGrid(
                 }
             }
 
-            BentoCell(
+            BentoMiniCell(
                 modifier = Modifier.fillMaxWidth().weight(1f),
                 backgroundIcon = Icons.Default.ShoppingCart,
-                onClick = onStoreClick
-            ) {
-                Text(
-                    text = "Tienda",
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Black,
-                    fontFamily = FontFamily.Monospace
-                )
-            }
+                onClick = onStoreClick,
+                isLocked = isGuest,
+                text = "Tienda"
+            )
 
-            BentoCell(
+            BentoMiniCell(
                 modifier = Modifier.fillMaxWidth().weight(1f),
                 backgroundIcon = Icons.Default.Star,
-                onClick = onGroupsClick
-            ) {
-                Text(
-                    text = "Logros",
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Black,
-                    fontFamily = FontFamily.Monospace
-                )
-            }
+                onClick = onGroupsClick,
+                isLocked = isGuest,
+                text = "Logros"
+            )
         }
     }
 }
 
 @Composable
-fun BentoCell(
+fun BentoMiniCell(
     modifier: Modifier = Modifier,
-    color: Color = ColorDark,
-    borderAlpha: Float = 0.1f,
     backgroundIcon: ImageVector? = null,
     onClick: (() -> Unit)? = null,
-    content: @Composable BoxScope.() -> Unit = {}
+    isLocked: Boolean = false,
+    text: String = ""
 ) {
-    val shape = RoundedCornerShape(18.dp)
-    Box(
-        modifier = modifier
-            .clip(shape)
-            .background(color)
-            .border(1.dp, Color.White.copy(alpha = borderAlpha), shape)
-            .then(
-                if (onClick != null) Modifier.clickable { onClick() } else Modifier
-            )
+    AstraisGlassSurface(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.extraLarge,
+        backgroundAlpha = if (isLocked) Glassmorphism.BG_SECONDARY else Glassmorphism.BG_PRIMARY,
+        onClick = if (!isLocked) onClick else null
     ) {
+        Box(modifier = Modifier.fillMaxSize().padding(20.dp)) {
+            if (backgroundIcon != null) {
+                Icon(
+                    imageVector = backgroundIcon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.08f),
+                    modifier = Modifier
+                        .size(100.dp)
+                        .align(Alignment.BottomEnd)
+                        .offset(x = 20.dp, y = 20.dp)
+                )
+            }
 
-        if (backgroundIcon != null) {
-            Icon(
-                imageVector = backgroundIcon,
-                contentDescription = null,
-                tint = Color.White.copy(alpha = 0.07f),
-                modifier = Modifier
-                    .size(90.dp)
-                    .align(Alignment.BottomEnd)
-                    .offset(x = 16.dp, y = 16.dp)
+            if (isLocked) {
+                Icon(
+                    imageVector = Icons.Default.Lock,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.TEXT_TERTIARY),
+                    modifier = Modifier
+                        .size(22.dp)
+                        .align(Alignment.TopEnd)
+                )
+            }
+
+            Text(
+                text = text,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = if (isGuest()) MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.TEXT_TERTIARY) else MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.TEXT_PRIMARY),
+                fontFamily = FontFamily.Monospace
             )
         }
-
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .padding(16.dp),
-            content = content
-        )
     }
 }
 
 @Composable
 fun NotificationsBar(count: Int) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(50.dp))
-            .background(Color.White.copy(alpha = 0.08f))
-            .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(50.dp))
-            .clickable { }
-            .padding(horizontal = 20.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+    AstraisGlassSurface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(28.dp),
+        backgroundAlpha = Glassmorphism.BG_TERTIARY,
+        onClick = {}
     ) {
-        Text(
-            text = "Notificaciones ($count)",
-            color = Color.White,
-            fontSize = 13.sp,
-            fontFamily = FontFamily.Monospace,
-            fontWeight = FontWeight.SemiBold
-        )
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-            contentDescription = null,
-            tint = Color.White,
-            modifier = Modifier.size(18.dp)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 14.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Notificaciones ($count)",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.TEXT_PRIMARY),
+                fontFamily = FontFamily.Monospace
+            )
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.ICON_ALPHA),
+                modifier = Modifier.size(20.dp)
+            )
+        }
     }
 }

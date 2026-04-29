@@ -5,35 +5,40 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.core.graphics.toColorInt
 import com.mm.astraisandroid.data.models.Theme
 
 private val DefaultDarkColorScheme = darkColorScheme(
-    primary = IndigoGalaxia,
-    secondary = MoradoNebulosa,
-    tertiary = TurquesaCosmico,
-    background = BgDark,
-    surface = SurfaceDark,
+    primary = Primary,
+    secondary = Secondary,
+    tertiary = Tertiary,
+    background = Background,
+    surface = Surface,
     onPrimary = Color.White,
-    onBackground = Gray50,
-    onSurface = Gray50,
-    error = StateError
+    onBackground = TextPrimary,
+    onSurface = TextPrimary,
+    surfaceVariant = BackgroundAlt,
+    onSurfaceVariant = Gray300,
+    error = ErrorCustom
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = IndigoMedio,
-    secondary = MoradoMedio,
-    tertiary = VerdeMedio,
-    background = Gray50,
-    surface = Color.White,
+    primary = Primary,
+    secondary = Secondary,
+    tertiary = Tertiary,
+    background = Color.White,
+    surface = Color(0xFFF1F5F9),
     onPrimary = Color.White,
     onSecondary = Color.White,
     onTertiary = Gray900,
     onBackground = Gray900,
     onSurface = Gray900,
-    error = StateError
+    surfaceVariant = Gray300,
+    onSurfaceVariant = Gray700,
+    error = ErrorCustom
 )
 
 private fun getContrastColor(backgroundColor: Color): Color {
@@ -42,7 +47,7 @@ private fun getContrastColor(backgroundColor: Color): Color {
 
 private fun parseHexColor(hexString: String, fallback: Color): Color {
     return try {
-        Color(hexString.toColorInt())
+        Color(hexString.trim().toColorInt())
     } catch (e: Exception) {
         fallback
     }
@@ -55,35 +60,60 @@ fun AstraisandroidTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (userTheme != null) {
-        val textColor = parseHexColor(userTheme.text, Gray50)
+        val textColor = parseHexColor(userTheme.text, if (darkTheme) TextPrimary else Gray900)
+        val prim = parseHexColor(userTheme.primary, Primary)
+        val sec = parseHexColor(userTheme.secondary, Secondary)
+        val tert = parseHexColor(userTheme.tertiary, Tertiary)
+        val err = parseHexColor(userTheme.error, ErrorCustom)
+        val bg = parseHexColor(userTheme.background, if (darkTheme) Background else Color.White)
+        val bgAlt = parseHexColor(userTheme.backgroundAlt, if (darkTheme) BackgroundAlt else Gray300)
+        val surf = parseHexColor(userTheme.surface, if (darkTheme) Surface else Color.White)
 
-        val prim = parseHexColor(userTheme.primary, IndigoGalaxia)
-        val sec = parseHexColor(userTheme.secondary, MoradoNebulosa)
-        val tert = parseHexColor(userTheme.tertiary, TurquesaCosmico)
-        val err = parseHexColor(userTheme.error, StateError)
-
-        darkColorScheme(
-            primary = prim,
-            onPrimary = getContrastColor(prim),
-            secondary = sec,
-            onSecondary = getContrastColor(sec),
-            tertiary = tert,
-            onTertiary = getContrastColor(tert),
-            background = parseHexColor(userTheme.background, BgDark),
-            surfaceVariant = parseHexColor(userTheme.backgroundAlt, BgDark),
-            surface = parseHexColor(userTheme.surface, SurfaceDark),
-            error = err,
-            onError = getContrastColor(err),
-            onBackground = textColor,
-            onSurface = textColor
-        )
-    } else {
+        if (darkTheme) {
+            darkColorScheme(
+                primary = prim,
+                onPrimary = getContrastColor(prim),
+                secondary = sec,
+                onSecondary = getContrastColor(sec),
+                tertiary = tert,
+                onTertiary = getContrastColor(tert),
+                background = bg,
+                surfaceVariant = bgAlt,
+                surface = surf,
+                error = err,
+                onError = getContrastColor(err),
+                onBackground = textColor,
+                onSurface = textColor
+            )
+        } else {
+            lightColorScheme(
+                primary = prim,
+                onPrimary = getContrastColor(prim),
+                secondary = sec,
+                onSecondary = getContrastColor(sec),
+                tertiary = tert,
+                onTertiary = getContrastColor(tert),
+                background = bg,
+                surfaceVariant = bgAlt,
+                surface = surf,
+                error = err,
+                onError = getContrastColor(err),
+                onBackground = textColor,
+                onSurface = textColor
+            )
+        }
+    } else if (darkTheme) {
         DefaultDarkColorScheme
+    } else {
+        LightColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(LocalAstraisSpacing provides AstraisSpacing()) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            shapes = AstraisShapes,
+            content = content
+        )
+    }
 }

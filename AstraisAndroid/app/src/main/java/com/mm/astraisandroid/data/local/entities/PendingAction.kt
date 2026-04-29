@@ -6,8 +6,10 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "pending_actions")
 data class PendingAction(
     @PrimaryKey(autoGenerate = true) val actionId: Int = 0,
-    val type: String,           // "CREATE_TASK", "COMPLETE_TASK", "DELETE_TASK"
+    val type: String,           // "CREATE_TASK", "COMPLETE_TASK", "UNCOMPLETE_TASK", "DELETE_TASK", "EDIT_TASK"
     val data: String,           // El JSON de la petición
     val targetId: Int? = null,  // ID de la tarea si es para completar
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val retryCount: Int = 0,    // Contador de reintentos
+    val lastError: String? = null // Último mensaje de error
 )
