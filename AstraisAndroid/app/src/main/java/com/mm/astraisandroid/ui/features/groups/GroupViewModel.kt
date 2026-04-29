@@ -65,7 +65,7 @@ class GroupViewModel @Inject constructor(
         _state
     ) { dbGroups, currentState ->
         currentState.copy(groups = dbGroups.map { it.toDomain() })
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), GroupScreenState())
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, GroupScreenState())
 
     /**
      * Bloque de inicialización: suscribe al [Flow] de grupos locales de Room para que
@@ -87,10 +87,14 @@ class GroupViewModel @Inject constructor(
         // STRICT GUEST GUARD: groups are locked for guests, never hit backend
         if (SessionManager.isGuest()) return
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
-            val result = repository.refreshGroups()
-            _state.update { it.copy(isLoading = false, isOffline = result.isFailure) }
+            refreshGroupsSuspend()
         }
+    }
+
+    private suspend fun refreshGroupsSuspend() {
+        _state.update { it.copy(isLoading = true) }
+        val result = repository.refreshGroups()
+        _state.update { it.copy(isLoading = false, isOffline = result.isFailure) }
     }
 
     /**
@@ -106,7 +110,7 @@ class GroupViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true) }
             try {
                 repository.createGroup(name, desc)
-                loadGroups()
+                refreshGroupsSuspend()
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false, error = e.message) }
             }
@@ -182,7 +186,7 @@ class GroupViewModel @Inject constructor(
             try {
                 repository.addUser(gid = gid, userId = userId)
                 _state.update { it.copy(infoMessage = "Usuario agregado al grupo") }
-                loadGroups()
+                refreshGroupsSuspend()
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false, error = e.message) }
             }
@@ -203,7 +207,7 @@ class GroupViewModel @Inject constructor(
             try {
                 repository.removeUser(gid = gid, userId = userId)
                 _state.update { it.copy(infoMessage = "Usuario eliminado del grupo") }
-                loadGroups()
+                refreshGroupsSuspend()
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false, error = e.message) }
             }
@@ -224,7 +228,7 @@ class GroupViewModel @Inject constructor(
             try {
                 repository.passOwnership(gid = gid, newOwnerUserId = newOwnerUserId)
                 _state.update { it.copy(infoMessage = "Propiedad transferida correctamente") }
-                loadGroups()
+                refreshGroupsSuspend()
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false, error = e.message) }
             }
@@ -263,7 +267,7 @@ class GroupViewModel @Inject constructor(
             try {
                 repository.joinByUrl(inviteUrl)
                 _state.update { it.copy(infoMessage = "Te has unido al grupo correctamente") }
-                loadGroups()
+                refreshGroupsSuspend()
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false, error = e.message) }
             }

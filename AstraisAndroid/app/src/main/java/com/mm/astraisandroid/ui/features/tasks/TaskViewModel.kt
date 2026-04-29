@@ -205,7 +205,7 @@ class TaskViewModel @Inject constructor(
             tasks = filteredTasks,
             allTasksCache = allUiTasks
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TaskScreenState())
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, TaskScreenState())
 
     /**
      * Muestra el diálogo de creación rápida de tarea.
@@ -286,9 +286,8 @@ class TaskViewModel @Inject constructor(
             var debeCompletarPadre = false
 
             if (parentId != null) {
-                val subtareasPendientes = state.value.allTasksCache.filter {
-                    it.parentId == parentId && it.id != tid && !it.isCompleted
-                }
+                val subtareasPendientes = tareaDao.getSubtasksForTask(parentId)
+                    .filter { it.id != tid && it.estado != "COMPLETE" }
 
                 if (subtareasPendientes.isEmpty()) {
                     debeCompletarPadre = true
@@ -345,8 +344,8 @@ class TaskViewModel @Inject constructor(
 
                 var debeDeshacerPadre = false
                 if (parentId != null) {
-                    val padre = state.value.allTasksCache.find { it.id == parentId }
-                    if (padre?.isCompleted == true) {
+                    val padre = tareaDao.getTaskById(parentId)
+                    if (padre?.estado == "COMPLETE") {
                         debeDeshacerPadre = true
                         tareaDao.markAsActive(parentId)
                     }

@@ -94,8 +94,9 @@ interface TareaDao {
     @Transaction
     suspend fun syncRemoteTasks(remoteEntities: List<TareaEntity>) {
         val pendingTasks = getPendingSyncTasks()
+        val pendingIds = pendingTasks.map { it.id }.toSet()
         clearSyncedTareas()
-        insertTareas(remoteEntities)
-        insertTareas(pendingTasks.filter { it.id < 0 })
+        insertTareas(remoteEntities.filter { it.id !in pendingIds })
+        insertTareas(pendingTasks)
     }
 }

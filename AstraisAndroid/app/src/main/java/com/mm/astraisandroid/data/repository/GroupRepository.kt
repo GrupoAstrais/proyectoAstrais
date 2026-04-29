@@ -73,8 +73,7 @@ class GroupRepository @Inject constructor(
                     role = it.role
                 )
             }
-            dao.clearAll()
-            dao.insertGroups(entities)
+            dao.replaceAll(entities)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
