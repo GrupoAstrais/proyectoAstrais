@@ -643,7 +643,11 @@ class DatabaseDAOImpl : DatabaseDAO {
                             usuario?.id_mascota_equipada?.value == cosmetico.id.value
                         } else if (cosmetico.tipo == CosmeticType.APP_THEME) {
                             usuario?.themeColors == cosmetico.tema
-                        } else false
+                        } else if (cosmetico.tipo == CosmeticType.AVATAR_PART) {
+                            usuario?.id_avatar_equipado?.value == cosmetico.id.value
+                        } else {
+                            false
+                        }
 
                 val finalName = if (translated) {
                     val fname = Json.decodeFromString<NamesCosmetic>(cosmetico.nombre)
