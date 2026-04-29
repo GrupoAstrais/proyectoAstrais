@@ -23,7 +23,7 @@ const getDefaultFormData = (): ITaskFormData => ({
   name: "",
   description: "",
   difficulty: 1,
-  taskType: "daily",
+  taskType: "UNICO",
   habitFrequency: null,
   taskDate: formatTaskDate(new Date())
 });
@@ -36,16 +36,17 @@ export default function Modal({
   tareasObjetivos
 }: ModalProps) {
   const [formData, setFormData] = useState<ITaskFormData>(getDefaultFormData);
-  const [objetivo, setObjetivo] = useState<number>(-1);
+  const [objetivo, setObjetivo] = useState<number>();
 
   useEffect(() => {
     if (!initialData) {
       setFormData(getDefaultFormData());
+      setObjetivo(undefined);
       return;
     }
 
     setFormData(buildTaskFormData(initialData));
-
+    setObjetivo(initialData.idObjetivo);
   }, [initialData]);
 
 
@@ -64,7 +65,7 @@ export default function Modal({
   };
 
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!formData.name.trim()) {
@@ -72,18 +73,23 @@ export default function Modal({
       return;
     }
 
-    if (formData.taskType === "habit" && !formData.habitFrequency) {
+    if (formData.taskType === "HABITO" && !formData.habitFrequency) {
       alert("Selecciona una frecuencia para el habito.");
       return;
     }
 
 
-    void onSubmit({
+    await void onSubmit({
       ...formData,
       name: formData.name.trim(),
       description: formData.description.trim(),
       idObjetivo: objetivo
     });
+
+    if (!initialData) {
+      setFormData(getDefaultFormData());
+      setObjetivo(undefined);
+    }
   };
 
   const renderFrequencyButton = (value: THabitFrequency, label: string) => {
@@ -150,7 +156,7 @@ export default function Modal({
           />
         </div>
 
-        {formData.taskType === "daily" && (
+        {formData.taskType === "UNICO" && (
           <div className="rounded-md border border-white/15 bg-accent-beige-300/80 px-2 py-4">
             <input
               type="date"
@@ -166,36 +172,41 @@ export default function Modal({
           </div>
         )}
 
+
         <div className="flex flex-row justify-around rounded-md border border-white/15 bg-accent-beige-300/80 px-2 py-4">
           <DifficultyModal difficulty={0} selectedDifficulty={formData.difficulty} onSelect={setDifficulty} />
           <DifficultyModal difficulty={1} selectedDifficulty={formData.difficulty} onSelect={setDifficulty} />
           <DifficultyModal difficulty={2} selectedDifficulty={formData.difficulty} onSelect={setDifficulty} />
         </div>
 
-        <div className="flex flex-row justify-around rounded-md border border-white/15 bg-accent-beige-300/80 px-2 py-4">
-          <DiaryHabit
-            handleActive={() => setTaskType("habit")}
-            titulo="Habito"
-            esOtroActivo={formData.taskType === "habit" ? "Habito" : formData.taskType === "daily" ? "Diaria" : "Objetivo"}
-          />
-          <DiaryHabit
-            handleActive={() => setTaskType("daily")}
-            titulo="Diaria"
-            esOtroActivo={formData.taskType === "daily" ? "Diaria" : formData.taskType === "habit" ? "Habito" : "Objetivo"}
-          />
-          <DiaryHabit
-            handleActive={() => setTaskType("objetivo")}
-            titulo="Objetivo"
-            esOtroActivo={formData.taskType === "daily" ? "Diaria" : formData.taskType === "habit" ? "Habito" : "Objetivo"}
-          />
-        </div>
+        {!initialData &&
+          <div className="flex flex-row justify-around rounded-md border border-white/15 bg-accent-beige-300/80 px-2 py-4">
+            <DiaryHabit
+                handleActive={() => setTaskType("HABITO")}
+                titulo="Habito"
+                active={formData.taskType === "HABITO"}
+                esOtroActivo={formData.taskType}
+            />
+            <DiaryHabit
+                handleActive={() => setTaskType("UNICO")}
+                titulo="Diaria"
+                active={formData.taskType === "UNICO"}
+                esOtroActivo={formData.taskType}
+            />
+            <DiaryHabit
+                handleActive={() => setTaskType("OBJETIVO")}
+                titulo="Objetivo"
+                active={formData.taskType === "OBJETIVO"}
+                esOtroActivo={formData.taskType}
+            />
+          </div>}
 
-        {formData.taskType == "objetivo" && (
+        {formData.taskType == "UNICO" && !initialData && (
           <div className="rounded-md bg-accent-beige-300 p-3">
             <h3 className="mb-2 font-bold text-primary-900">Elegir objetivo</h3>
             <div className="mb-3 flex gap-2">
-              <select  className="text-primary-900"  id="objetivos" name="tareasObjetivos" value={objetivo ?? -1} onChange={(e) => setObjetivo(Number(e.target.value))}>
-                <option  key={-1} value={-1}>Elige tu objetivo</option>
+              <select  className="text-primary-900"  id="objetivos" name="tareasObjetivos" value={objetivo ?? ""} onChange={(e) => setObjetivo(Number(e.target.value))}>
+                <option  key={-1} value={""}>Elige tu objetivo</option>
                 {
                   tareasObjetivos && tareasObjetivos.map((obj) => (
                     <option  key={obj.id} value={obj.id}>{obj.titulo}</option>
@@ -206,7 +217,7 @@ export default function Modal({
           </div>
         )}
 
-        {formData.taskType === "habit" && (
+        {formData.taskType === "HABITO"  && !initialData && (
           <div className="rounded-md bg-accent-beige-300 p-3">
             <h3 className="mb-2 font-bold text-primary-900">Frecuencia</h3>
             <div className="grid grid-cols-3 gap-2">

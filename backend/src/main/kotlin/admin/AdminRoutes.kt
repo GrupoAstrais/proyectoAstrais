@@ -1,10 +1,11 @@
 package admin
 
-import AvatarLayer
 import OK_MESSAGE_RESPONSE
 import com.astrais.ErrorCodes
 import com.astrais.Errors
 import com.astrais.db.CosmeticType
+import com.astrais.db.DatosSimpleUsuarios
+import com.astrais.db.UserRoles
 import com.astrais.db.getDatabaseDaoImpl
 import io.ktor.http.*
 import io.ktor.http.content.*
@@ -16,6 +17,7 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.File
+import kotlin.reflect.jvm.internal.impl.types.error.ErrorEntity
 
 @Serializable
 data class CreateCosmeticRequest(
@@ -43,6 +45,16 @@ data class CreateGroupAdmin(
     val desc : String
 )
 
+@Serializable
+data class CreateUserAdmin(
+    val name : String,
+    val email : String,
+    val password : String,
+    val lang : String,
+    val utcOffset : Float,
+    val role : String
+)
+
 enum class RarityType(val multiplier: Double) {
     COMUN(1.0),
     RARO(2.5),
@@ -53,7 +65,6 @@ enum class RarityType(val multiplier: Double) {
 fun calculateCosmeticPrice(type: CosmeticType, rarity: RarityType): Int {
     val baseCost = when (type) {
         CosmeticType.AVATAR_PART -> 100
-        CosmeticType.PET_SKIN -> 300
         CosmeticType.APP_THEME -> 500
         CosmeticType.PET -> 1000
     }
@@ -81,7 +92,7 @@ fun Route.adminRoutes() {
                     call.respond(
                         HttpStatusCode.Forbidden,
                         Errors(
-                            ErrorCodes.EER_FORBIDDEN.ordinal,
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
                             "Forbidden, you are not admin"
                         )
                     )
@@ -92,7 +103,7 @@ fun Route.adminRoutes() {
                 val multipart = call.receiveMultipart()
                 val data = receiveFormDataFromClient(multipart)
 
-                if (data.fileBytes == null || data.fileName.isBlank() || !data.fileName.endsWith(".json")) {
+                if (data.type == CosmeticType.PET && (data.fileBytes == null || data.fileName.isBlank() || !data.fileName.endsWith(".json"))) {
                     call.respond(
                         HttpStatusCode.BadRequest,
                         Errors(
@@ -101,17 +112,27 @@ fun Route.adminRoutes() {
                         )
                     )
                     return@post
+                } else if (data.type == CosmeticType.APP_THEME && (data.theme == null)){
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        Errors(
+                            ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal,
+                            "No se envio el JSON de tema"
+                        )
+                    )
+                    return@post
                 }
 
                 try {
-                    val uploadsubdir = "pets"
+                    val uploadsubdir = if (data.type == CosmeticType.PET) {"pets" } else { "avatar" }
 
-                    saveFileIntoCosmetics(
-                        uploadDir = uploadsubdir,
-                        filename = data.fileName,
-                        data = data.fileBytes!!
-                    )
-
+                    if (data.type == CosmeticType.PET || data.type == CosmeticType.AVATAR_PART) {
+                        saveFileIntoCosmetics(
+                            uploadDir = uploadsubdir,
+                            filename = data.fileName,
+                            data = data.fileBytes!!
+                        )
+                    }
 
                     val finalPrice = if (data.price == 0) {
                         calculateCosmeticPrice(data.type, data.rarity)
@@ -126,9 +147,8 @@ fun Route.adminRoutes() {
                         type = data.type,
                         price = finalPrice,
                         assetRef = data.fileName,
-                        theme = data.theme,
+                        theme = data.theme ?: "",
                         coleccion = data.collection,
-                        layer = data.layer,
                         rarity = data.rarity
                     )
 
@@ -150,7 +170,9 @@ fun Route.adminRoutes() {
                         )
                     }
                 } catch (e: Exception) {
+                    println("Exception! Tipo: ${e.javaClass.name}. Message ${e.message}")
                     e.printStackTrace()
+
                     call.respond(
                         HttpStatusCode.InternalServerError,
                         mapOf("error" to "Error al escribir el archivo")
@@ -171,13 +193,13 @@ fun Route.adminRoutes() {
                     )
                     return@post
                 }
-                val cid = call.parameters["cid"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "CID invalid"))
+                val cid = call.parameters["cid"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_FORBIDDEN.ordinal, "CID invalid"))
 
                 if (!getDatabaseDaoImpl().checkIfUserIsServerAdmin(token)){
                     call.respond(
                         HttpStatusCode.Forbidden,
                         Errors(
-                            ErrorCodes.EER_FORBIDDEN.ordinal,
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
                             "Forbidden, you are not admin"
                         )
                     )
@@ -200,20 +222,17 @@ fun Route.adminRoutes() {
                 }
 
                 try {
-                    val uploadsubdir = "pets"
+                    val uploadsubdir = if (data.type == CosmeticType.PET) {"pets" } else { "avatar" }
 
-                    saveFileIntoCosmetics(
-                        uploadDir = uploadsubdir,
-                        filename = data.fileName,
-                        data = data.fileBytes!!
-                    )
-
-
-                    val finalPrice = if (data.price == 0) {
-                        calculateCosmeticPrice(data.type, data.rarity)
-                    } else{
-                        data.price
+                    if ((data.fileBytes != null || data.fileName.isBlank() || !data.fileName.endsWith(".json")) && (data.type == CosmeticType.PET || data.type == CosmeticType.AVATAR_PART)) {
+                        saveFileIntoCosmetics(
+                            uploadDir = uploadsubdir,
+                            filename = data.fileName,
+                            data = data.fileBytes!!
+                        )
                     }
+
+
                     val success = getDatabaseDaoImpl().adminUpdateCosmetic(
                         cid = cid,
                         name = Json.encodeToString(
@@ -224,11 +243,10 @@ fun Route.adminRoutes() {
                         )),
                         desc = data.desc,
                         type = data.type,
-                        price = finalPrice,
+                        price = data.price,
                         assetRef = data.fileName,
-                        theme = data.theme,
+                        theme = data.theme ?: "",
                         coleccion = data.collection,
-                        layer = data.layer,
                         rarity = data.rarity
                     )
 
@@ -250,7 +268,9 @@ fun Route.adminRoutes() {
                         )
                     }
                 } catch (e: Exception) {
+                    println("Exception! Tipo: ${e.javaClass.name}. Message ${e.message}")
                     e.printStackTrace()
+
                     call.respond(
                         HttpStatusCode.InternalServerError,
                         mapOf("error" to "Error al escribir el archivo")
@@ -271,13 +291,13 @@ fun Route.adminRoutes() {
                     )
                     return@delete
                 }
-                val cid = call.parameters["cid"]?.toInt() ?: return@delete call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "CID invalid"))
+                val cid = call.parameters["cid"]?.toInt() ?: return@delete call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_FORBIDDEN.ordinal, "CID invalid"))
 
                 if (!getDatabaseDaoImpl().checkIfUserIsServerAdmin(token)){
                     call.respond(
                         HttpStatusCode.Forbidden,
                         Errors(
-                            ErrorCodes.EER_FORBIDDEN.ordinal,
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
                             "Forbidden, you are not admin"
                         )
                     )
@@ -311,7 +331,7 @@ fun Route.adminRoutes() {
                     call.respond(
                         HttpStatusCode.Forbidden,
                         Errors(
-                            ErrorCodes.EER_FORBIDDEN.ordinal,
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
                             "Forbidden, you are not admin"
                         )
                     )
@@ -320,6 +340,46 @@ fun Route.adminRoutes() {
 
                 val users = getDatabaseDaoImpl().adminGetAllUsers()
                 call.respond(HttpStatusCode.OK, users)
+            }
+
+            get("/users/{uid}") {
+                val token = call.principal<JWTPrincipal>()?.subject?.toInt()
+                if (token == null) {
+                    // No deberia ser null, pero se hace la comprobacion por si acaso
+                    call.respond(
+                        HttpStatusCode.Unauthorized,
+                        Errors(
+                            ErrorCodes.ERR_INVALIDTOKEN.ordinal,
+                            "Invalid/Missing refresh token"
+                        )
+                    )
+                    return@get
+                }
+
+                if (!getDatabaseDaoImpl().checkIfUserIsServerAdmin(token)){
+                    call.respond(
+                        HttpStatusCode.Forbidden,
+                        Errors(
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
+                            "Forbidden, you are not admin"
+                        )
+                    )
+                    return@get
+                }
+
+                val uid = call.parameters["uid"]?.toInt() ?: return@get call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "No GID"))
+
+                val data = getDatabaseDaoImpl().getUsuarioByID(id = uid)
+                if (data != null){
+                    call.respond(HttpStatusCode.OK, DatosSimpleUsuarios(
+                        id = data.id.value,
+                        nombre = data.nombre,
+                        rol = if (data.rol == UserRoles.ADMIN_USER) {"Admin"} else {"User"},
+                        nivel = data.nivel
+                    ))
+                }else{
+                    call.respond(HttpStatusCode.NotFound, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "User doesn't exists"))
+                }
 
             }
 
@@ -341,7 +401,7 @@ fun Route.adminRoutes() {
                     call.respond(
                         HttpStatusCode.Forbidden,
                         Errors(
-                            ErrorCodes.EER_FORBIDDEN.ordinal,
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
                             "Forbidden, you are not admin"
                         )
                     )
@@ -369,7 +429,7 @@ fun Route.adminRoutes() {
                     call.respond(
                         HttpStatusCode.Forbidden,
                         Errors(
-                            ErrorCodes.EER_FORBIDDEN.ordinal,
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
                             "Forbidden, you are not admin"
                         )
                     )
@@ -390,6 +450,114 @@ fun Route.adminRoutes() {
                     call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
                 }
             }
+            delete("/groups/delete/{gid}"){
+                val token = call.principal<JWTPrincipal>()?.subject?.toInt()
+                if (token == null) {
+                    // No deberia ser null, pero se hace la comprobacion por si acaso
+                    call.respond(
+                        HttpStatusCode.Unauthorized,
+                        Errors(
+                            ErrorCodes.ERR_INVALIDTOKEN.ordinal,
+                            "Invalid/Missing refresh token"
+                        )
+                    )
+                    return@delete
+                }
+
+                if (!getDatabaseDaoImpl().checkIfUserIsServerAdmin(token)){
+                    call.respond(
+                        HttpStatusCode.Forbidden,
+                        Errors(
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
+                            "Forbidden, you are not admin"
+                        )
+                    )
+                    return@delete
+                }
+                val gid = call.parameters["gid"]?.toInt() ?: return@delete call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "No GID"))
+
+                if (getDatabaseDaoImpl().deleteGroup(gid)){
+                    call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
+                }else {
+                    call.respond(HttpStatusCode.NotModified, Errors(ErrorCodes.ERR_RESOURCENOTMODIFIED.ordinal, "Couldn't delete!"))
+                }
+            }
+
+            post("/user/create"){
+                val token = call.principal<JWTPrincipal>()?.subject?.toInt()
+                if (token == null) {
+                    // No deberia ser null, pero se hace la comprobacion por si acaso
+                    call.respond(
+                        HttpStatusCode.Unauthorized,
+                        Errors(
+                            ErrorCodes.ERR_INVALIDTOKEN.ordinal,
+                            "Invalid/Missing refresh token"
+                        )
+                    )
+                    return@post
+                }
+
+                if (!getDatabaseDaoImpl().checkIfUserIsServerAdmin(token)){
+                    call.respond(
+                        HttpStatusCode.Forbidden,
+                        Errors(
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
+                            "Forbidden, you are not admin"
+                        )
+                    )
+                    return@post
+                }
+
+                val data = call.receive<CreateUserAdmin>()
+
+                val d = getDatabaseDaoImpl().createUser(
+                    nombreusu = data.name,
+                    emailusu = data.email,
+                    passwordusu = data.password,
+                    lang = data.lang,
+                    utcOffset = data.utcOffset,
+                    role = if (data.role == "ADMIN") {UserRoles.ADMIN_USER} else {UserRoles.NORMAL_USER}
+                )
+                if (d != -1){
+                    call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
+                }else {
+                    call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCENOTCREATED.ordinal, "Couldn't create user"))
+                }
+            }
+            post("/user/delete/{cid}"){
+                val token = call.principal<JWTPrincipal>()?.subject?.toInt()
+                if (token == null) {
+                    // No deberia ser null, pero se hace la comprobacion por si acaso
+                    call.respond(
+                        HttpStatusCode.Unauthorized,
+                        Errors(
+                            ErrorCodes.ERR_INVALIDTOKEN.ordinal,
+                            "Invalid/Missing refresh token"
+                        )
+                    )
+                    return@post
+                }
+
+                if (!getDatabaseDaoImpl().checkIfUserIsServerAdmin(token)){
+                    call.respond(
+                        HttpStatusCode.Forbidden,
+                        Errors(
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
+                            "Forbidden, you are not admin"
+                        )
+                    )
+                    return@post
+                }
+
+                val data = call.parameters["cid"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "No CID"))
+
+                val d = getDatabaseDaoImpl().deleteUsuario(data)
+                if (d){
+                    call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
+                }else {
+                    call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCENOTCREATED.ordinal, "Couldn't create user"))
+                }
+            }
         }
     }
 }
@@ -402,11 +570,10 @@ data class FormClientData(
     var desc : String,
     var type : CosmeticType,
     var price : Int,
-    var theme : String,
+    var theme : String?,
     var fileName : String,
     var fileBytes: ByteArray?,
     var collection : String,
-    var layer : AvatarLayer?
 )
 
 suspend fun receiveFormDataFromClient(multipart : MultiPartData) : FormClientData {
@@ -421,7 +588,6 @@ suspend fun receiveFormDataFromClient(multipart : MultiPartData) : FormClientDat
     var fileName : String = ""
     var fileBytes: ByteArray? = null
     var collection : String = "DEFAULT"
-    var layer : AvatarLayer? = null
 
     multipart.forEachPart { part ->
         when (part) {
@@ -436,7 +602,6 @@ suspend fun receiveFormDataFromClient(multipart : MultiPartData) : FormClientDat
                     "theme" -> theme = part.value
                     "collection" -> collection = part.value
                     "rarity" -> rarityStr = part.value
-                    "layer" -> layer = AvatarLayer.valueOf(part.value)
                 }
             }
             is PartData.FileItem -> {
@@ -463,8 +628,7 @@ suspend fun receiveFormDataFromClient(multipart : MultiPartData) : FormClientDat
         theme = theme,
         fileName = fileName,
         fileBytes = fileBytes,
-        collection = collection,
-        layer = layer
+        collection = collection
     )
 }
 

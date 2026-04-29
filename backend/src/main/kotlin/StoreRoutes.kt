@@ -27,20 +27,20 @@ fun Route.storeRoutes() {
     authenticate("access-jwt") {
         route("/store") {
             get("/items") {
-                val uid = call.principal<JWTPrincipal>()!!.subject?.toInt() ?: return@get call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "No UID available"))
+                val uid = call.principal<JWTPrincipal>()!!.subject?.toInt() ?: return@get call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_FORBIDDEN.ordinal, "No UID available"))
                 call.respond(HttpStatusCode.OK, getDatabaseDaoImpl().getStoreItems(uid, true))
             }
             get("/items/admin") {
-                val uid = call.principal<JWTPrincipal>()!!.subject?.toInt() ?: return@get call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "No UID available"))
+                val uid = call.principal<JWTPrincipal>()!!.subject?.toInt() ?: return@get call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_FORBIDDEN.ordinal, "No UID available"))
                 if (getDatabaseDaoImpl().checkIfUserIsServerAdmin(uid)){
                     call.respond(HttpStatusCode.OK, getDatabaseDaoImpl().getStoreItems(uid, false))
                 }else {
-                    call.respond(HttpStatusCode.Forbidden, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "You are not administrator"))
+                    call.respond(HttpStatusCode.Forbidden, Errors(ErrorCodes.ERR_FORBIDDEN.ordinal, "You are not administrator"))
                 }
             }
             post("/buy/{id}") {
-                val uid = call.principal<JWTPrincipal>()!!.subject?.toInt() ?: return@post call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "No UID available"))
-                val cid = call.parameters["id"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Didn't catch the Cosmetic ID"))
+                val uid = call.principal<JWTPrincipal>()!!.subject?.toInt() ?: return@post call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_FORBIDDEN.ordinal, "No UID available"))
+                val cid = call.parameters["id"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_FORBIDDEN.ordinal, "Didn't catch the Cosmetic ID"))
 
                 when (getDatabaseDaoImpl().buyCosmetic(uid, cid)){
                     BuyCosmeticResponse.OKAY -> call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
@@ -52,8 +52,8 @@ fun Route.storeRoutes() {
                 }
             }
             post("/equip/{id}") {
-                val uid = call.principal<JWTPrincipal>()!!.subject?.toInt() ?: return@post call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "No UID available"))
-                val cid = call.parameters["id"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "Didn't catch the Cosmetic ID"))
+                val uid = call.principal<JWTPrincipal>()!!.subject?.toInt() ?: return@post call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_FORBIDDEN.ordinal, "No UID available"))
+                val cid = call.parameters["id"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_FORBIDDEN.ordinal, "Didn't catch the Cosmetic ID"))
 
                 when (getDatabaseDaoImpl().equipCosmetic(uid, cid)){
                     BuyCosmeticResponse.OKAY -> call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)

@@ -20,7 +20,7 @@ enum class ErrorCodes {
     /** El recurso no se puede crear */
     ERR_RESOURCENOTCREATED,
     /** No se permite el acceso a la ruta */
-    EER_FORBIDDEN,
+    ERR_FORBIDDEN,
     /** Error interno importante */
     ERR_INTERNALERROR,
     /** No se pudo modificar el recurso */

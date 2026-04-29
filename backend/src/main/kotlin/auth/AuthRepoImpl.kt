@@ -184,6 +184,12 @@ class AuthRepoImpl : AuthRepo {
         )
 
         if (resp) {
+            if (email != null) {
+                val code = (100000..999999).random().toString()
+                getDatabaseDaoImpl().saveConfirmationCode(uid, code)
+                sendEmail(email, code)
+            }
+
             // Pide que te desloguees
             UserBusSSE.publishSignOff(uid)
         }

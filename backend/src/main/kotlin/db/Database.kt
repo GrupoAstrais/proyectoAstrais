@@ -50,7 +50,7 @@ object DatabaseController {
         println(" User: $dbuser, DB: $dbname")
 
         database = Database.connect(
-            url = "jdbc:postgresql://database:$POSTGRES_PORT/$dbname",
+            url = url,
             driver = "org.postgresql.Driver",
             user = dbuser,
             password = dbpassword

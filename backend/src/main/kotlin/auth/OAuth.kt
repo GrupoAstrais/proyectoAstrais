@@ -139,7 +139,7 @@ fun Route.oauthRoutes() {
 
                 when (out) {
                     BuyCosmeticResponse.OKAY -> call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
-                    BuyCosmeticResponse.USER_NOT_FOUND -> call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "That UID is not valid!"))
+                    BuyCosmeticResponse.USER_NOT_FOUND -> call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_FORBIDDEN.ordinal, "That UID is not valid!"))
                     BuyCosmeticResponse.ALREADY_HAS_OBJECT -> call.respond(HttpStatusCode.NotModified, Errors(ErrorCodes.ERR_RESOURCEALREADYEXISTS.ordinal, "Error! There's an oauth of the same provided linked."))
                     else -> call.respond("what")
                 }
@@ -165,7 +165,7 @@ fun Route.oauthRoutes() {
 
                 when (out) {
                     BuyCosmeticResponse.OKAY -> call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
-                    BuyCosmeticResponse.USER_NOT_FOUND -> call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.EER_FORBIDDEN.ordinal, "That UID is not valid!"))
+                    BuyCosmeticResponse.USER_NOT_FOUND -> call.respond(HttpStatusCode.Unauthorized, Errors(ErrorCodes.ERR_FORBIDDEN.ordinal, "That UID is not valid!"))
                     BuyCosmeticResponse.NO_METHOD_REMAIN -> call.respond(HttpStatusCode.NotModified, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "If the method was deleted, the account would be orphan!"))
                     else -> call.respond("what")
                 }

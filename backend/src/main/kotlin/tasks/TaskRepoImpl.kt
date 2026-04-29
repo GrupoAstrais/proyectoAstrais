@@ -32,7 +32,7 @@ class TaskRepoImpl : TaskRepo{
                 TASKTYPE_UNIQUE -> {
                     if (req.extraUnico != null){
                         extraUnica = TareaUniqueData(
-                            fechaLimite = kotlinx.datetime.Instant.parse(req.extraUnico.fechaLimite).toLocalDateTime(TimeZone.UTC)
+                            fechaLimite = kotlin.time.Instant.parse(req.extraUnico.fechaLimite).toLocalDateTime(TimeZone.UTC)
                         )
                     }else{
                         return Pair(CreateTaskRepoResponse.RESP_MISSINGDATA, -2)

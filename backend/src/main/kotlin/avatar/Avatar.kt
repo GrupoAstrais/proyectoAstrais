@@ -1,6 +1,5 @@
 package avatar
 
-import AvatarLayer
 import com.astrais.ErrorCodes
 import com.astrais.Errors
 import com.astrais.db.getDatabaseDaoImpl
@@ -13,10 +12,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class AvatarLayerDTO(
-    val slot: String,
-    val layer: AvatarLayer,
-    val assetRef: String,
-    val cosmeticId: Int
+    val cosmeticId: Int,
+    val name: String,
+    val imageRef: String,
+    val rareza : String
 )
 
 fun Route.avatarRoute(){
@@ -24,11 +23,20 @@ fun Route.avatarRoute(){
         post("/avatar/") {
             val uid = call.principal<JWTPrincipal>()!!.subject?.toInt() ?: return@post call.respond(
                 HttpStatusCode.Unauthorized, Errors(
-                    ErrorCodes.EER_FORBIDDEN.ordinal, "No UID available")
+                    ErrorCodes.ERR_FORBIDDEN.ordinal, "No UID available")
             )
 
-            val layer = getDatabaseDaoImpl().retrieveAvatar(uid)
-            call.respond(HttpStatusCode.OK, mapOf("avatarLayers" to layer))
+            val layer = getDatabaseDaoImpl().getUserEquippedAvatar(uid)
+            if (layer == null){
+                call.respond(HttpStatusCode.OK, mapOf("avatar" to null))
+            } else {
+                call.respond(HttpStatusCode.OK, mapOf("avatar" to AvatarLayerDTO(
+                    cosmeticId = layer.id.value,
+                    name = layer.nombre,
+                    imageRef = layer.assetRef,
+                    rareza = layer.rareza.name
+                )))
+            }
         }
     }
 }

@@ -142,6 +142,8 @@ fun Route.sseRoutes() {
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 // Desconectar cliente
+            } finally {
+                UserBusSSE.publishSignOff(uid)
             }
         }
     }
