@@ -74,7 +74,7 @@ En resumen: en Astrais tachas pendientes de una lista y a la vez **subes de nive
 
 Al abrir Astrais por primera vez, verás la pantalla de bienvenida con dos opciones: explorar como invitado o acceder con tu cuenta.
 
-### 2.1 Modo Invitado
+### 2.1 Modo Invitado (Android)
 
 Si quieres echarle un vistazo a la aplicación antes de registrarte, puedes entrar en **Modo Invitado**. Es como probar un videojuego en demo.
 
