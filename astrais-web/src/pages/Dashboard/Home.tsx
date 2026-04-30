@@ -223,7 +223,7 @@ export default function Home() {
     }
   };
 
-  const dashboardTasks = [...getDailyTasks(tasks), ...getHabitTasks(tasks)].filter((task) => isTaskVisibleInDefaultList(task) && !isTaskCompleted(task));
+  const dashboardTasks = [...getDailyTasks(tasks), ...getHabitTasks(tasks)].filter((task) => isTaskVisibleInDefaultList(task) && !isTaskCompleted(task) && task.idObjetivo === undefined);
   const availableObjectives = tasks.filter((task) => task.id !== initialDataModal?.id);
 
   const editTaskHandle = (taskId: number) => {
