@@ -23,3 +23,54 @@
 </div>
 
 ---
+
+## Sobre el Proyecto
+ 
+Astraïs resuelve uno de los mayores obstáculos para mantener la productividad personal: la falta de constancia. Transforma tareas cotidianas en una experiencia gamificada donde los usuarios pueden:
+ 
+- **Gestionar tareas** personales y grupales con seguimiento visual
+- **Subir de nivel** mediante experiencia (XP) acumulada
+- **Comprar cosméticos** con Ludiones (moneda virtual)
+- **Colaborar en grupos** con roles definidos
+- **Acceder a minijuegos** como recompensa
+- **Personalizar avatar** y adoptar mascotas
+ 
+### Problema que resuelve:
+- Falta de motivación inmediata en sistemas tradicionales
+- Monotonía en rutinas repetitivas
+- Ausencia de refuerzo positivo visible
+- Dificultad para compartir objetivos colaborativamente
+
+## Capturas de Pantalla
+
+### Interfaz Principal
+![Dashboard principal](./docs/images/dashboard.png)
+
+### Gestión de Tareas
+![Tareas](./docs/images/dashboard.png)
+
+### Sistema de Grupos
+![Grupos](./docs/images/dashboard.png)
+
+
+### Tienda de Cosméticos
+![Tienda](./docs/images/dashboard.png)
+
+
+## Características Principales
+
+### Implementadas:
+- Autenticación segura (JWT + OAuth Google)
+- Gestión completa de tareas
+- Sistema de grupos colaborativos
+- Tienda virtual con cosméticos
+- Sistema de niveles y XP
+- Personalización de avatar
+
+### En Desarrollo:
+- Sistema de logros y achievements
+- Minijuegos integrados
+- Sistema de amigos
+- Notificaciones push
+- Rachas avanzadas
+- SSE
