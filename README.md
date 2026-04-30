@@ -4,11 +4,12 @@
 
 ![Banner principal](./docs/images/banner.svg)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Kotlin](https://img.shields.io/badge/Kotlin-1.9.0-purple.svg?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
-[![React](https://img.shields.io/badge/React-18.2.0-blue.svg?logo=react&logoColor=white)](https://reactjs.org/)
-[![Android](https://img.shields.io/badge/Android-API%2034+-green.svg?logo=android&logoColor=white)](https://developer.android.com/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue.svg?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Kotlin Backend](https://img.shields.io/badge/Kotlin_Backend-2.1.0-purple.svg?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
+[![Kotlin Android](https://img.shields.io/badge/Kotlin_Android-2.0.21-purple.svg?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
+[![React](https://img.shields.io/badge/React-19.2.0-blue.svg?logo=react&logoColor=white)](https://react.dev/)
+[![Android](https://img.shields.io/badge/Android-API%2035-green.svg?logo=android&logoColor=white)](https://developer.android.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-blue.svg?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Ktor](https://img.shields.io/badge/Ktor-3.1.3-orange.svg?logo=ktor&logoColor=white)](https://ktor.io/)
 
 > **Convierte tu productividad en una aventura** <br />
 > Sistema de gamificación para hábitos y tareas con progresión de personaje, recompensas y colaboración social.
@@ -73,4 +74,49 @@ Astraïs resuelve uno de los mayores obstáculos para mantener la productividad 
 - Sistema de amigos
 - Notificaciones push
 - Rachas avanzadas
-- SSE
+- Eventos en tiempo real mediante SSE
+
+## Stack Tecnológico
+
+### Backend
+
+- **Kotlin**
+- **Ktor**
+- **Exposed ORM**
+- **PostgreSQL**
+- **JWT**
+- **Docker**
+
+El backend está desarrollado con Ktor sobre Kotlin/JVM. Expone una API REST con autenticación JWT, OAuth con Google, gestión de usuarios, tareas, grupos, tienda, inventario, recompensas y comunicación con PostgreSQL mediante Exposed ORM.
+
+### Aplicación Web
+
+- **React**
+- **TypeScript**
+- **Vite**
+- **Tailwind CSS**
+- **React Router**
+- **Axios**
+
+La aplicación web está desarrollada con React, TypeScript y Vite. Utiliza Tailwind CSS para estilos, React Router para navegación y Axios para la comunicación con el backend.
+ 
+### Aplicación Android
+
+- **Kotlin**
+- **Jetpack Compose**
+- **Ktor Client**
+- **Room**
+- **DataStore**
+- **Hilt**
+
+La aplicación Android está desarrollada en Kotlin con Jetpack Compose. Sigue una arquitectura basada en estado, cliente Ktor para comunicación con la API, Room para persistencia local, DataStore para preferencias y Hilt para inyección de dependencias.
+
+
+### Infraestructura
+
+- **Docker**
+- **Docker Compose**
+- **PostgreSQL 17**
+- **Nginx**
+
+El proyecto incluye un `docker-compose.yml` con servicios para backend y base de datos. PostgreSQL se ejecuta en contenedor con volumen persistente y el backend se construye mediante un Dockerfile basado en Gradle y Eclipse Temurin.
