@@ -65,10 +65,10 @@
        id="rect5" /><linearGradient
        id="linearGradient4"
        inkscape:collect="always"><stop
-         style="stop-color:#0f172a;stop-opacity:0.56666666;"
+         style="stop-color:#0f172a;stop-opacity:1;"
          offset="0.53864735"
          id="stop4" /><stop
-         style="stop-color:#000000;stop-opacity:0.56666666;"
+         style="stop-color:#000000;stop-opacity:1;"
          offset="1"
          id="stop5" /></linearGradient><rect
        x="531.3538"
@@ -84,9 +84,9 @@
        x2="308.77694"
        y2="64.589219"
        gradientUnits="userSpaceOnUse" /></defs><rect
-     style="fill:url(#linearGradient5);fill-opacity:1;stroke-width:0.264583"
+     style="fill:url(#linearGradient5);stroke-width:0.264583"
      id="rect1"
-     width="318.71375"
+     width="318.71399"
      height="153.4684"
      x="-9.9368029"
      y="-12.14498" /><text
