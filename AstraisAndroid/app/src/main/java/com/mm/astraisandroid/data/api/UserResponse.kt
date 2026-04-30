@@ -68,6 +68,7 @@ data class UserMeResponse(
     val ludiones: Int,
     val personalGid: Int?,
     val equippedPetRef: String?,
+    val equippedAvatarRef: String? = null,
     val themeColors: String? = null
 )
 
@@ -108,6 +109,7 @@ fun UserMeResponse.toDomain(): User {
         ludiones = this.ludiones,
         personalGid = this.personalGid,
         equippedPetRef = this.equippedPetRef,
+        equippedAvatarRef = this.equippedAvatarRef,
         theme = parsedTheme
     )
 }

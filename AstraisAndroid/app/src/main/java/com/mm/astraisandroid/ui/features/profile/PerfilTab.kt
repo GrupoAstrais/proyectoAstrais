@@ -51,6 +51,7 @@ import com.mm.astraisandroid.ui.components.AstraisScreenHeader
 import com.mm.astraisandroid.ui.components.Glassmorphism
 import com.mm.astraisandroid.ui.features.auth.AuthBackground
 import androidx.compose.foundation.text.BasicTextField
+import com.mm.astraisandroid.util.AvatarImageRenderer
 
 @Composable
 fun PerfilTab(
@@ -180,7 +181,10 @@ private fun ProfileHeroCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                AvatarBubble(initial = name.firstOrNull()?.uppercaseChar()?.toString() ?: "?")
+                AvatarImageRenderer(
+                    assetRef = user?.equippedAvatarRef,
+                    initial = name.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
+                )
 
                 Column(
                     modifier = Modifier.weight(1f),
@@ -254,32 +258,6 @@ private fun ProfileHeroCard(
     }
 }
 
-@Composable
-private fun AvatarBubble(initial: String) {
-    Box(
-        modifier = Modifier
-            .size(80.dp)
-            .clip(CircleShape)
-            .background(
-                Brush.radialGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
-                        MaterialTheme.colorScheme.surface.copy(alpha = 0.2f)
-                    )
-                )
-            )
-            .border(2.dp, Color.White.copy(alpha = 0.25f), CircleShape),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = initial,
-            style = MaterialTheme.typography.displaySmall,
-            fontWeight = FontWeight.Black,
-            color = MaterialTheme.colorScheme.onBackground,
-            fontFamily = FontFamily.Monospace
-        )
-    }
-}
 
 @Composable
 private fun InlineNameEditor(

@@ -11,6 +11,7 @@ package com.mm.astraisandroid.data.models
  * @property ludiones Moneda virtual del juego, utilizada para comprar en la tienda.
  * @property personalGid Identificador del grupo personal asociado al usuario.
  * @property equippedPetRef Referencia al asset de la mascota que el usuario tiene equipada.
+ * @property equippedAvatarRef Referencia al asset del avatar que el usuario tiene equipado.
  * @property theme Tema de colores equipado actualmente.
  */
 data class User(
@@ -22,6 +23,7 @@ data class User(
     val ludiones: Int,
     val personalGid: Int?,
     val equippedPetRef: String?,
+    val equippedAvatarRef: String?,
     val theme: Theme?
 )
 

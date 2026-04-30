@@ -112,7 +112,16 @@ fun LoginScreen(
                     val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
                     val idToken = googleIdTokenCredential.idToken
 
-                    viewModel.loginWithGoogle(idToken)
+                    if (idToken != null) {
+                        viewModel.loginWithGoogle(idToken)
+                    } else {
+                        // Token no obtenido correctamente
+                        Toast.makeText(context, "Error: token de Google vacío", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    // No se obtuvo un token Google Id Token válido
+                    Toast.makeText(context, "No se pudo obtener tokens de Google", Toast.LENGTH_SHORT).show()
+                    Log.e("GOOGLE_LOGIN", "Credential no es GoogleIdTokenCredential: ${credential?.javaClass?.simpleName}")
                 }
             } catch (e: GetCredentialException) {
                 Log.e("GOOGLE_LOGIN", "Error de CredentialManager: ${e.javaClass.simpleName} - ${e.errorMessage}")

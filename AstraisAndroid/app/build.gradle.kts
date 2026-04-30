@@ -98,6 +98,9 @@ dependencies {
     // ### Lottie ###
     implementation("com.airbnb.android:lottie-compose:6.4.0")
 
+    // ### Coil ###
+    implementation("io.coil-kt:coil-compose:2.7.0")
+
     // ### ROOM ###
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")

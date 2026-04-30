@@ -253,6 +253,11 @@ fun Route.authRoutes() {
                     EntidadCosmetico.findById(cosmeticoId)?.assetRef
                 }
             }
+            val avatarEquipadoAsset = transaction {
+                user.id_avatar_equipado?.let { cosmeticoId ->
+                    EntidadCosmetico.findById(cosmeticoId)?.assetRef
+                }
+            }
 
             call.respond(
                     HttpStatusCode.OK,
@@ -265,6 +270,7 @@ fun Route.authRoutes() {
                             ludiones = user.ludiones,
                             personalGid = gidPersonal,
                             equippedPetRef = mascotaEquipadaAsset,
+                            equippedAvatarRef = avatarEquipadoAsset,
                             themeColors = user.themeColors,
                             isAdmin = user.rol == UserRoles.ADMIN_USER
                     )
@@ -320,6 +326,7 @@ data class UserMeResponse(
     val ludiones: Int,
     val personalGid: Int?,
     val equippedPetRef: String?,
+    val equippedAvatarRef: String?,
     val themeColors: String? = null,
     val isAdmin : Boolean
 )

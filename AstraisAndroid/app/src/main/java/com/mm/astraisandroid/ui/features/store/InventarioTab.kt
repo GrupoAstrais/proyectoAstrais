@@ -26,6 +26,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mm.astraisandroid.util.LottiePetRenderer
+import com.mm.astraisandroid.util.AvatarImageRenderer
 import com.mm.astraisandroid.ui.components.AstraisGlassSurface
 import com.mm.astraisandroid.ui.components.AstraisGlassCard
 import com.mm.astraisandroid.ui.components.AstraisScreenHeader
@@ -210,7 +211,15 @@ fun PetInventoryCard(item: Cosmetic, onClick: () -> Unit) {
             backgroundAlpha = if (isEquipped) Glassmorphism.BG_TERTIARY else Glassmorphism.BG_SECONDARY
         ) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                if (item.type.name == "AVATAR_PART") {
+                AvatarImageRenderer(
+                    assetRef = item.assetRef,
+                    initial = item.name.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
+                    size = 50.dp
+                )
+            } else {
                 LottiePetRenderer(assetRef = item.assetRef ?: "", modifier = Modifier.size(50.dp))
+            }
             }
         }
 

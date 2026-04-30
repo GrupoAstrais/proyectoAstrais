@@ -31,6 +31,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mm.astraisandroid.util.LottiePetRenderer
+import com.mm.astraisandroid.util.AvatarImageRenderer
 import com.mm.astraisandroid.ui.features.auth.AuthBackground
 import com.mm.astraisandroid.ui.components.AstraisScreenHeader
 import com.mm.astraisandroid.ui.components.Glassmorphism
@@ -279,7 +280,15 @@ fun PetStoreCard(item: Cosmetic, modifier: Modifier = Modifier, onClick: () -> U
                 ))),
             contentAlignment = Alignment.Center
         ) {
-            LottiePetRenderer(assetRef = item.assetRef, modifier = Modifier.size(70.dp))
+            if (item.type.name == "AVATAR_PART") {
+                AvatarImageRenderer(
+                    assetRef = item.assetRef,
+                    initial = item.name.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
+                    size = 70.dp
+                )
+            } else {
+                LottiePetRenderer(assetRef = item.assetRef, modifier = Modifier.size(70.dp))
+            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
