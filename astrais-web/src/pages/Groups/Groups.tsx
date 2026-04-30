@@ -12,7 +12,6 @@ import type { IGroup, ITarea } from "../../types/Interfaces";
 import {
   buildCreateTaskRequest,
   buildEditTaskRequest,
-  buildTaskFormData,
   completeTask,
   createLocalTask,
   createGroup,
@@ -30,10 +29,10 @@ import {
   isTaskCompleted,
   isTaskVisibleInDefaultList,
   removeTaskWithSubtasks,
-  shouldRecreateTaskOnEdit,
   sortTasksByCompleted,
   toggleSubtaskCompleted,
   toggleTaskCompleted,
+  uncompleteTask,
   type ITaskFormData
 } from "../../data/Api";
 
@@ -79,26 +78,6 @@ const normalizeTaskFormData = (data: ITaskFormData, fallbackObjetivoId?: number)
   ...data,
   idObjetivo: normalizeObjectiveId(data.idObjetivo) ?? normalizeObjectiveId(fallbackObjetivoId)
 });
-
-const recreateTaskChildren = async (gid: number, parentTaskId: number, subtasks: ITarea[]): Promise<ITarea[]> => {
-  const recreatedSubtasks: ITarea[] = [];
-
-  for (const subtask of subtasks) {
-    const subtaskData = buildTaskFormData(subtask);
-    const subtaskId = await createTask(buildCreateTaskRequest(gid, subtaskData, parentTaskId));
-
-    recreatedSubtasks.push(
-      createLocalTask(subtaskData, {
-        gid,
-        id: subtaskId,
-        idObjetivo: parentTaskId,
-        tipo: "UNICO"
-      })
-    );
-  }
-
-  return recreatedSubtasks;
-};
 
 export default function Groups() {
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
@@ -264,28 +243,6 @@ export default function Groups() {
     ]);
   };
 
-  const recreateTaskWithChanges = async (currentTask: ITarea, currentSubtasks: ITarea[], data: ITaskFormData) => {
-    const normalizedData = normalizeTaskFormData(data, currentTask.idObjetivo);
-    const createdTaskId = await createTask(buildCreateTaskRequest(activeGroup, normalizedData));
-    const recreatedTasks: ITarea[] = [
-      createLocalTask(normalizedData, {
-        gid: activeGroup,
-        id: createdTaskId,
-        idObjetivo: normalizedData.idObjetivo
-      })
-    ];
-
-    if (typeof normalizedData.idObjetivo !== "number") {
-      recreatedTasks.push(...(await recreateTaskChildren(activeGroup, createdTaskId, currentSubtasks)));
-    }
-
-    for (const subtask of currentSubtasks) {
-      await deleteTask(subtask.id);
-    }
-
-    await deleteTask(currentTask.id);
-    updateActiveGroupTasks((groupTasks) => [...removeTaskWithSubtasks(groupTasks, currentTask.id), ...recreatedTasks]);
-  };
 
   const editTaskWithSubtasks = async (currentTask: ITarea, data: ITaskFormData) => {
     const normalizedData = normalizeTaskFormData(data, currentTask.idObjetivo);
@@ -318,13 +275,9 @@ export default function Groups() {
         return;
       }
 
-      const currentSubtasks = activeGroupData ? getTaskSubtasks(activeGroupData.tasks, initialDataModal.id) : [];
-
-      if (shouldRecreateTaskOnEdit(initialDataModal, normalizedData)) {
-        await recreateTaskWithChanges(initialDataModal, currentSubtasks, normalizedData);
-      } else {
-        await editTaskWithSubtasks(initialDataModal, normalizedData);
-      }
+      
+      await editTaskWithSubtasks(initialDataModal, normalizedData);
+      
 
       closeTaskModalHandle();
     } catch (submitError) {
@@ -427,25 +380,52 @@ export default function Groups() {
   };
 
   const handleToggleTaskCompleted = async (taskId: number) => {
+    const groupTasks = activeGroupData?.tasks ?? [];
+    const task = groupTasks.find((t) => t.id === taskId);
+    if (!task) return;
+
+    const subtasks = getTaskSubtasks(groupTasks, taskId);
+    const willComplete = !isTaskCompleted(task);
+
     try {
-      await completeTask(taskId);
-    } catch (completeError) {
-      console.error("Error al completar la tarea del grupo:", completeError);
+        if (willComplete) {
+            await Promise.all(
+                subtasks
+                    .filter((s) => !isTaskCompleted(s))
+                    .map((s) => completeTask(s.id))
+            );
+            await completeTask(taskId);
+        } else {
+            await uncompleteTask(taskId);
+            await Promise.all(
+                subtasks
+                    .filter((s) => isTaskCompleted(s))
+                    .map((s) => uncompleteTask(s.id))
+            );
+        }
+    } catch (err) {
+        console.error("Error al completar/descompletar tarea del grupo:", err);
     } finally {
-      updateActiveGroupTasks((groupTasks) => toggleTaskCompleted(groupTasks, `${taskId}`));
+        updateActiveGroupTasks((groupTasks) => toggleTaskCompleted(groupTasks, `${taskId}`));
     }
   };
 
   const handleToggleSubtaskCompleted = async (taskId: number, subtaskId: number) => {
     const subtask = activeGroupData?.tasks.find((task) => task.id === subtaskId);
-    const shouldSyncParent = subtask ? !isTaskCompleted(subtask) : false;
+    const parentTask = activeGroupData?.tasks.find((task) => task.id === taskId);
+    if (!subtask) return;
 
     try {
-      await completeTask(subtaskId);
-      if (shouldSyncParent) {
+      if (isTaskCompleted(subtask)) {
+        await uncompleteTask(subtaskId);
+        if (parentTask && isTaskCompleted(parentTask)) {
+          await uncompleteTask(taskId);
+        }
+      } else {
+        await completeTask(subtaskId);
         const siblingSubtasks = getTaskSubtasks(activeGroupData?.tasks ?? [], taskId).filter((task) => task.id !== subtaskId);
 
-        if (siblingSubtasks.every((task) => isTaskCompleted(task))) {
+        if (parentTask && !isTaskCompleted(parentTask) && siblingSubtasks.every((task) => isTaskCompleted(task))) {
           await completeTask(taskId);
         }
       }

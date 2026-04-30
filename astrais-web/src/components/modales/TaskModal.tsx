@@ -73,7 +73,7 @@ export default function Modal({
       return;
     }
 
-    if (formData.taskType === "HABITO" && !formData.habitFrequency) {
+    if (formData.taskType === "HABITO" && !formData.habitFrequency && !initialData) {
       alert("Selecciona una frecuencia para el habito.");
       return;
     }
@@ -156,7 +156,7 @@ export default function Modal({
           />
         </div>
 
-        {formData.taskType === "UNICO" && (
+        {formData.taskType === "UNICO" && !initialData && (
           <div className="rounded-md border border-white/15 bg-accent-beige-300/80 px-2 py-4">
             <input
               type="date"

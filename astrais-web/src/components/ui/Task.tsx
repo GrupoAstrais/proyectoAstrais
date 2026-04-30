@@ -71,8 +71,8 @@ export default function Task({ onToggleConfig, data, subtasks = [], onComplete, 
 
           <div className="flex flex-col gap-2">
             {subtasks.map((subtask) => (
-              <label key={subtask.id} className="flex flex-row items-center justify-between gap-3">
-                <span>{subtask.titulo}</span>
+              <label onClick={(e) => e.stopPropagation()} key={subtask.id} className="flex flex-row items-center justify-between gap-3">
+                <span  className={`${!isTaskCompleted(subtask) ? '' : 'text-white/50 line-through decoration-primary-700'}`}>{subtask.titulo}</span>
                 <input
                   id={`subtask-${subtask.id}`}
                   checked={isTaskCompleted(subtask)}

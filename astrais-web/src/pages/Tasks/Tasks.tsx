@@ -10,7 +10,6 @@ import ButtonComplete from "../../components/ui/ButtonComplete";
 import {
   buildCreateTaskRequest,
   buildEditTaskRequest,
-  buildTaskFormData,
   completeTask,
   createLocalTask,
   createTask,
@@ -26,10 +25,10 @@ import {
   getUserData,
   isTaskCompleted,
   removeTaskWithSubtasks,
-  shouldRecreateTaskOnEdit,
   sortTasksByCompleted,
   toggleSubtaskCompleted,
   toggleTaskCompleted,
+  uncompleteTask,
   type ITaskFormData,
   type TTaskTimeFilter
 } from "../../data/Api";
@@ -46,17 +45,6 @@ const normalizeTaskFormData = (data: ITaskFormData, fallbackObjetivoId?: number)
   idObjetivo: normalizeObjectiveId(data.idObjetivo) ?? normalizeObjectiveId(fallbackObjetivoId)
 });
 
-const recreateSubtasks = async (gid: number, parentId: number, subtasks: ITarea[]): Promise<ITarea[]> => {
-  const results: ITarea[] = [];
-
-  for (const subtask of subtasks) {
-    const subtaskData = buildTaskFormData(subtask);
-    const subtaskId = await createTask(buildCreateTaskRequest(gid, subtaskData, parentId));
-    results.push(createLocalTask(subtaskData, { gid, id: subtaskId, idObjetivo: parentId, tipo: "UNICO" }));
-  }
-
-  return results;
-};
 
 // ---------------------------------------------------------------------------
 // Component
@@ -133,19 +121,6 @@ export default function Tasks() {
     );
   };
 
-  const handleRecreate = async (currentTask: ITarea, currentSubtasks: ITarea[], data: ITaskFormData) => {
-    const newId = await createTask(buildCreateTaskRequest(personalGroupId!, data));
-    const recreated: ITarea[] = [
-      createLocalTask(data, { gid: personalGroupId!, id: newId, idObjetivo: data.idObjetivo })
-    ];
-
-    if (typeof data.idObjetivo !== "number") {
-      recreated.push(...(await recreateSubtasks(personalGroupId!, newId, currentSubtasks)));
-    }
-
-    await Promise.all([...currentSubtasks.map((s) => deleteTask(s.id)), deleteTask(currentTask.id)]);
-    setTasks((prev) => [...removeTaskWithSubtasks(prev, currentTask.id), ...recreated]);
-  };
 
   const handleModalSubmit = async (data: ITaskFormData) => {
     const normalized = normalizeTaskFormData(data, initialDataModal?.idObjetivo);
@@ -156,12 +131,7 @@ export default function Tasks() {
       if (!initialDataModal) {
         await handleCreate(normalized);
       } else {
-        const subtasks = getTaskSubtasks(tasks, initialDataModal.id);
-        if (shouldRecreateTaskOnEdit(initialDataModal, normalized)) {
-          await handleRecreate(initialDataModal, subtasks, normalized);
-        } else {
-          await handleEdit(initialDataModal, normalized);
-        }
+        await handleEdit(initialDataModal, normalized);
       }
 
       closeModal();
@@ -188,24 +158,52 @@ export default function Tasks() {
   // ---------------------------------------------------------------------------
 
   const handleToggleTask = async (taskId: number) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+
+    const subtasks = getTaskSubtasks(tasks, taskId);
+    const willComplete = !isTaskCompleted(task);
+
     try {
-      await completeTask(taskId);
+        if (willComplete) {
+            // Completar hijas primero, luego padre
+            await Promise.all(
+                subtasks
+                    .filter((s) => !isTaskCompleted(s))
+                    .map((s) => completeTask(s.id))
+            );
+            await completeTask(taskId);
+        } else {
+            // Descompletar padre primero, luego hijas
+            await uncompleteTask(taskId);
+            await Promise.all(
+                subtasks
+                    .filter((s) => isTaskCompleted(s))
+                    .map((s) => uncompleteTask(s.id))
+            );
+        }
+    } catch (err) {
+        console.error("Error al completar/descompletar tarea:", err);
     } finally {
-      setTasks((prev) => toggleTaskCompleted(prev, `${taskId}`));
+        setTasks((prev) => toggleTaskCompleted(prev, `${taskId}`));
     }
   };
 
   const handleToggleSubtask = async (taskId: number, subtaskId: number) => {
     const subtask = tasks.find((t) => t.id === subtaskId);
-    const wasIncomplete = subtask ? !isTaskCompleted(subtask) : false;
+    const parentTask = tasks.find((t) => t.id === taskId);
+    if (!subtask) return;
 
     try {
-      await completeTask(subtaskId);
-
-      if (wasIncomplete) {
+      if (isTaskCompleted(subtask)) {
+        await uncompleteTask(subtaskId);
+        if (parentTask && isTaskCompleted(parentTask)) {
+          await uncompleteTask(taskId);
+        }
+      } else {
+        await completeTask(subtaskId);
         const siblings = getTaskSubtasks(tasks, taskId).filter((t) => t.id !== subtaskId);
-        const parentTask = tasks.find((t) => t.id === taskId);
-        if (parentTask && siblings.every(isTaskCompleted)) {
+        if (parentTask && !isTaskCompleted(parentTask) && siblings.every(isTaskCompleted)) {
           await completeTask(taskId);
         }
       }

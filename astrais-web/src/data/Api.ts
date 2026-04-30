@@ -418,6 +418,29 @@ export async function completeTask(tid: number) : Promise<void> {
     }
 }
 
+export async function uncompleteTask(tid: number) : Promise<void> {
+    try {
+        const data = await instance.patch("/tasks/"+tid+"/uncomplete");
+
+        if (data.status >= 200 && data.status < 300) {
+            console.error("Successful user task uncomplete! ");
+
+            return Promise.resolve();
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            console.error("STATUS:", err.response?.status);
+            console.error("DATA:", err.response?.data);
+        } else {
+            console.error(err);
+        }
+        return Promise.reject();
+    }
+}
+
 export async function deleteTask(tid: number) : Promise<void> {
     try {
         const data = await instance.delete("/tasks/"+tid+"/delete");
@@ -726,32 +749,6 @@ export const buildEditTaskRequest = (data: ITaskFormData): EditTask => {
     };
 }
 
-export const shouldRecreateTaskOnEdit = (task: ITarea, data: ITaskFormData): boolean => {
-    const nextTaskType =
-        data.taskType === "HABITO"
-            ? "HABITO"
-            : data.taskType === "OBJETIVO"
-                ? "OBJETIVO"
-                : "UNICO";
-
-    if (task.tipo !== nextTaskType) {
-        return true;
-    }
-
-    if (nextTaskType === "HABITO") {
-        return getTaskHabitFrequency(task) !== data.habitFrequency;
-    }
-
-    if (getTaskDate(task) !== normalizeTaskDateString(data.taskDate)) {
-        return true;
-    }
-
-    if (data.idObjetivo || task.tipo === "OBJETIVO") {
-        return true;
-    }
-
-    return false;
-}
 
 export const createLocalTask = (
     data: ITaskFormData,
