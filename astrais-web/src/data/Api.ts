@@ -1,11 +1,13 @@
 import axios from 'axios';
-import type { AddUserToGroup, CreateGroup, CreateTask, EditGroup, EditTask, LoginRequest, RegisterRequest, UserData, UserGroups, UserGroupsResponse, UserTasksResponse, VerifyRequest } from '../types/LoginRequest';
+import type { AddUserToGroup, CreateGroup, CreateTask, EditGroup, EditTask, EditUser, EventosGrupos, GroupInvitacion, GroupInvitacionRespuesta, LoginRequest, MembersResponse, PassOwnershipGroup, RegisterRequest, RevokeGroupInvit, SetEmailLogin, SetMemberRole, UserData, UserGroups, UserGroupsResponse, UserTasksResponse, VerifyRequest } from '../types/LoginRequest';
 import type { IGroup, ITarea } from '../types/Interfaces';
 
 
 export const API_BASE_URL = 'http://192.168.3.148:5684' //url desde las practicas
 // export const API_BASE_URL = 'http://192.168.56.1:5684' //url desde casa
 
+
+// TOKENS
 
 let jwtToken: string | null = null
 
@@ -96,6 +98,7 @@ instance.interceptors.response.use(
 );
 
 
+//AUTH DE USUARIO 
 
 export async function performLogin(req: LoginRequest) : Promise<void> {
     try {
@@ -176,6 +179,72 @@ export async function confirmRegister(req: VerifyRequest) : Promise<void> {
     }
 }
 
+export async function editUser(req: EditUser) : Promise<void> {
+    try {
+        const data = await instance.patch("/auth/editUser", req);
+        if (data.status >= 200 && data.status < 300) {
+            
+            console.error("Successful user perfil edit! ");
+            return Promise.resolve();
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            console.error("STATUS:", err.response?.status);
+            console.error("DATA:", err.response?.data);
+        } else {
+            console.error(err);
+        }
+        return Promise.reject();
+    }
+}
+
+export async function deleteUser() : Promise<void> {
+    try {
+        const data = await instance.delete("/auth/deleteUser");
+        if (data.status >= 200 && data.status < 300) {
+            
+            console.error("Successful user delete! ");
+            return Promise.resolve();
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            console.error("STATUS:", err.response?.status);
+            console.error("DATA:", err.response?.data);
+        } else {
+            console.error(err);
+        }
+        return Promise.reject();
+    }
+}
+
+export async function setEmailLogin(req: SetEmailLogin) : Promise<void> {
+    try {
+        const data = await instance.patch("/auth/setEmailLogin", req);
+        if (data.status >= 200 && data.status < 300) {
+            
+            console.error("Successful email login edit! ");
+            return Promise.resolve();
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            console.error("STATUS:", err.response?.status);
+            console.error("DATA:", err.response?.data);
+        } else {
+            console.error(err);
+        }
+        return Promise.reject();
+    }
+}
+
 export async function getUserData() : Promise<UserData> {
     try {
 
@@ -200,6 +269,8 @@ export async function getUserData() : Promise<UserData> {
         return Promise.reject();
     }
 }
+
+// GRUPOS
 
 export async function getUserGroup() : Promise<UserGroups[]> {
     try {
@@ -305,7 +376,301 @@ export async function addUserToGroup(req: AddUserToGroup) : Promise<void> {
         const data = await instance.post("/groups/addUser", req);
         if (data.status >= 200 && data.status < 300) {
 
-            console.error("Successful user profile set up! ");
+            console.error("Successful user add to group! ");
+            return Promise.resolve();
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            console.error("STATUS:", err.response?.status);
+            console.error("DATA:", err.response?.data);
+        } else {
+            console.error(err);
+        }
+        return Promise.reject();
+    }
+}
+
+export async function userLeaveGroup(req: number) : Promise<void> {
+    try {
+        const data = await instance.post("/groups/leave", req);
+        if (data.status >= 200 && data.status < 300) {
+
+            console.error("Successfuly left group! ");
+            return Promise.resolve();
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            console.error("STATUS:", err.response?.status);
+            console.error("DATA:", err.response?.data);
+        } else {
+            console.error(err);
+        }
+        return Promise.reject();
+    }
+}
+
+export async function removeUserFromGroup(req: AddUserToGroup) : Promise<void> {
+    try {
+        const data = await instance.post("/groups/removeUser", req);
+        if (data.status >= 200 && data.status < 300) {
+
+            console.error("Successful user remove from group! ");
+            return Promise.resolve();
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            console.error("STATUS:", err.response?.status);
+            console.error("DATA:", err.response?.data);
+        } else {
+            console.error(err);
+        }
+        return Promise.reject();
+    }
+}
+
+export async function membersGroups(gid: number) : Promise<MembersResponse[]> {
+    try {
+        const data = await instance.get("/groups/"+gid+"/members");
+        if (data.status >= 200 && data.status < 300) {
+
+            const res = data.data as MembersResponse[];
+            console.error("Successful members group array! ");
+
+            return res;
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            console.error("STATUS:", err.response?.status);
+            console.error("DATA:", err.response?.data);
+        } else {
+            console.error(err);
+        }
+        return Promise.reject();
+    }
+}
+
+
+export async function setMemberRole(req: SetMemberRole) : Promise<void> {
+    try {
+        const data = await instance.patch("/groups/setMemberRole", req);
+
+        if (data.status >= 200 && data.status < 300) {
+
+            console.error("Successful user role assign! ");
+            return Promise.resolve();
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            console.error("STATUS:", err.response?.status);
+            console.error("DATA:", err.response?.data);
+        } else {
+            console.error(err);
+        }
+        return Promise.reject();
+    }
+}
+
+export async function eventosGroup(gid: number) : Promise<EventosGrupos[]> {
+    try {
+        const data = await instance.get("/groups/"+gid+"/audit");
+        if (data.status >= 200 && data.status < 300) {
+
+            const res = data.data as EventosGrupos[];
+            console.error("Successful eventos array! ");
+
+            return res;
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            console.error("STATUS:", err.response?.status);
+            console.error("DATA:", err.response?.data);
+        } else {
+            console.error(err);
+        }
+        return Promise.reject();
+    }
+}
+
+export async function groupInviteLink(req: number) : Promise<string> {
+    try {
+        const data = await instance.post("/groups/inviteUrl", req);
+        if (data.status >= 200 && data.status < 300) {
+            console.error("Successful inivite link! ");
+
+            return data.data["inviteUrl"] as string;
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            console.error("STATUS:", err.response?.status);
+            console.error("DATA:", err.response?.data);
+        } else {
+            console.error(err);
+        }
+        return Promise.reject();
+    }
+}
+
+export async function groupJoinByLink(req: string) : Promise<void> {
+    try {
+        const data = await instance.post("/groups/joinByUrl", req);
+        if (data.status >= 200 && data.status < 300) {
+            console.error("Successful join link! ");
+
+            return Promise.resolve();
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            console.error("STATUS:", err.response?.status);
+            console.error("DATA:", err.response?.data);
+        } else {
+            console.error(err);
+        }
+        return Promise.reject();
+    }
+}
+
+export async function groupJoinByCode(req: string) : Promise<void> {
+    try {
+        const data = await instance.post("/groups/joinByCode", req);
+        if (data.status >= 200 && data.status < 300) {
+            console.error("Successful join code! ");
+
+            return Promise.resolve();
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            console.error("STATUS:", err.response?.status);
+            console.error("DATA:", err.response?.data);
+        } else {
+            console.error(err);
+        }
+        return Promise.reject();
+    }
+}
+
+export async function groupInvitacion(req: GroupInvitacion) : Promise<GroupInvitacionRespuesta> {
+    try {
+        const data = await instance.post("/groups/invites", req);
+        if (data.status >= 200 && data.status < 300) {
+            console.error("Successful crear invitacion ");
+
+            
+            return data.data["inviteUrl"] as GroupInvitacionRespuesta;
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            console.error("STATUS:", err.response?.status);
+            console.error("DATA:", err.response?.data);
+        } else {
+            console.error(err);
+        }
+        return Promise.reject();
+    }
+}
+
+export async function groupInvitacionLista(gid: number) : Promise<GroupInvitacionRespuesta[]> {
+    try {
+        const data = await instance.get("/groups/"+gid+"/invites");
+        if (data.status >= 200 && data.status < 300) {
+            console.error("Successful lista  invitaciones! ");
+
+            return data.data["inviteUrl"] as GroupInvitacionRespuesta[];
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            console.error("STATUS:", err.response?.status);
+            console.error("DATA:", err.response?.data);
+        } else {
+            console.error(err);
+        }
+        return Promise.reject();
+    }
+}
+
+export async function revokeGroupInvit(req: RevokeGroupInvit) : Promise<void> {
+    try {
+        const data = await instance.post("/groups/invites/revoke", req);
+        if (data.status >= 200 && data.status < 300) {
+            console.error("Successful lista  invitaciones! ");
+
+            return Promise.resolve();
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            console.error("STATUS:", err.response?.status);
+            console.error("DATA:", err.response?.data);
+        } else {
+            console.error(err);
+        }
+        return Promise.reject();
+    }
+}
+
+//sinceramente no entendi que es lo que hace, revisar
+export async function redirectInvite(req: RevokeGroupInvit) : Promise<void> {
+    try {
+        const data = await instance.post("/groups/redirectInvite", req);
+        if (data.status >= 200 && data.status < 300) {
+            console.error("Successful lista  invitaciones! ");
+
+            return Promise.resolve();
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            console.error("STATUS:", err.response?.status);
+            console.error("DATA:", err.response?.data);
+        } else {
+            console.error(err);
+        }
+        return Promise.reject();
+    }
+}
+
+export async function passOwnershipGroup(req: PassOwnershipGroup) : Promise<void> {
+    try {
+        const data = await instance.post("/groups/passOwnership", req);
+        if (data.status >= 200 && data.status < 300) {
+            console.error("Successful ownership pasado! ");
+
             return Promise.resolve();
         } else {
             console.error("Error en el log! " + data.data["error"]);
