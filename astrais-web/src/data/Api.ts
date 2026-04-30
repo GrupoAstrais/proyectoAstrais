@@ -253,7 +253,7 @@ export async function getUserData() : Promise<UserData> {
             console.error("Successful user data retrieval! ");
             const result = data.data as UserData;
 
-
+            console.log(data);
             return result;
         } else {
             console.error("Error en el log! " + data.data["error"]);
@@ -373,7 +373,10 @@ export async function editGroup(req: EditGroup) : Promise<void> {
 
 export async function addUserToGroup(req: AddUserToGroup) : Promise<void> {
     try {
-        const data = await instance.post("/groups/addUser", req);
+        const data = await instance.post("/groups/addUser", JSON.stringify({
+            gid: req.gid,
+            userId: req.userId
+        }));
         if (data.status >= 200 && data.status < 300) {
 
             console.error("Successful user add to group! ");
@@ -393,9 +396,9 @@ export async function addUserToGroup(req: AddUserToGroup) : Promise<void> {
     }
 }
 
-export async function userLeaveGroup(req: number) : Promise<void> {
+export async function userLeaveGroup(uid: number) : Promise<void> {
     try {
-        const data = await instance.post("/groups/leave", req);
+        const data = await instance.post("/groups/leave",  { gid: uid });
         if (data.status >= 200 && data.status < 300) {
 
             console.error("Successfuly left group! ");
@@ -442,8 +445,8 @@ export async function membersGroups(gid: number) : Promise<MembersResponse[]> {
         const data = await instance.get("/groups/"+gid+"/members");
         if (data.status >= 200 && data.status < 300) {
 
-            const res = data.data as MembersResponse[];
-            console.error("Successful members group array! ");
+            const res = data.data["members"] as MembersResponse[];
+            console.error("Successful members group array! "+JSON.stringify(res));
 
             return res;
         } else {
@@ -511,7 +514,10 @@ export async function eventosGroup(gid: number) : Promise<EventosGrupos[]> {
 
 export async function groupInviteLink(req: number) : Promise<string> {
     try {
-        const data = await instance.post("/groups/inviteUrl", req);
+        const data = await instance.post("/groups/inviteUrl", {
+                gid: req
+            });
+
         if (data.status >= 200 && data.status < 300) {
             console.error("Successful inivite link! ");
 
@@ -533,7 +539,10 @@ export async function groupInviteLink(req: number) : Promise<string> {
 
 export async function groupJoinByLink(req: string) : Promise<void> {
     try {
-        const data = await instance.post("/groups/joinByUrl", req);
+        const data = await instance.post("/groups/joinByUrl", {
+                inviteUrl: req 
+            });
+
         if (data.status >= 200 && data.status < 300) {
             console.error("Successful join link! ");
 
@@ -555,7 +564,10 @@ export async function groupJoinByLink(req: string) : Promise<void> {
 
 export async function groupJoinByCode(req: string) : Promise<void> {
     try {
-        const data = await instance.post("/groups/joinByCode", req);
+        const data = await instance.post("/groups/joinByCode", {
+                code: req 
+            });
+
         if (data.status >= 200 && data.status < 300) {
             console.error("Successful join code! ");
 
@@ -667,7 +679,7 @@ export async function redirectInvite(req: RevokeGroupInvit) : Promise<void> {
 
 export async function passOwnershipGroup(req: PassOwnershipGroup) : Promise<void> {
     try {
-        const data = await instance.post("/groups/passOwnership", req);
+        const data = await instance.patch("/groups/passOwnership", req);
         if (data.status >= 200 && data.status < 300) {
             console.error("Successful ownership pasado! ");
 

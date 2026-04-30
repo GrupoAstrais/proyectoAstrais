@@ -55,7 +55,7 @@ export interface EditGroup {
 
 export interface AddUserToGroup {
   gid: number;
-  userid: number;
+  userId: number;
 }
 
 export interface CreateTask {
