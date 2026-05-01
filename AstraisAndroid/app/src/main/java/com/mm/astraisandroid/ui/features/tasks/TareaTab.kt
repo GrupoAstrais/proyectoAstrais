@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.mm.astraisandroid.data.preferences.SessionManager
 import com.mm.astraisandroid.ui.components.AstraisScreenHeader
 
 @Composable
@@ -40,7 +39,7 @@ fun TasksTab(viewModel: TaskViewModel = hiltViewModel(), onTaskCompleted: () -> 
     var taskToEdit by remember { mutableStateOf<TaskUIModel?>(null) }
 
     LaunchedEffect(Unit) {
-        val gid = SessionManager.getPersonalGid()
+        val gid = state.personalGid
         if (gid != null) viewModel.loadTareas(gid)
     }
 
@@ -134,7 +133,7 @@ fun TasksTab(viewModel: TaskViewModel = hiltViewModel(), onTaskCompleted: () -> 
                             expandedTaskId = if (expandedTaskId == task.id) null else task.id
                         },
                         onToggleComplete = { clickedTask ->
-                            val gid = SessionManager.getPersonalGid() ?: -1
+                            val gid = state.personalGid ?: -1
                             viewModel.toggleTaskCompletion(
                                 tid = clickedTask.id,
                                 gid = gid,
@@ -144,7 +143,7 @@ fun TasksTab(viewModel: TaskViewModel = hiltViewModel(), onTaskCompleted: () -> 
                         onAddSubtask = { viewModel.openCreateDialog(parentId = task.id) },
                         onEdit = { taskToEdit = task },
                         onDelete = {
-                            val gid = SessionManager.getPersonalGid() ?: -1
+                            val gid = state.personalGid ?: -1
                             viewModel.eliminarTarea(task.id, gid)
                         }
                     )
@@ -158,7 +157,7 @@ fun TasksTab(viewModel: TaskViewModel = hiltViewModel(), onTaskCompleted: () -> 
             task = task,
             onDismiss = { taskToEdit = null },
             onEdit = { titulo, desc, prio, fechaLimite, frecuencia ->
-                val gid = SessionManager.getPersonalGid() ?: -1
+                val gid = state.personalGid ?: -1
                 viewModel.editarTarea(task.id, gid, titulo, desc, prio, fechaLimite, frecuencia)
                 taskToEdit = null
             }

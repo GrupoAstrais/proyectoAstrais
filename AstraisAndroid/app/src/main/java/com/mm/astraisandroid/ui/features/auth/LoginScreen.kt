@@ -212,7 +212,7 @@ fun LoginScreen(
 
                 Button(
                     onClick = {
-                        com.mm.astraisandroid.data.preferences.SessionManager.startGuestSession()
+                        viewModel.startGuestSession()
                         onNavigateToHome()
                     },
                     modifier = Modifier.fillMaxWidth().height(52.dp),

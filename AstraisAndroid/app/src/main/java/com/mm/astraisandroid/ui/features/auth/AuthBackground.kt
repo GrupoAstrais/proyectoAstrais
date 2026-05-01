@@ -16,7 +16,6 @@ import androidx.compose.ui.graphics.Color
 @Composable
 fun AuthBackground(content: @Composable BoxScope.() -> Unit) {
     val bgBase = MaterialTheme.colorScheme.background
-    // Si tienes custom colors usa tu backgroundAlt, si no, surface hace un efecto idéntico
     val bgAlt = MaterialTheme.colorScheme.surfaceVariant
 
     val primaryGlow = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)

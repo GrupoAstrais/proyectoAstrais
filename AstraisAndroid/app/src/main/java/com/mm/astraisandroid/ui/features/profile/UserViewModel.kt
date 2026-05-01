@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mm.astraisandroid.data.api.UserMeResponse
 import com.mm.astraisandroid.data.models.User
-import com.mm.astraisandroid.data.preferences.SessionManager
 import com.mm.astraisandroid.data.repository.UserRepository
+import com.mm.astraisandroid.data.preferences.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,14 +23,15 @@ data class UserScreenState(
 
 @HiltViewModel
 class UserViewModel @Inject constructor(
-    private val repository: UserRepository
+    private val repository: UserRepository,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UserScreenState())
     val state: StateFlow<UserScreenState> = _state.asStateFlow()
 
     fun fetchUser() {
-        if (SessionManager.isGuest()) return
+        if (sessionManager.isGuest()) return
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
@@ -59,7 +60,7 @@ class UserViewModel @Inject constructor(
         viewModelScope.launch {
             val user = state.value.user ?: return@launch
             try {
-                if (!SessionManager.isGuest()) {
+                if (!sessionManager.isGuest()) {
                     repository.updateUsername(user.id, newName)
                 }
                 _state.update {
@@ -74,7 +75,7 @@ class UserViewModel @Inject constructor(
     fun updateProfile(newName: String, language: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
             val user = state.value.user ?: return@launch
-            if (SessionManager.isGuest()) {
+            if (sessionManager.isGuest()) {
                 _state.update { it.copy(user = user.copy(name = newName)) }
                 onSuccess()
                 return@launch

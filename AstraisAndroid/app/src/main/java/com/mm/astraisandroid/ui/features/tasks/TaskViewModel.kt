@@ -16,8 +16,8 @@ import com.mm.astraisandroid.data.local.entities.TareaEntity
 import com.mm.astraisandroid.data.models.TaskPriority
 import com.mm.astraisandroid.data.models.TaskState
 import com.mm.astraisandroid.data.models.TaskType
-import com.mm.astraisandroid.data.preferences.SessionManager
 import com.mm.astraisandroid.data.repository.TaskRepository
+import com.mm.astraisandroid.data.preferences.SessionManager
 import com.mm.astraisandroid.sync.scheduleSync
 import com.mm.astraisandroid.ui.components.SnackbarManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -118,6 +118,7 @@ data class TaskScreenState(
     val parentIdForNewTask: Int? = null,
     val tasks: List<TaskUIModel> = emptyList(),
     val allTasksCache: List<TaskUIModel> = emptyList(),
+    val personalGid: Int? = null,
     val error: String? = null
 )
 
@@ -151,13 +152,18 @@ class TaskViewModel @Inject constructor(
     private val repository: TaskRepository,
     private val actionDao: ActionDao,
     private val tareaDao: TareaDao,
-    private val snackbarManager: SnackbarManager
+    private val snackbarManager: SnackbarManager,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     /**
      * Estado mutable interno; solo modificable desde este ViewModel.
      */
     private val _state = MutableStateFlow(TaskScreenState())
+
+    init {
+        _state.update { it.copy(personalGid = sessionManager.getPersonalGid()) }
+    }
 
     /**
      * Estado público expuesto a la UI como flujo de solo lectura.
@@ -253,7 +259,7 @@ class TaskViewModel @Inject constructor(
     fun loadTareas(gid: Int) {
         viewModelScope.launch {
             // STRICT GUEST GUARD: never refresh from backend in guest mode
-            if (SessionManager.isGuest()) {
+            if (sessionManager.isGuest()) {
                 _state.update { it.copy(isLoading = false, isOffline = false) }
                 return@launch
             }
@@ -297,7 +303,7 @@ class TaskViewModel @Inject constructor(
 
             onSuccess()
             snackbarManager.showMessage("¡Tarea completada! + ${tareaActual.xp} XP /  ${tareaActual.ludiones} L")
-            if (SessionManager.isGuest()) {
+            if (sessionManager.isGuest()) {
                 actionDao.addAction(PendingAction(type = "COMPLETE_TASK", data = "", targetId = tid))
                 if (debeCompletarPadre) {
                     actionDao.addAction(PendingAction(type = "COMPLETE_TASK", data = "", targetId = parentId!!))
@@ -353,7 +359,7 @@ class TaskViewModel @Inject constructor(
 
                 onSuccess()
 
-                if (SessionManager.isGuest()) {
+                if (sessionManager.isGuest()) {
                     actionDao.addAction(PendingAction(type = "UNCOMPLETE_TASK", data = "", targetId = tid))
                     if (debeDeshacerPadre) {
                         actionDao.addAction(PendingAction(type = "UNCOMPLETE_TASK", data = "", targetId = parentId!!))
@@ -437,7 +443,7 @@ class TaskViewModel @Inject constructor(
                 idObjetivo = currentParentId
             )
 
-            if (SessionManager.isGuest()) {
+            if (sessionManager.isGuest()) {
                 val tempId = -(System.currentTimeMillis() % 100000).toInt()
                 val guestRequest = request.copy(gid = SessionManager.GUEST_GID)
                 val entity = TareaEntity(
@@ -506,7 +512,7 @@ class TaskViewModel @Inject constructor(
         viewModelScope.launch {
             tareaDao.deleteTareaById(tid)
 
-            if (SessionManager.isGuest()) {
+            if (sessionManager.isGuest()) {
                 if (tid >= 0) {
                     actionDao.addAction(PendingAction(type = "DELETE_TASK", data = "", targetId = tid))
                 }
@@ -564,7 +570,7 @@ class TaskViewModel @Inject constructor(
                 extraHabito = habitFrequencyEnum?.let { CreateTareaHabitData(1, it) }
             )
 
-            if (SessionManager.isGuest()) {
+            if (sessionManager.isGuest()) {
                 val dataString = Json.encodeToString(EditTareaRequest.serializer(), request)
                 actionDao.addAction(PendingAction(
                     type = "EDIT_TASK",

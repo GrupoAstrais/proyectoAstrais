@@ -1,7 +1,6 @@
 package com.mm.astraisandroid.sync
 
 import android.content.Context
-import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
@@ -12,6 +11,8 @@ import com.mm.astraisandroid.data.local.dao.ActionDao
 import com.mm.astraisandroid.data.local.dao.TareaDao
 import com.mm.astraisandroid.data.local.entities.PendingAction
 import com.mm.astraisandroid.data.preferences.SessionManager
+import com.mm.astraisandroid.util.logging.AppLogger
+import com.mm.astraisandroid.util.logging.LogFeature
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.serialization.json.Json
@@ -22,7 +23,9 @@ class SyncWorker @AssistedInject constructor(
     @Assisted params: WorkerParameters,
     private val taskApi: TaskApi,
     private val actionDao: ActionDao,
-    private val tareaDao: TareaDao
+    private val tareaDao: TareaDao,
+    private val sessionManager: SessionManager,
+    private val logger: AppLogger
 ) : CoroutineWorker(appContext, params) {
 
     companion object {
@@ -30,8 +33,8 @@ class SyncWorker @AssistedInject constructor(
     }
 
     override suspend fun doWork(): Result {
-        if (SessionManager.isGuest()) {
-            Log.d("SyncWorker", "Skipping sync: user is in guest mode")
+        if (sessionManager.isGuest()) {
+            logger.d(LogFeature.SYNC, "Skipping sync: user is in guest mode")
             return Result.success()
         }
 
@@ -57,10 +60,10 @@ class SyncWorker @AssistedInject constructor(
                 is ActionResult.Retryable -> {
                     hasRetryableFailures = true
                     actionDao.incrementRetryCount(action.actionId, result.error)
-                    Log.w("SyncWorker", "Retryable failure for ${action.type}: ${result.error}")
+                    logger.w(LogFeature.SYNC, "Retryable failure for ${action.type}: ${result.error}")
                 }
                 is ActionResult.PermanentFailure -> {
-                    Log.e("SyncWorker", "Permanent failure for ${action.type}: ${result.error}")
+                    logger.e(LogFeature.SYNC, "Permanent failure for ${action.type}: ${result.error}")
                     actionDao.deleteAction(action.actionId)
                 }
             }

@@ -44,7 +44,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mm.astraisandroid.data.models.User
-import com.mm.astraisandroid.data.preferences.SessionManager
 import com.mm.astraisandroid.ui.components.AstraisGlassCard
 import com.mm.astraisandroid.ui.components.AstraisGlassSurface
 import com.mm.astraisandroid.ui.components.AstraisScreenHeader
@@ -56,13 +55,13 @@ import com.mm.astraisandroid.util.AvatarImageRenderer
 @Composable
 fun PerfilTab(
     user: User?,
+    isGuest: Boolean = false,
     onBack: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val userViewModel: UserViewModel = hiltViewModel()
     val viewModelState by userViewModel.state.collectAsStateWithLifecycle()
-    val isGuest = SessionManager.isGuest()
 
     fun shareProfileText() {
         val shareText = buildString {

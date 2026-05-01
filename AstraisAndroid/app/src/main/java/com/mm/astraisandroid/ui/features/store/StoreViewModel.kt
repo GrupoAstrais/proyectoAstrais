@@ -28,7 +28,8 @@ sealed class StoreEvent {
 
 @HiltViewModel
 class StoreViewModel @Inject constructor(
-    private val repository: StoreRepository
+    private val repository: StoreRepository,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(StoreScreenState())
@@ -38,7 +39,7 @@ class StoreViewModel @Inject constructor(
     val uiEvent = _uiEvent.receiveAsFlow()
 
     fun loadStore() {
-        if (SessionManager.isGuest()) return
+        if (sessionManager.isGuest()) return
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
@@ -51,7 +52,7 @@ class StoreViewModel @Inject constructor(
     }
 
     fun buyItem(id: Int, onSuccess: () -> Unit) {
-        if (SessionManager.isGuest()) return
+        if (sessionManager.isGuest()) return
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             try {
@@ -68,7 +69,7 @@ class StoreViewModel @Inject constructor(
     }
 
     fun equipItem(id: Int, onSuccess: () -> Unit) {
-        if (SessionManager.isGuest()) return
+        if (sessionManager.isGuest()) return
         viewModelScope.launch {
             try {
                 repository.equipCosmetic(id)

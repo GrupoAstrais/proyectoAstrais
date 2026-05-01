@@ -34,7 +34,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mm.astraisandroid.util.LottiePetRenderer
 import com.mm.astraisandroid.data.api.UserMeResponse
 import com.mm.astraisandroid.data.models.User
-import com.mm.astraisandroid.data.preferences.SessionManager.isGuest
 import com.mm.astraisandroid.ui.features.tasks.TaskViewModel
 import com.mm.astraisandroid.ui.components.AstraisGlassSurface
 import com.mm.astraisandroid.ui.components.AstraisGlassChip
@@ -44,6 +43,7 @@ import com.mm.astraisandroid.ui.components.Glassmorphism
 fun HomeTab(
     user: User?,
     taskViewModel: TaskViewModel = hiltViewModel(),
+    isGuest: Boolean = false,
     onNavigateToProfile: () -> Unit = {},
     onNavigateToTasks: () -> Unit = {},
     onNavigateToStore: () -> Unit = {},
@@ -59,7 +59,6 @@ fun HomeTab(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        val isGuest = isGuest()
 
         WelcomeHeader(
             username = if (isGuest) "Invitado" else (user?.name ?: "Viajero"),
@@ -420,7 +419,7 @@ fun BentoMiniCell(
                 text = text,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = if (isGuest()) MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.TEXT_TERTIARY) else MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.TEXT_PRIMARY),
+                color = if (isLocked) MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.TEXT_TERTIARY) else MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.TEXT_PRIMARY),
                 fontFamily = FontFamily.Monospace
             )
         }

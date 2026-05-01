@@ -3,9 +3,8 @@ package com.mm.astraisandroid.ui.features.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mm.astraisandroid.data.api.LoginRequest
-import com.mm.astraisandroid.data.api.RegisterRequest
-import com.mm.astraisandroid.data.preferences.SessionManager
 import com.mm.astraisandroid.data.repository.AuthRepository
+import com.mm.astraisandroid.data.preferences.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +27,8 @@ sealed class LoginEvent {
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val repository: AuthRepository
+    private val repository: AuthRepository,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
     private val _loginState = MutableStateFlow<LoginUIState>(LoginUIState.Idle)
     val loginState: StateFlow<LoginUIState> = _loginState
@@ -66,5 +66,9 @@ class LoginViewModel @Inject constructor(
                 _loginState.value = LoginUIState.Error(e.message ?: "Error desconocido")
             }
         }
+    }
+
+    fun startGuestSession() {
+        sessionManager.startGuestSession()
     }
 }

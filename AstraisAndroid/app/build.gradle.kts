@@ -111,6 +111,9 @@ dependencies {
     // ### SEGURIDAD ###
     implementation("androidx.security:security-crypto:1.1.0")
 
+    // ### LOGGING ###
+    implementation("com.jakewharton.timber:timber:5.0.1")
+
     // ### Hilt ###
     implementation("com.google.dagger:hilt-android:2.51.1")
     ksp("com.google.dagger:hilt-compiler:2.51.1")

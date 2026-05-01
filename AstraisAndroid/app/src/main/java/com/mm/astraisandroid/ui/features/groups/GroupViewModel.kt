@@ -49,7 +49,8 @@ data class GroupScreenState(
  */
 @HiltViewModel
 class GroupViewModel @Inject constructor(
-    private val repository: GroupRepository
+    private val repository: GroupRepository,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     /**
@@ -85,7 +86,7 @@ class GroupViewModel @Inject constructor(
      */
     fun loadGroups() {
         // STRICT GUEST GUARD: groups are locked for guests, never hit backend
-        if (SessionManager.isGuest()) return
+        if (sessionManager.isGuest()) return
         viewModelScope.launch {
             refreshGroupsSuspend()
         }
