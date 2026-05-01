@@ -74,6 +74,7 @@ export default function CreateGroupModal({
                     </div>
 
                     <div className="space-y-6">
+                        {/*
                         <div className="flex flex-col items-center">
                             <div
                                 className="relative cursor-pointer group"
@@ -103,6 +104,7 @@ export default function CreateGroupModal({
                             />
                             <p className="mt-2 text-gray-400 text-sm">Haga clic para cambiar la foto</p>
                         </div>
+                        */}
 
                         <div>
                             <label className="block text-gray-300 mb-2">Nombre del grupo</label>

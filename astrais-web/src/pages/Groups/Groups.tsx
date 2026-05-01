@@ -10,6 +10,7 @@ import GroupSettingsModal from "../../components/modales/GroupSettingsModal";
 import CreateGroupModal from "../../components/modales/CreateGroupModal";
 import type { IGroup, ITarea } from "../../types/Interfaces";
 import {
+  addUserToGroup,
   buildCreateTaskRequest,
   buildEditTaskRequest,
   completeTask,
@@ -22,19 +23,30 @@ import {
   editGroup,
   editTask,
   filterTasksByCompleted,
+  groupInviteLink,
+  groupInvitacion,
+  groupJoinByCode,
+  groupJoinByLink,
   getTaskSubtasks,
   getTaskXpReward,
   getTasksFromGroup,
+  getUserData,
   getUserGroup,
   isTaskCompleted,
   isTaskVisibleInDefaultList,
+  passOwnershipGroup,
+  removeUserFromGroup,
   removeTaskWithSubtasks,
+  setMemberRole,
   sortTasksByCompleted,
   toggleSubtaskCompleted,
   toggleTaskCompleted,
   uncompleteTask,
-  type ITaskFormData
+  type ITaskFormData,
+  userLeaveGroup,
+  membersGroups
 } from "../../data/Api";
+import type { MembersResponse } from "../../types/LoginRequest";
 
 const compareGroupsAlphabetically = (firstGroup: IGroup, secondGroup: IGroup): number => {
   return firstGroup.name.localeCompare(secondGroup.name, "es", { sensitivity: "base" });
@@ -85,6 +97,10 @@ export default function Groups() {
   const [activeGroup, setActiveGroup] = useState<number>(-1);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = React.useState<boolean>(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState<boolean>(false);
+  const [isJoinModalOpen, setIsJoinModalOpen] = React.useState<boolean>(false);
+  const [joinGroupInput, setJoinGroupInput] = React.useState<string>("");
+  const [joinGroupLoading, setJoinGroupLoading] = React.useState<boolean>(false);
+  const [joinGroupError, setJoinGroupError] = React.useState<string | null>(null);
   const [initialDataModal, setInitialDataModal] = useState<ITarea | null>(null);
   const [groupTaskFilters, setGroupTaskFilters] = useState({
     completed: false,
@@ -97,6 +113,52 @@ export default function Groups() {
   const [loadingTasks, setLoadingTasks] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [groupMembersMap, setGroupMembersMap] = useState<Record<number, MembersResponse[]>>({});
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [personalGroupId, setPersonalGroupId] = useState<number | null>(null);
+
+  const toRenderableGroups = (userGroups: Array<{
+    gid?: number;
+    id?: number;
+    name?: string;
+    nombre?: string;
+    description: string;
+    role: number;
+  }>): IGroup[] =>
+    userGroups
+      .filter((group) => (group.gid ?? group.id ?? -1) !== personalGroupId)
+      .map(mapUserGroupToLocalGroup);
+
+  const preloadMembersForGroups = async (baseGroups: IGroup[]): Promise<IGroup[]> => {
+    const entries = await Promise.all(
+      baseGroups.map(async (group) => {
+        try {
+          const serverMembers = await membersGroups(group.gid);
+          const normalizedMembers = (Array.isArray(serverMembers) ? serverMembers : []).filter(
+            (member): member is MembersResponse =>
+              !!member &&
+              typeof member.uid === "number" &&
+              Number.isFinite(member.uid) &&
+              typeof member.name === "string"
+          );
+          return [group.gid, normalizedMembers] as const;
+        } catch {
+          return [group.gid, []] as const;
+        }
+      })
+    );
+
+    const mapFromServer: Record<number, MembersResponse[]> = Object.fromEntries(entries);
+    setGroupMembersMap((prevMap) => ({ ...prevMap, ...mapFromServer }));
+
+    return baseGroups.map((group) => ({
+      ...group,
+      members: (mapFromServer[group.gid] ?? []).map((member) => ({
+        id: member.uid,
+        name: member.name
+      }))
+    }));
+  };
 
   useEffect(() => {
     const loadGroups = async () => {
@@ -104,8 +166,14 @@ export default function Groups() {
         setLoadingGroups(true);
         setError(null);
 
-        const userGroups = await getUserGroup();
-        setGroups(userGroups.slice(1).map(mapUserGroupToLocalGroup));
+        const [userGroups, userData] = await Promise.all([getUserGroup(), getUserData()]);
+        setCurrentUserId(userData.id);
+        setPersonalGroupId(userData.personalGid);
+        const baseGroups = userGroups
+          .filter((group) => (group.gid ?? group.id ?? -1) !== userData.personalGid)
+          .map(mapUserGroupToLocalGroup);
+        const groupsWithMembers = await preloadMembersForGroups(baseGroups);
+        setGroups(groupsWithMembers);
       } catch (loadError) {
         console.error("Error al cargar los grupos:", loadError);
         setError("No se pudieron cargar los grupos.");
@@ -178,6 +246,46 @@ export default function Groups() {
 
     void loadGroupTasks();
   }, [activeGroup, loadedGroupIds]);
+
+  const loadGroupMembers = async (gid: number) => {
+    try {
+      const serverMembers = await membersGroups(gid);
+      const normalizedMembers = (Array.isArray(serverMembers) ? serverMembers : []).filter(
+        (member): member is MembersResponse =>
+          !!member &&
+          typeof member.uid === "number" &&
+          Number.isFinite(member.uid) &&
+          typeof member.name === "string"
+      );
+
+      setGroupMembersMap((prevMap) => ({ ...prevMap, [gid]: normalizedMembers }));
+      setGroups((prevGroups) =>
+        prevGroups.map((group) =>
+          group.gid === gid
+            ? {
+                ...group,
+                members: normalizedMembers.map((member) => ({
+                  id: member.uid,
+                  name: member.name
+                }))
+              }
+            : group
+        )
+      );
+    } catch (loadError) {
+      console.error("Error al cargar los miembros del grupo:", loadError);
+      setError("No se pudieron cargar los miembros del grupo.");
+    }
+  };
+
+  useEffect(() => {
+    if (activeGroup === -1) {
+      return;
+    }
+
+    void loadGroupMembers(activeGroup);
+  }, [activeGroup]);
+  
 
   React.useEffect(() => {
     if (searchParams.get("openCreateModal") !== "true") {
@@ -324,7 +432,6 @@ export default function Groups() {
     name: string;
     description: string;
     photo?: File | null;
-    newMembers: string[];
   }) => {
     if (activeGroup === -1) {
       return;
@@ -345,18 +452,11 @@ export default function Groups() {
           return group;
         }
 
-        const nextMemberId = group.members.reduce((maxId, member) => Math.max(maxId, member.id), 0) + 1;
-        const createdMembers = settings.newMembers.map((member, index) => ({
-          id: nextMemberId + index,
-          name: member
-        }));
-
         return {
           ...group,
           name: settings.name,
           description: settings.description,
-          photoUrl: newPhotoUrl ?? group.photoUrl ?? null,
-          members: [...group.members, ...createdMembers]
+          photoUrl: newPhotoUrl ?? group.photoUrl ?? null
         };
       })
     );
@@ -451,6 +551,162 @@ export default function Groups() {
     setIsOpenModal(true);
   };
 
+  const leaveGroupHandler = async (gid: number) => {
+    try {
+      await userLeaveGroup(gid);
+      setGroups((prevGroups) => prevGroups.filter((group) => group.gid !== gid));
+      setLoadedGroupIds((prevIds) => prevIds.filter((loadedGid) => loadedGid !== gid));
+      setGroupMembersMap((prevMap) => {
+        const nextMap = { ...prevMap };
+        delete nextMap[gid];
+        return nextMap;
+      });
+      if (activeGroup === gid) {
+        setActiveGroup(-1);
+        setIsOpen(false);
+      }
+      setIsSettingsModalOpen(false);
+    } catch (saveError) {
+      console.error("Error al guardar la configuracion del grupo:", saveError);
+      setError("No se pudieron guardar los cambios del grupo.");
+    }
+  }
+
+  const addMemberByUidHandler = async (gid: number, uid: number) => {
+    try {
+      await addUserToGroup({ gid, userId: uid });
+      await loadGroupMembers(gid);
+    } catch (saveError) {
+      console.error("Error al agregar miembro al grupo:", saveError);
+      setError("No se pudo agregar el miembro.");
+      throw saveError;
+    }
+  };
+
+  const removeMemberHandler = async (gid: number, uid: number) => {
+    try {
+      await removeUserFromGroup({ gid, userId: uid });
+      await loadGroupMembers(gid);
+    } catch (saveError) {
+      console.error("Error al eliminar miembro del grupo:", saveError);
+      setError("No se pudo eliminar el miembro.");
+      throw saveError;
+    }
+  };
+
+  const generateInviteLinkHandler = async (gid: number): Promise<string> => {
+    try {
+      const inviteResponse = await groupInvitacion({ gid });
+      const linkFromInviteResponse =
+        typeof inviteResponse === "string"
+          ? inviteResponse
+          : typeof inviteResponse?.inviteUrl === "string"
+            ? inviteResponse.inviteUrl
+            : "";
+
+      if (linkFromInviteResponse) {
+        return linkFromInviteResponse;
+      }
+
+      const fallbackLink = await groupInviteLink(gid);
+      if (typeof fallbackLink === "string" && fallbackLink.trim()) {
+        return fallbackLink;
+      }
+
+      throw new Error("No se recibio enlace de invitacion");
+    } catch (saveError) {
+      console.error("Error al generar invitacion del grupo:", saveError);
+      setError("No se pudo generar la invitacion.");
+      throw saveError;
+    }
+  };
+
+  const joinByCodeHandler = async (code: string) => {
+    try {
+      await groupJoinByCode(code);
+      const userGroups = await getUserGroup();
+      const baseGroups = toRenderableGroups(userGroups);
+      const groupsWithMembers = await preloadMembersForGroups(baseGroups);
+      setGroups(groupsWithMembers);
+    } catch (saveError) {
+      console.error("Error al unirse al grupo por codigo:", saveError);
+      setError("No se pudo unir al grupo por codigo.");
+      throw saveError;
+    }
+  };
+
+  const joinByLinkHandler = async (inviteLink: string) => {
+    try {
+      await groupJoinByLink(inviteLink);
+      const userGroups = await getUserGroup();
+      const baseGroups = toRenderableGroups(userGroups);
+      const groupsWithMembers = await preloadMembersForGroups(baseGroups);
+      setGroups(groupsWithMembers);
+    } catch (saveError) {
+      console.error("Error al unirse al grupo por enlace:", saveError);
+      setError("No se pudo unir al grupo por enlace.");
+      throw saveError;
+    }
+  };
+
+  const handleJoinGroupFromModal = async () => {
+    const value = joinGroupInput.trim();
+    if (!value) {
+      setJoinGroupError("Introduce un codigo o enlace.");
+      return;
+    }
+
+    try {
+      setJoinGroupLoading(true);
+      setJoinGroupError(null);
+
+      const isLink = value.startsWith("http://") || value.startsWith("https://") || value.includes("/");
+      if (isLink) {
+        await joinByLinkHandler(value);
+      } else {
+        await joinByCodeHandler(value);
+      }
+
+      window.location.reload();
+    } catch {
+      setJoinGroupError("No se pudo unir al grupo.");
+    } finally {
+      setJoinGroupLoading(false);
+    }
+  };
+
+  const setMemberRoleHandler = async (gid: number, uid: number, role: number) => {
+    try {
+      await setMemberRole({ gid, userId: uid, role });
+      await loadGroupMembers(gid);
+    } catch (saveError) {
+      console.error("Error al cambiar rol del miembro (gid/uid/role):", gid, uid, role, saveError);
+      setError("No se pudo cambiar el rol del miembro.");
+      throw saveError;
+    }
+  };
+
+  const passOwnershipHandler = async (gid: number, newOwnerUserId: number) => {
+    try {
+      await passOwnershipGroup({ gid, newOwnerUserId });
+      await loadGroupMembers(gid);
+      setGroups((prevGroups) =>
+        prevGroups.map((group) =>
+          group.gid === gid
+            ? {
+                ...group,
+                role: currentUserId === newOwnerUserId ? 2 : 1
+              }
+            : group
+        )
+      );
+    } catch (saveError) {
+      console.error("Error al ceder ownership del grupo:", saveError);
+      setError("No se pudo ceder el ownership del grupo.");
+      throw saveError;
+    }
+  };
+
 
 
 
@@ -463,6 +719,9 @@ export default function Groups() {
         <div className="flex w-full flex-col gap-2 md:w-1/3">
           <button onClick={() => setIsCreateModalOpen(true)} className="w-full rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
             <span className="text-2xl font-bold">Crear grupo</span>
+          </button>
+          <button onClick={() => setIsJoinModalOpen(true)} className="w-full rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
+            <span className="text-2xl font-bold">Unir al grupo</span>
           </button>
           {loadingGroups ? (
             <p className="py-4 text-center italic text-gray-300">Cargando grupos...</p>
@@ -478,15 +737,9 @@ export default function Groups() {
             <button disabled={!activeGroupData} onClick={() => setIsSettingsModalOpen(true)} className="rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
               <span className="text-2xl font-bold">Configuracion</span>
             </button>
-            <button
-              disabled={!activeGroupData}
-              onClick={() => {
-                setInitialDataModal(null);
-                setIsOpenModal(true);
-              }}
-              className="ml-auto rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <span className="text-2xl font-bold">+ Anadir tarea</span>
+            <button disabled={!activeGroupData} onClick={() => {setInitialDataModal(null); setIsOpenModal(true);}}
+              className="ml-auto rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
+                <span className="text-2xl font-bold">+ Anadir tarea</span>
             </button>
           </div>
 
@@ -545,10 +798,53 @@ export default function Groups() {
           initialData={activeGroupData}
           onSave={handleSaveSettings}
           onDelete={({ gid, role }) => setGroupToDelete({ gid, role })}
+          onLeave={(gid) => leaveGroupHandler(gid)}
+          members={groupMembersMap[activeGroupData.gid] ?? []}
+          onAddMemberByUid={addMemberByUidHandler}
+          onRemoveMember={removeMemberHandler}
+          onGenerateInviteLink={generateInviteLinkHandler}
+          onSetMemberRole={setMemberRoleHandler}
+          onPassOwnership={passOwnershipHandler}
         />
       )}
 
       <CreateGroupModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} onSave={handleCreateGroup} />
+
+      {isJoinModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 font-['Space_Grotesk']">
+          <div className="bg-[linear-gradient(160deg,#0a101ff2,#3c1480d9,#142f42e6)] rounded-lg shadow-xl w-full max-w-xl p-6">
+            <h2 className="text-2xl font-bold text-white mb-3">Unir al grupo</h2>
+            <p className="text-sm text-gray-300 mb-3">Introduce un codigo o un enlace de invitacion.</p>
+            <input
+              type="text"
+              value={joinGroupInput}
+              onChange={(e) => setJoinGroupInput(e.target.value)}
+              placeholder="Codigo o enlace"
+              className="w-full bg-gray-800 border border-gray-700 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-accent-beige-300"
+            />
+            {joinGroupError && <p className="mt-2 text-sm text-red-300">{joinGroupError}</p>}
+            <div className="mt-4 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setIsJoinModalOpen(false);
+                  setJoinGroupInput("");
+                  setJoinGroupError(null);
+                }}
+                className="px-6 py-2 border border-gray-600 rounded-md text-white hover:bg-gray-700 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleJoinGroupFromModal}
+                disabled={joinGroupLoading}
+                className="px-6 py-2 bg-accent-beige-300 text-black rounded-md font-medium hover:bg-accent-beige-400 transition-colors disabled:opacity-60"
+              >
+                Aceptar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
