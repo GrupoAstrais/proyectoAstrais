@@ -305,6 +305,6 @@ Proyecto desarrollado por:
 - **Olga**
 - **Samuel**
 - **Manuel**
-- **Elías**
+- **Elías (Ahora desde PopOS)**
 
 
