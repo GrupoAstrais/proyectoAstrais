@@ -611,6 +611,7 @@ class DatabaseDAOImpl : DatabaseDAO {
                         assetRef = cosmetico.assetRef,
                         theme = cosmetico.tema,
                         coleccion = cosmetico.coleccion, 
+                        rarity = cosmetico.rareza.name,
                         owned = inventarioUsuario.contains(cosmetico.id.value),
                         equipped = isEquipped
                 )

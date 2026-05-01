@@ -1,4 +1,5 @@
-import { Route, Routes } from 'react-router'
+import { useEffect } from 'react'
+import { Route, Routes, useLocation } from 'react-router'
 import Login from './pages/Auth/Login'
 import Register from './pages/Auth/Register'
 import Achivs from './pages/Achiv/Achivs'
@@ -9,7 +10,9 @@ import Group from './pages/Groups/Groups'
 import Shop from './pages/Shop/Shop'
 import Tasks from './pages/Tasks/Tasks'
 import Profile from './pages/User/Profile'
+import { getUserData } from './data/Api'
 import './styles/colors.css'
+import { applyThemeColors } from './styles/theme'
 
 function Placeholder({ title }: { title: string }) {
   return (
@@ -20,6 +23,22 @@ function Placeholder({ title }: { title: string }) {
 }
 
 export default function App() {
+  const location = useLocation()
+
+  useEffect(() => {
+    if (['/', '/login', '/register', '/forgot-password'].includes(location.pathname)) {
+      applyThemeColors()
+      return
+    }
+
+    if (typeof window === 'undefined' || !window.localStorage.getItem('jwtToken')) {
+      applyThemeColors()
+      return
+    }
+
+    void getUserData().catch(() => undefined)
+  }, [location.pathname])
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />

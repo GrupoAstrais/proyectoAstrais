@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { AddUserToGroup, CreateGroup, CreateTask, EditGroup, EditTask, LoginRequest, RegisterRequest, UserData, UserGroups, UserGroupsResponse, UserTasksResponse, VerifyRequest } from '../types/LoginRequest';
 import type { IGroup, ITarea } from '../types/Interfaces';
-
+import { applyThemeColors } from '../styles/theme';
 
 export const API_BASE_URL = 'http://192.168.3.148:5684' //url desde las practicas
 // export const API_BASE_URL = 'http://192.168.56.1:5684' //url desde casa
@@ -10,7 +10,6 @@ export const API_BASE_URL = 'http://192.168.3.148:5684' //url desde las practica
 let jwtToken: string | null = null
 
 let jwtRefreshToken: string | null = null
-
 
 const instance = axios.create({
     baseURL: API_BASE_URL,
@@ -44,6 +43,20 @@ const processQueue = (error: unknown, token: string | null = null) => {
     });
     failedQueue = [];
 };
+
+export interface StoreItemResponse {
+    id: number;
+    name: string;
+    desc: string;
+    type: string;
+    price: number;
+    assetRef: string;
+    theme: string;
+    coleccion: string;
+    rarity?: string;
+    owned: boolean;
+    equipped: boolean;
+}
 
 instance.interceptors.response.use(
     response => response,
@@ -178,24 +191,88 @@ export async function confirmRegister(req: VerifyRequest) : Promise<void> {
 
 export async function getUserData() : Promise<UserData> {
     try {
+        const response = await instance.get<UserData>("/auth/me");
+        console.error("Successful user data retrieval! ");
+        const result = response.data;
+        applyThemeColors(result.themeColors);
+        return result;
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            const status = err.response?.status;
+            const responseData = err.response?.data as { errorText?: string; error?: string } | undefined;
+            const message =
+                responseData?.errorText ??
+                responseData?.error ??
+                err.message ??
+                "Error interno de axios";
+            console.error("STATUS:", status);
+            console.error("DATA:", err.response?.data);
+            throw new Error(`No se pudo obtener /auth/me (${status ?? "sin status"}): ${message}`);
+        }
 
-        const data = await instance.get("/auth/me");
+        console.error("Error de la peticion!", err);
+        throw new Error("No se pudo obtener /auth/me por un error inesperado.");
+    }
+}
+
+export async function getStoreItems() : Promise<StoreItemResponse[]> {
+    try {
+        const response = await instance.get<StoreItemResponse[]>("/store/items");
+        return response.data;
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            const status = err.response?.status;
+            const responseData = err.response?.data as { errorText?: string; error?: string } | undefined;
+            const message =
+                responseData?.errorText ??
+                responseData?.error ??
+                err.message ??
+                "Error interno de axios";
+            console.error("STATUS:", status);
+            console.error("DATA:", err.response?.data);
+            throw new Error(`No se pudo obtener /store/items (${status ?? "sin status"}): ${message}`);
+        }
+
+        console.error(err);
+        throw new Error("No se pudo obtener /store/items por un error inesperado.");
+    }
+}
+
+export async function buyStoreItem(id: number) : Promise<void> {
+    try {
+        const data = await instance.post("/store/buy/" + id);
         if (data.status >= 200 && data.status < 300) {
-            console.error("Successful user data retrieval! ");
-            const result = data.data as UserData;
-
-
-            return result;
+            return Promise.resolve();
         } else {
-            console.error("Error en el log! " + data.data["error"]);
+            console.error("Error en la compra! " + data.data["error"]);
             return Promise.reject();
         }
     } catch (err) {
         if (axios.isAxiosError(err)) {
-            // Error de axios
-            console.error("Error interno de axios!!")
+            console.error("STATUS:", err.response?.status);
+            console.error("DATA:", err.response?.data);
         } else {
-            console.error("Error de la peticion!")
+            console.error(err);
+        }
+        return Promise.reject();
+    }
+}
+
+export async function equipStoreItem(id: number) : Promise<void> {
+    try {
+        const data = await instance.post("/store/equip/" + id);
+        if (data.status >= 200 && data.status < 300) {
+            return Promise.resolve();
+        } else {
+            console.error("Error al equipar! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            console.error("STATUS:", err.response?.status);
+            console.error("DATA:", err.response?.data);
+        } else {
+            console.error(err);
         }
         return Promise.reject();
     }

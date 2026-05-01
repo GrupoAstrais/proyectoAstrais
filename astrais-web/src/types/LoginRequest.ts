@@ -24,9 +24,11 @@ export interface UserData {
   nivel: number;
   xpActual: number;
   xpTotal: number; 
+  ludiones: number;
   personalGid: number;
-  equipperPetRef: number; 
-  themeColors: number | null; 
+  equippedPetRef: string | null;
+  themeColors: string | null;
+  isAdmin: boolean;
 }
 
 export interface UserGroups {

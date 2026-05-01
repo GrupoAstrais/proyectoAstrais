@@ -4,6 +4,8 @@ import { Link, useNavigate } from 'react-router'
 import loginBg from '../../assets/login-bg.jpg'
 import { confirmRegister, createUser } from '../../data/Api'
 
+const PASSWORD_SECURITY_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{12,}$/
+
 export default function Register() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
@@ -13,6 +15,8 @@ export default function Register() {
   const [confirmation, setConfirmation] = useState('')
   const [codeSent, setCodeSent] = useState(false)
   const [error, setError] = useState('')
+
+  const isPasswordSecure = (value: string) => PASSWORD_SECURITY_PATTERN.test(value)
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -24,6 +28,9 @@ export default function Register() {
       } else {
         if (password !== passwordVer) {
           setError('Passwords do not match.')
+          return
+        } else if (!isPasswordSecure(password)) {
+          setError('Password must have at least 12 characters, including uppercase, lowercase and a number.')
           return
         } else {
           await createUser({name: name, email: email, passwd: password, lang: 'ENG'}).then( () => {
@@ -105,6 +112,9 @@ export default function Register() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="current-password"
+              minLength={12}
+              pattern={`${PASSWORD_SECURITY_PATTERN}`}
+              title="Minimum 12 characters, with uppercase, lowercase and a number."
               required
               className="rounded-xl border border-white/25 bg-black/25 px-3.5 py-3 text-base text-white placeholder:text-white/65 focus-visible:outline-2 focus-visible:outline-[#ff66dd] focus-visible:outline-offset-1"
             />
@@ -119,6 +129,9 @@ export default function Register() {
               value={passwordVer}
               onChange={(event) => setPasswordVer(event.target.value)}
               autoComplete="current-password"
+              minLength={12}
+              pattern={`${PASSWORD_SECURITY_PATTERN}`}
+              title="Minimum 1 characters, with uppercase, lowercase and a number."
               required
               className="rounded-xl border border-white/25 bg-black/25 px-3.5 py-3 text-base text-white placeholder:text-white/65 focus-visible:outline-2 focus-visible:outline-[#ff66dd] focus-visible:outline-offset-1"
             />

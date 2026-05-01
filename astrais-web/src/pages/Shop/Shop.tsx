@@ -3,31 +3,170 @@ import { NavLink } from 'react-router'
 import Navbar from '../../components/layout/Navbar'
 import bgImage from '../../assets/homeScreenBack.jpg'
 import logo from '../../assets/logo_w.svg'
-import { readClickerStats } from '../Games/gameStorage'
-import { SHOP_CATEGORIES, SHOP_ITEMS, getItemsForCategory, getRarityClasses, type ShopCategory } from './shopCatalog'
-import { calculateAvailableBalance, calculateSpentLudions, readShopState, type ShopState, writeShopState } from './shopStorage'
+import {
+  buyStoreItem,
+  equipStoreItem,
+  getStoreItems,
+  getUserData,
+  type StoreItemResponse,
+} from '../../data/Api'
+import { parseThemeConfig } from '../../styles/theme'
 
 const PAGE_SIZE = 4
 
-function usePersistedShopState() {
-  const [shopState, setShopState] = React.useState<ShopState>(() => readShopState())
+type ShopCategory = 'Todos' | 'Eventos' | 'Temas' | 'Mascotas' | 'Especiales'
+type ShopSlot = 'theme' | 'companion' | 'aura'
+type ShopRarity = 'Comun' | 'Raro' | 'Epico' | 'Legendario'
 
-  const updateShopState = React.useCallback((nextState: ShopState) => {
-    setShopState(nextState)
-    writeShopState(nextState)
-  }, [])
+interface ShopDisplayItem extends StoreItemResponse {
+  category: Exclude<ShopCategory, 'Todos'>
+  slot: ShopSlot
+  rarityLabel: ShopRarity
+  shortDescription: string
+  detail: string
+  perk: string
+  accentFrom: string
+  accentTo: string
+}
 
-  return [shopState, updateShopState] as const
+const SHOP_CATEGORIES: ShopCategory[] = ['Todos', 'Eventos', 'Temas', 'Mascotas', 'Especiales']
+
+function normalizeRarity(rarity?: string): ShopRarity {
+  switch (rarity?.toUpperCase()) {
+    case 'RARO':
+    case 'RARE':
+      return 'Raro'
+    case 'EPICO':
+    case 'EPIC':
+      return 'Epico'
+    case 'LEGENDARIO':
+    case 'LEGENDARY':
+      return 'Legendario'
+    default:
+      return 'Comun'
+  }
+}
+
+function getRarityClasses(rarity: ShopRarity) {
+  if (rarity === 'Legendario') {
+    return 'border-[#f59e0b]/45 bg-[#f59e0b]/10 text-[#f8d089]'
+  }
+
+  if (rarity === 'Epico') {
+    return 'border-[var(--astrais-error)]/35 bg-[var(--astrais-error)]/10 text-[var(--astrais-error)]'
+  }
+
+  if (rarity === 'Raro') {
+    return 'border-accent-mint-300/35 bg-accent-mint-300/10 text-accent-mint-300'
+  }
+
+  return 'border-white/15 bg-white/8 text-slate-200'
+}
+
+function getItemCategory(item: StoreItemResponse): Exclude<ShopCategory, 'Todos'> {
+  if (item.type === 'APP_THEME') {
+    return 'Temas'
+  }
+
+  if (item.type === 'PET') {
+    return 'Mascotas'
+  }
+
+  if (item.coleccion.toLowerCase().includes('event')) {
+    return 'Eventos'
+  }
+
+  return 'Especiales'
+}
+
+function getItemSlot(item: StoreItemResponse): ShopSlot {
+  if (item.type === 'APP_THEME') {
+    return 'theme'
+  }
+
+  if (item.type === 'PET') {
+    return 'companion'
+  }
+
+  return 'aura'
+}
+
+function getItemAccent(item: StoreItemResponse) {
+  if (item.type === 'APP_THEME') {
+    const theme = parseThemeConfig(item.theme)
+    return { accentFrom: theme.primary, accentTo: theme.secondary }
+  }
+
+  if (item.type === 'PET') {
+    return { accentFrom: 'var(--astrais-tertiary)', accentTo: 'var(--astrais-secondary)' }
+  }
+
+  return { accentFrom: 'var(--astrais-primary)', accentTo: 'var(--astrais-error)' }
+}
+
+function toDisplayItem(item: StoreItemResponse): ShopDisplayItem {
+  const { accentFrom, accentTo } = getItemAccent(item)
+
+  return {
+    ...item,
+    category: getItemCategory(item),
+    slot: getItemSlot(item),
+    rarityLabel: normalizeRarity(item.rarity),
+    shortDescription: item.desc,
+    detail: item.desc,
+    perk: item.type === 'APP_THEME'
+      ? 'Tema visual equipado desde tu cuenta para sincronizar colores entre web y app.'
+      : `Cosmetico de la coleccion ${item.coleccion || 'DEFAULT'}.`,
+    accentFrom,
+    accentTo,
+  }
+}
+
+function getSoftGradient(from: string, to: string, fromWeight = '20%', toWeight = '14%') {
+  return `linear-gradient(145deg, color-mix(in srgb, ${from} ${fromWeight}, transparent), color-mix(in srgb, ${to} ${toWeight}, transparent))`
 }
 
 export default function Shop() {
-  const [shopState, updateShopState] = usePersistedShopState()
+  const [items, setItems] = React.useState<ShopDisplayItem[]>([])
+  const [availableBalance, setAvailableBalance] = React.useState(0)
   const [activeCategory, setActiveCategory] = React.useState<ShopCategory>('Todos')
   const [currentPage, setCurrentPage] = React.useState(0)
-  const [selectedItemId, setSelectedItemId] = React.useState<string>(SHOP_ITEMS[0]?.id ?? '')
-  const [gameStats] = React.useState(() => readClickerStats())
+  const [selectedItemId, setSelectedItemId] = React.useState<number | null>(null)
+  const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState<string | null>(null)
+  const [mutationItemId, setMutationItemId] = React.useState<number | null>(null)
 
-  const filteredItems = React.useMemo(() => getItemsForCategory(activeCategory), [activeCategory])
+  const loadShopData = React.useCallback(async () => {
+    const [userData, storeItems] = await Promise.all([getUserData(), getStoreItems()])
+
+    setAvailableBalance(userData.ludiones)
+    setItems(storeItems.map(toDisplayItem))
+  }, [])
+
+  React.useEffect(() => {
+    const loadInitialShopData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        await loadShopData()
+      } catch {
+        setError('No se pudo conectar la tienda con el servidor.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    void loadInitialShopData()
+  }, [loadShopData])
+
+  const filteredItems = React.useMemo(() => {
+    if (activeCategory === 'Todos') {
+      return items
+    }
+
+    return items.filter((item) => item.category === activeCategory)
+  }, [activeCategory, items])
+
   const pageCount = Math.max(1, Math.ceil(filteredItems.length / PAGE_SIZE))
   const visibleItems = React.useMemo(
     () => filteredItems.slice(currentPage * PAGE_SIZE, currentPage * PAGE_SIZE + PAGE_SIZE),
@@ -37,16 +176,21 @@ export default function Shop() {
   const selectedItem =
     filteredItems.find((item) => item.id === selectedItemId) ??
     visibleItems[0] ??
-    SHOP_ITEMS[0]
+    filteredItems[0] ??
+    null
 
-  const spentLudions = calculateSpentLudions(shopState.ownedIds)
-  const availableBalance = calculateAvailableBalance(gameStats.totalLudionsEarned, shopState.ownedIds)
-  const isOwned = selectedItem ? shopState.ownedIds.includes(selectedItem.id) : false
-  const isEquipped = selectedItem ? shopState.equippedBySlot[selectedItem.slot] === selectedItem.id : false
+  const spentLudions = React.useMemo(
+    () => items.reduce((total, item) => total + (item.owned ? item.price : 0), 0),
+    [items],
+  )
+  const ownedCount = items.filter((item) => item.owned).length
+  const isOwned = selectedItem?.owned ?? false
+  const isEquipped = selectedItem?.equipped ?? false
+  const isMutatingSelected = selectedItem ? mutationItemId === selectedItem.id : false
 
-  const equippedTheme = SHOP_ITEMS.find((item) => item.id === shopState.equippedBySlot.theme)
-  const equippedCompanion = SHOP_ITEMS.find((item) => item.id === shopState.equippedBySlot.companion)
-  const equippedAura = SHOP_ITEMS.find((item) => item.id === shopState.equippedBySlot.aura)
+  const equippedTheme = items.find((item) => item.slot === 'theme' && item.equipped)
+  const equippedCompanion = items.find((item) => item.slot === 'companion' && item.equipped)
+  const equippedAura = items.find((item) => item.slot === 'aura' && item.equipped)
 
   React.useEffect(() => {
     setCurrentPage(0)
@@ -60,6 +204,7 @@ export default function Shop() {
 
   React.useEffect(() => {
     if (!visibleItems.length) {
+      setSelectedItemId(null)
       return
     }
 
@@ -70,46 +215,61 @@ export default function Shop() {
     }
   }, [selectedItemId, visibleItems])
 
-  const handleBuySelected = () => {
-    if (!selectedItem || isOwned || availableBalance < selectedItem.price) {
-      return
-    }
-
-    updateShopState({
-      ...shopState,
-      ownedIds: [...shopState.ownedIds, selectedItem.id],
-    })
+  const refreshAfterMutation = async () => {
+    await loadShopData()
+    setError(null)
   }
 
-  const handleEquipSelected = () => {
-    if (!selectedItem || !isOwned) {
+  const handleBuySelected = async () => {
+    if (!selectedItem || isOwned || availableBalance < selectedItem.price || mutationItemId !== null) {
       return
     }
 
-    updateShopState({
-      ...shopState,
-      equippedBySlot: {
-        ...shopState.equippedBySlot,
-        [selectedItem.slot]: selectedItem.id,
-      },
-    })
+    try {
+      setMutationItemId(selectedItem.id)
+      await buyStoreItem(selectedItem.id)
+      await refreshAfterMutation()
+    } catch {
+      setError('No se pudo completar la compra.')
+    } finally {
+      setMutationItemId(null)
+    }
+  }
+
+  const handleEquipSelected = async () => {
+    if (!selectedItem || !isOwned || isEquipped || mutationItemId !== null) {
+      return
+    }
+
+    try {
+      setMutationItemId(selectedItem.id)
+      await equipStoreItem(selectedItem.id)
+      await refreshAfterMutation()
+    } catch {
+      setError('No se pudo equipar el cosmetico.')
+    } finally {
+      setMutationItemId(null)
+    }
   }
 
   return (
     <div
       style={{ backgroundImage: `url(${bgImage})` }}
-      className="relative h-screen overflow-hidden bg-cover bg-center font-['Space_Grotesk'] text-white"
+      className="relative h-screen overflow-hidden bg-cover bg-center font-['Space_Grotesk'] text-(--astrais-text)"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.18),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(139,92,246,0.24),transparent_38%),radial-gradient(circle_at_center,rgba(34,197,94,0.16),transparent_45%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-black/63" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--astrais-primary),transparent_34%),radial-gradient(circle_at_bottom_right,var(--astrais-secondary),transparent_38%),radial-gradient(circle_at_center,var(--astrais-tertiary),transparent_45%)] opacity-20" />
+      <div
+        className="pointer-events-none absolute inset-0 opacity-80"
+        style={{ backgroundColor: 'color-mix(in srgb, var(--astrais-background) 74%, black 26%)' }}
+      />
       <div className="scanlines pointer-events-none absolute inset-0 opacity-25" />
 
       <div className="relative z-10 flex h-full min-h-0 flex-col">
         <Navbar />
 
         <main className="flex min-h-0 flex-1 px-3 pb-3 pt-1 md:px-4 md:pb-4 xl:px-6 xl:pb-5">
-          <section className="mx-auto hidden h-full w-full gap-3 lg:grid lg:grid-cols-12 min-[1400px]:gap-4 min-[1400px]:grid-cols-[15.75rem_minmax(0,1.24fr)_20.25rem]">
-            <aside className="panel-glow relative col-span-2 grid min-h-0 grid-rows-[auto_auto_auto_minmax(0,1fr)] overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(170deg,rgba(15,23,42,0.9),rgba(30,74,99,0.78))] p-3.5 shadow-[0_20px_56px_rgba(7,12,24,0.46)] min-[1400px]:p-5">
+          <section className="mx-auto hidden h-full w-full gap-3 lg:grid lg:grid-cols-12 min-[1400px]:grid-cols-[15.75rem_minmax(0,1.24fr)_20.25rem] min-[1400px]:gap-4">
+            <aside className="panel-glow relative col-span-2 grid min-h-0 grid-rows-[auto_auto_auto_minmax(0,1fr)] overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(170deg,color-mix(in_srgb,var(--astrais-background)_90%,black_10%),color-mix(in_srgb,var(--astrais-background-alt)_82%,var(--astrais-secondary)_18%))] p-3.5 shadow-[0_20px_56px_rgba(7,12,24,0.46)] min-[1400px]:p-5">
               <div className="pointer-events-none absolute -left-12 top-3 h-36 w-36 rounded-full bg-secondary-500/16 blur-3xl" />
               <div className="relative z-10 flex items-start justify-between gap-3">
                 <div>
@@ -117,8 +277,8 @@ export default function Shop() {
                   <h1 className="mt-3 font-['Press_Start_2P'] text-[clamp(0.92rem,1.4vw,1.2rem)] leading-tight text-white">
                     Tienda orbital
                   </h1>
-                  <p className="mt-2 text-[0.8rem] text-left leading-5 text-slate-300 xl:text-[0.86rem] xl:leading-6">
-                    Explora, compra y equipa a tu antojo.
+                  <p className="mt-2 text-left text-[0.8rem] leading-5 text-slate-300 xl:text-[0.86rem] xl:leading-6">
+                    Explora, compra y equipa cosmeticos desde tu cuenta.
                   </p>
                 </div>
                 <img src={logo} alt="Astrais logo" className="h-9 w-9 opacity-85 min-[1400px]:h-12 min-[1400px]:w-12" />
@@ -137,26 +297,30 @@ export default function Shop() {
 
               <div className="relative z-10 mt-4 rounded-3xl border border-white/10 bg-black/18 p-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-[0.58rem] uppercase tracking-[0.18em] text-slate-400">Conexion arcade</p>
-                  <span className="rounded-full border border-accent-mint-300/25 bg-accent-mint-300/8 px-2 py-1 text-[0.54rem] uppercase tracking-[0.14em] text-accent-mint-300">
-                    Activa
+                  <p className="text-[0.58rem] uppercase tracking-[0.18em] text-slate-400">Conexion backend</p>
+                  <span className={`rounded-full border px-2 py-1 text-[0.54rem] uppercase tracking-[0.14em] ${
+                    error
+                      ? 'border-(--astrais-error)/35 bg-(--astrais-error)/10 text-(--astrais-error)'
+                      : 'border-accent-mint-300/25 bg-accent-mint-300/8 text-accent-mint-300'
+                  }`}>
+                    {error ? 'Error' : 'Activa'}
                   </span>
                 </div>
                 <div className="mt-2 space-y-2 text-[0.76rem] text-slate-300 xl:text-[0.82rem]">
                   <div className="flex items-center justify-between">
-                    <span>Ludiones del arcade</span>
-                    <span className="font-semibold text-white">{gameStats.totalLudionsEarned}</span>
+                    <span>Objetos cargados</span>
+                    <span className="font-semibold text-white">{items.length}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Objetos comprados</span>
-                    <span className="font-semibold text-white">{shopState.ownedIds.length}</span>
+                    <span className="font-semibold text-white">{ownedCount}</span>
                   </div>
                 </div>
               </div>
 
               <div className="relative z-10 mt-4 min-h-0 rounded-3xl border border-white/10 bg-black/18 p-3">
-              <p className="text-xs text-center uppercase tracking-[0.18em] text-slate-400">Categorias</p>
-                <div className="mt-2 grid grid-cols-1 gap-2 overflow-y-scroll ">
+                <p className="text-center text-xs uppercase tracking-[0.18em] text-slate-400">Categorias</p>
+                <div className="mt-2 grid grid-cols-1 gap-2 overflow-y-scroll">
                   {SHOP_CATEGORIES.map((category) => (
                     <button
                       key={category}
@@ -164,7 +328,7 @@ export default function Shop() {
                       onClick={() => setActiveCategory(category)}
                       className={`rounded-2xl border px-3 py-2.5 text-left text-[0.76rem] font-semibold xl:text-[0.82rem] ${
                         activeCategory === category
-                          ? 'border-0 bg-linear-to-r from-[#f97316] via-[#ec4899] to-[#8b5cf6] text-white shadow-[0_10px_24px_rgba(236,72,153,0.20)]'
+                          ? 'border-0 bg-linear-to-r from-(--astrais-primary) via-(--astrais-error) to-(--astrais-secondary) text-white shadow-[0_10px_24px_rgba(236,72,153,0.20)]'
                           : 'border-white/12 bg-white/6 text-slate-200 hover:bg-white/10'
                       }`}
                     >
@@ -175,7 +339,7 @@ export default function Shop() {
               </div>
             </aside>
 
-            <section className="panel-glow relative col-span-7 grid min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-[28px] border border-white/15 bg-[linear-gradient(160deg,rgba(15,23,42,0.88),rgba(76,29,149,0.56),rgba(30,74,99,0.72))] p-3.5 shadow-[0_20px_58px_rgba(7,12,24,0.48)] min-[1400px]:p-5">
+            <section className="panel-glow relative col-span-7 grid min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-[28px] border border-white/15 bg-[linear-gradient(160deg,color-mix(in_srgb,var(--astrais-background)_88%,black_12%),color-mix(in_srgb,var(--astrais-primary)_42%,transparent),color-mix(in_srgb,var(--astrais-background-alt)_82%,var(--astrais-secondary)_18%))] p-3.5 shadow-[0_20px_58px_rgba(7,12,24,0.48)] min-[1400px]:p-5">
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.10),transparent_25%)]" />
               <header className="relative z-10 flex items-start justify-between gap-3 min-[1400px]:gap-4">
                 <div>
@@ -183,15 +347,16 @@ export default function Shop() {
                   <h2 className="mt-3 font-['Press_Start_2P'] text-[clamp(0.92rem,1.4vw,1.15rem)] text-white">
                     Seleccion premium
                   </h2>
+                  {error ? <p className="mt-2 text-[0.76rem] text-(--astrais-error)">{error}</p> : null}
                 </div>
 
                 <div className="flex items-center gap-2.5 min-[1400px]:gap-3">
                   <button
                     type="button"
                     onClick={() => setCurrentPage((page) => Math.max(0, page - 1))}
-                    disabled={currentPage === 0}
+                    disabled={currentPage === 0 || loading}
                     className={`rounded-full border px-3 py-2 text-[0.74rem] font-semibold transition ${
-                      currentPage === 0
+                      currentPage === 0 || loading
                         ? 'cursor-not-allowed border-white/10 bg-white/6 text-slate-500'
                         : 'border-white/15 bg-white/8 text-white hover:bg-white/12'
                     }`}
@@ -204,9 +369,9 @@ export default function Shop() {
                   <button
                     type="button"
                     onClick={() => setCurrentPage((page) => Math.min(pageCount - 1, page + 1))}
-                    disabled={currentPage >= pageCount - 1}
+                    disabled={currentPage >= pageCount - 1 || loading}
                     className={`rounded-full border px-3 py-2 text-[0.74rem] font-semibold transition ${
-                      currentPage >= pageCount - 1
+                      currentPage >= pageCount - 1 || loading
                         ? 'cursor-not-allowed border-white/10 bg-white/6 text-slate-500'
                         : 'border-white/15 bg-white/8 text-white hover:bg-white/12'
                     }`}
@@ -217,10 +382,15 @@ export default function Shop() {
               </header>
 
               <div className="relative z-10 mt-4 grid min-h-0 grid-cols-2 grid-rows-2 gap-3 min-[1400px]:gap-4">
-                {visibleItems.map((item) => {
-                  const itemOwned = shopState.ownedIds.includes(item.id)
-                  const itemEquipped = shopState.equippedBySlot[item.slot] === item.id
-
+                {loading ? (
+                  <div className="col-span-2 row-span-2 grid place-items-center rounded-3xl border border-white/12 bg-black/18 text-sm text-slate-300">
+                    Cargando tienda...
+                  </div>
+                ) : visibleItems.length === 0 ? (
+                  <div className="col-span-2 row-span-2 grid place-items-center rounded-3xl border border-white/12 bg-black/18 p-8 text-center text-sm leading-6 text-slate-300">
+                    No hay cosmeticos disponibles en esta categoria.
+                  </div>
+                ) : visibleItems.map((item) => {
                   return (
                     <article
                       key={item.id}
@@ -233,7 +403,7 @@ export default function Shop() {
                     >
                       <div
                         className="relative overflow-hidden rounded-[20px] border border-white/10 px-3 py-3"
-                        style={{ background: `linear-gradient(145deg, ${item.accentFrom}33, ${item.accentTo}22)` }}
+                        style={{ background: getSoftGradient(item.accentFrom, item.accentTo) }}
                       >
                         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.16),transparent_34%)]" />
                         <div className="relative flex items-start justify-between gap-3">
@@ -241,8 +411,8 @@ export default function Shop() {
                             <p className="text-[0.58rem] uppercase tracking-[0.18em] text-slate-300">{item.category}</p>
                             <h3 className="mt-2 truncate text-[0.82rem] font-semibold text-white min-[1400px]:text-[0.94rem]">{item.name}</h3>
                           </div>
-                          <span className={`rounded-full border px-2 py-1 text-[0.52rem] uppercase tracking-[0.16em] ${getRarityClasses(item.rarity)}`}>
-                            {item.rarity}
+                          <span className={`rounded-full border px-2 py-1 text-[0.52rem] uppercase tracking-[0.16em] ${getRarityClasses(item.rarityLabel)}`}>
+                            {item.rarityLabel}
                           </span>
                         </div>
 
@@ -257,7 +427,7 @@ export default function Shop() {
                       <div className="mt-3 flex items-center justify-between">
                         <span className="text-[0.8rem] font-semibold text-[#f8d089] min-[1400px]:text-[0.9rem]">{item.price} L</span>
                         <span className="rounded-full border border-white/12 bg-white/6 px-2 py-1 text-[0.54rem] uppercase tracking-[0.14em] text-slate-300">
-                          {itemEquipped ? 'Equipado' : itemOwned ? 'Comprado' : 'Disponible'}
+                          {item.equipped ? 'Equipado' : item.owned ? 'Comprado' : 'Disponible'}
                         </span>
                       </div>
                     </article>
@@ -267,15 +437,13 @@ export default function Shop() {
             </section>
 
             {selectedItem ? (
-              <aside className="panel-glow relative grid min-h-0 col-span-3
-              grid-rows-[minmax(0,1fr)_auto] overflow-y-scroll rounded-[26px] border border-white/15 bg-[linear-gradient(170deg,rgba(15,23,42,0.9),rgba(30,74,99,0.76))] p-3.5 shadow-[0_20px_56px_rgba(7,12,24,0.46)] min-[1400px]:p-5">
+              <aside className="panel-glow relative col-span-3 grid min-h-0 grid-rows-[minmax(0,1fr)_auto] overflow-y-scroll rounded-[26px] border border-white/15 bg-[linear-gradient(170deg,color-mix(in_srgb,var(--astrais-background)_90%,black_10%),color-mix(in_srgb,var(--astrais-background-alt)_82%,var(--astrais-secondary)_18%))] p-3.5 shadow-[0_20px_56px_rgba(7,12,24,0.46)] min-[1400px]:p-5">
                 <div className="pointer-events-none absolute -right-10 top-6 h-36 w-36 rounded-full bg-secondary-500/18 blur-3xl" />
                 <div
                   className="relative min-h-0 overflow-hidden rounded-3xl border border-white/10 p-4"
-                  style={{ background: `linear-gradient(145deg, ${selectedItem.accentFrom}30, ${selectedItem.accentTo}18)` }}
+                  style={{ background: getSoftGradient(selectedItem.accentFrom, selectedItem.accentTo, '19%', '10%') }}
                 >
                   <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.16),transparent_34%)]" />
-                  
 
                   <div className="relative z-10 grid h-full min-h-0 grid-rows-[auto_auto_auto_auto_auto_auto]">
                     <div className="flex items-start justify-between gap-3">
@@ -285,8 +453,8 @@ export default function Shop() {
                           {selectedItem.name}
                         </h2>
                       </div>
-                      <span className={`rounded-full border px-2 py-1 text-[0.52rem] uppercase tracking-[0.16em] ${getRarityClasses(selectedItem.rarity)}`}>
-                        {selectedItem.rarity}
+                      <span className={`rounded-full border px-2 py-1 text-[0.52rem] uppercase tracking-[0.16em] ${getRarityClasses(selectedItem.rarityLabel)}`}>
+                        {selectedItem.rarityLabel}
                       </span>
                     </div>
 
@@ -329,24 +497,24 @@ export default function Shop() {
                       <button
                         type="button"
                         onClick={handleBuySelected}
-                        disabled={isOwned || availableBalance < selectedItem.price}
-                          className={`rounded-2xl px-4 py-3 text-[0.72rem] font-semibold transition min-[1400px]:text-[0.82rem] ${
+                        disabled={isOwned || availableBalance < selectedItem.price || isMutatingSelected}
+                        className={`rounded-2xl px-4 py-3 text-[0.72rem] font-semibold transition min-[1400px]:text-[0.82rem] ${
                           isOwned
                             ? 'cursor-default border border-accent-mint-300/25 bg-accent-mint-300/12 text-accent-mint-300'
-                            : availableBalance < selectedItem.price
+                            : availableBalance < selectedItem.price || isMutatingSelected
                               ? 'cursor-not-allowed border border-white/10 bg-white/8 text-slate-400'
-                              : 'border border-transparent bg-linear-to-r from-[#f97316] via-[#ec4899] to-[#8b5cf6] text-white shadow-[0_14px_28px_rgba(236,72,153,0.22)] hover:-translate-y-0.5'
+                              : 'border border-transparent bg-linear-to-r from-(--astrais-primary) via-(--astrais-error) to-(--astrais-secondary) text-white shadow-[0_14px_28px_rgba(236,72,153,0.22)] hover:-translate-y-0.5'
                         }`}
                       >
-                        {isOwned ? 'Ya comprado' : 'Comprar ahora'}
+                        {isMutatingSelected ? 'Procesando...' : isOwned ? 'Ya comprado' : 'Comprar ahora'}
                       </button>
 
                       <button
                         type="button"
                         onClick={handleEquipSelected}
-                        disabled={!isOwned || isEquipped}
-                          className={`rounded-2xl px-4 py-3 text-[0.72rem] font-semibold transition min-[1400px]:text-[0.82rem] ${
-                          !isOwned
+                        disabled={!isOwned || isEquipped || isMutatingSelected}
+                        className={`rounded-2xl px-4 py-3 text-[0.72rem] font-semibold transition min-[1400px]:text-[0.82rem] ${
+                          !isOwned || isMutatingSelected
                             ? 'cursor-not-allowed border border-white/10 bg-white/8 text-slate-400'
                             : isEquipped
                               ? 'cursor-default border border-accent-mint-300/25 bg-accent-mint-300/12 text-accent-mint-300'
@@ -361,7 +529,7 @@ export default function Shop() {
 
                 <div className="mt-4 flex flex-col items-center justify-between gap-3">
                   <div className="rounded-2xl border border-white/10 bg-black/18 px-4 py-3 text-[0.72rem] leading-5 text-slate-300 min-[1400px]:text-[0.8rem]">
-                    Si necesitas mas saldo, el arcade ya alimenta esta tienda con lo que ganas en minijuegos.
+                    El saldo y el inventario se actualizan desde el backend y la base de datos.
                   </div>
                   <NavLink
                     to="/games"
@@ -411,7 +579,7 @@ export default function Shop() {
         }
 
         ::-webkit-scrollbar {
-        display: none;
+          display: none;
         }
       `}</style>
     </div>

@@ -19,6 +19,7 @@ data class CosmeticResponseDTO(
         val assetRef: String,
         val theme: String,
         val coleccion: String,
+        val rarity: String,
         val owned: Boolean,
         val equipped: Boolean
 )

@@ -9,14 +9,14 @@ import kotlinx.serialization.json.Json
 
 /* Así es la estructura del JSON para los colores
 {
-    "primary": "#39FF14",
-    "secondary": "#00C800",
-    "tertiary": "#007A00",
-    "background": "#050B05",
-    "backgroundAlt": "#1A331A",
-    "surface": "#101A10",
-    "text": "#E0FFE0",
-    "error": "#FF3366"
+  "primary": "#8B5CF6",
+  "secondary": "#38BDF8 ",
+  "tertiary": "#10B981",
+  "background": "#0D1117",
+  "backgroundAlt": "#11161D",
+  "surface": "#1A1D2D",
+  "text": "#F8FAFC",
+  "error": "#F43F5E"
 }
 * */
 
