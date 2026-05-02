@@ -3,13 +3,8 @@ import type { AddUserToGroup, CreateGroup, CreateTask, EditGroup, EditTask, Logi
 import type { IGroup, ITarea } from '../types/Interfaces';
 
 
-<<<<<<< HEAD
 //export const API_BASE_URL = 'http://192.168.3.148:5684' //url desde las practicas
 export const API_BASE_URL = 'http://192.168.56.1:5684' //url desde casa
-=======
-export const API_BASE_URL = 'http://192.168.3.148:5684' //url desde las practicas
-// export const API_BASE_URL = 'http://192.168.56.1:5684' //url desde casa
->>>>>>> 02dee146514a6d7b78a97ab80ac39aed1e7b51d2
 
 
 let jwtToken: string | null = null
@@ -26,6 +21,7 @@ const instance = axios.create({
 const refreshInstance = axios.create({
     baseURL: API_BASE_URL,
     timeout: 10_000,
+    
     headers: { 'Content-Type': 'application/json' }
 });
 
