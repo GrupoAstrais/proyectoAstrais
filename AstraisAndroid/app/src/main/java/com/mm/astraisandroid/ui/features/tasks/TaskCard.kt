@@ -29,6 +29,23 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * Tarjeta visual que representa una tarea individual en la lista.
+ *
+ * Los objetivos muestran un indicador de progreso basado en sus subtareas y permiten expandirse para
+ * verlas. Las tarjetas pueden deslizarse hacia la izquierda para eliminar.
+ *
+ * @param task Modelo de UI de la tarea a mostrar.
+ * @param subtasks Lista de subtareas asociadas (objetivos).
+ * @param isExpanded `true` si la tarjeta está expandida mostrando detalles adicionales.
+ * @param onToggleExpand Acción al pulsar la tarjeta para expandirla o colapsarla.
+ * @param onToggleComplete Acción al marcar o desmarcar la tarea como completada.
+ * @param onAddSubtask Acción al pulsar el botón de añadir subtarea (objetivos).
+ * @param onEditSubtask Acción al editar una subtarea existente.
+ * @param onDeleteSubtask Acción al eliminar una subtarea existente.
+ * @param onEdit Acción al pulsar el botón de editar la tarea principal.
+ * @param onDelete Acción al deslizar la tarjeta para eliminar la tarea.
+ */
 @Composable
 fun TaskCard(
     task: TaskUIModel,
@@ -262,6 +279,12 @@ fun TaskCard(
     )
 }
 
+/**
+ * Icono que representa el tipo de tarea.
+ *
+ * @param tipo Tipo de tarea (`"OBJETIVO"`, `"HABITO"` u otro).
+ * @param alpha Valor de opacidad aplicado al icono y su contenedor.
+ */
 @Composable
 private fun TaskTypeIcon(tipo: String, alpha: Float) {
     val (icon, color) = when(tipo) {
@@ -281,6 +304,13 @@ private fun TaskTypeIcon(tipo: String, alpha: Float) {
     }
 }
 
+/**
+ * Chip informativo que muestra metadatos de una tarea (XP, ludiones, frecuencia, fecha...).
+ *
+ * @param text Texto a mostrar dentro del chip.
+ * @param icon Icono asociado al metadato.
+ * @param color Color temático del chip.
+ */
 @Composable
 private fun TaskMetadataChip(text: String, icon: ImageVector, color: Color) {
     Row(
@@ -297,6 +327,11 @@ private fun TaskMetadataChip(text: String, icon: ImageVector, color: Color) {
     }
 }
 
+/**
+ * Cabecera de la sección de subtareas dentro de un objetivo expandido.
+ *
+ * @param onAdd Acción al pulsar el botón de añadir una nueva subtarea.
+ */
 @Composable
 private fun SubtaskHeader(onAdd: () -> Unit) {
     Row(
@@ -311,6 +346,14 @@ private fun SubtaskHeader(onAdd: () -> Unit) {
     }
 }
 
+/**
+ * Fila individual que representa una subtarea dentro de un objetivo.
+ *
+ * @param sub Modelo de UI de la subtarea.
+ * @param onToggle Acción al marcar o desmarcar la subtarea como completada.
+ * @param onEdit Acción al pulsar el botón de editar la subtarea.
+ * @param onDelete Acción al pulsar el botón de eliminar la subtarea.
+ */
 @Composable
 private fun SubtaskRow(
     sub: TaskUIModel,

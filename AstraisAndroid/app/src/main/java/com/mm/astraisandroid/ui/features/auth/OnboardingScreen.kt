@@ -21,6 +21,15 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mm.astraisandroid.ui.features.profile.UserViewModel
 
+/**
+ * Pantalla de onboarding para completar el perfil tras el registro o primer login.
+ *
+ * Permite al usuario elegir un nombre de usuario y su idioma preferido antes de
+ * acceder a la aplicación por primera vez.
+ *
+ * @param onFinish Callback invocado tras guardar correctamente el perfil.
+ * @param userViewModel ViewModel de perfil que gestiona la carga y actualización de datos.
+ */
 @Composable
 fun OnboardingScreen(
     onFinish: () -> Unit,
@@ -130,6 +139,15 @@ fun OnboardingScreen(
     }
 }
 
+/**
+ * Opción visual de selección de idioma en la pantalla de onboarding.
+ *
+ * @param label Nombre visible del idioma (p. ej. "Español").
+ * @param code Código interno del idioma (p. ej. "ESP").
+ * @param isSelected `true` si este idioma está seleccionado actualmente.
+ * @param onClick Acción al pulsar la opción.
+ * @param modifier Modificadores adicionales de Compose.
+ */
 @Composable
 fun LanguageOption(
     label: String,

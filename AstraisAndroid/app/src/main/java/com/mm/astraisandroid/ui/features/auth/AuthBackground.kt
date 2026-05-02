@@ -13,6 +13,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
+/**
+ * Fondo para las pantallas de autenticación.
+ *
+ * @param content Contenido composable que se mostrará encima del fondo.
+ */
 @Composable
 fun AuthBackground(content: @Composable BoxScope.() -> Unit) {
     val bgBase = MaterialTheme.colorScheme.background

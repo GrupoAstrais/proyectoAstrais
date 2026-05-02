@@ -13,19 +13,36 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 
-// https://m3.material.io/components/text-fields/overview
+/**
+ * Campo de texto estilizado para las pantallas de autenticación.
+ *
+ * Envuelve un [TextField] de Material 3 con una paleta de colores personalizada
+ * adaptada al tema oscuro de Astrais. Soporta texto de contraseña, indicadores de
+ * error y texto de ayuda.
+ *
+ * @param value Texto actual del campo.
+ * @param onValueChange Callback invocado en cada cambio de texto.
+ * @param label Etiqueta flotante que actúa como placeholder.
+ * @param modifier Modificadores adicionales de Compose.
+ * @param keyboardType Tipo de teclado que debe mostrar el sistema operativo.
+ * @param imeAction Acción del botón principal del teclado virtual.
+ * @param isPassword Si es `true`, oculta el texto introducido.
+ * @param isError Si es `true`, resalta el campo en color de error.
+ * @param supportingText Texto auxiliar mostrado debajo del campo, útil para mensajes de error.
+ *
+ * @see <a href="https://m3.material.io/components/text-fields/overview">Material Text Fields</a>
+ */
 @Composable
 fun AuthTextField(
-    value: String,                                  // Texto que muestra el campo en este momento
-    onValueChange: (String) -> Unit,                // Lambda que se llama cada vez que el usuario escribe o borra un caracter
-    label: String,                                  /* Texto flotante que aparece dentro del campo vacío como placeholder,
-                                                       sube arriba cuando el campo está enfocado o tiene texto */
-    modifier: Modifier = Modifier,                  // Permite que cuando se llama la función se pueda añadir modificadores extra
-    keyboardType: KeyboardType = KeyboardType.Text, // Le dice al sistema operativo que teclado mostrar
-    imeAction: ImeAction = ImeAction.Next,          // Controla el boton de acción del teclado
-    isPassword: Boolean = false,                    // Boolean para aplicar el transform de contraseñas
-    isError: Boolean = false,                       // Boolean que le dice al textfield que esta en estado de error. Cambia colores
-    supportingText: String? = null                  // Texto pequeño que aparece debajo del campo, para errores basicamente
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    imeAction: ImeAction = ImeAction.Next,
+    isPassword: Boolean = false,
+    isError: Boolean = false,
+    supportingText: String? = null
 ) {
     TextField(
         value = value,

@@ -30,6 +30,17 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+/**
+ * Diálogo de creación de tareas para Astrais.
+ *
+ * Permite al usuario configurar una nueva tarea o subtarea indicando título,
+ * descripción, tipo (única, hábito u objetivo), prioridad, y datos adicionales
+ * según el tipo seleccionado (frecuencia para hábitos, fecha límite para únicas).
+ *
+ * @param parentId Identificador del objetivo padre si se crea una subtarea; `null` para tareas padre.
+ * @param onDismiss Callback invocado al cerrar el diálogo sin crear la tarea.
+ * @param onCreate Callback invocado al confirmar la creación con los datos introducidos por el usuario.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateTareaDialog(

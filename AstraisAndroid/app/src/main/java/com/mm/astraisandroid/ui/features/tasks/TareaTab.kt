@@ -24,6 +24,16 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mm.astraisandroid.ui.components.AstraisScreenHeader
 
+/**
+ * Pantalla principal de listado de tareas.
+ *
+ * Gestiona la visualización de tareas pendientes y completadas, permite filtrar
+ * por categoría y expandir objetivos para ver sus subtareas. Se integra con
+ * [TaskViewModel] para obtener el estado reactivo de la pantalla.
+ *
+ * @param viewModel ViewModel que expone el estado y las operaciones de tareas.
+ * @param onTaskCompleted Callback invocado cuando una tarea se marca como completada.
+ */
 @Composable
 fun TasksTab(viewModel: TaskViewModel = hiltViewModel(), onTaskCompleted: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -165,6 +175,14 @@ fun TasksTab(viewModel: TaskViewModel = hiltViewModel(), onTaskCompleted: () -> 
     }
 }
 
+/**
+ * Botón de pestaña usado para alternar entre "Pendientes" y "Completadas".
+ *
+ * @param text Etiqueta visible del botón.
+ * @param isSelected `true` si esta pestaña está activa.
+ * @param modifier Modificador de Compose para ajustar el tamaño o posición.
+ * @param onClick Acción al pulsar el botón.
+ */
 @Composable
 fun TabButton(text: String, isSelected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Box(
@@ -185,6 +203,13 @@ fun TabButton(text: String, isSelected: Boolean, modifier: Modifier = Modifier, 
     }
 }
 
+/**
+ * Chip de filtrado por categoría de tarea (Todas, Únicas, Hábitos, Objetivos).
+ *
+ * @param text Etiqueta visible del chip.
+ * @param isSelected `true` si esta categoría está seleccionada como filtro activo.
+ * @param onClick Acción al pulsar el chip.
+ */
 @Composable
 fun CategoryFilterChip(
     text: String,

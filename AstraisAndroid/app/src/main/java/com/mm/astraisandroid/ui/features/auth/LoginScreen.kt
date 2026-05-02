@@ -48,6 +48,19 @@ import kotlinx.coroutines.flow.collectLatest
 import android.widget.Toast
 
 
+/**
+ * Pantalla de inicio de sesión.
+ *
+ * Permite al usuario autenticarse mediante correo y contraseña, iniciar sesión
+ * con Google mediante Credential Manager, o continuar como invitado.
+ * Escucha los eventos del [LoginViewModel] para navegar a la pantalla principal,
+ * al onboarding o mostrar mensajes temporales.
+ *
+ * @param onNavigateToHome Callback para navegar a la pantalla principal tras un login exitoso.
+ * @param onNavigateToRegister Callback para navegar a la pantalla de registro.
+ * @param onNavigateToOnboarding Callback para navegar al onboarding si es la primera vez.
+ * @param viewModel ViewModel que gestiona la lógica de autenticación.
+ */
 @Composable
 fun LoginScreen(
     onNavigateToHome: () -> Unit,

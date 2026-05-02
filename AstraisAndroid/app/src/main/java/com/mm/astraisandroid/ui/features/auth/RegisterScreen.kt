@@ -46,6 +46,19 @@ import com.mm.astraisandroid.data.api.RegisterRequest
 import kotlinx.coroutines.flow.collectLatest
 import android.widget.Toast
 
+/**
+ * Pantalla de registro de nuevos usuarios.
+ *
+ * Recoge el correo, la contraseña y la confirmación de términos. Tras enviar
+ * el formulario, muestra un campo para introducir el código de verificación
+ * enviado por email. Escucha los eventos del [RegisterViewModel] para navegar
+ * al login, al onboarding o mostrar notificaciones.
+ *
+ * @param onNavigateToLogin Callback para navegar a la pantalla de inicio de sesión.
+ * @param onRegisterSuccess Callback invocado tras un registro exitoso previo a la verificación.
+ * @param onNavigateToOnboarding Callback para navegar al onboarding tras verificar el código.
+ * @param viewModel ViewModel que gestiona el registro y la verificación por email.
+ */
 @Composable
 fun RegisterScreen(
     onNavigateToLogin: () -> Unit,
