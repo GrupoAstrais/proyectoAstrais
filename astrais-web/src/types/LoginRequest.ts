@@ -56,8 +56,8 @@ export interface EditGroup {
 }
 
 export interface AddUserToGroup {
-  guid: number;
-  userid: number;
+  gid: number;
+  userId: number;
 }
 
 export interface CreateTask {
@@ -84,4 +84,67 @@ export interface EditTask {
   titulo: string,
   descripcion: string,
   prioridad: string
+}
+
+export interface EditUser {
+  uid: string,
+  nombreusu: string,
+  lang: string,
+  utcOffset: number
+}
+
+export interface SetEmailLogin {
+  email: string,
+  passwd: string
+}
+
+export interface MembersResponse {
+  uid: number,
+  name: string,
+  role: number,
+  joinedAt: string // "ISO 8601 | null"
+}
+
+export interface SetMemberRole {
+  gid: number,
+  userId: number,
+  role: number
+}
+
+export interface EventosGrupos {
+  id: number,
+  actorUid: number,
+  eventType: string
+  payloadJson: string | null,
+  createdAt: string,
+}
+
+export interface GroupInvitacion {
+  gid: number,
+  expiresInSeconds?: number,
+  maxUses?: number
+}
+
+export interface GroupInvitacionRespuesta {
+  code: string,
+  inviteUrl: string,
+  expiresAt: string | null,
+  maxUses: number,
+  usesCount: number,
+  revokedAt: string | null,
+}
+
+export interface RevokeGroupInvit {
+  gid: number,
+  code: string
+}
+
+export interface RevokeGroupInvit {
+  code: string,
+  gid: number
+}
+
+export interface PassOwnershipGroup {
+  gid: number,
+  newOwnerUserId: number
 }

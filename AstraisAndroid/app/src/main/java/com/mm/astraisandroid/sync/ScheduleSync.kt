@@ -1,10 +1,14 @@
 package com.mm.astraisandroid.sync
 
 import android.content.Context
+import androidx.work.BackoffPolicy
 import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import androidx.work.WorkRequest
+import java.util.concurrent.TimeUnit
 
 /**
  * Configura y encola una solicitud de trabajo único para el [SyncWorker].
@@ -18,8 +22,9 @@ import androidx.work.WorkManager
  * tenga una conexión de red activa ([NetworkType.CONNECTED]).
  *
  * @param context El contexto de la aplicación necesario para inicializar el servicio de [WorkManager].
+ * @param delayMinutes El retraso inicial en minutos antes de ejecutar la tarea.
  */
-fun scheduleSync(context: Context) {
+fun scheduleSync(context: Context, delayMinutes: Long = 0) {
     // Se definen las condiciones bajo las cuales se permite la ejecución.
     val constraints = Constraints.Builder()
         .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -28,12 +33,18 @@ fun scheduleSync(context: Context) {
     // Se crea la petición de trabajo de una sola ejecución (OneTime).
     val syncWorkRequest = OneTimeWorkRequestBuilder<SyncWorker>()
         .setConstraints(constraints)
+        .setBackoffCriteria(
+            BackoffPolicy.EXPONENTIAL,
+            WorkRequest.MIN_BACKOFF_MILLIS,
+            TimeUnit.MILLISECONDS
+        )
+        .setInitialDelay(delayMinutes, TimeUnit.MINUTES)
         .build()
 
     // Se registra la petición en el gestor de trabajos de Android.
     WorkManager.getInstance(context).enqueueUniqueWork(
         "AstraisOfflineSync",
-        androidx.work.ExistingWorkPolicy.KEEP,
+        ExistingWorkPolicy.APPEND_OR_REPLACE,
         syncWorkRequest
     )
 }

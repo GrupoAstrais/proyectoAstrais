@@ -193,6 +193,7 @@ object TablaGrupoUsuario : CompositeIdTable("RelGroupUser") {
     val gid = reference("group_id", TablaGrupo, onDelete = ReferenceOption.CASCADE)
     val uid = reference("user_id", TablaUsuario, onDelete = ReferenceOption.CASCADE)
     val role = enumerationByName<GroupRoles>("role", 25)
+    val joined_at = datetime("joined_at")
     override val primaryKey = PrimaryKey(gid, uid)
 }
 
@@ -202,6 +203,29 @@ class EntidadGrupoUsuario(id: EntityID<CompositeID>) : CompositeEntity(id) {
     var gid by TablaGrupoUsuario.gid
     var uid by TablaGrupoUsuario.uid
     var role by TablaGrupoUsuario.role
+    var joined_at by TablaGrupoUsuario.joined_at
+}
+
+object TablaGrupoInvites : IntIdTable("GroupInvite") {
+    val gid = reference("group_id", TablaGrupo, onDelete = ReferenceOption.CASCADE)
+    /** Stored to allow re-sharing existing invite links */
+    val code = varchar("code", 128)
+    /** SHA-256 hex */
+    val code_hash = varchar("code_hash", 64).uniqueIndex()
+    val created_by_uid = reference("created_by_user_id", TablaUsuario, onDelete = ReferenceOption.CASCADE)
+    val created_at = datetime("created_at")
+    val expires_at = datetime("expires_at").nullable()
+    val revoked_at = datetime("revoked_at").nullable()
+    val max_uses = integer("max_uses").nullable()
+    val uses_count = integer("uses_count").default(0)
+}
+
+object TablaGrupoAuditLog : IntIdTable("GroupAuditLog") {
+    val gid = reference("group_id", TablaGrupo, onDelete = ReferenceOption.CASCADE)
+    val actor_uid = reference("actor_user_id", TablaUsuario, onDelete = ReferenceOption.SET_NULL).nullable()
+    val event_type = varchar("event_type", 64)
+    val payload_json = text("payload_json").nullable()
+    val created_at = datetime("created_at")
 }
 
 object TablaTarea : IntIdTable("Task") {
@@ -216,6 +240,8 @@ object TablaTarea : IntIdTable("Task") {
     val fecha_completado = date("done_date").nullable()
     val recompensa_xp = integer("reward_xp").default(0)
     val recompensa_ludion = integer("reward_ludion").default(0)
+
+    val ludiones_otorgados = integer("granted_ludion").default(0)
 
     val recompensa_reclamada = bool("reward_claimed").default(false)
 
@@ -237,6 +263,7 @@ class EntidadTarea(id: EntityID<Int>) : IntEntity(id) {
     var fecha_completado by TablaTarea.fecha_completado
     var recompensa_xp by TablaTarea.recompensa_xp
     var recompensa_ludion by TablaTarea.recompensa_ludion
+    var ludiones_otorgados by TablaTarea.ludiones_otorgados
 
     var recompensa_reclamada by TablaTarea.recompensa_reclamada
 
@@ -247,7 +274,8 @@ object TablaTareaUnica : IntIdTable("TaskUnique") {
     val id_tarea = reference("tid", TablaTarea, onDelete = ReferenceOption.CASCADE)
     val fecha_vencimiento = datetime("due_date").nullable()
 }
-class EntidadTareaUnica(id : EntityID<Int>) : IntEntity(id) {
+
+class EntidadTareaUnica(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<EntidadTareaUnica>(TablaTareaUnica)
 
     var id_tarea by TablaTareaUnica.id_tarea

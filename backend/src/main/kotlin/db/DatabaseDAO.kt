@@ -43,6 +43,35 @@ data class DatosSimpleGrupo(
     val ownerNombre: String,
 )
 
+data class GroupInviteDb(
+    val id: Int,
+    val gid: Int,
+    val code: String,
+    val codeHash: String,
+    val createdByUid: Int,
+    val createdAt: LocalDateTime,
+    val expiresAt: LocalDateTime?,
+    val revokedAt: LocalDateTime?,
+    val maxUses: Int?,
+    val usesCount: Int,
+)
+
+data class GroupAuditEventDb(
+    val id: Int,
+    val gid: Int,
+    val actorUid: Int?,
+    val eventType: String,
+    val payloadJson: String?,
+    val createdAt: LocalDateTime,
+)
+
+data class GroupMemberDb(
+    val uid: Int,
+    val name: String,
+    val role: Int,
+    val joinedAt: LocalDateTime,
+)
+
 interface DatabaseDAO {
     /**
      * Crea un usuario en la base de datos
@@ -180,6 +209,20 @@ interface DatabaseDAO {
     suspend fun addUserToGroup(idusuario: Int, idgrupo: Int): Boolean
 
     /**
+     * Se elimina el usuario con el ID indicado del grupo
+     * @param idusuario ID del usuario a eliminar
+     * @param idgrupo ID del grupo del que se elimina
+     */
+    suspend fun removeUserFromGroup(idusuario: Int, idgrupo: Int): Boolean
+
+    /**
+     * Transfiere la propiedad de un grupo.
+     * @param gid ID del grupo
+     * @param newOwnerId ID del nuevo propietario
+     */
+    suspend fun passGroupOwnership(gid: Int, newOwnerId: Int): Boolean
+
+    /**
      * Comprueba si el usuario indicado es admin del grupo
      */
     suspend fun checkIfUserIsGroupAdmin(uid : Int, gid : Int) : Boolean
@@ -262,6 +305,42 @@ interface DatabaseDAO {
     suspend fun admindeleteCosmetic(cid : Int) : Boolean
     suspend fun adminGetAllUsers() : List<DatosSimpleUsuarios>
     suspend fun adminGetAllGroups() : List<DatosSimpleGrupo>
+
+    suspend fun createGroupInvite(
+        gid: Int,
+        code: String,
+        codeHash: String,
+        createdByUid: Int,
+        createdAt: LocalDateTime,
+        expiresAt: LocalDateTime?,
+        maxUses: Int?,
+    ): Int
+
+    suspend fun revokeGroupInvite(
+        gid: Int,
+        codeHash: String,
+        revokedAt: LocalDateTime,
+    ): Boolean
+
+    suspend fun listGroupInvites(gid: Int, includeRevoked: Boolean = false): List<GroupInviteDb>
+
+    suspend fun getGroupInviteByHash(codeHash: String): GroupInviteDb?
+
+    suspend fun tryConsumeInvite(inviteId: Int, now: LocalDateTime): Boolean
+
+    suspend fun appendGroupAuditEvent(
+        gid: Int,
+        actorUid: Int?,
+        eventType: String,
+        payloadJson: String?,
+        createdAt: LocalDateTime,
+    ): Int
+
+    suspend fun listGroupAuditEvents(gid: Int, limit: Int, offset: Long): List<GroupAuditEventDb>
+
+    suspend fun listGroupMembers(gid: Int): List<GroupMemberDb>
+
+    suspend fun setGroupMemberRole(gid: Int, uid: Int, role: GroupRoles): Boolean
 }
 
 fun getDatabaseDaoImpl(): DatabaseDAO {

@@ -19,6 +19,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
@@ -42,13 +44,16 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mm.astraisandroid.data.api.RegisterRequest
 import kotlinx.coroutines.flow.collectLatest
+import android.widget.Toast
 
 @Composable
 fun RegisterScreen(
     onNavigateToLogin: () -> Unit,
     onRegisterSuccess: () -> Unit,
+    onNavigateToOnboarding: () -> Unit,
     viewModel: RegisterViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -70,8 +75,11 @@ fun RegisterScreen(
                 is RegisterEvent.NavigateToLogin -> {
                     onRegisterSuccess()
                 }
+                is RegisterEvent.NavigateToOnboarding -> {
+                    onNavigateToOnboarding()
+                }
                 is RegisterEvent.ShowToast -> {
-                    // TODO: Snackbar
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -120,9 +128,9 @@ fun RegisterScreen(
                         modifier = Modifier.fillMaxWidth().height(52.dp),
                         shape = RoundedCornerShape(50),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF0D0D0D),
-                            contentColor = Color.White,
-                            disabledContainerColor = Color(0xFF0D0D0D).copy(alpha = 0.5f)
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                            disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                         )
                     ) {
                         Text("Verificar Cuenta", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
@@ -200,7 +208,7 @@ fun RegisterScreen(
 
                 Button(
                     onClick = {
-                        viewModel.register(RegisterRequest(email.split("@")[0], email, password, "ESP"))
+                        viewModel.register(RegisterRequest("NUEVO_USUARIO", email, password, "ESP"))
                     },
                     enabled = canSubmit,
                     modifier = Modifier
@@ -208,9 +216,9 @@ fun RegisterScreen(
                         .height(52.dp),
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF0D0D0D),
-                        contentColor = Color.White,
-                        disabledContainerColor = Color(0xFF0D0D0D).copy(alpha = 0.5f)
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                     )
                 ) {
                     if (uiState is RegisterUIState.Loading) {

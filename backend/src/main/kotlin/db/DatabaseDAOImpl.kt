@@ -4,11 +4,17 @@ import CosmeticResponseDTO
 import LANG_CODE_ENGLISH
 import LANG_CODE_RUSSIAN
 import LANG_CODE_SPANISH
+import ROLE_USERMOD
+import ROLE_USERNORMAL
+import ROLE_USEROWNER
 import admin.NamesCosmetic
 import admin.RarityType
 import com.astrais.mainlogger
 import java.time.LocalDate
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -17,6 +23,9 @@ import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 
 class DatabaseDAOImpl : DatabaseDAO {
     // https://www.jetbrains.com/help/exposed/dsl-querying-data.html
+
+    private fun nowUtc(): kotlinx.datetime.LocalDateTime =
+        Clock.System.now().toLocalDateTime(TimeZone.UTC)
 
     override suspend fun createUser(
             nombreusu: String,
@@ -274,13 +283,15 @@ class DatabaseDAOImpl : DatabaseDAO {
 
     override suspend fun getUserRoleOnGroup(idusuario: Int, idgrupo: Int): GroupRoles? {
         return suspendTransaction {
-            EntidadGrupoUsuario.find {
-                        TablaGrupoUsuario.gid
-                                .eq(EntityID(idgrupo, TablaGrupo))
-                                .and(TablaGrupoUsuario.uid.eq(EntityID(idusuario, TablaUsuario)))
-                    }
-                    .singleOrNull()
-                    ?.role
+            TablaGrupoUsuario
+                .select(TablaGrupoUsuario.role)
+                .where {
+                    TablaGrupoUsuario.gid
+                        .eq(EntityID(idgrupo, TablaGrupo))
+                        .and(TablaGrupoUsuario.uid.eq(EntityID(idusuario, TablaUsuario)))
+                }
+                .singleOrNull()
+                ?.get(TablaGrupoUsuario.role)
         }
     }
 
@@ -295,11 +306,57 @@ class DatabaseDAOImpl : DatabaseDAO {
                 TablaGrupoUsuario.insert {
                             it[gid] = EntityID(idgrupo, TablaGrupo)
                             it[uid] = EntityID(idusuario, TablaUsuario)
+                            it[role] = GroupRoles.USER
+                            it[joined_at] = nowUtc()
                         }
                         .insertedCount > 0
             } else {
                 false
             }
+        }
+    }
+
+    override suspend fun removeUserFromGroup(idusuario: Int, idgrupo: Int): Boolean {
+        return suspendTransaction {
+            TablaGrupoUsuario.deleteWhere {
+                TablaGrupoUsuario.gid.eq(idgrupo).and(TablaGrupoUsuario.uid.eq(idusuario))
+            } > 0
+        }
+    }
+
+    override suspend fun passGroupOwnership(gid: Int, newOwnerId: Int): Boolean {
+        return suspendTransaction {
+            val group = EntidadGrupo.findById(gid) ?: return@suspendTransaction false
+            val oldOwnerId = group.owner.value
+
+            group.owner = EntityID(newOwnerId, TablaUsuario)
+
+            // El nuevo owner se representa en Group.owner, no en RelGroupUser.
+            TablaGrupoUsuario.deleteWhere {
+                TablaGrupoUsuario.gid.eq(gid).and(TablaGrupoUsuario.uid.eq(newOwnerId))
+            }
+
+            // El owner anterior mantiene acceso como MOD.
+            val oldOwnerRelationExists = !TablaGrupoUsuario.selectAll().where {
+                TablaGrupoUsuario.gid.eq(gid).and(TablaGrupoUsuario.uid.eq(oldOwnerId))
+            }.empty()
+
+            if (!oldOwnerRelationExists) {
+                TablaGrupoUsuario.insert {
+                    it[TablaGrupoUsuario.gid] = EntityID(gid, TablaGrupo)
+                    it[TablaGrupoUsuario.uid] = EntityID(oldOwnerId, TablaUsuario)
+                    it[TablaGrupoUsuario.role] = GroupRoles.MOD
+                    it[TablaGrupoUsuario.joined_at] = nowUtc()
+                }
+            } else {
+                TablaGrupoUsuario.update({
+                    TablaGrupoUsuario.gid.eq(gid).and(TablaGrupoUsuario.uid.eq(oldOwnerId))
+                }) {
+                    it[role] = GroupRoles.MOD
+                }
+            }
+
+            true
         }
     }
 
@@ -517,6 +574,10 @@ class DatabaseDAOImpl : DatabaseDAO {
             usuario.ludiones_ganados_hoy += ludionesFinales
         }
 
+        // Persistimos cuánto se otorgó realmente para que el undo (uncomplete)
+        // pueda devolver exactamente la misma cantidad.
+        tarea.ludiones_otorgados = ludionesFinales
+
         usuario.ludiones += ludionesFinales
         usuario.xp_actual += tarea.recompensa_xp
         usuario.xp_total += tarea.recompensa_xp
@@ -582,7 +643,11 @@ class DatabaseDAOImpl : DatabaseDAO {
                             usuario?.id_mascota_equipada?.value == cosmetico.id.value
                         } else if (cosmetico.tipo == CosmeticType.APP_THEME) {
                             usuario?.themeColors == cosmetico.tema
-                        } else false
+                        } else if (cosmetico.tipo == CosmeticType.AVATAR_PART) {
+                            usuario?.id_avatar_equipado?.value == cosmetico.id.value
+                        } else {
+                            false
+                        }
 
                 val finalName = if (translated) {
                     val fname = Json.decodeFromString<NamesCosmetic>(cosmetico.nombre)
@@ -793,6 +858,174 @@ class DatabaseDAOImpl : DatabaseDAO {
                     ownerNombre = ownerName
                 )
             }
+        }
+    }
+
+    override suspend fun createGroupInvite(
+        gid: Int,
+        code: String,
+        codeHash: String,
+        createdByUid: Int,
+        createdAt: kotlinx.datetime.LocalDateTime,
+        expiresAt: kotlinx.datetime.LocalDateTime?,
+        maxUses: Int?,
+    ): Int {
+        return suspendTransaction {
+            TablaGrupoInvites.insertAndGetId {
+                it[TablaGrupoInvites.gid] = EntityID(gid, TablaGrupo)
+                it[TablaGrupoInvites.code] = code
+                it[TablaGrupoInvites.code_hash] = codeHash
+                it[TablaGrupoInvites.created_by_uid] = EntityID(createdByUid, TablaUsuario)
+                it[TablaGrupoInvites.created_at] = createdAt
+                it[TablaGrupoInvites.expires_at] = expiresAt
+                it[TablaGrupoInvites.max_uses] = maxUses
+            }.value
+        }
+    }
+
+    override suspend fun revokeGroupInvite(
+        gid: Int,
+        codeHash: String,
+        revokedAt: kotlinx.datetime.LocalDateTime,
+    ): Boolean {
+        return suspendTransaction {
+            TablaGrupoInvites.update({
+                (TablaGrupoInvites.gid eq EntityID(gid, TablaGrupo)) and
+                    (TablaGrupoInvites.code_hash eq codeHash) and
+                    TablaGrupoInvites.revoked_at.isNull()
+            }) {
+                it[revoked_at] = revokedAt
+            } > 0
+        }
+    }
+
+    override suspend fun listGroupInvites(gid: Int, includeRevoked: Boolean): List<GroupInviteDb> {
+        return suspendTransaction {
+            val base = TablaGrupoInvites.selectAll().where { TablaGrupoInvites.gid eq EntityID(gid, TablaGrupo) }
+            val rows = if (includeRevoked) base else base.andWhere { TablaGrupoInvites.revoked_at.isNull() }
+            rows.map {
+                GroupInviteDb(
+                    id = it[TablaGrupoInvites.id].value,
+                    gid = it[TablaGrupoInvites.gid].value,
+                    code = it[TablaGrupoInvites.code],
+                    codeHash = it[TablaGrupoInvites.code_hash],
+                    createdByUid = it[TablaGrupoInvites.created_by_uid].value,
+                    createdAt = it[TablaGrupoInvites.created_at],
+                    expiresAt = it[TablaGrupoInvites.expires_at],
+                    revokedAt = it[TablaGrupoInvites.revoked_at],
+                    maxUses = it[TablaGrupoInvites.max_uses],
+                    usesCount = it[TablaGrupoInvites.uses_count],
+                )
+            }
+        }
+    }
+
+    override suspend fun getGroupInviteByHash(codeHash: String): GroupInviteDb? {
+        return suspendTransaction {
+            TablaGrupoInvites.selectAll().where { TablaGrupoInvites.code_hash eq codeHash }.singleOrNull()?.let {
+                GroupInviteDb(
+                    id = it[TablaGrupoInvites.id].value,
+                    gid = it[TablaGrupoInvites.gid].value,
+                    code = it[TablaGrupoInvites.code],
+                    codeHash = it[TablaGrupoInvites.code_hash],
+                    createdByUid = it[TablaGrupoInvites.created_by_uid].value,
+                    createdAt = it[TablaGrupoInvites.created_at],
+                    expiresAt = it[TablaGrupoInvites.expires_at],
+                    revokedAt = it[TablaGrupoInvites.revoked_at],
+                    maxUses = it[TablaGrupoInvites.max_uses],
+                    usesCount = it[TablaGrupoInvites.uses_count],
+                )
+            }
+        }
+    }
+
+    override suspend fun tryConsumeInvite(inviteId: Int, now: kotlinx.datetime.LocalDateTime): Boolean {
+        return suspendTransaction {
+            TablaGrupoInvites.update({
+                (TablaGrupoInvites.id eq inviteId) and
+                    TablaGrupoInvites.revoked_at.isNull() and
+                    ((TablaGrupoInvites.expires_at.isNull()) or (TablaGrupoInvites.expires_at greater now)) and
+                    ((TablaGrupoInvites.max_uses.isNull()) or (TablaGrupoInvites.uses_count less TablaGrupoInvites.max_uses))
+            }) {
+                it.update(uses_count, uses_count + 1)
+            } > 0
+        }
+    }
+
+    override suspend fun appendGroupAuditEvent(
+        gid: Int,
+        actorUid: Int?,
+        eventType: String,
+        payloadJson: String?,
+        createdAt: kotlinx.datetime.LocalDateTime,
+    ): Int {
+        return suspendTransaction {
+            TablaGrupoAuditLog.insertAndGetId {
+                it[TablaGrupoAuditLog.gid] = EntityID(gid, TablaGrupo)
+                it[TablaGrupoAuditLog.actor_uid] = actorUid?.let { uid -> EntityID(uid, TablaUsuario) }
+                it[TablaGrupoAuditLog.event_type] = eventType
+                it[TablaGrupoAuditLog.payload_json] = payloadJson
+                it[TablaGrupoAuditLog.created_at] = createdAt
+            }.value
+        }
+    }
+
+    override suspend fun listGroupAuditEvents(gid: Int, limit: Int, offset: Long): List<GroupAuditEventDb> {
+        return suspendTransaction {
+            TablaGrupoAuditLog.selectAll()
+                .where { TablaGrupoAuditLog.gid eq EntityID(gid, TablaGrupo) }
+                .orderBy(TablaGrupoAuditLog.id, SortOrder.DESC)
+                .limit(limit)
+                .offset(offset)
+                .map {
+                    GroupAuditEventDb(
+                        id = it[TablaGrupoAuditLog.id].value,
+                        gid = it[TablaGrupoAuditLog.gid].value,
+                        actorUid = it[TablaGrupoAuditLog.actor_uid]?.value,
+                        eventType = it[TablaGrupoAuditLog.event_type],
+                        payloadJson = it[TablaGrupoAuditLog.payload_json],
+                        createdAt = it[TablaGrupoAuditLog.created_at],
+                    )
+                }
+        }
+    }
+
+    override suspend fun listGroupMembers(gid: Int): List<GroupMemberDb> {
+        return suspendTransaction {
+            val group = EntidadGrupo.findById(gid) ?: return@suspendTransaction emptyList()
+
+            val owner = EntidadUsuario.findById(group.owner.value)
+            val ownerRow = owner?.let {
+                GroupMemberDb(
+                    uid = it.id.value,
+                    name = it.nombre,
+                    role = ROLE_USEROWNER,
+                    joinedAt = nowUtc(),
+                )
+            }
+
+            val members = (TablaGrupoUsuario innerJoin TablaUsuario).selectAll().where {
+                TablaGrupoUsuario.gid.eq(EntityID(gid, TablaGrupo))
+            }.map {
+                GroupMemberDb(
+                    uid = it[TablaUsuario.id].value,
+                    name = it[TablaUsuario.nombre],
+                    role = if (it[TablaGrupoUsuario.role] == GroupRoles.MOD) ROLE_USERMOD else ROLE_USERNORMAL,
+                    joinedAt = it[TablaGrupoUsuario.joined_at],
+                )
+            }
+
+            if (ownerRow == null) members else listOf(ownerRow) + members
+        }
+    }
+
+    override suspend fun setGroupMemberRole(gid: Int, uid: Int, role: GroupRoles): Boolean {
+        return suspendTransaction {
+            TablaGrupoUsuario.update({
+                TablaGrupoUsuario.gid.eq(gid).and(TablaGrupoUsuario.uid.eq(uid))
+            }) {
+                it[TablaGrupoUsuario.role] = role
+            } > 0
         }
     }
 }

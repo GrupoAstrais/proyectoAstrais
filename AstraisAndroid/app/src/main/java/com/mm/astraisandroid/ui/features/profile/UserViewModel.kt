@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.mm.astraisandroid.data.api.UserMeResponse
 import com.mm.astraisandroid.data.models.User
 import com.mm.astraisandroid.data.repository.UserRepository
+import com.mm.astraisandroid.data.preferences.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,13 +23,15 @@ data class UserScreenState(
 
 @HiltViewModel
 class UserViewModel @Inject constructor(
-    private val repository: UserRepository
+    private val repository: UserRepository,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UserScreenState())
     val state: StateFlow<UserScreenState> = _state.asStateFlow()
 
     fun fetchUser() {
+        if (sessionManager.isGuest()) return
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
@@ -57,15 +60,38 @@ class UserViewModel @Inject constructor(
         viewModelScope.launch {
             val user = state.value.user ?: return@launch
             try {
-                if (!com.mm.astraisandroid.data.preferences.SessionManager.isGuest()) {
+                if (!sessionManager.isGuest()) {
                     repository.updateUsername(user.id, newName)
                 }
-                // Update local state immediately
                 _state.update {
                     it.copy(user = user.copy(name = newName))
                 }
             } catch (e: Exception) {
                 _state.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    fun updateProfile(newName: String, language: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            val user = state.value.user ?: return@launch
+            if (sessionManager.isGuest()) {
+                _state.update { it.copy(user = user.copy(name = newName)) }
+                onSuccess()
+                return@launch
+            }
+            _state.update { it.copy(isLoading = true, error = null) }
+            try {
+                repository.updateProfile(user.id, newName, language)
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        user = user.copy(name = newName)
+                    )
+                }
+                onSuccess()
+            } catch (e: Exception) {
+                _state.update { it.copy(isLoading = false, error = e.message) }
             }
         }
     }

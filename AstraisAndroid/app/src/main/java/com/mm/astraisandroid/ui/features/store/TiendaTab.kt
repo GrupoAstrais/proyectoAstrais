@@ -31,12 +31,17 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mm.astraisandroid.util.LottiePetRenderer
+import com.mm.astraisandroid.util.AvatarImageRenderer
 import com.mm.astraisandroid.ui.features.auth.AuthBackground
+import com.mm.astraisandroid.ui.components.AstraisScreenHeader
+import com.mm.astraisandroid.ui.components.Glassmorphism
 import com.mm.astraisandroid.data.api.ThemeConfig
 import kotlinx.serialization.json.Json
 import androidx.core.graphics.toColorInt
 import com.mm.astraisandroid.data.models.Cosmetic
 import kotlinx.coroutines.flow.collectLatest
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 
 fun getRarityColor(price: Int): Color {
     return when {
@@ -54,6 +59,7 @@ fun TiendaTab(
     onCosmeticChanged: () -> Unit = {}
 ) {
     val state by storeViewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -65,7 +71,7 @@ fun TiendaTab(
         storeViewModel.uiEvent.collectLatest { event ->
             when(event) {
                 is StoreEvent.ShowToast -> {
-                    // TODO: Snackbar
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
                 is StoreEvent.BuySuccess -> onCosmeticChanged()
             }
@@ -83,43 +89,34 @@ fun TiendaTab(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Tienda",
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Black,
-                    fontFamily = FontFamily.Monospace
-                )
-
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f))
-                        .border(1.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
-                        .padding(horizontal = 14.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Filled.CurrencyPound,
-                        contentDescription = "Ludiones",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "$ludiones",
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Black,
-                        fontFamily = FontFamily.Monospace
-                    )
+            AstraisScreenHeader(
+                title = "Tienda",
+                trailing = {
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.BG_TERTIARY))
+                            .border(1.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.BORDER_PRIMARY), RoundedCornerShape(16.dp))
+                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Filled.CurrencyPound,
+                            contentDescription = "Ludiones",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "$ludiones",
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.TEXT_PRIMARY),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Black,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
                 }
-            }
+            )
 
             Row(
                 modifier = Modifier
@@ -262,7 +259,6 @@ fun PetStoreCard(item: Cosmetic, modifier: Modifier = Modifier, onClick: () -> U
     val isOwned = item.owned
     val rarityColor = getRarityColor(item.price)
     val bgColor = Color.Black.copy(alpha = 0.3f)
-    //val borderColor = if (isOwned) Color.White.copy(alpha=0.05f) else MaterialTheme.colorScheme.primary.copy(alpha=0.4f)
     val borderColor = if (isOwned) Color.White.copy(alpha=0.05f) else rarityColor.copy(alpha=0.7f)
     Column(
         modifier = modifier
@@ -284,7 +280,15 @@ fun PetStoreCard(item: Cosmetic, modifier: Modifier = Modifier, onClick: () -> U
                 ))),
             contentAlignment = Alignment.Center
         ) {
-            LottiePetRenderer(assetRef = item.assetRef, modifier = Modifier.size(70.dp))
+            if (item.type.name == "AVATAR_PART") {
+                AvatarImageRenderer(
+                    assetRef = item.assetRef,
+                    initial = item.name.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
+                    size = 70.dp
+                )
+            } else {
+                LottiePetRenderer(assetRef = item.assetRef, modifier = Modifier.size(70.dp))
+            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))

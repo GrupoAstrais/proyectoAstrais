@@ -389,7 +389,7 @@
 
     <script src="constant.js"></script>
     <script>
-        if (!localStorage.getItem(STORAGE_ACCESS)) window.location.href = 'login.html';
+        if (!localStorage.getItem(STORAGE_ACCESS)) window.location.href = LOGIN_URL;
 
         const DEFAULT_PALETTE = {
             primary: "#8B5CF6",
@@ -416,7 +416,7 @@
 
         function logout() {
             localStorage.clear();
-            window.location.href = 'login.html';
+            window.location.href = LOGIN_URL;
         }
 
         function showSection(id) {

@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import com.mm.astraisandroid.data.local.entities.GrupoEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -20,4 +21,10 @@ interface GrupoDao {
 
     @Query("DELETE FROM grupos")
     suspend fun clearAll()
+
+    @Transaction
+    suspend fun replaceAll(groups: List<GrupoEntity>) {
+        clearAll()
+        insertGroups(groups)
+    }
 }

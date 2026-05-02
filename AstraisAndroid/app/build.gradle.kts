@@ -98,6 +98,9 @@ dependencies {
     // ### Lottie ###
     implementation("com.airbnb.android:lottie-compose:6.4.0")
 
+    // ### Coil ###
+    implementation("io.coil-kt:coil-compose:2.7.0")
+
     // ### ROOM ###
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")
@@ -107,6 +110,9 @@ dependencies {
 
     // ### SEGURIDAD ###
     implementation("androidx.security:security-crypto:1.1.0")
+
+    // ### LOGGING ###
+    implementation("com.jakewharton.timber:timber:5.0.1")
 
     // ### Hilt ###
     implementation("com.google.dagger:hilt-android:2.51.1")

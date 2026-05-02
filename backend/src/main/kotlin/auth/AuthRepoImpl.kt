@@ -164,7 +164,7 @@ class AuthRepoImpl : AuthRepo {
         )
 
         if (res){
-            return EditUserReturn.ERROR
+            return EditUserReturn.OK
         }else{
             return EditUserReturn.INVALID_LANGUAGE
         }
