@@ -9,6 +9,7 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import java.io.File
 
 private var dbname : String = ""
 private var dbuser  : String = ""
@@ -16,6 +17,7 @@ private var dbpassword : String = ""
 
 object DatabaseController {
     private var database : Database? = null
+    private var isFreshlyInstalled : Boolean = false
 
     public fun init(){
         if (!isConnected()){
@@ -64,6 +66,8 @@ object DatabaseController {
                 TablaConfirmacionUsuario,
                 TablaGrupo,
                 TablaGrupoUsuario,
+                TablaGrupoInvites,
+                TablaGrupoAuditLog,
                 TablaTarea,
                 TablaTareaUnica,
                 TablaTareaObjetivo,
@@ -76,7 +80,8 @@ object DatabaseController {
 
         // Crea un usuario admin si no hay nada en la tabla
         transaction {
-            if (TablaUsuario.selectAll().empty()){
+            isFreshlyInstalled = TablaUsuario.selectAll().empty()
+            if (isFreshlyInstalled){
                 val a = EntidadUsuario.new {
                     nombre = "Admin"
                     rol = UserRoles.ADMIN_USER
@@ -97,6 +102,9 @@ object DatabaseController {
                 }
             }
         }
+    }
+    public fun isFresh() : Boolean{
+        return isFreshlyInstalled
     }
 }
 

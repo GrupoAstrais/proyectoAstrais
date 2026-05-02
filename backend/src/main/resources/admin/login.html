@@ -116,7 +116,7 @@
                     localStorage.setItem(STORAGE_ACCESS, data.jwtAccessToken);
                     localStorage.setItem(STORAGE_REFRESH, data.jwtRefreshToken);
                     if (await checkIfAdmin(data.jwtAccessToken)) {
-                        window.location.href = '/index.html';
+                        window.location.href = INDEX_URL;
                     } else {
                         localStorage.setItem(STORAGE_ACCESS, null);
                         localStorage.setItem(STORAGE_REFRESH, null);

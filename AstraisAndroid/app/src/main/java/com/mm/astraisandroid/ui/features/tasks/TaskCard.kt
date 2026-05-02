@@ -1,10 +1,10 @@
-@file:OptIn(ExperimentalLayoutApi::class)
+@file:OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
+package com.mm.astraisandroid.ui.features.tasks
+
+import androidx.compose.animation.*
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,16 +17,35 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mm.astraisandroid.data.models.TaskPriority
-import com.mm.astraisandroid.ui.features.tasks.TaskUIModel
 
+/**
+ * Tarjeta visual que representa una tarea individual en la lista.
+ *
+ * Los objetivos muestran un indicador de progreso basado en sus subtareas y permiten expandirse para
+ * verlas. Las tarjetas pueden deslizarse hacia la izquierda para eliminar.
+ *
+ * @param task Modelo de UI de la tarea a mostrar.
+ * @param subtasks Lista de subtareas asociadas (objetivos).
+ * @param isExpanded `true` si la tarjeta está expandida mostrando detalles adicionales.
+ * @param onToggleExpand Acción al pulsar la tarjeta para expandirla o colapsarla.
+ * @param onToggleComplete Acción al marcar o desmarcar la tarea como completada.
+ * @param onAddSubtask Acción al pulsar el botón de añadir subtarea (objetivos).
+ * @param onEditSubtask Acción al editar una subtarea existente.
+ * @param onDeleteSubtask Acción al eliminar una subtarea existente.
+ * @param onEdit Acción al pulsar el botón de editar la tarea principal.
+ * @param onDelete Acción al deslizar la tarjeta para eliminar la tarea.
+ */
 @Composable
 fun TaskCard(
     task: TaskUIModel,
@@ -35,224 +54,344 @@ fun TaskCard(
     onToggleExpand: () -> Unit,
     onToggleComplete: (TaskUIModel) -> Unit,
     onAddSubtask: () -> Unit = {},
+    onEditSubtask: (TaskUIModel) -> Unit = {},
+    onDeleteSubtask: (TaskUIModel) -> Unit = {},
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     val isObjective = task.tipo == "OBJETIVO"
-    val contentAlpha = if (task.isCompleted) 0.4f else 1f
+    val isHabit = task.tipo == "HABITO"
+    val contentAlpha = if (task.isCompleted) 0.5f else 1f
 
-    val cardBg = Color(0xFF1E1E2E).copy(alpha = if (task.isCompleted) 0.3f else 0.6f)
-    val cardBorder = Color.White.copy(alpha = 0.08f)
+    val completedCount = subtasks.count { it.isCompleted }
+    val totalCount = subtasks.size
+    val progressFraction = if (totalCount > 0) completedCount.toFloat() / totalCount else 0f
+    val animatedProgress by animateFloatAsState(targetValue = progressFraction, label = "prog")
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(cardBg)
-            .border(1.dp, cardBorder, RoundedCornerShape(20.dp))
-            .clickable { onToggleExpand() }
-            .animateContentSize()
-            .padding(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            if (value == SwipeToDismissBoxValue.EndToStart) { onDelete(); false } else false
+        }
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        enableDismissFromStartToEnd = false,
+        backgroundContent = {
+            val errorColor = MaterialTheme.colorScheme.error
+
+            val isSwipingToDismiss = dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart
+
+            val progress = if (isSwipingToDismiss) dismissState.progress else 0f
+
+            val actionAlpha = when {
+                progress < 0.15f -> 0f
+                progress > 0.5f -> 1f
+                else -> (progress - 0.15f) / (0.5f - 0.15f)
+            }
+
+            val animatedActionAlpha by animateFloatAsState(
+                targetValue = actionAlpha,
+                animationSpec = tween(durationMillis = 100),
+                label = "actionAlpha"
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(vertical = 4.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                errorColor.copy(alpha = 0.3f * animatedActionAlpha)
+                            )
+                        )
+                    )
+                    .padding(horizontal = 24.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Eliminar",
+                    tint = errorColor,
+                    modifier = Modifier.alpha(animatedActionAlpha)
+                )
+            }
+        },
+        content = {
             Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = task.title,
-                    color = Color.White.copy(alpha = contentAlpha),
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
-                )
-
-                if (task.description.isNotBlank()) {
-                    Text(
-                        text = task.description,
-                        color = Color.White.copy(alpha = contentAlpha * 0.6f),
-                        fontSize = 14.sp,
-                        maxLines = if (isExpanded) Int.MAX_VALUE else 2,
-                        overflow = TextOverflow.Ellipsis,
-                        lineHeight = 20.sp
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.15f)
+                            )
+                        )
                     )
-                }
-
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                    modifier = Modifier.padding(top = 4.dp)
+                    .border(
+                        width = 1.dp,
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color.White.copy(alpha = 0.2f),
+                                Color.White.copy(alpha = 0.05f)
+                            )
+                        ),
+                        shape = RoundedCornerShape(24.dp)
+                    )
+                    .clickable { onToggleExpand() }
+                    .animateContentSize()
+                    .padding(20.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    if (isObjective) {
-                        ModernChip(text = "Objetivo", icon = Icons.Default.Flag, color = MaterialTheme.colorScheme.primary, alpha = contentAlpha)
-                    } else {
-                        val priorityColor = when (task.priority) {
-                            TaskPriority.LOW -> Color(0xFF81C784)
-                            TaskPriority.MEDIUM -> Color(0xFFFFD166)
-                            TaskPriority.HIGH -> Color(0xFFE57373)
-                        }
-                        val priorityIcon = when (task.priority) {
-                            TaskPriority.LOW -> Icons.Default.KeyboardArrowDown
-                            TaskPriority.MEDIUM -> Icons.Default.Remove
-                            TaskPriority.HIGH -> Icons.Default.KeyboardArrowUp
-                        }
-                        ModernChip(
-                            text = task.priority.name.lowercase().replaceFirstChar { it.uppercase() },
-                            icon = priorityIcon,
-                            color = priorityColor,
-                            alpha = contentAlpha
-                        )
-                    }
+                    TaskTypeIcon(task.tipo, contentAlpha)
 
-                    ModernChip(text = "${task.xp} XP", icon = Icons.Default.Star, color = Color(0xFF64B5F6), alpha = contentAlpha)
-
-                    if (task.ludiones > 0) {
-                        ModernChip(text = "${task.ludiones}", icon = Icons.Default.CurrencyPound, color = Color(0xFFFFB74D), alpha = contentAlpha)
-                    }
-                }
-            }
-
-            if (!isObjective) {
-                Box(
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clip(CircleShape)
-                        .background(if (task.isCompleted) MaterialTheme.colorScheme.primary else Color.Transparent)
-                        .border(
-                            2.dp,
-                            if (task.isCompleted) Color.Transparent else Color.White.copy(alpha = 0.3f),
-                            CircleShape
-                        )
-                        .clickable { onToggleComplete(task) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (task.isCompleted) {
-                        Icon(Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
-                    }
-                }
-            } else {
-                Icon(
-                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = "Expandir",
-                    tint = Color.White.copy(alpha = 0.4f),
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-        }
-
-        AnimatedVisibility(
-            visible = isExpanded,
-            enter = expandVertically(tween(300)),
-            exit = shrinkVertically(tween(300))
-        ) {
-            Column(modifier = Modifier.padding(top = 16.dp)) {
-                HorizontalDivider(color = Color.White.copy(alpha = 0.05f))
-                Spacer(modifier = Modifier.height(16.dp))
-
-                if (isObjective) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Subtareas (${subtasks.count { it.isCompleted }}/${subtasks.size})",
-                            color = Color.White.copy(alpha = 0.6f),
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                        TextButton(
-                            onClick = onAddSubtask,
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
-                            modifier = Modifier.height(28.dp)
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Añadir", color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    subtasks.forEach { sub ->
+                    Column(modifier = Modifier.weight(1f)) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable { onToggleComplete(sub) }
-                                .padding(vertical = 8.dp, horizontal = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(20.dp)
-                                    .clip(CircleShape)
-                                    .background(if (sub.isCompleted) MaterialTheme.colorScheme.primary else Color.Transparent)
-                                    .border(2.dp, if (sub.isCompleted) Color.Transparent else Color.White.copy(alpha = 0.2f), CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                if (sub.isCompleted) {
-                                    Icon(Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(12.dp))
+                            Text(
+                                text = task.title,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = contentAlpha),
+                                textDecoration = if (task.isCompleted) TextDecoration.LineThrough else null,
+                                modifier = Modifier.weight(1f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+
+                            if (isObjective) {
+                                Icon(
+                                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+                                )
+                            } else {
+
+                                Box(
+                                    modifier = Modifier
+                                        .size(26.dp)
+                                        .clip(CircleShape)
+                                        .background(if (task.isCompleted) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.1f))
+                                        .border(
+                                            1.5.dp,
+                                            if (task.isCompleted) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.3f),
+                                            CircleShape
+                                        )
+                                        .clickable { onToggleComplete(task) },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (task.isCompleted) {
+                                        Icon(Icons.Default.Check, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(16.dp))
+                                    }
                                 }
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
+                        }
+
+                        if (task.description.isNotBlank()) {
                             Text(
-                                text = sub.title,
-                                color = Color.White.copy(alpha = if (sub.isCompleted) 0.4f else 0.8f),
-                                fontSize = 14.sp,
-                                textDecoration = if (sub.isCompleted) TextDecoration.LineThrough else TextDecoration.None
+                                text = task.description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f * contentAlpha),
+                                maxLines = if (isExpanded) 5 else 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(top = 4.dp)
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
                 }
 
-                Row(
+                Spacer(modifier = Modifier.height(16.dp))
+
+                FlowRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    IconButton(onClick = onEdit, modifier = Modifier.size(36.dp)) {
-                        Icon(Icons.Default.Edit, contentDescription = "Editar", tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
+                    TaskMetadataChip("${task.xp} XP", Icons.Default.Star, MaterialTheme.colorScheme.primary)
+
+                    if (task.ludiones > 0) {
+                        TaskMetadataChip("${task.ludiones}", Icons.Default.CurrencyPound, MaterialTheme.colorScheme.tertiary)
                     }
-                    IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
-                        Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color(0xFFE57373).copy(alpha = 0.7f), modifier = Modifier.size(20.dp))
+
+                    if (isHabit && !task.habitFrequency.isNullOrBlank()) {
+                        TaskMetadataChip(task.habitFrequency, Icons.Default.Repeat, MaterialTheme.colorScheme.secondary)
+                    }
+
+                    if (!isHabit && !task.dueDate.isNullOrBlank()) {
+                        val dateLabel = task.dueDate.split("T").firstOrNull() ?: ""
+                        TaskMetadataChip(dateLabel, Icons.Default.Event, MaterialTheme.colorScheme.error)
+                    }
+                }
+
+                if (isObjective && totalCount > 0) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Subtareas: $completedCount/$totalCount", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f))
+                            Text("${(progressFraction * 100).toInt()}%", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                        }
+                        LinearProgressIndicator(
+                            progress = { animatedProgress },
+                            modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape),
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = Color.White.copy(alpha = 0.08f)
+                        )
+                    }
+                }
+
+                AnimatedVisibility(visible = isExpanded) {
+                    Column(modifier = Modifier.padding(top = 20.dp)) {
+                        if (isObjective) {
+                            SubtaskHeader(onAddSubtask)
+                            Spacer(Modifier.height(10.dp))
+                            subtasks.forEach { sub ->
+                                SubtaskRow(sub, onToggleComplete, onEditSubtask, onDeleteSubtask)
+                            }
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TextButton(onClick = onEdit) {
+                                Icon(Icons.Default.Edit, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.secondary)
+                                Spacer(Modifier.width(6.dp))
+                                Text("Editar", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
+                            }
+                        }
                     }
                 }
             }
+        }
+    )
+}
+
+/**
+ * Icono que representa el tipo de tarea.
+ *
+ * @param tipo Tipo de tarea (`"OBJETIVO"`, `"HABITO"` u otro).
+ * @param alpha Valor de opacidad aplicado al icono y su contenedor.
+ */
+@Composable
+private fun TaskTypeIcon(tipo: String, alpha: Float) {
+    val (icon, color) = when(tipo) {
+        "OBJETIVO" -> Icons.Default.Flag to MaterialTheme.colorScheme.tertiary
+        "HABITO" -> Icons.Default.Repeat to MaterialTheme.colorScheme.secondary
+        else -> Icons.Default.Task to MaterialTheme.colorScheme.primary
+    }
+    Box(
+        modifier = Modifier
+            .size(46.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(color.copy(alpha = 0.15f * alpha))
+            .border(1.dp, color.copy(alpha = 0.4f * alpha), RoundedCornerShape(14.dp)),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(icon, null, tint = color.copy(alpha = alpha), modifier = Modifier.size(24.dp))
+    }
+}
+
+/**
+ * Chip informativo que muestra metadatos de una tarea (XP, ludiones, frecuencia, fecha...).
+ *
+ * @param text Texto a mostrar dentro del chip.
+ * @param icon Icono asociado al metadato.
+ * @param color Color temático del chip.
+ */
+@Composable
+private fun TaskMetadataChip(text: String, icon: ImageVector, color: Color) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(color.copy(alpha = 0.1f))
+            .border(1.dp, color.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Icon(icon, null, tint = color, modifier = Modifier.size(14.dp))
+        Text(text, fontSize = 12.sp, color = color.copy(alpha = 0.9f), fontWeight = FontWeight.SemiBold, fontFamily = FontFamily.Monospace)
+    }
+}
+
+/**
+ * Cabecera de la sección de subtareas dentro de un objetivo expandido.
+ *
+ * @param onAdd Acción al pulsar el botón de añadir una nueva subtarea.
+ */
+@Composable
+private fun SubtaskHeader(onAdd: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text("SUBTAREAS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f))
+        IconButton(onClick = onAdd, modifier = Modifier.size(28.dp)) {
+            Icon(Icons.Default.AddCircle, null, tint = MaterialTheme.colorScheme.primary)
         }
     }
 }
 
+/**
+ * Fila individual que representa una subtarea dentro de un objetivo.
+ *
+ * @param sub Modelo de UI de la subtarea.
+ * @param onToggle Acción al marcar o desmarcar la subtarea como completada.
+ * @param onEdit Acción al pulsar el botón de editar la subtarea.
+ * @param onDelete Acción al pulsar el botón de eliminar la subtarea.
+ */
 @Composable
-fun ModernChip(
-    text: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
-    color: Color,
-    alpha: Float = 1f
+private fun SubtaskRow(
+    sub: TaskUIModel,
+    onToggle: (TaskUIModel) -> Unit,
+    onEdit: (TaskUIModel) -> Unit,
+    onDelete: (TaskUIModel) -> Unit
 ) {
     Row(
-        verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-            .clip(CircleShape)
-            .background(color.copy(alpha = 0.1f * alpha))
-            .border(1.dp, color.copy(alpha = 0.2f * alpha), CircleShape)
-            .padding(horizontal = 10.dp, vertical = 4.dp)
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.White.copy(alpha = 0.05f))
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        if (icon != null) {
-            Icon(icon, contentDescription = null, tint = color.copy(alpha = alpha), modifier = Modifier.size(14.dp))
-            Spacer(Modifier.width(4.dp))
-        }
-        Text(
-            text = text,
-            color = color.copy(alpha = alpha),
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium
+        Checkbox(
+            checked = sub.isCompleted,
+            onCheckedChange = { onToggle(sub) },
+            modifier = Modifier.size(24.dp),
+            colors = CheckboxDefaults.colors(
+                checkedColor = MaterialTheme.colorScheme.primary,
+                uncheckedColor = Color.White.copy(alpha = 0.3f)
+            )
         )
+        Spacer(Modifier.width(12.dp))
+        Text(
+            text = sub.title,
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = if (sub.isCompleted) 0.5f else 0.9f),
+            textDecoration = if (sub.isCompleted) TextDecoration.LineThrough else null
+        )
+        IconButton(onClick = { onEdit(sub) }, modifier = Modifier.size(28.dp)) {
+            Icon(Icons.Default.Edit, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f))
+        }
+        IconButton(onClick = { onDelete(sub) }, modifier = Modifier.size(28.dp)) {
+            Icon(Icons.Default.Close, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f))
+        }
     }
 }

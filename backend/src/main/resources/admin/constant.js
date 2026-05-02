@@ -2,6 +2,17 @@ const API_URL = "http://localhost:5684";
 const STORAGE_ACCESS = 'astrais_access';
 const STORAGE_REFRESH = 'astrais_refresh';
 
+var url_login = "/admin/login.html";
+var url_index = "/admin/login.html";
+
+if (window.location.port == "5500"){
+    url_login = "/login.html";
+    url_index = "/index.html";
+}
+
+const LOGIN_URL = url_login;
+const INDEX_URL = url_index;
+
 
 function checkIfNeedsRefresh(num, jsondata) {
     return num == 401 && jsondata.errorCode == 0 && jsondata.errorText == "Invalid/expired token";

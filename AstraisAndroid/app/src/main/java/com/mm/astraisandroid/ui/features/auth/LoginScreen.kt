@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,12 +45,27 @@ import com.mm.astraisandroid.data.api.LoginRequest
 import kotlinx.coroutines.launch
 import com.mm.astraisandroid.BuildConfig
 import kotlinx.coroutines.flow.collectLatest
+import android.widget.Toast
 
 
+/**
+ * Pantalla de inicio de sesión.
+ *
+ * Permite al usuario autenticarse mediante correo y contraseña, iniciar sesión
+ * con Google mediante Credential Manager, o continuar como invitado.
+ * Escucha los eventos del [LoginViewModel] para navegar a la pantalla principal,
+ * al onboarding o mostrar mensajes temporales.
+ *
+ * @param onNavigateToHome Callback para navegar a la pantalla principal tras un login exitoso.
+ * @param onNavigateToRegister Callback para navegar a la pantalla de registro.
+ * @param onNavigateToOnboarding Callback para navegar al onboarding si es la primera vez.
+ * @param viewModel ViewModel que gestiona la lógica de autenticación.
+ */
 @Composable
 fun LoginScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToRegister: () -> Unit,
+    onNavigateToOnboarding: () -> Unit,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     // remember sirve para guardar el valor entre recomposiciones
@@ -71,8 +87,11 @@ fun LoginScreen(
                 is LoginEvent.NavigateToHome -> {
                     onNavigateToHome()
                 }
+                is LoginEvent.NavigateToOnboarding -> {
+                    onNavigateToOnboarding()
+                }
                 is LoginEvent.ShowToast -> {
-                    // TODO: Snackbar
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -87,7 +106,7 @@ fun LoginScreen(
                 val googleIdOption = GetGoogleIdOption.Builder()
                     .setFilterByAuthorizedAccounts(false)
                     .setServerClientId(BuildConfig.GOOGLE_WEB_CLIENT_ID)
-                    .setAutoSelectEnabled(true)
+                    .setAutoSelectEnabled(false) // Desactivado para forzar que salga el selector de cuentas
                     .build()
 
                 val request = GetCredentialRequest.Builder()
@@ -106,7 +125,16 @@ fun LoginScreen(
                     val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
                     val idToken = googleIdTokenCredential.idToken
 
-                    viewModel.loginWithGoogle(idToken)
+                    if (idToken != null) {
+                        viewModel.loginWithGoogle(idToken)
+                    } else {
+                        // Token no obtenido correctamente
+                        Toast.makeText(context, "Error: token de Google vacío", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    // No se obtuvo un token Google Id Token válido
+                    Toast.makeText(context, "No se pudo obtener tokens de Google", Toast.LENGTH_SHORT).show()
+                    Log.e("GOOGLE_LOGIN", "Credential no es GoogleIdTokenCredential: ${credential?.javaClass?.simpleName}")
                 }
             } catch (e: GetCredentialException) {
                 Log.e("GOOGLE_LOGIN", "Error de CredentialManager: ${e.javaClass.simpleName} - ${e.errorMessage}")
@@ -163,9 +191,9 @@ fun LoginScreen(
                         .height(52.dp),
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF0D0D0D),
-                        contentColor = Color.White,
-                        disabledContainerColor = Color(0xFF0D0D0D).copy(alpha = 0.5f)
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                     )
                 ) {
                     if (uiState is LoginUIState.Loading) {
@@ -186,8 +214,8 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White,
-                        contentColor = Color.Black
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.onSurface
                     )
                 ) {
                     Text("Continuar con Google", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
@@ -197,7 +225,7 @@ fun LoginScreen(
 
                 Button(
                     onClick = {
-                        com.mm.astraisandroid.data.preferences.SessionManager.startGuestSession()
+                        viewModel.startGuestSession()
                         onNavigateToHome()
                     },
                     modifier = Modifier.fillMaxWidth().height(52.dp),

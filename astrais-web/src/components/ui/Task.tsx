@@ -41,7 +41,7 @@ export default function Task({ onToggleConfig, data, subtasks = [], onComplete, 
       onClick={clickHandle}
       className={`relative flex w-full flex-row justify-between rounded-md border border-[#F4E9E9]/15 px-2 py-4 font-['Space_Grotesk'] backdrop-blur-sm ${
         taskChecked
-          ? "bg-[#918C84]/55 text-white/50 line-through decoration-primary-900"
+          ? "bg-[#918C84]/65 text-white/50 line-through decoration-primary-900"
           : "bg-accent-beige-300/35"
       }`}
     >
@@ -71,8 +71,8 @@ export default function Task({ onToggleConfig, data, subtasks = [], onComplete, 
 
           <div className="flex flex-col gap-2">
             {subtasks.map((subtask) => (
-              <label key={subtask.id} className="flex flex-row items-center justify-between gap-3">
-                <span>{subtask.titulo}</span>
+              <label onClick={(e) => e.stopPropagation()} key={subtask.id} className="flex flex-row items-center justify-between gap-3">
+                <span  className={`${!isTaskCompleted(subtask) ? '' : 'text-white/50 line-through decoration-primary-700'}`}>{subtask.titulo}</span>
                 <input
                   id={`subtask-${subtask.id}`}
                   checked={isTaskCompleted(subtask)}

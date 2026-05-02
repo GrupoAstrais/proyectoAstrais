@@ -6,7 +6,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-
 /* Así es la estructura del JSON para los colores
 {
     "primary": "#39FF14",
@@ -56,6 +55,7 @@ data class ThemeConfig(
  * @property ludiones Moneda virtual del juego, utilizada para comprar en la tienda.
  * @property personalGid Identificador del grupo personal asociado al usuario.
  * @property equippedPetRef Referencia al asset de la mascota que el usuario tiene equipada.
+ * @property equippedAvatarRef Referencia al asset del avatar que el usuario tiene equipado.
  * @property themeColors Tema de colores equipado actualmente.
  */
 @Serializable
@@ -68,6 +68,7 @@ data class UserMeResponse(
     val ludiones: Int,
     val personalGid: Int?,
     val equippedPetRef: String?,
+    val equippedAvatarRef: String? = null,
     val themeColors: String? = null
 )
 
@@ -108,6 +109,7 @@ fun UserMeResponse.toDomain(): User {
         ludiones = this.ludiones,
         personalGid = this.personalGid,
         equippedPetRef = this.equippedPetRef,
+        equippedAvatarRef = this.equippedAvatarRef,
         theme = parsedTheme
     )
 }

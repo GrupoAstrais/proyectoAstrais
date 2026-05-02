@@ -2,14 +2,16 @@ package com.astrais
 
 import admin.adminRoutes
 import avatar.avatarRoute
+import avatar.loadInitialCosmetics
 import com.astrais.auth.authRoutes
 import com.astrais.auth.installAuth
 import com.astrais.auth.oauthRoutes
+import com.astrais.db.DatabaseController
+import com.astrais.db.TablaUsuario
 import com.astrais.db.initDatabase
 import com.astrais.groups.groupRoutes
 import com.auth0.jwt.exceptions.TokenExpiredException
 import installSSE
-import io.ktor.client.plugins.sse.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -22,11 +24,14 @@ import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import java.io.File
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import sseRoutes
 import storeRoutes
 import tasks.tareaRoutes
+import java.io.File
 import java.util.logging.Logger
 
 const val POSTGRES_PORT = "5432"
@@ -115,6 +120,12 @@ fun Application.module() {
 
     installSSE()
 
+    runBlocking {
+        if (DatabaseController.isFresh()){
+            loadInitialCosmetics()
+        }
+    }
+
     routing {
         authRoutes()
         adminRoutes()
@@ -126,7 +137,9 @@ fun Application.module() {
         sseRoutes()
 
         staticResources("/static", "static") {}
-        staticResources("/admin", "admin") {}
+        staticResources("/admin", "admin") {
+            default("index.html")
+        }
 
         val externalUploadsDir = System.getenv("UPLOAD_DIR") ?: "uploads"
         staticFiles("/assets", File(externalUploadsDir))

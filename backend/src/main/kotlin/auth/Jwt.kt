@@ -21,7 +21,7 @@ import java.util.Date
 private lateinit var jwtIssuer: String
 private lateinit var jwtAudience: String
 // MS hasta que expire el token
-private var jwtAccessTokenExpiration: Long = 1 * 60 * 1000 // 1 minuto (creo)
+private var jwtAccessTokenExpiration: Long = 10 * 60 * 1000 // 1 minuto (creo)
 private var jwtRefreshTokenExpiration: Long = 7 * 24 * 60 * 60 * 1000
 // Algoritmo ya prehecho con los datos
 private lateinit var jwtAlgorithmAccess: Algorithm

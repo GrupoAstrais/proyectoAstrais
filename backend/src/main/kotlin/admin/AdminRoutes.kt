@@ -7,6 +7,9 @@ import com.astrais.db.CosmeticType
 import com.astrais.db.DatosSimpleUsuarios
 import com.astrais.db.UserRoles
 import com.astrais.db.getDatabaseDaoImpl
+import groups.types.AuditEventOut
+import groups.types.GroupMemberOut
+import groups.types.InviteOut
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.auth.*
@@ -46,6 +49,12 @@ data class CreateGroupAdmin(
 )
 
 @Serializable
+data class EditGroupAdmin(
+    val name : String?,
+    val desc : String?
+)
+
+@Serializable
 data class CreateUserAdmin(
     val name : String,
     val email : String,
@@ -53,6 +62,13 @@ data class CreateUserAdmin(
     val lang : String,
     val utcOffset : Float,
     val role : String
+)
+
+@Serializable
+data class FullGroupAdmin(
+    val activeInvites : List<InviteOut>,
+    val members : List<GroupMemberOut>,
+    val events: List<AuditEventOut>
 )
 
 enum class RarityType(val multiplier: Double) {
@@ -102,81 +118,15 @@ fun Route.adminRoutes() {
 
                 val multipart = call.receiveMultipart()
                 val data = receiveFormDataFromClient(multipart)
+                val res = getAdminDao().uploadCosmetic(data)
 
-                if (data.type == CosmeticType.PET && (data.fileBytes == null || data.fileName.isBlank() || !data.fileName.endsWith(".json"))) {
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        Errors(
-                            ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal,
-                            "Falta el archivo Lottie o no es formato .json"
-                        )
-                    )
-                    return@post
-                } else if (data.type == CosmeticType.APP_THEME && (data.theme == null)){
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        Errors(
-                            ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal,
-                            "No se envio el JSON de tema"
-                        )
-                    )
-                    return@post
-                }
-
-                try {
-                    val uploadsubdir = if (data.type == CosmeticType.PET) {"pets" } else { "avatar" }
-
-                    if (data.type == CosmeticType.PET || data.type == CosmeticType.AVATAR_PART) {
-                        saveFileIntoCosmetics(
-                            uploadDir = uploadsubdir,
-                            filename = data.fileName,
-                            data = data.fileBytes!!
-                        )
-                    }
-
-                    val finalPrice = if (data.price == 0) {
-                        calculateCosmeticPrice(data.type, data.rarity)
-                    } else{
-                        data.price
-                    }
-                    val success = getDatabaseDaoImpl().createCosmetic(
-                        name = Json.encodeToString(NamesCosmetic(
-                            data.engName, data.espName.ifEmpty { data.engName }, data.rusName.ifEmpty { data.engName }
-                        )),
-                        desc = data.desc,
-                        type = data.type,
-                        price = finalPrice,
-                        assetRef = data.fileName,
-                        theme = data.theme ?: "",
-                        coleccion = data.collection,
-                        rarity = data.rarity
-                    )
-
-                    if (success) {
-                        call.respond(
-                            HttpStatusCode.Created,
-                            OK_MESSAGE_RESPONSE
-                        )
-                    } else {
-                        val file = getCosmeticPath(uploadDir = uploadsubdir, filename =  data.fileName)
-                        if (file.exists()) file.delete()
-
-                        call.respond(
-                            HttpStatusCode.InternalServerError,
-                            Errors(
-                                    ErrorCodes.ERR_INTERNALERROR.ordinal,
-                            "Error al guardar en BD"
-                            )
-                        )
-                    }
-                } catch (e: Exception) {
-                    println("Exception! Tipo: ${e.javaClass.name}. Message ${e.message}")
-                    e.printStackTrace()
-
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        mapOf("error" to "Error al escribir el archivo")
-                    )
+                when (res.first) {
+                    UploadCosmeticResponse.OK -> call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
+                    UploadCosmeticResponse.MISSING_FILE -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, res.second))
+                    UploadCosmeticResponse.DB_ERROR -> call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, res.second))
+                    UploadCosmeticResponse.EXCEPTION -> call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, res.second))
+                    UploadCosmeticResponse.NO_COSMETIC -> call.respond(HttpStatusCode.NotModified, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, res.second))
+                    UploadCosmeticResponse.NOT_ADMIN -> call.respond(HttpStatusCode.Forbidden, Errors(ErrorCodes.ERR_FORBIDDEN.ordinal, "Forbidden, you are not admin"))
                 }
             }
 
@@ -209,72 +159,15 @@ fun Route.adminRoutes() {
 
                 val multipart = call.receiveMultipart()
                 val data = receiveFormDataFromClient(multipart)
+                val res = getAdminDao().updateCosmetic(cid, data)
 
-                if (data.fileBytes == null || data.fileName.isBlank() || !data.fileName.endsWith(".json")) {
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        Errors(
-                            ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal,
-                            "Falta el archivo Lottie o no es formato .json"
-                        )
-                    )
-                    return@post
-                }
-
-                try {
-                    val uploadsubdir = if (data.type == CosmeticType.PET) {"pets" } else { "avatar" }
-
-                    if ((data.fileBytes != null || data.fileName.isBlank() || !data.fileName.endsWith(".json")) && (data.type == CosmeticType.PET || data.type == CosmeticType.AVATAR_PART)) {
-                        saveFileIntoCosmetics(
-                            uploadDir = uploadsubdir,
-                            filename = data.fileName,
-                            data = data.fileBytes!!
-                        )
-                    }
-
-
-                    val success = getDatabaseDaoImpl().adminUpdateCosmetic(
-                        cid = cid,
-                        name = Json.encodeToString(
-                            NamesCosmetic(
-                                data.engName,
-                            data.espName.ifEmpty { data.engName },
-                            data.rusName.ifEmpty { data.engName }
-                        )),
-                        desc = data.desc,
-                        type = data.type,
-                        price = data.price,
-                        assetRef = data.fileName,
-                        theme = data.theme ?: "",
-                        coleccion = data.collection,
-                        rarity = data.rarity
-                    )
-
-                    if (success) {
-                        call.respond(
-                            HttpStatusCode.Created,
-                            OK_MESSAGE_RESPONSE
-                        )
-                    } else {
-                        val file = getCosmeticPath(uploadDir = uploadsubdir, filename =  data.fileName)
-                        if (file.exists()) file.delete()
-
-                        call.respond(
-                            HttpStatusCode.InternalServerError,
-                            Errors(
-                                ErrorCodes.ERR_INTERNALERROR.ordinal,
-                                "Error al guardar en BD"
-                            )
-                        )
-                    }
-                } catch (e: Exception) {
-                    println("Exception! Tipo: ${e.javaClass.name}. Message ${e.message}")
-                    e.printStackTrace()
-
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        mapOf("error" to "Error al escribir el archivo")
-                    )
+                when (res.first) {
+                    UploadCosmeticResponse.OK -> call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
+                    UploadCosmeticResponse.MISSING_FILE -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, res.second))
+                    UploadCosmeticResponse.DB_ERROR -> call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, res.second))
+                    UploadCosmeticResponse.EXCEPTION -> call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, res.second))
+                    UploadCosmeticResponse.NO_COSMETIC -> call.respond(HttpStatusCode.NotModified, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, res.second))
+                    UploadCosmeticResponse.NOT_ADMIN -> call.respond(HttpStatusCode.Forbidden, Errors(ErrorCodes.ERR_FORBIDDEN.ordinal, "Forbidden, you are not admin"))
                 }
             }
 
@@ -305,7 +198,7 @@ fun Route.adminRoutes() {
                 }
 
 
-                if (getDatabaseDaoImpl().admindeleteCosmetic(cid)){
+                if (getAdminDao().deleteCosmetic(cid)){
                     call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
                 }else {
                     call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCENOTMODIFIED.ordinal, "Couldn't delete the cosmetic"))
@@ -338,8 +231,12 @@ fun Route.adminRoutes() {
                     return@post
                 }
 
-                val users = getDatabaseDaoImpl().adminGetAllUsers()
-                call.respond(HttpStatusCode.OK, users)
+                val data = getAdminDao().listUsers()
+                if (data.first){
+                    call.respond(HttpStatusCode.OK, data.second)
+                } else {
+                    call.respond(HttpStatusCode.InternalServerError, Errors(HttpStatusCode.InternalServerError.value, "Unknown error!"))
+                }
             }
 
             get("/users/{uid}") {
@@ -369,18 +266,12 @@ fun Route.adminRoutes() {
 
                 val uid = call.parameters["uid"]?.toInt() ?: return@get call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "No GID"))
 
-                val data = getDatabaseDaoImpl().getUsuarioByID(id = uid)
+                val data = getAdminDao().getUserData(uid)
                 if (data != null){
-                    call.respond(HttpStatusCode.OK, DatosSimpleUsuarios(
-                        id = data.id.value,
-                        nombre = data.nombre,
-                        rol = if (data.rol == UserRoles.ADMIN_USER) {"Admin"} else {"User"},
-                        nivel = data.nivel
-                    ))
+                    call.respond(HttpStatusCode.OK, data)
                 }else{
                     call.respond(HttpStatusCode.NotFound, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "User doesn't exists"))
                 }
-
             }
 
             post ("/groups") {
@@ -450,6 +341,46 @@ fun Route.adminRoutes() {
                     call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
                 }
             }
+
+            post("/groups/edit/{gid}") {
+                val token = call.principal<JWTPrincipal>()?.subject?.toInt()
+                if (token == null) {
+                    // No deberia ser null, pero se hace la comprobacion por si acaso
+                    call.respond(
+                        HttpStatusCode.Unauthorized,
+                        Errors(
+                            ErrorCodes.ERR_INVALIDTOKEN.ordinal,
+                            "Invalid/Missing refresh token"
+                        )
+                    )
+                    return@post
+                }
+
+                if (!getDatabaseDaoImpl().checkIfUserIsServerAdmin(token)){
+                    call.respond(
+                        HttpStatusCode.Forbidden,
+                        Errors(
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
+                            "Forbidden, you are not admin"
+                        )
+                    )
+                    return@post
+                }
+
+                val gid = call.parameters["gid"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "No GID"))
+                val data = call.receive<EditGroupAdmin>()
+
+                if (getDatabaseDaoImpl().editGroup(
+                        gid = gid,
+                        name = data.name,
+                        desc = data.desc
+                )){
+                    call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
+                }else{
+                    call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCENOTCREATED.ordinal, "Couldn't edit group"))
+                }
+            }
+
             delete("/groups/delete/{gid}"){
                 val token = call.principal<JWTPrincipal>()?.subject?.toInt()
                 if (token == null) {
@@ -481,6 +412,67 @@ fun Route.adminRoutes() {
                 }else {
                     call.respond(HttpStatusCode.NotModified, Errors(ErrorCodes.ERR_RESOURCENOTMODIFIED.ordinal, "Couldn't delete!"))
                 }
+            }
+
+            post("/groups/moredata/{gid}") {
+                val token = call.principal<JWTPrincipal>()?.subject?.toInt()
+                if (token == null) {
+                    // No deberia ser null, pero se hace la comprobacion por si acaso
+                    call.respond(
+                        HttpStatusCode.Unauthorized,
+                        Errors(
+                            ErrorCodes.ERR_INVALIDTOKEN.ordinal,
+                            "Invalid/Missing refresh token"
+                        )
+                    )
+                    return@post
+                }
+
+                if (!getDatabaseDaoImpl().checkIfUserIsServerAdmin(token)){
+                    call.respond(
+                        HttpStatusCode.Forbidden,
+                        Errors(
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
+                            "Forbidden, you are not admin"
+                        )
+                    )
+                    return@post
+                }
+
+                val gid = call.parameters["gid"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "No CID"))
+
+                val invites = getDatabaseDaoImpl().listGroupInvites(gid, true).map {
+                    InviteOut(
+                        code = it.code,
+                        inviteUrl = it.code,
+                        expiresAt = it.expiresAt,
+                        maxUses = it.maxUses,
+                        usesCount = it.usesCount,
+                        revokedAt = it.revokedAt
+                    )
+                }
+                val members = getDatabaseDaoImpl().listGroupMembers(gid).map {
+                    GroupMemberOut(
+                        uid = it.uid,
+                        name = it.name,
+                        role = it.role,
+                        joinedAt = it.joinedAt
+                    )
+                }
+                val events = getDatabaseDaoImpl().listGroupAuditEvents(gid = gid, limit = 20, offset = 0).map {
+                    AuditEventOut(
+                        id = it.id,
+                        actorUid = it.actorUid,
+                        eventType = it.eventType,
+                        payloadJson = it.payloadJson,
+                        createdAt = it.createdAt
+                    )
+                }
+                call.respond(HttpStatusCode.OK, FullGroupAdmin(
+                    activeInvites = invites,
+                    members = members,
+                    events = events
+                ))
             }
 
             post("/user/create"){

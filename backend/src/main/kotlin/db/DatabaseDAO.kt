@@ -4,6 +4,9 @@ import CosmeticResponseDTO
 import LANG_CODE_ENGLISH
 import admin.RarityType
 import avatar.AvatarLayerDTO
+import groups.types.AuditEventOut
+import groups.types.GroupMemberOut
+import groups.types.InviteOut
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -41,6 +44,35 @@ data class DatosSimpleGrupo(
     val descripcion: String,
     val ownerId : Int,
     val ownerNombre: String,
+)
+
+data class GroupInviteDb(
+    val id: Int,
+    val gid: Int,
+    val code: String,
+    val codeHash: String,
+    val createdByUid: Int,
+    val createdAt: LocalDateTime,
+    val expiresAt: LocalDateTime?,
+    val revokedAt: LocalDateTime?,
+    val maxUses: Int?,
+    val usesCount: Int,
+)
+
+data class GroupAuditEventDb(
+    val id: Int,
+    val gid: Int,
+    val actorUid: Int?,
+    val eventType: String,
+    val payloadJson: String?,
+    val createdAt: LocalDateTime,
+)
+
+data class GroupMemberDb(
+    val uid: Int,
+    val name: String,
+    val role: Int,
+    val joinedAt: LocalDateTime,
 )
 
 interface DatabaseDAO {
@@ -180,6 +212,20 @@ interface DatabaseDAO {
     suspend fun addUserToGroup(idusuario: Int, idgrupo: Int): Boolean
 
     /**
+     * Se elimina el usuario con el ID indicado del grupo
+     * @param idusuario ID del usuario a eliminar
+     * @param idgrupo ID del grupo del que se elimina
+     */
+    suspend fun removeUserFromGroup(idusuario: Int, idgrupo: Int): Boolean
+
+    /**
+     * Transfiere la propiedad de un grupo.
+     * @param gid ID del grupo
+     * @param newOwnerId ID del nuevo propietario
+     */
+    suspend fun passGroupOwnership(gid: Int, newOwnerId: Int): Boolean
+
+    /**
      * Comprueba si el usuario indicado es admin del grupo
      */
     suspend fun checkIfUserIsGroupAdmin(uid : Int, gid : Int) : Boolean
@@ -242,13 +288,18 @@ interface DatabaseDAO {
         rarity: RarityType
     ): Boolean
 
+    /**
+     * Obtiene un cosmético por su ID.
+     * @param cid El ID del cosmético
+     * @return La entidad del cosmético, o null si no existe
+     */
+    suspend fun getCosmetic(cid: Int) : EntidadCosmetico?
+
     suspend fun saveConfirmationCode(uid: Int, code: String)
     suspend fun verifyConfirmationCode(email: String, code: String): Boolean
     suspend fun isUserConfirmed(email: String): Boolean
 
     suspend fun getUserEquippedAvatar(uid: Int) : EntidadCosmetico?
-
-
 
     suspend fun adminUpdateCosmetic(cid: Int,
                                     name: String,
@@ -262,6 +313,42 @@ interface DatabaseDAO {
     suspend fun admindeleteCosmetic(cid : Int) : Boolean
     suspend fun adminGetAllUsers() : List<DatosSimpleUsuarios>
     suspend fun adminGetAllGroups() : List<DatosSimpleGrupo>
+
+    suspend fun createGroupInvite(
+        gid: Int,
+        code: String,
+        codeHash: String,
+        createdByUid: Int,
+        createdAt: LocalDateTime,
+        expiresAt: LocalDateTime?,
+        maxUses: Int?,
+    ): Int
+
+    suspend fun revokeGroupInvite(
+        gid: Int,
+        codeHash: String,
+        revokedAt: LocalDateTime,
+    ): Boolean
+
+    suspend fun listGroupInvites(gid: Int, includeRevoked: Boolean = false): List<GroupInviteDb>
+
+    suspend fun getGroupInviteByHash(codeHash: String): GroupInviteDb?
+
+    suspend fun tryConsumeInvite(inviteId: Int, now: LocalDateTime): Boolean
+
+    suspend fun appendGroupAuditEvent(
+        gid: Int,
+        actorUid: Int?,
+        eventType: String,
+        payloadJson: String?,
+        createdAt: LocalDateTime,
+    ): Int
+
+    suspend fun listGroupAuditEvents(gid: Int, limit: Int, offset: Long): List<GroupAuditEventDb>
+
+    suspend fun listGroupMembers(gid: Int): List<GroupMemberDb>
+
+    suspend fun setGroupMemberRole(gid: Int, uid: Int, role: GroupRoles): Boolean
 }
 
 fun getDatabaseDaoImpl(): DatabaseDAO {

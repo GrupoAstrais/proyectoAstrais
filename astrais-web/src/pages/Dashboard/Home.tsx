@@ -12,7 +12,6 @@ import Pet from "../../components/ui/Pet";
 import {
   buildCreateTaskRequest,
   buildEditTaskRequest,
-  buildTaskFormData,
   completeTask,
   createLocalTask,
   createTask,
@@ -27,9 +26,9 @@ import {
   isTaskCompleted,
   isTaskVisibleInDefaultList,
   removeTaskWithSubtasks,
-  shouldRecreateTaskOnEdit,
   toggleSubtaskCompleted,
   toggleTaskCompleted,
+  uncompleteTask,
   type ITaskFormData
 } from "../../data/Api";
 
@@ -42,25 +41,6 @@ const normalizeTaskFormData = (data: ITaskFormData, fallbackObjetivoId?: number)
   idObjetivo: normalizeObjectiveId(data.idObjetivo) ?? normalizeObjectiveId(fallbackObjetivoId)
 });
 
-const recreateTaskChildren = async (gid: number, parentTaskId: number, subtasks: ITarea[]): Promise<ITarea[]> => {
-  const recreatedSubtasks: ITarea[] = [];
-
-  for (const subtask of subtasks) {
-    const subtaskData = buildTaskFormData(subtask);
-    const subtaskId = await createTask(buildCreateTaskRequest(gid, subtaskData, parentTaskId));
-
-    recreatedSubtasks.push(
-      createLocalTask(subtaskData, {
-        gid,
-        id: subtaskId,
-        idObjetivo: parentTaskId,
-        tipo: "UNICO"
-      })
-    );
-  }
-
-  return recreatedSubtasks;
-};
 
 export default function Home() {
   const [notif] = useState<number>(0);
@@ -117,32 +97,6 @@ export default function Home() {
     ]);
   };
 
-  const recreateTaskWithChanges = async (currentTask: ITarea, currentSubtasks: ITarea[], data: ITaskFormData) => {
-    if (personalGroupId === null) {
-      return;
-    }
-
-    const normalizedData = normalizeTaskFormData(data, currentTask.idObjetivo);
-    const createdTaskId = await createTask(buildCreateTaskRequest(personalGroupId, normalizedData));
-    const recreatedTasks: ITarea[] = [
-      createLocalTask(normalizedData, {
-        gid: personalGroupId,
-        id: createdTaskId,
-        idObjetivo: normalizedData.idObjetivo
-      })
-    ];
-
-    if (typeof normalizedData.idObjetivo !== "number") {
-      recreatedTasks.push(...(await recreateTaskChildren(personalGroupId, createdTaskId, currentSubtasks)));
-    }
-
-    for (const subtask of currentSubtasks) {
-      await deleteTask(subtask.id);
-    }
-
-    await deleteTask(currentTask.id);
-    setTasks((prevTasks) => [...removeTaskWithSubtasks(prevTasks, currentTask.id), ...recreatedTasks]);
-  };
 
   const editTaskWithSubtasks = async (currentTask: ITarea, data: ITaskFormData) => {
     const normalizedData = normalizeTaskFormData(data, currentTask.idObjetivo);
@@ -180,13 +134,8 @@ export default function Home() {
         return;
       }
 
-      const currentSubtasks = getTaskSubtasks(tasks, initialDataModal.id);
 
-      if (shouldRecreateTaskOnEdit(initialDataModal, normalizedData)) {
-        await recreateTaskWithChanges(initialDataModal, currentSubtasks, normalizedData);
-      } else {
-        await editTaskWithSubtasks(initialDataModal, normalizedData);
-      }
+      await editTaskWithSubtasks(initialDataModal, normalizedData);
 
       closeModalHandle();
     } catch (submitError) {
@@ -217,18 +166,56 @@ export default function Home() {
   };
 
   const handleToggleTaskCompleted = async (taskId: number) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+
+    const subtasks = getTaskSubtasks(tasks, taskId);
+    const willComplete = !isTaskCompleted(task);
+
     try {
-      await completeTask(taskId);
-    } catch (completeError) {
-      console.error("Error al completar la tarea:", completeError);
+        if (willComplete) {
+            // Completar hijas primero, luego padre
+            await Promise.all(
+                subtasks
+                    .filter((s) => !isTaskCompleted(s))
+                    .map((s) => completeTask(s.id))
+            );
+            await completeTask(taskId);
+        } else {
+            // Descompletar padre primero, luego hijas
+            await uncompleteTask(taskId);
+            await Promise.all(
+                subtasks
+                    .filter((s) => isTaskCompleted(s))
+                    .map((s) => uncompleteTask(s.id))
+            );
+        }
+    } catch (err) {
+        console.error("Error al completar/descompletar tarea:", err);
     } finally {
-      setTasks((prevTasks) => toggleTaskCompleted(prevTasks, `${taskId}`));
+        setTasks((prev) => toggleTaskCompleted(prev, `${taskId}`));
     }
   };
 
   const handleToggleSubtaskCompleted = async (taskId: number, subtaskId: number) => {
+    const subtask = tasks.find((currentTask) => currentTask.id === subtaskId);
+    const parentTask = tasks.find((currentTask) => currentTask.id === taskId);
+    if (!subtask) return;
+
     try {
-      await completeTask(subtaskId);
+      if (isTaskCompleted(subtask)) {
+        await uncompleteTask(subtaskId);
+        if (parentTask && isTaskCompleted(parentTask)) {
+          await uncompleteTask(taskId);
+        }
+      } else {
+        await completeTask(subtaskId);
+        const siblingSubtasks = getTaskSubtasks(tasks, taskId).filter((task) => task.id !== subtaskId);
+
+        if (parentTask && !isTaskCompleted(parentTask) && siblingSubtasks.every(isTaskCompleted)) {
+          await completeTask(taskId);
+        }
+      }
     } catch (completeError) {
       console.error("Error al completar la subtarea:", completeError);
     } finally {
@@ -236,7 +223,7 @@ export default function Home() {
     }
   };
 
-  const dashboardTasks = [...getDailyTasks(tasks), ...getHabitTasks(tasks)].filter((task) => isTaskVisibleInDefaultList(task) && !isTaskCompleted(task));
+  const dashboardTasks = [...getDailyTasks(tasks), ...getHabitTasks(tasks)].filter((task) => isTaskVisibleInDefaultList(task) && !isTaskCompleted(task) && task.idObjetivo === undefined);
   const availableObjectives = tasks.filter((task) => task.id !== initialDataModal?.id);
 
   const editTaskHandle = (taskId: number) => {
