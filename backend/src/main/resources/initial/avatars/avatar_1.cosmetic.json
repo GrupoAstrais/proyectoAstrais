@@ -1,0 +1,13 @@
+{
+    "type" : "avatar",
+    "names" : {
+        "esp" : "Limon",
+        "eng" : "Lemon",
+        "rus" : "лимон"
+    },
+    "desc" : "",
+    "collection" : "LEMON",
+    "price" : 180,
+    "rarity" : "COMUN",
+    "imageRef":"avatars/lemon.png"
+}
