@@ -10,11 +10,8 @@ import ROLE_USEROWNER
 import admin.NamesCosmetic
 import admin.RarityType
 import com.astrais.mainlogger
+import kotlinx.datetime.*
 import java.time.LocalDate
-import kotlinx.datetime.Clock
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toKotlinLocalDate
-import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -24,7 +21,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 class DatabaseDAOImpl : DatabaseDAO {
     // https://www.jetbrains.com/help/exposed/dsl-querying-data.html
 
-    private fun nowUtc(): kotlinx.datetime.LocalDateTime =
+    private fun nowUtc(): LocalDateTime =
         Clock.System.now().toLocalDateTime(TimeZone.UTC)
 
     override suspend fun createUser(
@@ -319,7 +316,7 @@ class DatabaseDAOImpl : DatabaseDAO {
     override suspend fun removeUserFromGroup(idusuario: Int, idgrupo: Int): Boolean {
         return suspendTransaction {
             TablaGrupoUsuario.deleteWhere {
-                TablaGrupoUsuario.gid.eq(idgrupo).and(TablaGrupoUsuario.uid.eq(idusuario))
+                gid.eq(idgrupo).and(uid.eq(idusuario))
             } > 0
         }
     }
@@ -333,7 +330,7 @@ class DatabaseDAOImpl : DatabaseDAO {
 
             // El nuevo owner se representa en Group.owner, no en RelGroupUser.
             TablaGrupoUsuario.deleteWhere {
-                TablaGrupoUsuario.gid.eq(gid).and(TablaGrupoUsuario.uid.eq(newOwnerId))
+                TablaGrupoUsuario.gid.eq(gid).and(uid.eq(newOwnerId))
             }
 
             // El owner anterior mantiene acceso como MOD.
@@ -344,9 +341,9 @@ class DatabaseDAOImpl : DatabaseDAO {
             if (!oldOwnerRelationExists) {
                 TablaGrupoUsuario.insert {
                     it[TablaGrupoUsuario.gid] = EntityID(gid, TablaGrupo)
-                    it[TablaGrupoUsuario.uid] = EntityID(oldOwnerId, TablaUsuario)
-                    it[TablaGrupoUsuario.role] = GroupRoles.MOD
-                    it[TablaGrupoUsuario.joined_at] = nowUtc()
+                    it[uid] = EntityID(oldOwnerId, TablaUsuario)
+                    it[role] = GroupRoles.MOD
+                    it[joined_at] = nowUtc()
                 }
             } else {
                 TablaGrupoUsuario.update({
@@ -593,11 +590,11 @@ class DatabaseDAOImpl : DatabaseDAO {
 
     override suspend fun deleteTarea(tid: Int): Boolean {
         return suspendTransaction {
-            TablaTareaUnica.deleteWhere { TablaTareaUnica.id_tarea eq tid }
-            TablaTareaHabito.deleteWhere { TablaTareaHabito.id_tarea eq tid }
-            TablaTareaObjetivo.deleteWhere { TablaTareaObjetivo.id_tarea eq tid }
+            TablaTareaUnica.deleteWhere { id_tarea eq tid }
+            TablaTareaHabito.deleteWhere { id_tarea eq tid }
+            TablaTareaObjetivo.deleteWhere { id_tarea eq tid }
 
-            TablaTarea.deleteWhere { TablaTarea.id eq tid } > 0
+            TablaTarea.deleteWhere { id eq tid } > 0
         }
     }
 
@@ -751,6 +748,12 @@ class DatabaseDAOImpl : DatabaseDAO {
         }
     }
 
+    override suspend fun getCosmetic(cid: Int): EntidadCosmetico? {
+        return suspendTransaction {
+            EntidadCosmetico.findById(cid)
+        }
+    }
+
     override suspend fun saveConfirmationCode(uid: Int, code: String) {
         suspendTransaction {
             EntidadConfirmacionUsuario.new {
@@ -813,10 +816,14 @@ class DatabaseDAOImpl : DatabaseDAO {
             val identity = EntidadCosmetico.findById(cid) ?: return@suspendTransaction false
             identity.nombre = name
             identity.descripcion = desc
-            identity.tipo = type
+            //identity.tipo = type
             identity.precioLudiones = price
-            identity.assetRef = assetRef
-            identity.tema = theme
+            if (type != CosmeticType.APP_THEME && assetRef.isNotBlank()){
+                identity.assetRef = assetRef
+            }
+            if (type == CosmeticType.APP_THEME && theme.isNotBlank()){
+                identity.tema = theme
+            }
             identity.coleccion = coleccion
             identity.rareza = rarity
             true
@@ -826,7 +833,7 @@ class DatabaseDAOImpl : DatabaseDAO {
     override suspend fun admindeleteCosmetic(cid: Int) : Boolean {
         return suspendTransaction {
             TablaCosmetico.deleteWhere {
-                TablaCosmetico.id.eq(cid)
+                id.eq(cid)
             } > 0
         }
     }
@@ -891,7 +898,7 @@ class DatabaseDAOImpl : DatabaseDAO {
     override suspend fun revokeGroupInvite(
         gid: Int,
         codeHash: String,
-        revokedAt: kotlinx.datetime.LocalDateTime,
+        revokedAt: LocalDateTime,
     ): Boolean {
         return suspendTransaction {
             TablaGrupoInvites.update({
@@ -944,7 +951,7 @@ class DatabaseDAOImpl : DatabaseDAO {
         }
     }
 
-    override suspend fun tryConsumeInvite(inviteId: Int, now: kotlinx.datetime.LocalDateTime): Boolean {
+    override suspend fun tryConsumeInvite(inviteId: Int, now: LocalDateTime): Boolean {
         return suspendTransaction {
             TablaGrupoInvites.update({
                 (TablaGrupoInvites.id eq inviteId) and
@@ -962,15 +969,15 @@ class DatabaseDAOImpl : DatabaseDAO {
         actorUid: Int?,
         eventType: String,
         payloadJson: String?,
-        createdAt: kotlinx.datetime.LocalDateTime,
+        createdAt: LocalDateTime,
     ): Int {
         return suspendTransaction {
             TablaGrupoAuditLog.insertAndGetId {
                 it[TablaGrupoAuditLog.gid] = EntityID(gid, TablaGrupo)
-                it[TablaGrupoAuditLog.actor_uid] = actorUid?.let { uid -> EntityID(uid, TablaUsuario) }
-                it[TablaGrupoAuditLog.event_type] = eventType
-                it[TablaGrupoAuditLog.payload_json] = payloadJson
-                it[TablaGrupoAuditLog.created_at] = createdAt
+                it[actor_uid] = actorUid?.let { uid -> EntityID(uid, TablaUsuario) }
+                it[event_type] = eventType
+                it[payload_json] = payloadJson
+                it[created_at] = createdAt
             }.value
         }
     }

@@ -7,6 +7,9 @@ import com.astrais.db.CosmeticType
 import com.astrais.db.DatosSimpleUsuarios
 import com.astrais.db.UserRoles
 import com.astrais.db.getDatabaseDaoImpl
+import groups.types.AuditEventOut
+import groups.types.GroupMemberOut
+import groups.types.InviteOut
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.auth.*
@@ -59,6 +62,13 @@ data class CreateUserAdmin(
     val lang : String,
     val utcOffset : Float,
     val role : String
+)
+
+@Serializable
+data class FullGroupAdmin(
+    val activeInvites : List<InviteOut>,
+    val members : List<GroupMemberOut>,
+    val events: List<AuditEventOut>
 )
 
 enum class RarityType(val multiplier: Double) {
@@ -402,6 +412,67 @@ fun Route.adminRoutes() {
                 }else {
                     call.respond(HttpStatusCode.NotModified, Errors(ErrorCodes.ERR_RESOURCENOTMODIFIED.ordinal, "Couldn't delete!"))
                 }
+            }
+
+            post("/groups/moredata/{gid}") {
+                val token = call.principal<JWTPrincipal>()?.subject?.toInt()
+                if (token == null) {
+                    // No deberia ser null, pero se hace la comprobacion por si acaso
+                    call.respond(
+                        HttpStatusCode.Unauthorized,
+                        Errors(
+                            ErrorCodes.ERR_INVALIDTOKEN.ordinal,
+                            "Invalid/Missing refresh token"
+                        )
+                    )
+                    return@post
+                }
+
+                if (!getDatabaseDaoImpl().checkIfUserIsServerAdmin(token)){
+                    call.respond(
+                        HttpStatusCode.Forbidden,
+                        Errors(
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
+                            "Forbidden, you are not admin"
+                        )
+                    )
+                    return@post
+                }
+
+                val gid = call.parameters["gid"]?.toInt() ?: return@post call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "No CID"))
+
+                val invites = getDatabaseDaoImpl().listGroupInvites(gid, true).map {
+                    InviteOut(
+                        code = it.code,
+                        inviteUrl = it.code,
+                        expiresAt = it.expiresAt,
+                        maxUses = it.maxUses,
+                        usesCount = it.usesCount,
+                        revokedAt = it.revokedAt
+                    )
+                }
+                val members = getDatabaseDaoImpl().listGroupMembers(gid).map {
+                    GroupMemberOut(
+                        uid = it.uid,
+                        name = it.name,
+                        role = it.role,
+                        joinedAt = it.joinedAt
+                    )
+                }
+                val events = getDatabaseDaoImpl().listGroupAuditEvents(gid = gid, limit = 20, offset = 0).map {
+                    AuditEventOut(
+                        id = it.id,
+                        actorUid = it.actorUid,
+                        eventType = it.eventType,
+                        payloadJson = it.payloadJson,
+                        createdAt = it.createdAt
+                    )
+                }
+                call.respond(HttpStatusCode.OK, FullGroupAdmin(
+                    activeInvites = invites,
+                    members = members,
+                    events = events
+                ))
             }
 
             post("/user/create"){

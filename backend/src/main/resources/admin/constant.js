@@ -2,13 +2,16 @@ const API_URL = "http://localhost:5684";
 const STORAGE_ACCESS = 'astrais_access';
 const STORAGE_REFRESH = 'astrais_refresh';
 
-if (window.location.port == "5501"){
-    const LOGIN_URL = "/login.html";
-    const INDEX_URL = "/index.html";
-}else{
-    const LOGIN_URL = "/admin/login.html";
-    const INDEX_URL = "/admin/index.html";
+var url_login = "/admin/login.html";
+var url_index = "/admin/login.html";
+
+if (window.location.port == "5500"){
+    url_login = "/login.html";
+    url_index = "/index.html";
 }
+
+const LOGIN_URL = url_login;
+const INDEX_URL = url_index;
 
 
 function checkIfNeedsRefresh(num, jsondata) {

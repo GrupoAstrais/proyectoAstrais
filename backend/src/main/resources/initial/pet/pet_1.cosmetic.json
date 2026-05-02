@@ -1,0 +1,13 @@
+{
+    "type" : "pet",
+    "names" : {
+        "esp" : "Gato mono",
+        "eng" : "Cute cat",
+        "rus" : "кот"
+    },
+    "desc" : "",
+    "collection" : "FLUFFY",
+    "price" : 180,
+    "rarity" : "COMUN",
+    "imageRef":"pet/cuteCatLottie.json"
+}
