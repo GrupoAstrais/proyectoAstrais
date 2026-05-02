@@ -288,6 +288,11 @@ interface DatabaseDAO {
         rarity: RarityType
     ): Boolean
 
+    /**
+     * Obtiene un cosmético por su ID.
+     * @param cid El ID del cosmético
+     * @return La entidad del cosmético, o null si no existe
+     */
     suspend fun getCosmetic(cid: Int) : EntidadCosmetico?
 
     suspend fun saveConfirmationCode(uid: Int, code: String)
@@ -295,13 +300,6 @@ interface DatabaseDAO {
     suspend fun isUserConfirmed(email: String): Boolean
 
     suspend fun getUserEquippedAvatar(uid: Int) : EntidadCosmetico?
-
-    /**
-     * Obtiene un cosmético por su ID.
-     * @param cid El ID del cosmético
-     * @return La entidad del cosmético, o null si no existe
-     */
-    suspend fun getCosmetic(cid: Int) : EntidadCosmetico?
 
     suspend fun adminUpdateCosmetic(cid: Int,
                                     name: String,
