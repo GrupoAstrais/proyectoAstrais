@@ -15,6 +15,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * Componente visual tipo chip para mostrar etiquetas breves relacionadas con tareas.
+ *
+ * @param text Contenido textual del chip.
+ * @param color Color principal del chip, aplicado al fondo semitransparente, al borde y al texto.
+ * @param icon Icono opcional que se muestra antes del texto.
+ */
 @Composable
 fun TaskChip(
     text: String,

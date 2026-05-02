@@ -26,6 +26,16 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+/**
+ * Diálogo de edición de tareas.
+ *
+ * Carga los datos actuales de la tarea proporcionada y permite modificarlos.
+ * Solo muestra los campos relevantes según el tipo de tarea.
+ *
+ * @param task Modelo de UI de la tarea que se va a editar.
+ * @param onDismiss Callback invocado al cerrar el diálogo sin guardar cambios.
+ * @param onEdit Callback invocado al confirmar con los nuevos valores del formulario.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditTaskDialog(
