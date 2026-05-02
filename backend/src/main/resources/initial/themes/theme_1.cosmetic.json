@@ -1,0 +1,23 @@
+{
+    "type" : "theme",
+    "names" : {
+        "esp" : "Por defecto",
+        "eng" : "Default",
+        "rus" : "умолчанию"
+    },
+    "desc" : "",
+    "collection" : "DEFAULT",
+    "price" : 0,
+    "rarity" : "COMUN",
+    "colors" : {
+        "primary": "#8B5CF6",
+        "secondary": "#38BDF8",
+        "tertiary": "#10B981",
+        "background": "#0D1117",
+        "onPrimary": "#F8FAFC",
+        "onSecondary": "#0D1117",
+        "onTertiary": "#0D1117",
+        "onBackground": "#F8FAFC",
+        "onSurface": "#F8FAFC"
+    }
+}

@@ -4,6 +4,9 @@ import CosmeticResponseDTO
 import LANG_CODE_ENGLISH
 import admin.RarityType
 import avatar.AvatarLayerDTO
+import groups.types.AuditEventOut
+import groups.types.GroupMemberOut
+import groups.types.InviteOut
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -284,6 +287,8 @@ interface DatabaseDAO {
         coleccion: String,
         rarity: RarityType
     ): Boolean
+
+    suspend fun getCosmetic(cid: Int) : EntidadCosmetico?
 
     suspend fun saveConfirmationCode(uid: Int, code: String)
     suspend fun verifyConfirmationCode(email: String, code: String): Boolean

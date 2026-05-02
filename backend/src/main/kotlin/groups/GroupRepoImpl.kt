@@ -82,8 +82,8 @@ class GroupRepoImpl : GroupRepo{
 
     /**
      * Determina el rol efectivo de un usuario sobre un grupo concreto consultando la base de datos.
-     * Primero verifica si el usuario es el Owner del grupo; si no lo es, consulta la tabla de
-     * membresías para distinguir entre Moderador y Miembro normal.
+     * Primero verifica si el usuario es el Owner del grupo; luego si este es administrador del servidor;
+     * si no es ninguno de los dos, consulta la tabla de membresías para distinguir entre Moderador y Miembro normal.
      *
      * @param uid Identificador del usuario cuyo rol se quiere conocer.
      * @param gid Identificador del grupo.
@@ -93,6 +93,7 @@ class GroupRepoImpl : GroupRepo{
     private suspend fun roleForUserOnGroup(uid: Int, gid: Int): Int {
         val gp = getDatabaseDaoImpl().getGroupById(gid) ?: return ROLE_USERNORMAL
         if (gp.owner.value == uid) return ROLE_USEROWNER
+        if (getDatabaseDaoImpl().checkIfUserIsServerAdmin(uid)) return ROLE_USEROWNER
         val d = getDatabaseDaoImpl().getUserRoleOnGroup(idusuario = uid, idgrupo = gid)
         return if (d == GroupRoles.MOD) ROLE_USERMOD else ROLE_USERNORMAL
     }
@@ -174,16 +175,7 @@ class GroupRepoImpl : GroupRepo{
     override suspend fun addUser(requesterId: Int, userId: Int, gid: Int): AddUserReturn {
         try {
             val gp = getDatabaseDaoImpl().getGroupById(gid) ?: return AddUserReturn.NOGROUP
-            var role = ROLE_USEROWNER
-
-            if (gp.owner.value != requesterId){
-                val d = getDatabaseDaoImpl().getUserRoleOnGroup(idusuario = requesterId, idgrupo = gid)
-                role = if (d == GroupRoles.MOD){
-                    ROLE_USERMOD
-                }else{
-                    ROLE_USERNORMAL
-                }
-            }
+            var role = roleForUserOnGroup(requesterId, gid)
 
             if (role != ROLE_USERNORMAL){
                 val add = getDatabaseDaoImpl().addUserToGroup(userId, gid)
@@ -219,15 +211,15 @@ class GroupRepoImpl : GroupRepo{
                 return RemoveUserReturn.CANNOT_REMOVE_OWNER
             }
 
-            var requesterRole = ROLE_USEROWNER
-            if (gp.owner.value != requesterId) {
+            val requesterRole = roleForUserOnGroup(requesterId, gid)
+            /*if (gp.owner.value != requesterId) {
                 val d = getDatabaseDaoImpl().getUserRoleOnGroup(idusuario = requesterId, idgrupo = gid)
                 requesterRole = if (d == GroupRoles.MOD) {
                     ROLE_USERMOD
                 } else {
                     ROLE_USERNORMAL
                 }
-            }
+            }*/
 
             if (requesterRole == ROLE_USERNORMAL) {
                 return RemoveUserReturn.NOPERMISSION
@@ -292,11 +284,14 @@ class GroupRepoImpl : GroupRepo{
                 return Pair(InviteUrlReturn.NOPERMISSION, null)
             }
 
-            var requesterRole = ROLE_USEROWNER
+            /*var requesterRole = ROLE_USEROWNER
             if (gp.owner.value != requesterId) {
                 val d = getDatabaseDaoImpl().getUserRoleOnGroup(idusuario = requesterId, idgrupo = gid)
                 requesterRole = if (d == GroupRoles.MOD) ROLE_USERMOD else ROLE_USERNORMAL
-            }
+            } else if (getDatabaseDaoImpl().checkIfUserIsServerAdmin(requesterId)){
+                requesterRole = ROLE_USEROWNER
+            }*/
+            val requesterRole = roleForUserOnGroup(requesterId, gid)
             if (requesterRole == ROLE_USERNORMAL) {
                 return Pair(InviteUrlReturn.NOPERMISSION, null)
             }
@@ -719,7 +714,7 @@ class GroupRepoImpl : GroupRepo{
      *   no tiene permisos o si ocurre un error.
      */
     override suspend fun deleteGroup(gid: Int, uid: Int): Boolean {
-        if (getDatabaseDaoImpl().checkIfUserIsGroupAdmin(uid = uid, gid = gid)){
+        if (getDatabaseDaoImpl().checkIfUserIsGroupAdmin(uid = uid, gid = gid) || getDatabaseDaoImpl().checkIfUserIsServerAdmin(uid)){
             return getDatabaseDaoImpl().deleteGroup(gid)
         }
         return false
@@ -737,7 +732,7 @@ class GroupRepoImpl : GroupRepo{
      * @return `true` si la edición fue exitosa; `false` si el usuario no tiene permisos.
      */
     override suspend fun editGroup(gid: Int, uid: Int, name: String?, desc: String?): Boolean {
-        if (getDatabaseDaoImpl().checkIfUserIsGroupAdmin(uid = uid, gid = gid) || getDatabaseDaoImpl().getUserRoleOnGroup(uid,gid) == GroupRoles.MOD){
+        if (roleForUserOnGroup(uid, gid) == ROLE_USEROWNER){
             return getDatabaseDaoImpl().editGroup(gid = gid, name = name, desc = desc)
         }
         return false
