@@ -291,7 +291,12 @@ interface DatabaseDAO {
 
     suspend fun getUserEquippedAvatar(uid: Int) : EntidadCosmetico?
 
-
+    /**
+     * Obtiene un cosmético por su ID.
+     * @param cid El ID del cosmético
+     * @return La entidad del cosmético, o null si no existe
+     */
+    suspend fun getCosmetic(cid: Int) : EntidadCosmetico?
 
     suspend fun adminUpdateCosmetic(cid: Int,
                                     name: String,

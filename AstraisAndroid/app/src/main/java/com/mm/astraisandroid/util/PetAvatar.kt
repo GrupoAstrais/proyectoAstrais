@@ -26,12 +26,29 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.net.URL
 
+/**
+ * Obtiene el archivo de caché local para una mascota específica.
+ *
+ * @param context Contexto de la aplicación.
+ * @param assetRef Identificador único del recurso de la mascota.
+ * @return Archivo correspondiente al recurso de la mascota dentro del directorio de caché.
+ */
 private fun petCacheFile(context: Context, assetRef: String): File {
     val dir = File(context.filesDir, "pets_cache")
     if (!dir.exists()) dir.mkdirs()
     return File(dir, assetRef)
 }
 
+/**
+ * Asegura que el archivo de animación de la mascota esté disponible en el almacenamiento local.
+ *
+ * Si el archivo no existe en caché, lo descarga desde el servidor utilizando [BASE_URL].
+ * La operación de red se ejecuta en el dispatcher de entrada/salida ([Dispatchers.IO]).
+ *
+ * @param context Contexto de la aplicación.
+ * @param assetRef Identificador único del recurso de la mascota.
+ * @return El archivo local si la operación fue exitosa, o `null` si ocurrió un error.
+ */
 private suspend fun ensurePetCached(context: Context, assetRef: String): File? {
     val file = petCacheFile(context, assetRef)
     if (file.exists()) return file
@@ -47,6 +64,16 @@ private suspend fun ensurePetCached(context: Context, assetRef: String): File? {
     }
 }
 
+/**
+ * Renderiza una animación Lottie de una mascota.
+ *
+ * Gestiona automáticamente la descarga y caché local del recurso animado.
+ * Muestra un indicador de carga mientras se obtiene el archivo, y mensajes de error
+ * si la descarga o la carga de la composición fallan.
+ *
+ * @param assetRef Identificador único del recurso de la mascota.
+ * @param modifier Modificador de Compose para aplicar al contenedor de la animación.
+ */
 @Composable
 fun LottiePetRenderer(assetRef: String, modifier: Modifier = Modifier) {
     val context = LocalContext.current

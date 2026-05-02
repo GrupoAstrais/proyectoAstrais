@@ -791,6 +791,12 @@ class DatabaseDAOImpl : DatabaseDAO {
         }
     }
 
+    override suspend fun getCosmetic(cid: Int): EntidadCosmetico? {
+        return suspendTransaction {
+            EntidadCosmetico.findById(cid)
+        }
+    }
+
     override suspend fun adminUpdateCosmetic(
         cid: Int,
         name: String,
