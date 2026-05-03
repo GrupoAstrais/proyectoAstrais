@@ -20,7 +20,7 @@ class AstraisWidget : AppWidgetProvider() {
 fun updateWidget(context: Context, appWidgetManager: AppWidgetManager, widgetId: Int) {
     val views = RemoteViews(context.packageName, R.layout.widget_layout)
 
-    views.setTextViewText(R.id.widget_subtitle, "3 tareas pendientes")
+    views.setTextViewText(R.id.widget_subtitle, context.getString(R.string.widget_pending_tasks, 3))
 
     appWidgetManager.updateAppWidget(widgetId, views)
 }

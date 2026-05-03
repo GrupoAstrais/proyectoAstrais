@@ -36,9 +36,7 @@ sealed class RegisterEvent {
     object NavigateToLogin : RegisterEvent()
     /** Navegar al flujo de onboarding tras verificación exitosa. */
     object NavigateToOnboarding : RegisterEvent()
-    /** Mostrar un mensaje temporal (toast) al usuario.
-     * @property message Texto a mostrar. */
-    data class ShowToast(val message: String) : RegisterEvent()
+
 }
 
 /**

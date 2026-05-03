@@ -24,6 +24,7 @@ data class User(
     val personalGid: Int?,
     val equippedPetRef: String?,
     val equippedAvatarRef: String?,
+    val language: String?,
     val theme: Theme?
 )
 

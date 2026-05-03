@@ -36,11 +36,10 @@ data class ThemeColorResource(
     val secondary : String,
     val tertiary : String,
     val background : String,
-    val onPrimary : String,
-    val onSecondary : String,
-    val onTertiary : String,
-    val onBackground : String,
-    val onSurface : String
+    val backgroundAlt : String,
+    val surface : String,
+    val text : String,
+    val error : String
 )
 
 @Serializable

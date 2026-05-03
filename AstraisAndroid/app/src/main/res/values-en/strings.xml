@@ -1,0 +1,325 @@
+<resources>
+    <string name="app_name">Astraïs</string>
+    <string name="title_activity_auth">AuthActivity</string>
+    <string name="title_activity_main">MainActivity</string>
+
+    <!-- General -->
+    <string name="general_unknown_error">Unknown error</string>
+    <string name="general_connection_error">Connection error</string>
+    <string name="general_nav_home">Home</string>
+    <string name="general_nav_tasks">Tasks</string>
+    <string name="general_nav_add">Add</string>
+    <string name="general_nav_groups">Groups</string>
+    <string name="general_nav_store">Store</string>
+    <string name="general_separator_bullet"> · </string>
+
+    <!-- Auth / Onboarding -->
+    <string name="auth_login_to_use_invitation">Log in to use the invitation</string>
+
+    <!-- Login -->
+    <string name="login_welcome_back">Welcome Back</string>
+    <string name="login_subtitle">Log into your account</string>
+    <string name="login_email_placeholder">Email</string>
+    <string name="login_password_placeholder">Password</string>
+    <string name="login_forgot_password">Forgot password?</string>
+    <string name="login_button">Log In</string>
+    <string name="login_or_continue_with">or continue with</string>
+    <string name="login_google_button">Google</string>
+    <string name="login_guest_button">Guest</string>
+    <string name="login_no_account">Don\'t have an account? </string>
+    <string name="login_sign_up">Sign Up</string>
+    <string name="login_google_token_error">Could not get Google tokens</string>
+
+    <!-- Register -->
+    <string name="register_verify_email_title">Verify Your Email</string>
+    <string name="register_create_account_title">Create Account</string>
+    <string name="register_verify_subtitle">Enter the code sent to your email</string>
+    <string name="register_subtitle">Sign up to get started</string>
+    <string name="register_verification_code_placeholder">Verification Code</string>
+    <string name="register_verify_button">Verify Account</string>
+    <string name="register_email_placeholder">Email</string>
+    <string name="register_password_placeholder">Password</string>
+    <string name="register_confirm_password_placeholder">Confirm Password</string>
+    <string name="register_password_mismatch">Passwords do not match</string>
+    <string name="register_terms_prefix">I agree to the </string>
+    <string name="register_terms_conditions">Terms &amp; Conditions</string>
+    <string name="register_create_account_button">Create Account</string>
+    <string name="register_already_have_account">Already have an account? </string>
+    <string name="register_log_in">Log In</string>
+    <string name="register_verification_error">Verification error</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_title">Configure Your Profile</string>
+    <string name="onboarding_subtitle">Choose how others will see you and your preferred language</string>
+    <string name="onboarding_username_placeholder">Username</string>
+    <string name="onboarding_username_min_chars">Minimum 3 characters</string>
+    <string name="onboarding_language_label">Language</string>
+    <string name="onboarding_profile_preview">Profile Preview</string>
+    <string name="onboarding_username_preview_placeholder">Your username</string>
+    <string name="onboarding_start_button">Start Adventure</string>
+
+    <!-- Languages -->
+    <string name="language_spanish">Spanish</string>
+    <string name="language_english">English</string>
+
+    <!-- Home -->
+    <string name="home_welcome_hi">Hi,</string>
+    <string name="home_level">Level %1$d</string>
+    <string name="home_xp_progress">%1$d / %2$d XP</string>
+    <string name="home_no_pet">NO PET</string>
+    <string name="home_all_caught_up">All caught up!</string>
+    <string name="home_pending_tasks_count">%1$d pending</string>
+    <string name="home_tasks_card_title">Tasks</string>
+    <string name="home_inventory_card_title">Inventory</string>
+    <string name="home_store_cell">Store</string>
+    <string name="home_achievements_cell">Achievements</string>
+    <string name="home_notifications">Notifications (%1$d)</string>
+    <string name="guest_welcome_title">Welcome to Astrais</string>
+    <string name="guest_welcome_subtitle">Tap to register and sync</string>
+    <string name="guest_register_to_access">Register to access this feature</string>
+    <string name="banner_guest_mode">GUEST MODE - Register to save your tasks</string>
+    <string name="banner_offline">OFFLINE - Will sync when back online</string>
+    <string name="banner_offline_local">OFFLINE MODE - Local access active</string>
+    <string name="error_no_personal_group">Error: User without personal group.</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Profile</string>
+    <string name="profile_guest_name">Guest</string>
+    <string name="profile_guest_mode_hint">Guest mode - register to sync</string>
+    <string name="profile_level_label">LEVEL %1$d</string>
+    <string name="profile_xp_progress">%1$d / %2$d XP</string>
+    <string name="profile_language_title">Language</string>
+    <string name="profile_save_preferences">Save preferences</string>
+    <string name="profile_equipped_pet_title">Equipped pet</string>
+    <string name="profile_no_pet_equipped">You don\'t have an equipped pet yet. Visit the store or inventory to choose one.</string>
+    <string name="profile_change_pet_hint">Change it from Inventory</string>
+    <string name="profile_share_button">Share my profile</string>
+    <string name="profile_share_chooser_title">Share profile</string>
+    <string name="profile_share_title">Check out my progress on Astrais!</string>
+    <string name="profile_share_username">User: @%1$s</string>
+    <string name="profile_share_level">Level: %1$d</string>
+    <string name="profile_share_xp">Total XP: %1$d</string>
+    <string name="profile_share_ludiones">Ludions: %1$d</string>
+    <string name="profile_share_join">Join at astrais.app!</string>
+    <string name="profile_register_login">REGISTER / LOG IN</string>
+    <string name="profile_logout">LOG OUT</string>
+
+    <!-- Groups -->
+    <string name="group_title">Groups</string>
+    <string name="group_settings_title">Settings</string>
+    <string name="group_members_header">MEMBERS · %1$d</string>
+    <string name="group_members_sheet_title">MEMBERS</string>
+    <string name="group_role_owner">Owner</string>
+    <string name="group_role_mod">Moderator</string>
+    <string name="group_role_member">Member</string>
+    <string name="group_role_chip_owner">Owner</string>
+    <string name="group_role_chip_mod">Mod</string>
+    <string name="group_role_chip_member">Member</string>
+    <string name="group_role_badge_owner">OWNER</string>
+    <string name="group_role_badge_mod">MOD</string>
+    <string name="group_role_badge_member">MEMBER</string>
+    <string name="group_promote_mod">Make mod</string>
+    <string name="group_demote_mod">Remove mod</string>
+    <string name="group_section_info">Group information</string>
+    <string name="group_section_invites">Invitations</string>
+    <string name="group_section_history">History</string>
+    <string name="group_section_danger_zone">Danger zone</string>
+    <string name="group_name_label">Name</string>
+    <string name="group_description_label">Description</string>
+    <string name="group_save_button">Save</string>
+    <string name="group_create_invite_button">Create invitation</string>
+    <string name="group_leave_button">Leave group</string>
+    <string name="group_no_invites">No invitations.</string>
+    <string name="group_no_audit_events">No recorded events.</string>
+    <string name="group_admin_only_edit">Only administrators can edit.</string>
+    <string name="group_owner_leave_warning">To leave as owner, transfer ownership first.</string>
+    <string name="group_invite_uses">Uses: %1$d</string>
+    <string name="group_invite_max_uses_suffix">/%1$d</string>
+    <string name="group_invite_expires"> · Expires: %1$s</string>
+    <string name="group_invite_revoked"> · Revoked</string>
+    <string name="group_empty_message">You are not in any group. Create one or join via link.</string>
+    <string name="group_search_placeholder">Search group...</string>
+    <string name="group_no_search_results">No results for "%1$s".</string>
+    <string name="group_new_tasks_badge">New tasks</string>
+    <string name="group_invite_action">Invite</string>
+    <string name="group_edit_action">Edit</string>
+    <string name="group_delete_action">Delete</string>
+    <string name="group_share_invite_chooser_title">Share invitation</string>
+    <string name="group_joined_success_toast">You have joined the group</string>
+    <string name="group_invite_failed_toast">Could not use the invitation link</string>
+    <string name="group_user_added">User added to group</string>
+    <string name="group_user_removed">User removed from group</string>
+    <string name="group_ownership_transferred">Ownership transferred successfully</string>
+    <string name="group_invite_url_generated">Invitation URL generated</string>
+    <string name="group_join_success">You have joined the group successfully</string>
+
+    <!-- Tasks -->
+    <string name="task_my_tasks_title">My Tasks</string>
+    <string name="task_new_task_title">New task</string>
+    <string name="task_new_subtask_title">New subtask</string>
+    <string name="task_edit_title">Edit Task</string>
+    <string name="task_label_title">TITLE</string>
+    <string name="task_label_description">DESCRIPTION</string>
+    <string name="task_label_type">TYPE</string>
+    <string name="task_label_priority">PRIORITY</string>
+    <string name="task_label_frequency">FREQUENCY</string>
+    <string name="task_label_new_frequency">NEW FREQUENCY</string>
+    <string name="task_label_due_date">DUE DATE</string>
+    <string name="task_label_new_due_date_optional">NEW DUE DATE (Optional)</string>
+    <string name="task_placeholder_title">Task name...</string>
+    <string name="task_placeholder_description">Additional details...</string>
+    <string name="task_select_date">Select date...</string>
+    <string name="task_keep_unchanged">Keep unchanged...</string>
+    <string name="task_create_button">Create</string>
+    <string name="task_save_button">Save</string>
+    <string name="task_xp_reward">%1$d XP</string>
+    <string name="task_edit_button">Edit</string>
+    <string name="task_tab_pending">Pending</string>
+    <string name="task_tab_completed">Completed</string>
+    <string name="task_category_all">All</string>
+    <string name="task_category_unique">Unique</string>
+    <string name="task_category_habit">Habits</string>
+    <string name="task_category_objective">Objectives</string>
+    <string name="task_all_caught_up">All caught up</string>
+    <string name="task_no_tasks_yet">No tasks yet</string>
+    <string name="task_no_pending_category">You have no pending tasks in this category.</string>
+    <string name="task_no_completed_category">You haven\'t completed tasks in this category.</string>
+    <string name="task_status_completed">COMPLETED</string>
+    <string name="task_status_pending">PENDING</string>
+    <string name="task_view_pending">View pending</string>
+    <string name="task_view_completed">View completed</string>
+    <string name="task_active_status_count">%1$s · %2$d</string>
+    <string name="task_inactive_status_count">%1$s (%2$d)</string>
+    <string name="task_subtasks_header">SUBTASKS</string>
+    <string name="task_subtasks_progress">Subtasks: %1$d/%2$d</string>
+    <string name="task_progress_percent">%1$d%%</string>
+    <string name="task_completed_snackbar">Task completed! + %1$d XP / %2$d L</string>
+    <string name="task_no_completed_yet">No completed tasks yet.</string>
+    <string name="task_no_pending">No pending tasks.</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_close">Close</string>
+    <string name="dialog_save">Save</string>
+    <string name="dialog_accept">Accept</string>
+    <string name="dialog_delete_confirm">Delete</string>
+    <string name="dialog_kick_confirm">Kick</string>
+    <string name="dialog_leave_confirm">Leave</string>
+    <string name="dialog_revoke_confirm">Revoke</string>
+    <string name="dialog_join_by_url_confirm">Join</string>
+    <string name="dialog_delete_task_title">Delete task</string>
+    <string name="dialog_delete_task_body">Are you sure you want to delete "%1$s"?</string>
+    <string name="dialog_kick_member_title">Kick member</string>
+    <string name="dialog_kick_member_body">Are you sure you want to kick this member from the group?</string>
+    <string name="dialog_leave_group_title">Leave group</string>
+    <string name="dialog_leave_group_body">Are you sure you want to leave?</string>
+    <string name="dialog_revoke_invite_title">Revoke invitation</string>
+    <string name="dialog_revoke_invite_body">Are you sure you want to revoke this invitation?</string>
+    <string name="dialog_create_group_title">Create group</string>
+    <string name="dialog_edit_group_title">Edit group</string>
+    <string name="dialog_delete_group_title">Delete group</string>
+    <string name="dialog_delete_group_body">Are you sure you want to delete "%1$s"?</string>
+    <string name="dialog_join_by_url_title">Join by URL</string>
+    <string name="dialog_generate_invite_url_title">Generate invitation URL</string>
+    <string name="dialog_generate_invite_url_body">A URL will be generated to share so other users can join the group.</string>
+    <string name="dialog_generate_url_button">Generate URL</string>
+    <string name="dialog_label_name">Name</string>
+    <string name="dialog_label_description">Description</string>
+    <string name="dialog_label_invite_url">Invitation URL</string>
+    <string name="dialog_back">Back</string>
+
+    <!-- Store / Inventory -->
+    <string name="store_title">Store</string>
+    <string name="store_tab_all">All</string>
+    <string name="store_tab_pets">Companions</string>
+    <string name="store_tab_avatars">Avatars</string>
+    <string name="store_tab_themes">Themes</string>
+    <string name="store_empty_items">No items available.</string>
+    <string name="store_collection_header">COLLECTION %1$s</string>
+    <string name="store_owned_label">IN INVENTORY</string>
+    <string name="store_price_ludiones">%1$d LUDIONS</string>
+    <string name="store_insufficient_funds">Insufficient funds</string>
+    <string name="store_already_owned">ALREADY IN INVENTORY</string>
+    <string name="store_purchased">Purchased</string>
+    <string name="store_acquire">Acquire</string>
+    <string name="store_app_theme_label">APP THEME</string>
+    <string name="store_purchase_success">Purchase successful!</string>
+    <string name="store_equip_success">Equipped successfully!</string>
+    <string name="store_unequipped">Unequipped</string>
+    <string name="store_equip_error">Error equipping</string>
+    <string name="store_back_button">Back</string>
+
+    <string name="inventory_title">My Inventory</string>
+    <string name="inventory_tab_pets">Companions</string>
+    <string name="inventory_tab_avatars">Avatars</string>
+    <string name="inventory_tab_themes">Themes &amp; Backgrounds</string>
+    <string name="inventory_empty_pets">You don\'t have any companions yet.</string>
+    <string name="inventory_empty_avatars">You don\'t have any avatars yet.</string>
+    <string name="inventory_empty_themes">You don\'t have any backgrounds unlocked.</string>
+    <string name="inventory_equipped_label">EQUIPPED</string>
+    <string name="inventory_type_pet">TYPE: COMPANION</string>
+    <string name="inventory_type_theme">TYPE: THEME</string>
+    <string name="inventory_type_avatar">TYPE: AVATAR</string>
+    <string name="inventory_equip">Equip</string>
+    <string name="inventory_unequip">Unequip</string>
+    <string name="inventory_theme_error">Theme error</string>
+
+    <!-- Achievements / Logros -->
+    <string name="achievement_title">Achievements</string>
+    <string name="achievement_completed_label">Completed</string>
+    <string name="achievement_progress_percent">%1$d%% progress</string>
+    <string name="achievement_count_fraction">%1$d / %2$d</string>
+
+    <string name="achievement_title_first_steps">First Steps</string>
+    <string name="achievement_desc_first_steps">Complete your first task</string>
+    <string name="achievement_cond_first_steps">Complete 1 task</string>
+    <string name="achievement_title_productivity">Productivity</string>
+    <string name="achievement_desc_productivity">Complete 10 tasks in total</string>
+    <string name="achievement_cond_productivity">Complete 10 tasks</string>
+    <string name="achievement_title_teamwork">Teamwork</string>
+    <string name="achievement_desc_teamwork">Join a group</string>
+    <string name="achievement_cond_teamwork">Join 1 group</string>
+    <string name="achievement_title_fire_streak">Fire Streak</string>
+    <string name="achievement_desc_fire_streak">Maintain a 7-day streak</string>
+    <string name="achievement_cond_fire_streak">7-day streak</string>
+    <string name="achievement_title_task_master">Task Master</string>
+    <string name="achievement_desc_task_master">Complete 50 tasks</string>
+    <string name="achievement_cond_task_master">Complete 50 tasks</string>
+    <string name="achievement_title_collector">Collector</string>
+    <string name="achievement_desc_collector">Get 5 companions</string>
+    <string name="achievement_cond_collector">Obtain 5 companions</string>
+    <string name="achievement_title_explorer">Explorer</string>
+    <string name="achievement_desc_explorer">Try 3 different themes</string>
+    <string name="achievement_cond_explorer">Use 3 themes</string>
+    <string name="achievement_title_legend">Legend</string>
+    <string name="achievement_desc_legend">Reach level 50</string>
+    <string name="achievement_cond_legend">Reach level 50</string>
+
+    <!-- Widget -->
+    <string name="widget_pending_tasks">%1$d pending tasks</string>
+
+    <!-- Content Descriptions -->
+    <string name="cd_back">Back</string>
+    <string name="cd_group_settings">Group settings</string>
+    <string name="cd_create_task">Create task</string>
+    <string name="cd_delete_task">Delete</string>
+    <string name="cd_kick_member">Kick</string>
+    <string name="cd_copy">Copy</string>
+    <string name="cd_revoke_invite">Revoke</string>
+    <string name="cd_join_by_url">Join by URL</string>
+    <string name="cd_create_group">Create group</string>
+    <string name="cd_clear_search">Clear search</string>
+    <string name="cd_new_activity">There is new activity</string>
+    <string name="cd_role_label">Role: %1$s</string>
+    <string name="cd_edit_name">Edit name</string>
+    <string name="cd_save_name">Save</string>
+    <string name="cd_cancel_edit">Cancel</string>
+    <string name="cd_ludiones">Ludions</string>
+    <string name="cd_show_password">Show password</string>
+    <string name="cd_hide_password">Hide password</string>
+
+    <!-- Task Frequency Labels -->
+    <string name="task_frequency_daily">Daily</string>
+    <string name="task_frequency_weekly">Weekly</string>
+    <string name="task_frequency_monthly">Monthly</string>
+</resources>

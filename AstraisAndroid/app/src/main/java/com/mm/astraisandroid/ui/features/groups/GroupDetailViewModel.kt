@@ -13,6 +13,7 @@ import com.mm.astraisandroid.data.models.TaskPriority
 import com.mm.astraisandroid.data.models.TaskType
 import com.mm.astraisandroid.data.repository.GroupRepository
 import com.mm.astraisandroid.data.repository.TaskRepository
+import com.mm.astraisandroid.ui.components.SnackbarManager
 import com.mm.astraisandroid.ui.features.tasks.TaskUIModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,7 +36,6 @@ import javax.inject.Inject
  * @property invites Lista de invitaciones del grupo (activas, expiradas y revocadas).
  * @property isLoadingAudit `true` mientras se carga el log de auditoría.
  * @property auditEvents Lista paginada de eventos de auditoría del grupo.
- * @property error Mensaje de error de la última operación fallida, o `null` si no hay error.
  */
 data class GroupDetailState(
     val isLoadingTasks: Boolean = false,
@@ -45,8 +45,7 @@ data class GroupDetailState(
     val isLoadingInvites: Boolean = false,
     val invites: List<InviteOut> = emptyList(),
     val isLoadingAudit: Boolean = false,
-    val auditEvents: List<AuditEventOut> = emptyList(),
-    val error: String? = null
+    val auditEvents: List<AuditEventOut> = emptyList()
 )
 
 /**
@@ -68,7 +67,8 @@ data class GroupDetailState(
 @HiltViewModel
 class GroupDetailViewModel @Inject constructor(
     private val taskRepository: TaskRepository,
-    private val groupRepository: GroupRepository
+    private val groupRepository: GroupRepository,
+    private val snackbarManager: SnackbarManager
 ) : ViewModel() {
     /** Estado mutable interno; solo modificable desde este ViewModel. */
     private val _state = MutableStateFlow(GroupDetailState())
@@ -97,7 +97,7 @@ class GroupDetailViewModel @Inject constructor(
      */
     fun loadTasks(gid: Int) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoadingTasks = true, error = null) }
+            _state.update { it.copy(isLoadingTasks = true) }
             try {
                 val responses = taskRepository.getTasksRemote(gid)
                 val tasks = responses.map { r ->
@@ -117,7 +117,8 @@ class GroupDetailViewModel @Inject constructor(
                 }
                 _state.update { it.copy(isLoadingTasks = false, tasks = tasks) }
             } catch (e: Exception) {
-                _state.update { it.copy(isLoadingTasks = false, error = e.message) }
+                _state.update { it.copy(isLoadingTasks = false) }
+                snackbarManager.showMessage(e.message ?: "Error al cargar tareas")
             }
         }
     }
@@ -130,12 +131,13 @@ class GroupDetailViewModel @Inject constructor(
      */
     fun loadMembers(gid: Int) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoadingMembers = true, error = null) }
+            _state.update { it.copy(isLoadingMembers = true) }
             try {
                 val res = groupRepository.getMembers(gid)
                 _state.update { it.copy(isLoadingMembers = false, members = res.members) }
             } catch (e: Exception) {
-                _state.update { it.copy(isLoadingMembers = false, error = e.message) }
+                _state.update { it.copy(isLoadingMembers = false, ) }
+                snackbarManager.showMessage(e.message ?: "Error al cargar miembros")
             }
         }
     }
@@ -150,12 +152,13 @@ class GroupDetailViewModel @Inject constructor(
      */
     fun loadInvites(gid: Int) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoadingInvites = true, error = null) }
+            _state.update { it.copy(isLoadingInvites = true) }
             try {
                 val res = groupRepository.listInvites(gid)
                 _state.update { it.copy(isLoadingInvites = false, invites = res.invites) }
             } catch (e: Exception) {
-                _state.update { it.copy(isLoadingInvites = false, error = e.message) }
+                _state.update { it.copy(isLoadingInvites = false, ) }
+                snackbarManager.showMessage(e.message ?: "Error al cargar invitaciones")
             }
         }
     }
@@ -170,12 +173,13 @@ class GroupDetailViewModel @Inject constructor(
      */
     fun loadAudit(gid: Int, limit: Int = 50, offset: Long = 0L) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoadingAudit = true, error = null) }
+            _state.update { it.copy(isLoadingAudit = true) }
             try {
                 val res = groupRepository.getAudit(gid, limit = limit, offset = offset)
                 _state.update { it.copy(isLoadingAudit = false, auditEvents = res.events) }
             } catch (e: Exception) {
-                _state.update { it.copy(isLoadingAudit = false, error = e.message) }
+                _state.update { it.copy(isLoadingAudit = false, ) }
+                snackbarManager.showMessage(e.message ?: "Error al cargar auditoría")
             }
         }
     }
@@ -193,7 +197,8 @@ class GroupDetailViewModel @Inject constructor(
                 taskRepository.completarTarea(tid)
                 loadTasks(gid)
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message) }
+                _state.update { it.copy() }
+                snackbarManager.showMessage(e.message ?: "Error")
             }
         }
     }
@@ -211,7 +216,8 @@ class GroupDetailViewModel @Inject constructor(
                 taskRepository.uncompleteTarea(tid)
                 loadTasks(gid)
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message) }
+                _state.update { it.copy() }
+                snackbarManager.showMessage(e.message ?: "Error")
             }
         }
     }
@@ -244,7 +250,8 @@ class GroupDetailViewModel @Inject constructor(
                 taskRepository.eliminarTarea(tid)
                 loadTasks(gid)
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message) }
+                _state.update { it.copy() }
+                snackbarManager.showMessage(e.message ?: "Error al eliminar tarea")
                 loadTasks(gid)
             }
         }
@@ -280,7 +287,8 @@ class GroupDetailViewModel @Inject constructor(
                 taskRepository.editarTarea(tid, titulo, descripcion, prioridad, fechaLimite, freqEnum)
                 loadTasks(gid)
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message) }
+                _state.update { it.copy() }
+                snackbarManager.showMessage(e.message ?: "Error")
             }
         }
     }
@@ -298,7 +306,27 @@ class GroupDetailViewModel @Inject constructor(
                 groupRepository.removeUser(gid = gid, userId = userId)
                 loadMembers(gid)
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message) }
+                _state.update { it.copy() }
+                snackbarManager.showMessage(e.message ?: "Error")
+            }
+        }
+    }
+
+    /**
+     * Transfiere la propiedad del grupo a otro miembro.
+     * Solo el Owner actual puede usar esta acción.
+     *
+     * @param gid Identificador del grupo.
+     * @param newOwnerUserId Identificador del nuevo propietario.
+     */
+    fun passOwnership(gid: Int, newOwnerUserId: Int) {
+        viewModelScope.launch {
+            try {
+                groupRepository.passOwnership(gid = gid, newOwnerUserId = newOwnerUserId)
+                loadMembers(gid)
+                snackbarManager.showMessage("Propiedad transferida correctamente")
+            } catch (e: Exception) {
+                snackbarManager.showMessage(e.message ?: "Error al transferir propiedad")
             }
         }
     }
@@ -317,7 +345,8 @@ class GroupDetailViewModel @Inject constructor(
                 groupRepository.setMemberRole(gid = gid, userId = userId, role = role)
                 loadMembers(gid)
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message) }
+                _state.update { it.copy() }
+                snackbarManager.showMessage(e.message ?: "Error")
             }
         }
     }
@@ -337,7 +366,8 @@ class GroupDetailViewModel @Inject constructor(
                 groupRepository.createInvite(gid = gid, expiresInSeconds = expiresInSeconds, maxUses = maxUses)
                 loadInvites(gid)
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message) }
+                _state.update { it.copy() }
+                snackbarManager.showMessage(e.message ?: "Error")
             }
         }
     }
@@ -355,7 +385,8 @@ class GroupDetailViewModel @Inject constructor(
                 groupRepository.revokeInvite(gid = gid, code = code)
                 loadInvites(gid)
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message) }
+                _state.update { it.copy() }
+                snackbarManager.showMessage(e.message ?: "Error")
             }
         }
     }
@@ -374,7 +405,8 @@ class GroupDetailViewModel @Inject constructor(
                 groupRepository.leaveGroup(gid)
                 groupRepository.refreshGroups()
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message) }
+                _state.update { it.copy() }
+                snackbarManager.showMessage(e.message ?: "Error")
             }
         }
     }
@@ -393,7 +425,8 @@ class GroupDetailViewModel @Inject constructor(
                 groupRepository.editGroup(gid = gid, name = name, desc = desc)
                 groupRepository.refreshGroups()
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message) }
+                _state.update { it.copy() }
+                snackbarManager.showMessage(e.message ?: "Error")
             }
         }
     }
@@ -422,7 +455,8 @@ class GroupDetailViewModel @Inject constructor(
         tipo: String,
         prioridad: Int,
         frecuencia: String?,
-        fechaLimite: String?
+        fechaLimite: String?,
+        parentId: Int? = null
     ) {
         viewModelScope.launch {
             try {
@@ -443,12 +477,14 @@ class GroupDetailViewModel @Inject constructor(
                     tipo = tipo,
                     prioridad = prioridad,
                     extraUnico = extraUnico,
-                    extraHabito = extraHabito
+                    extraHabito = extraHabito,
+                    idObjetivo = parentId
                 )
                 taskRepository.createTareaDirect(req)
                 loadTasks(gid)
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message) }
+                _state.update { it.copy() }
+                snackbarManager.showMessage(e.message ?: "Error")
             }
         }
     }

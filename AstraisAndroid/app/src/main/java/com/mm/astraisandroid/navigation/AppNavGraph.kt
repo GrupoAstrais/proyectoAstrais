@@ -11,7 +11,6 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.mm.astraisandroid.ui.core.MainUiEvent
 import com.mm.astraisandroid.ui.core.MainViewModel
 import com.mm.astraisandroid.ui.features.auth.LoginScreen
 import com.mm.astraisandroid.ui.features.auth.OnboardingScreen
@@ -30,18 +29,7 @@ fun AppNavGraph(
     onDeepLinkConsumed: () -> Unit,
     onLogout: () -> Unit
 ) {
-    val context = LocalContext.current
     val mainState by mainViewModel.state.collectAsStateWithLifecycle()
-
-    LaunchedEffect(Unit) {
-        mainViewModel.events.collect { event ->
-            when (event) {
-                is MainUiEvent.ShowToast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
 
     LaunchedEffect(mainState.isSessionActive) {
         val currentRoute = navController.currentDestination?.route

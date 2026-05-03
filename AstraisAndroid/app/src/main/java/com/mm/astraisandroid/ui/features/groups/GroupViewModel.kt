@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.mm.astraisandroid.data.local.entities.toDomain
 import com.mm.astraisandroid.data.preferences.SessionManager
 import com.mm.astraisandroid.data.repository.GroupRepository
+import com.mm.astraisandroid.ui.components.SnackbarManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -17,16 +18,12 @@ import javax.inject.Inject
  * @property isOffline `true` si el último intento de sincronización falló por falta
  *   de conectividad o error de servidor; los datos mostrados son del caché local.
  * @property groups Lista de grupos del usuario extraída de la base de datos local.
- * @property error Mensaje de error de la última operación fallida, o `null` si no hay error.
- * @property infoMessage Mensaje informativo, o `null` si no hay mensaje.
  * @property generatedInviteUrl URL de invitación generada para un grupo, o `null` si no se ha generado.
  */
 data class GroupScreenState(
     val isLoading: Boolean = false,
     val isOffline: Boolean = false,
     val groups: List<Grupo> = emptyList(),
-    val error: String? = null,
-    val infoMessage: String? = null,
     val generatedInviteUrl: String? = null
 )
 
@@ -43,24 +40,19 @@ data class GroupScreenState(
  * - Sincroniza los grupos con el servidor a través de [loadGroups].
  * - Implementa un guard de invitado: los usuarios no registrados (guest) no pueden
  *   realizar llamadas al backend.
- * - Maneja errores de red y los expone en [GroupScreenState.error].
+ * - Maneja errores de red y los expone vía [SnackbarManager].
  *
  * @property repository Repositorio de grupos que actúa como fuente de verdad.
  */
 @HiltViewModel
 class GroupViewModel @Inject constructor(
     private val repository: GroupRepository,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val snackbarManager: SnackbarManager
 ) : ViewModel() {
 
-    /**
-     * Estado mutable interno; sólo modificable desde el ViewModel.
-     */
     private val _state = MutableStateFlow(GroupScreenState())
 
-    /**
-     * Estado público expuesto a la UI como flujo de sólo lectura.
-     */
     val state: StateFlow<GroupScreenState> = combine(
         repository.allGroups,
         _state
@@ -68,24 +60,11 @@ class GroupViewModel @Inject constructor(
         currentState.copy(groups = dbGroups.map { it.toDomain() })
     }.stateIn(viewModelScope, SharingStarted.Eagerly, GroupScreenState())
 
-    /**
-     * Bloque de inicialización: suscribe al [Flow] de grupos locales de Room para que
-     * la UI se actualice automáticamente cuando cambia la base de datos, y dispara la
-     * primera sincronización con el servidor.
-     */
     init {
         loadGroups()
     }
 
-    /**
-     * Solicita una sincronización de grupos con el servidor.
-     * Marca [GroupScreenState.isLoading] durante la operación.
-     * Si falla, activa [GroupScreenState.isOffline] y los datos del caché local siguen
-     * siendo visibles.
-     * Los usuarios invitados son bloqueados antes de realizar la llamada de red.
-     */
     fun loadGroups() {
-        // STRICT GUEST GUARD: groups are locked for guests, never hit backend
         if (sessionManager.isGuest()) return
         viewModelScope.launch {
             refreshGroupsSuspend()
@@ -98,179 +77,114 @@ class GroupViewModel @Inject constructor(
         _state.update { it.copy(isLoading = false, isOffline = result.isFailure) }
     }
 
-    /**
-     * Crea un nuevo grupo en el servidor y refresca la lista local.
-     * El usuario autenticado pasa a ser el Owner del grupo creado.
-     * Actualiza [GroupScreenState.error] si la operación falla.
-     *
-     * @param name Nombre del grupo.
-     * @param desc Descripción del grupo.
-     */
     fun createGroup(name: String, desc: String) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             try {
                 repository.createGroup(name, desc)
                 refreshGroupsSuspend()
+                snackbarManager.showMessage("Grupo creado correctamente")
             } catch (e: Exception) {
-                _state.update { it.copy(isLoading = false, error = e.message) }
+                _state.update { it.copy(isLoading = false) }
+                snackbarManager.showMessage(e.message ?: "Error al crear grupo")
             }
         }
     }
 
-    /**
-     * Edita los metadatos de un grupo existente.
-     * Solo Owners y Moderadores pueden editar grupos.
-     * Refresca la lista local tras la operación.
-     *
-     * @param gid Identificador del grupo a editar.
-     * @param name Nuevo nombre, o `null` para no cambiarlo.
-     * @param desc Nueva descripción, o `null` para no cambiarla.
-     */
     fun editGroup(gid: Int, name: String?, desc: String?) {
         viewModelScope.launch {
             try {
                 repository.editGroup(gid, name, desc)
                 loadGroups()
+                snackbarManager.showMessage("Grupo actualizado")
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message) }
+                snackbarManager.showMessage(e.message ?: "Error al editar grupo")
             }
         }
     }
 
-    /**
-     * Elimina permanentemente un grupo del servidor.
-     * Solo el Owner puede eliminar un grupo. Refresca la lista local tras la operación.
-     *
-     * @param gid Identificador del grupo a eliminar.
-     */
     fun deleteGroup(gid: Int) {
         viewModelScope.launch {
             try {
                 repository.deleteGroup(gid)
                 loadGroups()
+                snackbarManager.showMessage("Grupo eliminado")
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message) }
+                snackbarManager.showMessage(e.message ?: "Error al eliminar grupo")
             }
         }
     }
 
-    /**
-     * Limpia el mensaje de error actual del estado.
-     * Debe llamarse desde la UI después de que el error haya sido mostrado al usuario
-     * para evitar que persista en la pantalla.
-     */
-    fun clearError() {
-        _state.update { it.copy(error = null) }
+    fun clearInviteUrl() {
+        _state.update { it.copy(generatedInviteUrl = null) }
     }
 
-    /**
-     * Limpia el mensaje informativo del estado.
-     * Debe llamarse desde la UI después de que el mensaje informativo haya sido mostrado.
-     */
-    fun clearInfoMessage() {
-        _state.update { it.copy(infoMessage = null, generatedInviteUrl = null) }
-    }
-
-    /**
-     * Agrega un usuario a un grupo de forma directa.
-     * Solo Owners y Moderadores pueden añadir usuarios.
-     * Actualiza [GroupScreenState.infoMessage] con un mensaje de éxito o [GroupScreenState.error]
-     * si falla.
-     *
-     * @param gid Identificador del grupo.
-     * @param userId Identificador del usuario que se desea añadir.
-     */
     fun addUser(gid: Int, userId: Int) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
+            _state.update { it.copy(isLoading = true) }
             try {
                 repository.addUser(gid = gid, userId = userId)
-                _state.update { it.copy(infoMessage = "Usuario agregado al grupo") }
+                snackbarManager.showMessage("Usuario agregado al grupo")
                 refreshGroupsSuspend()
             } catch (e: Exception) {
-                _state.update { it.copy(isLoading = false, error = e.message) }
+                _state.update { it.copy(isLoading = false) }
+                snackbarManager.showMessage(e.message ?: "Error al agregar usuario")
             }
         }
     }
 
-    /**
-     * Expulsa a un miembro de un grupo.
-     * Solo Owners y Moderadores pueden expulsar miembros.
-     * Actualiza [GroupScreenState.error] si la operación falla.
-     *
-     * @param gid Identificador del grupo.
-     * @param userId Identificador del usuario a expulsar.
-     */
     fun removeUser(gid: Int, userId: Int) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
+            _state.update { it.copy(isLoading = true) }
             try {
                 repository.removeUser(gid = gid, userId = userId)
-                _state.update { it.copy(infoMessage = "Usuario eliminado del grupo") }
+                snackbarManager.showMessage("Usuario eliminado del grupo")
                 refreshGroupsSuspend()
             } catch (e: Exception) {
-                _state.update { it.copy(isLoading = false, error = e.message) }
+                _state.update { it.copy(isLoading = false) }
+                snackbarManager.showMessage(e.message ?: "Error al eliminar usuario")
             }
         }
     }
 
-    /**
-     * Transfiere la propiedad de un grupo a otro miembro.
-     * Solo el Owner actual puede realizar esta operación.
-     * Refresca la lista local para reflejar el cambio de rol.
-     *
-     * @param gid Identificador del grupo.
-     * @param newOwnerUserId Identificador del miembro que pasará a ser Owner.
-     */
     fun passOwnership(gid: Int, newOwnerUserId: Int) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
+            _state.update { it.copy(isLoading = true) }
             try {
                 repository.passOwnership(gid = gid, newOwnerUserId = newOwnerUserId)
-                _state.update { it.copy(infoMessage = "Propiedad transferida correctamente") }
+                snackbarManager.showMessage("Propiedad transferida correctamente")
                 refreshGroupsSuspend()
             } catch (e: Exception) {
-                _state.update { it.copy(isLoading = false, error = e.message) }
+                _state.update { it.copy(isLoading = false) }
+                snackbarManager.showMessage(e.message ?: "Error al transferir propiedad")
             }
         }
     }
 
-    /**
-     * Crea una invitación segura para el grupo y muestra la URL resultante en
-     * [GroupScreenState.generatedInviteUrl].
-     * Solo Owners y Moderadores pueden crear invitaciones.
-     *
-     * @param gid Identificador del grupo para el que se genera la invitación.
-     */
     fun createInviteUrl(gid: Int) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null, generatedInviteUrl = null) }
+            _state.update { it.copy(isLoading = true, generatedInviteUrl = null) }
             try {
                 val url = repository.createInviteUrl(gid)
-                _state.update { it.copy(isLoading = false, generatedInviteUrl = url, infoMessage = "URL de invitacion generada") }
+                _state.update { it.copy(isLoading = false, generatedInviteUrl = url) }
+                snackbarManager.showMessage("URL de invitacion generada")
             } catch (e: Exception) {
-                _state.update { it.copy(isLoading = false, error = e.message) }
+                _state.update { it.copy(isLoading = false) }
+                snackbarManager.showMessage(e.message ?: "Error al generar URL")
             }
         }
     }
 
-    /**
-     * Une al usuario autenticado a un grupo mediante una URL de invitación.
-     * Soporta URLs con `?code=` (token seguro) y `?gid=` (flujo legado).
-     * Refresca la lista de grupos si la operación es exitosa.
-     *
-     * @param inviteUrl URL de invitación completa.
-     */
     fun joinByUrl(inviteUrl: String) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
+            _state.update { it.copy(isLoading = true) }
             try {
                 repository.joinByUrl(inviteUrl)
-                _state.update { it.copy(infoMessage = "Te has unido al grupo correctamente") }
+                snackbarManager.showMessage("Te has unido al grupo correctamente")
                 refreshGroupsSuspend()
             } catch (e: Exception) {
-                _state.update { it.copy(isLoading = false, error = e.message) }
+                _state.update { it.copy(isLoading = false) }
+                snackbarManager.showMessage(e.message ?: "Error al unirse al grupo")
             }
         }
     }

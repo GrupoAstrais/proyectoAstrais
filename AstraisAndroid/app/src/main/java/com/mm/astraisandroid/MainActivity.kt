@@ -1,5 +1,6 @@
 package com.mm.astraisandroid
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -9,7 +10,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -20,6 +25,7 @@ import com.mm.astraisandroid.ui.components.HideSystemBarsEffect
 import com.mm.astraisandroid.ui.core.MainViewModel
 import com.mm.astraisandroid.ui.features.profile.UserViewModel
 import com.mm.astraisandroid.ui.theme.AstraisandroidTheme
+import com.mm.astraisandroid.util.LocaleHelper
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -30,6 +36,10 @@ class MainActivity : ComponentActivity() {
     lateinit var sessionManager: SessionManager
 
     private val pendingDeepLinkUrl = mutableStateOf<String?>(null)
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(LocaleHelper.applyLocale(newBase))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,6 +52,8 @@ class MainActivity : ComponentActivity() {
             val userViewModel: UserViewModel = hiltViewModel()
             val userState by userViewModel.state.collectAsStateWithLifecycle()
 
+            var navRestartKey by remember { mutableIntStateOf(0) }
+
             val deepLink = pendingDeepLinkUrl.value
             if (deepLink != null) {
                 mainViewModel.onDeepLinkReceived(deepLink)
@@ -53,20 +65,25 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val navController = rememberNavController()
-                    AppNavGraph(
-                        navController = navController,
-                        startDestination = if (sessionManager.hasAnySession()) {
-                            com.mm.astraisandroid.navigation.Route.Home
-                        } else {
-                            com.mm.astraisandroid.navigation.Route.Login
-                        },
-                        mainViewModel = mainViewModel,
-                        userViewModel = userViewModel,
-                        sessionManager = sessionManager,
-                        onDeepLinkConsumed = { },
-                        onLogout = { mainViewModel.onLogout() }
-                    )
+                    key(navRestartKey) {
+                        val navController = rememberNavController()
+                        AppNavGraph(
+                            navController = navController,
+                            startDestination = if (sessionManager.hasAnySession()) {
+                                com.mm.astraisandroid.navigation.Route.Home
+                            } else {
+                                com.mm.astraisandroid.navigation.Route.Login
+                            },
+                            mainViewModel = mainViewModel,
+                            userViewModel = userViewModel,
+                            sessionManager = sessionManager,
+                            onDeepLinkConsumed = { },
+                            onLogout = {
+                                mainViewModel.onLogout()
+                                navRestartKey++
+                            }
+                        )
+                    }
                     HideSystemBarsEffect()
                 }
             }
