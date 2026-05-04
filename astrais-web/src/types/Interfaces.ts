@@ -1,6 +1,7 @@
 export interface ITarea {
   id: number,
   gid: number;
+  uid?: number | null;
   titulo: string;
   descripcion: string;
   tipo: 'UNICO' | 'HABITO' | 'OBJETIVO';
@@ -10,16 +11,21 @@ export interface ITarea {
   } | [
     fechaLimite: string, // Compatibilidad con tareas locales antiguas
   ]
-  extraHabito?: [
+  extraHabito?: {
+    numeroFrecuencia: number;
+    frequency: 'HOURLY' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+  } | [
     numeroFrecuencia?: number,
     frequency?: 'HOURLY' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
-  ]
-  idObjetivo?: number,
+  ];
+  idObjetivo?: number | null,
   estado: 'COMPLETE' | 'ACTIVE'
   recompensaXp: number,
   recompensaLudion: number,
   fecha_actualizado?: string,
-  fecha_creacion?: string
+  fecha_creacion?: string,
+  fecha_completado?: string | null,
+  fechaValida?: string | null
 }
 
 export interface IGroup {

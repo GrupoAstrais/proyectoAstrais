@@ -1,6 +1,9 @@
 package com.mm.astraisandroid.ui.features.tasks
 
+
+import com.mm.astraisandroid.R
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,28 +17,24 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.res.stringResource
 import com.mm.astraisandroid.data.models.TaskPriority
+import com.mm.astraisandroid.ui.theme.Gray300
+import com.mm.astraisandroid.ui.theme.Gray700
+import com.mm.astraisandroid.ui.theme.Primary
+import com.mm.astraisandroid.ui.theme.Surface
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/**
- * Diálogo de edición de tareas.
- *
- * Carga los datos actuales de la tarea proporcionada y permite modificarlos.
- * Solo muestra los campos relevantes según el tipo de tarea.
- *
- * @param task Modelo de UI de la tarea que se va a editar.
- * @param onDismiss Callback invocado al cerrar el diálogo sin guardar cambios.
- * @param onEdit Callback invocado al confirmar con los nuevos valores del formulario.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditTaskDialog(
@@ -48,7 +47,7 @@ fun EditTaskDialog(
     var prioridadInt by remember { mutableIntStateOf(task.priority.ordinal) }
 
     var frecuencia by remember { mutableStateOf(task.habitFrequency ?: "DAILY") }
-    var fechaLimite by remember { mutableStateOf("") }
+    var fechaLimite by remember { mutableStateOf(task.dueDate?.split("T")?.firstOrNull() ?: "") }
     var showDatePicker by remember { mutableStateOf(false) }
 
     val prioridades = listOf("BAJA", "MEDIA", "ALTA")
@@ -59,106 +58,142 @@ fun EditTaskDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(max = 600.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(Color(0xFF1A1A2E))
-                .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(20.dp))
+                .shadow(
+                    elevation = 16.dp,
+                    shape = RoundedCornerShape(28.dp),
+                    ambientColor = Color.Black.copy(alpha = 0.4f),
+                    spotColor = Primary.copy(alpha = 0.1f)
+                )
+                .clip(RoundedCornerShape(28.dp))
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Surface.copy(alpha = 0.92f),
+                            Surface.copy(alpha = 0.85f)
+                        )
+                    )
+                )
+                .border(
+                    width = 1.dp,
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.18f),
+                            Color.White.copy(alpha = 0.06f)
+                        )
+                    ),
+                    shape = RoundedCornerShape(28.dp)
+                )
                 .verticalScroll(rememberScrollState())
-                .padding(20.dp),
+                .padding(24.dp),
         ) {
             Text(
-                text = "Editar Tarea",
+                text = stringResource(R.string.task_edit_title),
                 color = Color.White,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Black,
-                fontFamily = FontFamily.Monospace
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            GlassTextFieldSection(
+                label = stringResource(R.string.task_label_title),
+                value = titulo,
+                onValueChange = { titulo = it },
+                placeholder = stringResource(R.string.task_placeholder_title),
+                singleLine = true
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("TÍTULO", color = Color.White.copy(alpha = 0.4f), fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.5.sp)
-                BasicTextField(
-                    value = titulo,
-                    onValueChange = { titulo = it },
-                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color.White.copy(alpha = 0.07f)).border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(10.dp)).padding(horizontal = 14.dp, vertical = 10.dp),
-                    textStyle = TextStyle(color = Color.White, fontSize = 13.sp, fontFamily = FontFamily.Monospace)
-                )
-            }
+            GlassTextFieldSection(
+                label = stringResource(R.string.task_label_description),
+                value = desc,
+                onValueChange = { desc = it },
+                placeholder = stringResource(R.string.task_placeholder_description),
+                singleLine = false,
+                minHeight = 60.dp
+            )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("DESCRIPCIÓN", color = Color.White.copy(alpha = 0.4f), fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.5.sp)
-                BasicTextField(
-                    value = desc,
-                    onValueChange = { desc = it },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 60.dp, max = 150.dp).clip(RoundedCornerShape(10.dp)).background(Color.White.copy(alpha = 0.07f)).border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(10.dp)).padding(horizontal = 14.dp, vertical = 10.dp),
-                    textStyle = TextStyle(color = Color.White, fontSize = 13.sp, fontFamily = FontFamily.Monospace)
-                )
-            }
+            GlassToggleSection(
+                label = stringResource(R.string.task_label_priority),
+                options = prioridades,
+                selectedIndex = prioridadInt,
+                onSelected = { prioridadInt = it }
+            )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("PRIORIDAD", color = Color.White.copy(alpha = 0.4f), fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.5.sp)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                    prioridades.forEachIndexed { index, p ->
-                        val isSelected = prioridadInt == index
-                        Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).background(if (isSelected) Color.White.copy(alpha = 0.15f) else Color.Transparent).border(1.dp, if (isSelected) Color.White.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.1f), RoundedCornerShape(8.dp)).clickable { prioridadInt = index }.padding(vertical = 7.dp), contentAlignment = Alignment.Center) {
-                            Text(text = p, color = if (isSelected) Color.White else Color.White.copy(alpha = 0.4f), fontSize = 11.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal, fontFamily = FontFamily.Monospace)
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             AnimatedVisibility(visible = task.tipo == "HABITO") {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(bottom = 12.dp)) {
-                    Text("NUEVA FRECUENCIA", color = Color.White.copy(alpha = 0.4f), fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.5.sp)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                        frecuencias.forEach { (clave, etiqueta) ->
-                            val isSelected = frecuencia == clave
-                            Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).background(if (isSelected) Color.White.copy(alpha = 0.15f) else Color.Transparent).border(1.dp, if (isSelected) Color.White.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.1f), RoundedCornerShape(8.dp)).clickable { frecuencia = clave }.padding(vertical = 7.dp), contentAlignment = Alignment.Center) {
-                                Text(text = etiqueta, color = if (isSelected) Color.White else Color.White.copy(alpha = 0.4f), fontSize = 11.sp, fontFamily = FontFamily.Monospace)
-                            }
-                        }
-                    }
+                Column {
+                    GlassToggleSection(
+                        label = "NUEVA FRECUENCIA",
+                        options = frecuencias.map { it.second },
+                        selectedIndex = frecuencias.indexOfFirst { it.first == frecuencia }.takeIf { it >= 0 } ?: 0,
+                        onSelected = { index -> frecuencia = frecuencias[index].first }
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
 
             AnimatedVisibility(visible = task.tipo == "UNICO") {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(bottom = 12.dp)) {
-                    Text("NUEVA FECHA LÍMITE (Opcional)", color = Color.White.copy(alpha = 0.4f), fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.5.sp)
+                Column {
+                    Text(stringResource(R.string.task_label_new_due_date_optional), color = Gray300.copy(alpha = 0.6f), fontSize = 10.sp, letterSpacing = 1.5.sp, fontWeight = FontWeight.SemiBold)
+                    Spacer(modifier = Modifier.height(8.dp))
                     Box(
-                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color.White.copy(alpha = 0.07f)).border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(10.dp)).clickable { showDatePicker = true }.padding(horizontal = 14.dp, vertical = 12.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.White.copy(alpha = 0.04f))
+                            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
+                            .clickable { showDatePicker = true }
+                            .padding(horizontal = 14.dp, vertical = 14.dp)
                     ) {
                         Text(
-                            text = if (fechaLimite.isEmpty()) "Dejar sin cambios..." else fechaLimite,
-                            color = if (fechaLimite.isEmpty()) Color.White.copy(alpha = 0.2f) else Color.White,
-                            fontSize = 13.sp,
-                            fontFamily = FontFamily.Monospace
+                            text = if (fechaLimite.isEmpty()) stringResource(R.string.task_keep_unchanged) else fechaLimite,
+                            color = if (fechaLimite.isEmpty()) Gray300.copy(alpha = 0.3f) else Color.White,
+                            fontSize = 14.sp
                         )
                     }
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(10.dp)).background(Color.White.copy(alpha = 0.06f)).clickable { onDismiss() }.padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
-                    Text("Cancelar", color = Color.White.copy(alpha = 0.5f), fontSize = 13.sp, fontFamily = FontFamily.Monospace)
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White.copy(alpha = 0.06f))
+                        .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
+                        .clickable { onDismiss() }
+                        .padding(vertical = 14.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(stringResource(R.string.dialog_cancel), color = Gray300, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                 }
-                Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(10.dp)).background(if (titulo.isNotBlank()) Color.White else Color.White.copy(alpha = 0.1f))
-                    .clickable(enabled = titulo.isNotBlank()) {
-                        val prio = TaskPriority.entries.getOrElse(prioridadInt) { TaskPriority.LOW }
-                        val freqFinal = if (task.tipo == "HABITO") frecuencia else null
-                        val fechaFinal = if (task.tipo == "UNICO" && fechaLimite.isNotBlank()) "${fechaLimite}T23:59:59Z" else null
-
-                        onEdit(titulo, desc, prio, fechaFinal, freqFinal)
-                    }
-                    .padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
-                    Text("Guardar", color = if (titulo.isNotBlank()) Color.Black else Color.White.copy(alpha = 0.3f), fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (titulo.isNotBlank()) Primary else Gray700)
+                        .shadow(
+                            elevation = if (titulo.isNotBlank()) 8.dp else 0.dp,
+                            shape = RoundedCornerShape(12.dp),
+                            ambientColor = if (titulo.isNotBlank()) Primary.copy(alpha = 0.3f) else Color.Transparent,
+                            spotColor = if (titulo.isNotBlank()) Color.White.copy(alpha = 0.1f) else Color.Transparent
+                        )
+                        .clickable(enabled = titulo.isNotBlank()) {
+                            val prio = TaskPriority.entries.getOrElse(prioridadInt) { TaskPriority.LOW }
+                            val freqFinal = if (task.tipo == "HABITO") frecuencia else null
+                            val fechaFinal = if (task.tipo == "UNICO" && fechaLimite.isNotBlank()) "${fechaLimite}T23:59:59Z" else null
+                            onEdit(titulo, desc, prio, fechaFinal, freqFinal)
+                        }
+                        .padding(vertical = 14.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(stringResource(R.string.task_save_button), color = if (titulo.isNotBlank()) Color.White else Gray300.copy(alpha = 0.4f), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -175,13 +210,102 @@ fun EditTaskDialog(
                         fechaLimite = formatter.format(Date(millis))
                     }
                     showDatePicker = false
-                }) { Text("Aceptar") }
+                }) { Text(stringResource(R.string.dialog_accept)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") }
+                TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.dialog_cancel)) }
             }
         ) {
             DatePicker(state = datePickerState)
         }
+    }
+}
+
+@Composable
+internal fun GlassTextFieldSection(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    singleLine: Boolean,
+    minHeight: androidx.compose.ui.unit.Dp? = null
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(label, color = Gray300.copy(alpha = 0.6f), fontSize = 10.sp, letterSpacing = 1.5.sp, fontWeight = FontWeight.SemiBold)
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier
+                .fillMaxWidth()
+                .let { if (minHeight != null) it.heightIn(min = minHeight) else it }
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color.White.copy(alpha = 0.04f))
+                .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
+                .padding(horizontal = 14.dp, vertical = 14.dp),
+            textStyle = TextStyle(color = Color.White, fontSize = 14.sp),
+            singleLine = singleLine,
+            decorationBox = { inner ->
+                if (value.isEmpty()) {
+                    Text(placeholder, color = Gray300.copy(alpha = 0.3f), fontSize = 14.sp)
+                }
+                inner()
+            }
+        )
+    }
+}
+
+@Composable
+internal fun GlassToggleSection(
+    label: String,
+    options: List<String>,
+    selectedIndex: Int,
+    onSelected: (Int) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(label, color = Gray300.copy(alpha = 0.6f), fontSize = 10.sp, letterSpacing = 1.5.sp, fontWeight = FontWeight.SemiBold)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+            options.forEachIndexed { index, option ->
+                val isSelected = selectedIndex == index
+                GlassToggleButton(
+                    text = option,
+                    isSelected = isSelected,
+                    modifier = Modifier.weight(1f),
+                    onClick = { onSelected(index) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+internal fun GlassToggleButton(text: String, isSelected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val animatedBg by animateColorAsState(
+        targetValue = if (isSelected) Primary.copy(alpha = 0.2f) else Color.Transparent,
+        label = "toggleBg"
+    )
+    val animatedBorder by animateColorAsState(
+        targetValue = if (isSelected) Primary.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.1f),
+        label = "toggleBorder"
+    )
+    val animatedText by animateColorAsState(
+        targetValue = if (isSelected) Color.White else Gray300.copy(alpha = 0.5f),
+        label = "toggleText"
+    )
+
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(animatedBg)
+            .border(1.dp, animatedBorder, RoundedCornerShape(10.dp))
+            .clickable { onClick() }
+            .padding(vertical = 10.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            color = animatedText,
+            fontSize = 12.sp,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+        )
     }
 }

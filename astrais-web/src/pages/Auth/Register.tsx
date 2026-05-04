@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
 import loginBg from '../../assets/login-bg.jpg'
-import { confirmRegister, createUser } from '../../data/Api'
+import { confirmRegister, createUser, handleGoogleCallback, loginWithGoogle } from '../../data/Api'
 
 const PASSWORD_SECURITY_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{12,}$/
 
@@ -17,6 +17,27 @@ export default function Register() {
   const [error, setError] = useState('')
 
   const isPasswordSecure = (value: string) => PASSWORD_SECURITY_PATTERN.test(value)
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const uid = params.get('uid')
+    const hadToRegister = params.get('hadToRegister')
+    const jwtAccessToken = params.get('jwtAccessToken')
+    const jwtRefreshToken = params.get('jwtRefreshToken')
+
+    if (!uid || !jwtAccessToken || !jwtRefreshToken || hadToRegister === null) {
+      return
+    }
+
+    void handleGoogleCallback(
+      Number(uid),
+      hadToRegister === 'true',
+      jwtAccessToken,
+      jwtRefreshToken
+    )
+      .then(() => navigate('/home'))
+      .catch(() => setError('No se pudo completar el registro con Google.'))
+  }, [navigate])
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -162,6 +183,14 @@ export default function Register() {
             type="submit"
           >
             Sign Up
+          </button>
+
+          <button
+            className="cursor-pointer rounded-xl border border-white/20 bg-white/10 p-3 text-base font-semibold text-white transition duration-150 ease-in hover:-translate-y-px"
+            type="button"
+            onClick={loginWithGoogle}
+          >
+            Continue with Google
           </button>
 
           <p className="m-0 text-center text-[0.95rem] text-[rgba(246,232,255,0.92)]">

@@ -127,6 +127,13 @@ fun Application.module() {
     }
 
     routing {
+        get("/.well-known/assetlinks.json") {
+            call.respondText(
+                """[{"relation":["delegate_permission/common.handle_all_urls"],"target":{"namespace":"android_app","package_name":"com.mm.astraisandroid","sha256_cert_fingerprints":["3F:59:F5:0F:81:FF:A5:D3:49:A1:9F:C2:AD:D5:16:FC:82:09:E5:10:F0:B9:6C:1C:7B:10:28:26:A5:9D:6E:38"]}}]""",
+                ContentType.Application.Json
+            )
+        }
+
         authRoutes()
         adminRoutes()
         avatarRoute()

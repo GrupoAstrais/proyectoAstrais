@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Route, Routes, useLocation } from 'react-router'
+import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router'
 import Login from './pages/Auth/Login'
 import Register from './pages/Auth/Register'
 import Achivs from './pages/Achiv/Achivs'
@@ -20,6 +20,15 @@ function Placeholder({ title }: { title: string }) {
       <h1>{title}</h1>
     </main>
   )
+}
+
+function RequireAuth() {
+  if (typeof window === 'undefined') {
+    return <Navigate to="/login" replace />
+  }
+
+  const token = window.localStorage.getItem('jwtToken')
+  return token ? <Outlet /> : <Navigate to="/login" replace />
 }
 
 export default function App() {
@@ -45,14 +54,16 @@ export default function App() {
       <Route path="/" element={<Login />} />
       <Route path="/forgot-password" element={<Placeholder title="Recuperacion de contrasena (proximamente)" />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/home" element={<Home />} />
-      <Route path="/groups" element={<Group />} />
-      <Route path="/tasks" element={<Tasks />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/shop" element={<Shop />} />
-      <Route path="/games/embed/:gameId" element={<GameEmbed />} />
-      <Route path="/games" element={<Games />} />
-      <Route path="/achievements" element={<Achivs />} />
+      <Route element={<RequireAuth />}>
+        <Route path="/home" element={<Home />} />
+        <Route path="/groups" element={<Group />} />
+        <Route path="/tasks" element={<Tasks />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/shop" element={<Shop />} />
+        <Route path="/games/embed/:gameId" element={<GameEmbed />} />
+        <Route path="/games" element={<Games />} />
+        <Route path="/achievements" element={<Achivs />} />
+      </Route>
       <Route path="*" element={<Placeholder title="Pagina no encontrada" />} />
     </Routes>
   )

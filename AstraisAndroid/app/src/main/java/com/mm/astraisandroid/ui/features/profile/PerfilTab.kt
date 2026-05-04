@@ -1,5 +1,7 @@
 package com.mm.astraisandroid.ui.features.profile
 
+
+import com.mm.astraisandroid.R
 import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -18,12 +20,10 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CurrencyPound
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -32,11 +32,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -50,7 +50,10 @@ import com.mm.astraisandroid.ui.components.AstraisScreenHeader
 import com.mm.astraisandroid.ui.components.Glassmorphism
 import com.mm.astraisandroid.ui.features.auth.AuthBackground
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.res.stringResource
 import com.mm.astraisandroid.util.AvatarImageRenderer
+import com.mm.astraisandroid.util.LocaleHelper
+import com.mm.astraisandroid.ui.theme.Gray300
 
 @Composable
 fun PerfilTab(
@@ -65,108 +68,81 @@ fun PerfilTab(
 
     fun shareProfileText() {
         val shareText = buildString {
-            appendLine("¡Mira mi progreso en Astrais!")
+            appendLine(context.getString(R.string.profile_share_title))
             appendLine()
-            appendLine("Usuario: @${user?.name?.lowercase() ?: "usuario"}")
-            appendLine("Nivel: ${user?.level ?: 0}")
-            appendLine("XP Total: ${user?.totalXp ?: 0}")
-            appendLine("Ludiones: ${user?.ludiones ?: 0}")
+            appendLine(context.getString(R.string.profile_share_username, user?.name?.lowercase() ?: "usuario"))
+            appendLine(context.getString(R.string.profile_share_level, user?.level ?: 0))
+            appendLine(context.getString(R.string.profile_share_xp, user?.totalXp ?: 0))
+            appendLine(context.getString(R.string.profile_share_ludiones, user?.ludiones ?: 0))
             appendLine()
-            appendLine("¡Únete en astrais.app!")
+            appendLine(context.getString(R.string.profile_share_join))
         }
         val shareIntent = Intent().apply {
             action = Intent.ACTION_SEND
             putExtra(Intent.EXTRA_TEXT, shareText)
             type = "text/plain"
         }
-        context.startActivity(Intent.createChooser(shareIntent, "Compartir perfil"))
+        context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.profile_share_chooser_title)))
     }
 
     AuthBackground {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .statusBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        AstraisScreenHeader(title = "Perfil", onBackClick = onBack)
-
-        ProfileHeroCard(
-            user = user,
-            isGuest = isGuest,
-            onNameChange = { newName -> userViewModel.updateUsername(newName) }
-        )
-
-        // 2. STATS ROW
-        //  StatsRow(
-        //      level = user?.level ?: 0,
-        //      totalXp = user?.totalXp ?: 0,
-        //      ludiones = user?.ludiones ?: 0
-        //  )
-
-        if (!isGuest && user != null) {
-            PreferencesCard(
-                isLoading = viewModelState.isLoading,
-                onSaveLanguage = { lang ->
-                    userViewModel.updateProfile(
-                        newName = user.name,
-                        language = lang,
-                        onSuccess = {}
-                    )
-                }
-            )
-        }
-
-        if (user != null) {
-            EquippedCosmeticCard(equippedPetRef = user.equippedPetRef)
-        }
-
-        ShareButton(onShare = ::shareProfileText)
-
-        Button(
-            onClick = onLogout,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (isGuest)
-                    MaterialTheme.colorScheme.tertiary
-                else
-                    MaterialTheme.colorScheme.error
-            ),
-            shape = RoundedCornerShape(14.dp),
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .statusBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Logout,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onError,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(Modifier.width(8.dp))
-            Text(
-                text = if (isGuest) "REGISTRARSE / INICIAR SESIÓN" else "CERRAR SESIÓN",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onError,
-                fontFamily = FontFamily.Monospace,
-                letterSpacing = 1.sp
-            )
-        }
+            AstraisScreenHeader(title = stringResource(R.string.profile_title), onBackClick = onBack)
 
-        Spacer(modifier = Modifier.height(8.dp))
-    }
+            GlassProfileHeroCard(
+                user = user,
+                isGuest = isGuest,
+                onNameChange = { newName -> userViewModel.updateUsername(newName) }
+            )
+
+            if (!isGuest && user != null) {
+                GlassPreferencesCard(
+                    isLoading = viewModelState.isLoading,
+                    initialLanguage = user.language ?: LocaleHelper.getLanguage(context),
+                    onSaveLanguage = { lang ->
+                        userViewModel.updateProfile(
+                            newName = user.name,
+                            language = lang,
+                            onSuccess = {
+                                val activity = context as? android.app.Activity
+                                activity?.recreate()
+                            }
+                        )
+                    }
+                )
+            }
+
+            if (user != null) {
+                GlassEquippedCosmeticCard(equippedPetRef = user.equippedPetRef)
+            }
+
+            GlassShareButton(onShare = ::shareProfileText)
+
+            GlassActionButton(
+                text = if (isGuest) stringResource(R.string.profile_register_login) else stringResource(R.string.profile_logout),
+                isDanger = !isGuest,
+                onClick = onLogout
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+        }
     }
 }
 
-
 @Composable
-private fun ProfileHeroCard(
+private fun GlassProfileHeroCard(
     user: User?,
     isGuest: Boolean,
     onNameChange: (String) -> Unit
 ) {
-    val name = user?.name ?: "Invitado"
+    val name = user?.name ?: stringResource(R.string.profile_guest_name)
     val level = user?.level ?: 0
     val currentXp = user?.currentXp ?: 0
     val maxXp = (level + 1) * 100
@@ -174,8 +150,39 @@ private fun ProfileHeroCard(
     var editingName by remember(name) { mutableStateOf(false) }
     var nameDraft by remember(name) { mutableStateOf(name) }
 
-    AstraisGlassCard(modifier = Modifier.fillMaxWidth(), onClick = null) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 8.dp,
+                shape = RoundedCornerShape(24.dp),
+                ambientColor = Color.Black.copy(alpha = 0.25f),
+                spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+            )
+            .clip(RoundedCornerShape(24.dp))
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.45f),
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.2f)
+                    )
+                )
+            )
+            .border(
+                width = 1.dp,
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.2f),
+                        Color.White.copy(alpha = 0.05f)
+                    )
+                ),
+                shape = RoundedCornerShape(24.dp)
+            )
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -190,7 +197,7 @@ private fun ProfileHeroCard(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     if (editingName && !isGuest) {
-                        InlineNameEditor(
+                        GlassInlineNameEditor(
                             value = nameDraft,
                             onChange = { nameDraft = it },
                             onConfirm = {
@@ -216,9 +223,8 @@ private fun ProfileHeroCard(
                             Text(
                                 text = name,
                                 style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Black,
-                                color = MaterialTheme.colorScheme.onBackground,
-                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(1f, fill = false)
@@ -226,8 +232,8 @@ private fun ProfileHeroCard(
                             if (!isGuest) {
                                 Icon(
                                     imageVector = Icons.Default.Edit,
-                                    contentDescription = "Editar nombre",
-                                    tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
+                                    contentDescription = stringResource(R.string.cd_edit_name),
+                                    tint = Gray300.copy(alpha = 0.55f),
                                     modifier = Modifier.size(14.dp)
                                 )
                             }
@@ -237,29 +243,26 @@ private fun ProfileHeroCard(
                     Text(
                         text = "@${name.lowercase().replace(" ", "")}",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.TEXT_SECONDARY),
-                        fontFamily = FontFamily.Monospace
+                        color = Gray300.copy(alpha = Glassmorphism.TEXT_SECONDARY),
                     )
 
                     if (isGuest) {
                         Text(
-                            text = "Modo invitado — registra para sincronizar",
+                            text = stringResource(R.string.profile_guest_mode_hint),
                             color = MaterialTheme.colorScheme.tertiary,
                             fontSize = 10.sp,
-                            fontFamily = FontFamily.Monospace
                         )
                     }
                 }
             }
 
-            XpBar(level = level, currentXp = currentXp, maxXp = maxXp)
+            GlassXpBar(level = level, currentXp = currentXp, maxXp = maxXp)
         }
     }
 }
 
-
 @Composable
-private fun InlineNameEditor(
+private fun GlassInlineNameEditor(
     value: String,
     onChange: (String) -> Unit,
     onConfirm: () -> Unit,
@@ -269,8 +272,8 @@ private fun InlineNameEditor(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .background(Color.White.copy(alpha = 0.08f))
-            .border(1.dp, Color.White.copy(alpha = 0.18f), RoundedCornerShape(10.dp))
+            .background(Color.White.copy(alpha = 0.06f))
+            .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(10.dp))
             .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -281,8 +284,7 @@ private fun InlineNameEditor(
             singleLine = true,
             modifier = Modifier.weight(1f),
             textStyle = TextStyle(
-                color = MaterialTheme.colorScheme.onBackground,
-                fontFamily = FontFamily.Monospace,
+                color = Color.White,
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Bold
             ),
@@ -290,7 +292,7 @@ private fun InlineNameEditor(
         )
         Icon(
             imageVector = Icons.Default.Check,
-            contentDescription = "Guardar",
+            contentDescription = stringResource(R.string.cd_save_name),
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier
                 .size(20.dp)
@@ -298,7 +300,7 @@ private fun InlineNameEditor(
         )
         Icon(
             imageVector = Icons.Default.Close,
-            contentDescription = "Cancelar",
+            contentDescription = stringResource(R.string.cd_cancel_edit),
             tint = MaterialTheme.colorScheme.error,
             modifier = Modifier
                 .size(20.dp)
@@ -307,9 +309,8 @@ private fun InlineNameEditor(
     }
 }
 
-
 @Composable
-private fun XpBar(level: Int, currentXp: Int, maxXp: Int) {
+private fun GlassXpBar(level: Int, currentXp: Int, maxXp: Int) {
     val safeMax = maxXp.coerceAtLeast(1)
     val progress by animateFloatAsState(
         targetValue = (currentXp.toFloat() / safeMax.toFloat()).coerceIn(0f, 1f),
@@ -323,18 +324,16 @@ private fun XpBar(level: Int, currentXp: Int, maxXp: Int) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "NIVEL $level",
+                text = stringResource(R.string.profile_level_label, level),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Black,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.tertiary,
-                fontFamily = FontFamily.Monospace,
                 letterSpacing = 1.sp
             )
             Text(
-                text = "$currentXp / $maxXp XP",
+                text = stringResource(R.string.profile_xp_progress, currentXp, maxXp),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = Glassmorphism.TEXT_SECONDARY),
-                fontFamily = FontFamily.Monospace
+                color = Gray300.copy(alpha = Glassmorphism.TEXT_SECONDARY),
             )
         }
         Box(
@@ -362,81 +361,54 @@ private fun XpBar(level: Int, currentXp: Int, maxXp: Int) {
     }
 }
 
-
-@Composable
-private fun StatsRow(level: Int, totalXp: Int, ludiones: Int) {
-    AstraisGlassSurface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 18.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            StatItem(value = level.toString(), label = "NIVEL", icon = Icons.Default.Star, tint = MaterialTheme.colorScheme.tertiary)
-            StatDivider()
-            StatItem(value = totalXp.toString(), label = "XP TOTAL", icon = null, tint = MaterialTheme.colorScheme.secondary)
-            StatDivider()
-            StatItem(value = ludiones.toString(), label = "LUDIONES", icon = Icons.Default.CurrencyPound, tint = MaterialTheme.colorScheme.primary)
-        }
-    }
-}
-
-@Composable
-private fun StatDivider() {
-    Box(
-        modifier = Modifier
-            .width(1.dp)
-            .height(36.dp)
-            .background(Color.White.copy(alpha = 0.12f))
-    )
-}
-
-@Composable
-private fun StatItem(value: String, label: String, icon: androidx.compose.ui.graphics.vector.ImageVector?, tint: Color) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        if (icon != null) {
-            Icon(icon, null, tint = tint, modifier = Modifier.size(16.dp))
-        }
-        Text(
-            text = value,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Black,
-            color = MaterialTheme.colorScheme.onBackground,
-            fontFamily = FontFamily.Monospace
-        )
-        Text(
-            text = label,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
-            fontSize = 10.sp,
-            fontFamily = FontFamily.Monospace,
-            letterSpacing = 1.sp
-        )
-    }
-}
-
 private val SUPPORTED_LANGUAGES = listOf("ESP" to "Español", "ENG" to "English")
 
 @Composable
-private fun PreferencesCard(
+private fun GlassPreferencesCard(
     isLoading: Boolean,
+    initialLanguage: String,
     onSaveLanguage: (String) -> Unit
 ) {
-    var selected by remember { mutableStateOf("ESP") }
+    var selected by remember { mutableStateOf(initialLanguage) }
 
-    AstraisGlassCard(modifier = Modifier.fillMaxWidth(), onClick = null) {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            SectionHeader(icon = Icons.Default.Language, title = "Idioma")
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 6.dp,
+                shape = RoundedCornerShape(20.dp),
+                ambientColor = Color.Black.copy(alpha = 0.2f),
+                spotColor = Color.Transparent
+            )
+            .clip(RoundedCornerShape(20.dp))
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.35f),
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.15f)
+                    )
+                )
+            )
+            .border(
+                width = 1.dp,
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.15f),
+                        Color.White.copy(alpha = 0.04f)
+                    )
+                ),
+                shape = RoundedCornerShape(20.dp)
+            )
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            GlassSectionHeader(icon = Icons.Default.Language, title = stringResource(R.string.profile_language_title))
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SUPPORTED_LANGUAGES.forEach { (code, label) ->
-                    LanguagePill(
+                    GlassLanguagePill(
                         label = label,
                         code = code,
                         selected = selected == code,
@@ -446,27 +418,32 @@ private fun PreferencesCard(
                 }
             }
 
-            Button(
-                onClick = { onSaveLanguage(selected) },
-                enabled = !isLoading,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                ),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(if (!isLoading) MaterialTheme.colorScheme.primary else Gray300.copy(alpha = 0.3f))
+                    .shadow(
+                        elevation = if (!isLoading) 6.dp else 0.dp,
+                        shape = RoundedCornerShape(12.dp),
+                        ambientColor = if (!isLoading) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f) else Color.Transparent,
+                        spotColor = if (!isLoading) Color.White.copy(alpha = 0.1f) else Color.Transparent
+                    )
+                    .clickable(enabled = !isLoading) { onSaveLanguage(selected) }
+                    .padding(vertical = 14.dp),
+                contentAlignment = Alignment.Center
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.onPrimary,
+                        color = Color.White,
                         strokeWidth = 2.dp,
                         modifier = Modifier.size(16.dp)
                     )
                 } else {
                     Text(
-                        "Guardar preferencias",
-                        fontFamily = FontFamily.Monospace,
+                        stringResource(R.string.profile_save_preferences),
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary
+                        color = Color.White
                     )
                 }
             }
@@ -475,40 +452,71 @@ private fun PreferencesCard(
 }
 
 @Composable
-private fun LanguagePill(
+private fun GlassLanguagePill(
     label: String,
     code: String,
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val accent = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
+    val accent = if (selected) MaterialTheme.colorScheme.primary else Gray300.copy(alpha = 0.5f)
+
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(if (selected) accent.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.05f))
-            .border(1.dp, accent.copy(alpha = if (selected) 0.55f else 0.2f), RoundedCornerShape(12.dp))
+            .background(if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.05f))
+            .border(1.dp, if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
             .clickable { onClick() }
             .padding(vertical = 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        Text(label, color = accent, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-        Text(code, color = accent.copy(alpha = 0.7f), fontFamily = FontFamily.Monospace, fontSize = 9.sp, letterSpacing = 1.sp)
+        Text(label, color = accent, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        Text(code, color = accent.copy(alpha = 0.7f), fontSize = 9.sp, letterSpacing = 1.sp)
     }
 }
 
 @Composable
-private fun EquippedCosmeticCard(equippedPetRef: String?) {
-    AstraisGlassCard(modifier = Modifier.fillMaxWidth(), onClick = null) {
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            SectionHeader(icon = Icons.Default.Pets, title = "Mascota equipada")
+private fun GlassEquippedCosmeticCard(equippedPetRef: String?) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 6.dp,
+                shape = RoundedCornerShape(20.dp),
+                ambientColor = Color.Black.copy(alpha = 0.2f),
+                spotColor = Color.Transparent
+            )
+            .clip(RoundedCornerShape(20.dp))
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.35f),
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.15f)
+                    )
+                )
+            )
+            .border(
+                width = 1.dp,
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.15f),
+                        Color.White.copy(alpha = 0.04f)
+                    )
+                ),
+                shape = RoundedCornerShape(20.dp)
+            )
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            GlassSectionHeader(icon = Icons.Default.Pets, title = stringResource(R.string.profile_equipped_pet_title))
 
             if (equippedPetRef.isNullOrBlank()) {
                 Text(
-                    text = "Aún no tienes mascota equipada. Visita la tienda o el inventario para elegir una.",
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                    fontFamily = FontFamily.Monospace,
+                    text = stringResource(R.string.profile_no_pet_equipped),
+                    color = Gray300.copy(alpha = 0.6f),
                     fontSize = 12.sp
                 )
             } else {
@@ -520,7 +528,7 @@ private fun EquippedCosmeticCard(equippedPetRef: String?) {
                         modifier = Modifier
                             .size(48.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
                             .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f), RoundedCornerShape(12.dp)),
                         contentAlignment = Alignment.Center
                     ) {
@@ -534,17 +542,15 @@ private fun EquippedCosmeticCard(equippedPetRef: String?) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = equippedPetRef,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontFamily = FontFamily.Monospace,
+                            color = Color.White,
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            text = "Cámbiala desde el Inventario",
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
-                            fontFamily = FontFamily.Monospace,
+                            text = stringResource(R.string.profile_change_pet_hint),
+                            color = Gray300.copy(alpha = 0.55f),
                             fontSize = 10.sp
                         )
                     }
@@ -555,37 +561,92 @@ private fun EquippedCosmeticCard(equippedPetRef: String?) {
 }
 
 @Composable
-private fun ShareButton(onShare: () -> Unit) {
-    Row(
+private fun GlassShareButton(onShare: () -> Unit) {
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
             .background(Color.White.copy(alpha = 0.06f))
             .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(14.dp))
             .clickable { onShare() }
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+            .padding(horizontal = 16.dp, vertical = 14.dp)
     ) {
-        Icon(
-            imageVector = Icons.Default.Share,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.size(18.dp)
-        )
-        Text(
-            text = "Compartir mi perfil",
-            color = MaterialTheme.colorScheme.onBackground,
-            fontFamily = FontFamily.Monospace,
-            fontWeight = FontWeight.Bold,
-            fontSize = 13.sp,
-            modifier = Modifier.weight(1f)
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Share,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(18.dp)
+            )
+            Text(
+                text = stringResource(R.string.profile_share_button),
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp,
+                modifier = Modifier.weight(1f)
+            )
+        }
     }
 }
 
 @Composable
-private fun SectionHeader(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String) {
+private fun GlassActionButton(
+    text: String,
+    isDanger: Boolean,
+    onClick: () -> Unit
+) {
+    val bgColor = if (isDanger) {
+        MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
+    } else {
+        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f)
+    }
+    val borderColor = if (isDanger) {
+        MaterialTheme.colorScheme.error.copy(alpha = 0.4f)
+    } else {
+        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.4f)
+    }
+    val textColor = if (isDanger) {
+        MaterialTheme.colorScheme.error
+    } else {
+        MaterialTheme.colorScheme.tertiary
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(bgColor)
+            .border(1.dp, borderColor, RoundedCornerShape(14.dp))
+            .clickable { onClick() }
+            .padding(vertical = 16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.Logout,
+                contentDescription = null,
+                tint = textColor,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.titleSmall,
+                color = textColor,
+                letterSpacing = 1.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun GlassSectionHeader(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -600,8 +661,7 @@ private fun SectionHeader(icon: androidx.compose.ui.graphics.vector.ImageVector,
             text = title.uppercase(),
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f),
-            fontFamily = FontFamily.Monospace,
+            color = Color.White.copy(alpha = 0.85f),
             letterSpacing = 1.sp
         )
     }

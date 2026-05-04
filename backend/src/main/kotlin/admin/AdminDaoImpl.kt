@@ -111,7 +111,7 @@ class AdminDaoImpl : AdminDao {
                 desc = formData.desc,
                 type = formData.type,
                 price = formData.price,
-                assetRef = formData.fileName,
+                assetRef = if (formData.fileBytes != null) formData.fileName else ent.assetRef,
                 theme = formData.theme ?: "",
                 coleccion = formData.collection,
                 rarity = formData.rarity

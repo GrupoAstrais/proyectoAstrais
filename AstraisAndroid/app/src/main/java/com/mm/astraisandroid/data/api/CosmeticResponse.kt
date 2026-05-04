@@ -16,6 +16,7 @@ data class CosmeticResponse(
     val price: Int,
     val assetRef: String,
     val theme: String,
+    val rarity: String = "COMUN",
     val owned: Boolean,
     val coleccion: String,
     val equipped: Boolean
@@ -37,6 +38,7 @@ fun CosmeticResponse.toDomain(): Cosmetic {
         price = this.price,
         assetRef = this.assetRef,
         theme = this.theme,
+        rarity = this.rarity,
         coleccion = this.coleccion,
         owned = this.owned,
         equipped = this.equipped

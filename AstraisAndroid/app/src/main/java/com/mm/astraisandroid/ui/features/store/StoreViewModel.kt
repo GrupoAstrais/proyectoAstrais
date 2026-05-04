@@ -5,12 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.mm.astraisandroid.data.models.Cosmetic
 import com.mm.astraisandroid.data.preferences.SessionManager
 import com.mm.astraisandroid.data.repository.StoreRepository
+import com.mm.astraisandroid.ui.components.SnackbarManager
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -22,32 +21,37 @@ data class StoreScreenState(
 )
 
 sealed class StoreEvent {
-    data class ShowToast(val message: String) : StoreEvent()
     object BuySuccess : StoreEvent()
 }
 
 @HiltViewModel
 class StoreViewModel @Inject constructor(
     private val repository: StoreRepository,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val snackbarManager: SnackbarManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(StoreScreenState())
     val state: StateFlow<StoreScreenState> = _state.asStateFlow()
 
-    private val _uiEvent = Channel<StoreEvent>()
-    val uiEvent = _uiEvent.receiveAsFlow()
+    private val _uiEvent = MutableStateFlow<StoreEvent?>(null)
+    val uiEvent: StateFlow<StoreEvent?> = _uiEvent.asStateFlow()
 
     fun loadStore() {
         if (sessionManager.isGuest()) return
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
-            try {
-                val items = repository.getStoreItems()
-                _state.update { it.copy(isLoading = false, items = items) }
-            } catch (e: Exception) {
-                _state.update { it.copy(isLoading = false, error = e.message ?: "Error de conexión") }
-            }
+            refreshStore()
+        }
+    }
+
+    private suspend fun refreshStore() {
+        _state.update { it.copy(isLoading = true, error = null) }
+        try {
+            val items = repository.getStoreItems()
+            _state.update { it.copy(isLoading = false, items = items) }
+        } catch (e: Exception) {
+            _state.update { it.copy(isLoading = false) }
+            snackbarManager.showMessage(e.message ?: "Error de conexión")
         }
     }
 
@@ -57,27 +61,28 @@ class StoreViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true) }
             try {
                 repository.buyCosmetic(id)
-                loadStore()
+                refreshStore()
                 onSuccess()
-                _uiEvent.send(StoreEvent.BuySuccess)
-                _uiEvent.send(StoreEvent.ShowToast("¡Compra realizada con éxito!"))
+                _uiEvent.value = StoreEvent.BuySuccess
+                snackbarManager.showMessage("¡Compra realizada con éxito!")
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false) }
-                _uiEvent.send(StoreEvent.ShowToast(e.message ?: "Fondos insuficientes"))
+                snackbarManager.showMessage(e.message ?: "Fondos insuficientes")
             }
         }
     }
 
-    fun equipItem(id: Int, onSuccess: () -> Unit) {
+    fun equipItem(id: Int, isCurrentlyEquipped: Boolean, onSuccess: () -> Unit) {
         if (sessionManager.isGuest()) return
         viewModelScope.launch {
             try {
                 repository.equipCosmetic(id)
-                loadStore()
+                refreshStore()
                 onSuccess()
-                _uiEvent.send(StoreEvent.ShowToast("¡Equipado con éxito!"))
+                val msg = if (isCurrentlyEquipped) "Desequipado" else "¡Equipado con éxito!"
+                snackbarManager.showMessage(msg)
             } catch (e: Exception) {
-                _uiEvent.send(StoreEvent.ShowToast(e.message ?: "Error al equipar"))
+                snackbarManager.showMessage(e.message ?: "Error al equipar")
             }
         }
     }

@@ -34,9 +34,7 @@ sealed class LoginEvent {
     object NavigateToHome : LoginEvent()
     /** Navegar al flujo de onboarding para completar el perfil. */
     object NavigateToOnboarding : LoginEvent()
-    /** Mostrar un mensaje temporal (toast) al usuario.
-     * @property message Texto a mostrar. */
-    data class ShowToast(val message: String) : LoginEvent()
+
 }
 
 /**

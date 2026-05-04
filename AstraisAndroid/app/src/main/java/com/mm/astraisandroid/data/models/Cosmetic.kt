@@ -4,10 +4,11 @@ package com.mm.astraisandroid.data.models
  * Enum que define los diferentes tipos de cosméticos disponibles.
  */
 enum class CosmeticType {
+    PET,         // Mascota / compañero (compatible con backend)
     PET_SKIN,    // Aspecto para una mascota
     APP_THEME,   // Tema de colores para la interfaz de la aplicación
     PET_BASE,    // Aspecto base de una mascota / La mascota en sí
-    AVATAR_PART, // Parte o accesorio para el avatar del usuario
+    AVATAR_PART, // Avatar de perfil del usuario
     UNKNOWN
 }
 
@@ -34,6 +35,7 @@ data class Cosmetic(
     val price: Int,
     val assetRef: String,
     val theme: String?,
+    val rarity: String = "COMUN",
     val coleccion: String,
     val owned: Boolean,
     val equipped: Boolean

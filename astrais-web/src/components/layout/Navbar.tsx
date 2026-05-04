@@ -13,7 +13,7 @@ const links = [
 export default function Navbar() {
   return (
     <nav
-      className="relative z-20 mb-1 flex w-full items-center justify-between border-b border-secondary-500/40 bg-secondary-500/35 px-3 py-2 text-white font-['Press_Start_2P'] backdrop-blur-sm min-[1400px]:px-4 min-[1400px]:py-2.5"
+      className="relative z-20 mb-1 flex w-full items-center justify-between border-b border-primary-500/40 bg-primary-500/35 px-3 py-2 text-white font-['Press_Start_2P'] backdrop-blur-sm min-[1400px]:px-4 min-[1400px]:py-2.5"
       aria-label="Navegacion principal"
     >
       <div className="flex min-w-0 flex-1 items-center gap-3 min-[1400px]:gap-4">

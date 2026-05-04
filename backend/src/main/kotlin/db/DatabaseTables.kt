@@ -342,6 +342,10 @@ object TablaInventario : IntIdTable("Inventory") {
     val id_usuario = reference("user_id", TablaUsuario, onDelete = ReferenceOption.CASCADE)
     val id_cosmetico = reference("cosmetic_id", TablaCosmetico, onDelete = ReferenceOption.CASCADE)
     val fecha_compra = date("purchase_date")
+
+    init {
+        uniqueIndex("idx_user_cosmetic", id_usuario, id_cosmetico)
+    }
 }
 
 class EntidadInventario(id: EntityID<Int>) : IntEntity(id) {

@@ -1,21 +1,34 @@
 package com.mm.astraisandroid.ui.features.auth
 
 import android.util.Log
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -24,15 +37,25 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.res.painterResource
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
@@ -41,104 +64,75 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.mm.astraisandroid.data.api.LoginRequest
-import kotlinx.coroutines.launch
 import com.mm.astraisandroid.BuildConfig
+import com.mm.astraisandroid.R
+import com.mm.astraisandroid.ui.components.GlobalSnackbarViewModel
+import com.mm.astraisandroid.data.api.LoginRequest
+import com.mm.astraisandroid.ui.theme.Background
+import com.mm.astraisandroid.ui.theme.Gray300
+import com.mm.astraisandroid.ui.theme.Gray700
+import com.mm.astraisandroid.ui.theme.Primary
+import com.mm.astraisandroid.ui.theme.Secondary
+import com.mm.astraisandroid.ui.theme.Surface
 import kotlinx.coroutines.flow.collectLatest
-import android.widget.Toast
+import kotlinx.coroutines.launch
 
-
-/**
- * Pantalla de inicio de sesión.
- *
- * Permite al usuario autenticarse mediante correo y contraseña, iniciar sesión
- * con Google mediante Credential Manager, o continuar como invitado.
- * Escucha los eventos del [LoginViewModel] para navegar a la pantalla principal,
- * al onboarding o mostrar mensajes temporales.
- *
- * @param onNavigateToHome Callback para navegar a la pantalla principal tras un login exitoso.
- * @param onNavigateToRegister Callback para navegar a la pantalla de registro.
- * @param onNavigateToOnboarding Callback para navegar al onboarding si es la primera vez.
- * @param viewModel ViewModel que gestiona la lógica de autenticación.
- */
 @Composable
 fun LoginScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToRegister: () -> Unit,
     onNavigateToOnboarding: () -> Unit,
-    viewModel: LoginViewModel = hiltViewModel()
+    viewModel: LoginViewModel = hiltViewModel(),
+    snackbarViewModel: GlobalSnackbarViewModel = hiltViewModel()
 ) {
-    // remember sirve para guardar el valor entre recomposiciones
-    // sino cada vez que Compose redibuja la pantalla, email volvería a ser ""
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    // es un StateFlow en el ViewModel, es como un useState
     val uiState by viewModel.loginState.collectAsStateWithLifecycle()
-
+    val isLoading = uiState is LoginUIState.Loading
+    val errorMessage = if (uiState is LoginUIState.Error) (uiState as LoginUIState.Error).message else null
     val isError = uiState is LoginUIState.Error
 
-    // Ejecuta el bloque cuando uiState cambia, un useEffect vaya
     LaunchedEffect(Unit) {
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
-                is LoginEvent.NavigateToHome -> {
-                    onNavigateToHome()
-                }
-                is LoginEvent.NavigateToOnboarding -> {
-                    onNavigateToOnboarding()
-                }
-                is LoginEvent.ShowToast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                }
+                is LoginEvent.NavigateToHome -> onNavigateToHome()
+                is LoginEvent.NavigateToOnboarding -> onNavigateToOnboarding()
+
             }
         }
     }
 
-    // TODO: Corregir guarrada de prueba
     val handleGoogleSignIn: () -> Unit = {
         coroutineScope.launch {
             try {
                 val credentialManager = CredentialManager.create(context)
-
                 val googleIdOption = GetGoogleIdOption.Builder()
                     .setFilterByAuthorizedAccounts(false)
                     .setServerClientId(BuildConfig.GOOGLE_WEB_CLIENT_ID)
-                    .setAutoSelectEnabled(false) // Desactivado para forzar que salga el selector de cuentas
+                    .setAutoSelectEnabled(false)
                     .build()
-
                 val request = GetCredentialRequest.Builder()
                     .addCredentialOption(googleIdOption)
                     .build()
-
-                val result = credentialManager.getCredential(
-                    request = request,
-                    context = context
-                )
-
+                val result = credentialManager.getCredential(request = request, context = context)
                 val credential = result.credential
-                if (credential is CustomCredential &&
-                    credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-
+                if (credential is CustomCredential && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                     val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                    val idToken = googleIdTokenCredential.idToken
-
-                    if (idToken != null) {
-                        viewModel.loginWithGoogle(idToken)
-                    } else {
-                        // Token no obtenido correctamente
-                        Toast.makeText(context, "Error: token de Google vacío", Toast.LENGTH_SHORT).show()
-                    }
+                    viewModel.loginWithGoogle(googleIdTokenCredential.idToken)
                 } else {
-                    // No se obtuvo un token Google Id Token válido
-                    Toast.makeText(context, "No se pudo obtener tokens de Google", Toast.LENGTH_SHORT).show()
+                    snackbarViewModel.showMessage(context.getString(R.string.login_google_token_error))
                     Log.e("GOOGLE_LOGIN", "Credential no es GoogleIdTokenCredential: ${credential?.javaClass?.simpleName}")
                 }
             } catch (e: GetCredentialException) {
-                Log.e("GOOGLE_LOGIN", "Error de CredentialManager: ${e.javaClass.simpleName} - ${e.errorMessage}")
+                val msg = e.errorMessage?.toString() ?: e.message ?: "Error al obtener credenciales"
+                snackbarViewModel.showMessage(msg)
+                Log.e("GOOGLE_LOGIN", "Error de CredentialManager: ${e.javaClass.simpleName} - $msg")
             } catch (e: Exception) {
+                snackbarViewModel.showMessage(e.message ?: "Error de Google Sign-In")
                 Log.e("GOOGLE_LOGIN", "Error general: ${e.message}")
             }
         }
@@ -148,95 +142,275 @@ fun LoginScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 28.dp, vertical = 48.dp),
-            verticalArrangement = Arrangement.SpaceAround
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp, vertical = 48.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Titulo
-            Text(
-                text = "LOG INTO YOUR\nACCOUNT",
-                color = Color.White,
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 1.sp,
-                lineHeight = 34.sp,
-                fontFamily = FontFamily.Monospace
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Header
+            Icon(
+                painter = painterResource(id = R.drawable.logo_new),
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = Primary
             )
 
-            // Formulario
-            Column(modifier = Modifier.fillMaxWidth()) {
-                AuthTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = "Email",
-                    keyboardType = KeyboardType.Email
-                )
+            Spacer(modifier = Modifier.height(16.dp))
 
-                AuthTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = "Password",
-                    isPassword = true,
-                    imeAction = ImeAction.Done,
-                    isError = isError,
-                    supportingText = if (isError) (uiState as LoginUIState.Error).message else null
-                )
+            Text(
+                text = stringResource(R.string.login_welcome_back),
+                style = MaterialTheme.typography.headlineLarge,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
 
-                Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-                Button(
-                    onClick = { viewModel.login(LoginRequest(email, password)) },
-                    enabled = uiState !is LoginUIState.Loading,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
-                    shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                        disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+            Text(
+                text = stringResource(R.string.login_subtitle),
+                style = MaterialTheme.typography.bodyLarge,
+                color = Gray300
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Form Card
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = RoundedCornerShape(24.dp),
+                        ambientColor = Primary.copy(alpha = 0.1f),
+                        spotColor = Primary.copy(alpha = 0.2f)
                     )
-                ) {
-                    if (uiState is LoginUIState.Loading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(22.dp),
-                            color = Color.White,
-                            strokeWidth = 2.dp
+                    .background(
+                        color = Surface,
+                        shape = RoundedCornerShape(24.dp)
+                    )
+                    .padding(24.dp)
+            ) {
+                Column {
+                    // Email TextField
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .defaultMinSize(minHeight = 56.dp),
+                        placeholder = { Text(stringResource(R.string.login_email_placeholder)) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Email,
+                                contentDescription = null,
+                                tint = Gray300
+                            )
+                        },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email,
+                            imeAction = ImeAction.Next
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Primary,
+                            unfocusedBorderColor = Gray700,
+                            focusedPlaceholderColor = Gray300,
+                            unfocusedPlaceholderColor = Gray300,
+                            focusedLeadingIconColor = Primary,
+                            unfocusedLeadingIconColor = Gray300,
+                            cursorColor = Primary,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
                         )
-                    } else {
-                        Text("Log In", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Password TextField
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .defaultMinSize(minHeight = 56.dp),
+                        placeholder = { Text(stringResource(R.string.login_password_placeholder)) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = null,
+                                tint = Gray300
+                            )
+                        },
+                        trailingIcon = {
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(
+                                    imageVector = if (passwordVisible)
+                                        Icons.Default.Visibility
+                                    else
+                                        Icons.Default.VisibilityOff,
+                                    contentDescription = if (passwordVisible) stringResource(R.string.cd_hide_password) else stringResource(R.string.cd_show_password),
+                                    tint = Gray300
+                                )
+                            }
+                        },
+                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Done
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Primary,
+                            unfocusedBorderColor = Gray700,
+                            focusedPlaceholderColor = Gray300,
+                            unfocusedPlaceholderColor = Gray300,
+                            focusedLeadingIconColor = Primary,
+                            unfocusedLeadingIconColor = Gray300,
+                            focusedTrailingIconColor = Primary,
+                            unfocusedTrailingIconColor = Gray300,
+                            cursorColor = Primary,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        ),
+                        isError = isError,
+                        supportingText = if (isError) { { Text(errorMessage ?: "", color = MaterialTheme.colorScheme.error) } } else null
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Forgot password
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Text(
+                            text = stringResource(R.string.login_forgot_password),
+                            color = Secondary,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.clickable { /* TODO: Navigate to forgot password */ }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Log In Button
+                    Button(
+                        onClick = { viewModel.login(LoginRequest(email, password)) },
+                        enabled = !isLoading,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Primary,
+                            contentColor = Color.White,
+                            disabledContainerColor = Primary.copy(alpha = 0.5f)
+                        )
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                text = stringResource(R.string.login_button),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-                Button(
+            // Divider Section
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    color = Gray700
+                )
+                Text(
+                    text = stringResource(R.string.login_or_continue_with),
+                    color = Gray300,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    color = Gray700
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Social Buttons Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Google Button
+                OutlinedButton(
                     onClick = handleGoogleSignIn,
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
-                    shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        contentColor = MaterialTheme.colorScheme.onSurface
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Gray700),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = Color.White
                     )
                 ) {
-                    Text("Continuar con Google", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_google),
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = Color.Unspecified
+                    )
+                    Spacer(modifier = Modifier.size(8.dp))
+                    Text(
+                        text = stringResource(R.string.login_google_button),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Button(
+                // Guest Button
+                OutlinedButton(
                     onClick = {
                         viewModel.startGuestSession()
                         onNavigateToHome()
                     },
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
-                    shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = Color.White
-                    ),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.5f))
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Secondary),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = Secondary
+                    )
                 ) {
-                    Text("Continuar como Invitado", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = Secondary
+                    )
+                    Spacer(modifier = Modifier.size(8.dp))
+                    Text(
+                        text = stringResource(R.string.login_guest_button),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
 
@@ -245,22 +419,24 @@ fun LoginScreen(
             // Footer
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Don't have an account? ",
-                    color = Color.White.copy(alpha = 0.7f),
-                    fontSize = 13.sp
+                    text = stringResource(R.string.login_no_account),
+                    color = Gray300,
+                    style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    "Sign Up",
-                    color = Color.White,
-                    fontSize = 13.sp,
+                    text = stringResource(R.string.login_sign_up),
+                    color = Secondary,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable { onNavigateToRegister() }
                 )
             }
 
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
