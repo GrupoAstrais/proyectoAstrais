@@ -102,36 +102,54 @@ class DatabaseDAOImpl : DatabaseDAO {
     }
 
     override suspend fun deleteUsuario(id: Int): Boolean {
-        // Primero borramos al usuario de los grupos
-        TablaGrupoUsuario.deleteWhere {
-            uid.eq(id)
-        }
-        // Luego, hacemos a otro usuario el owner
-        val subquery = EntidadGrupo.find {
-            TablaGrupo.owner.eq(id).and(TablaGrupo.es_grupo_personal.eq(false))
-        }.toList()
+        return suspendTransaction {
+            try {
+                // Borramos credenciales de autenticacion (OAuth, email/passwd)
+                TablaCredencialesAuth.deleteWhere { uid.eq(id) }
 
-        subquery.forEach { grp->
-            val gid = grp.id.value
-            val newOwner = TablaGrupoUsuario.selectAll()
-                .where {
-                    (TablaGrupoUsuario.gid.eq(gid)).and(TablaGrupoUsuario.uid.neq(id))
+                // Borramos codigos de confirmacion pendientes
+                TablaConfirmacionUsuario.deleteWhere { uid.eq(id) }
+
+                // Borramos invitaciones creadas por el usuario
+                TablaGrupoInvites.deleteWhere { created_by_uid.eq(id) }
+
+                // Borramos al usuario de los grupos
+                TablaGrupoUsuario.deleteWhere { uid.eq(id) }
+
+                // Para grupos no personales donde el usuario es owner:
+                // transferir a otro miembro o borrar el grupo si no hay mas miembros
+                val ownedGroups = EntidadGrupo.find {
+                    TablaGrupo.owner.eq(id).and(TablaGrupo.es_grupo_personal.eq(false))
+                }.toList()
+
+                ownedGroups.forEach { grp ->
+                    val gid = grp.id.value
+                    val newOwner = TablaGrupoUsuario.selectAll()
+                        .where {
+                            (TablaGrupoUsuario.gid.eq(gid)).and(TablaGrupoUsuario.uid.neq(id))
+                        }
+                        .limit(1)
+                        .firstOrNull()
+
+                    if (newOwner != null) {
+                        grp.owner = newOwner[TablaGrupoUsuario.uid]
+                    } else {
+                        // No hay mas miembros, borramos el grupo (cascade borra tareas, invites, audit)
+                        grp.delete()
+                    }
                 }
-                .limit(1)
-                .firstOrNull()
 
-            if (newOwner != null) {
-                grp.owner = newOwner[TablaGrupoUsuario.uid]
+                // Borramos grupo personal
+                TablaGrupo.deleteWhere {
+                    owner.eq(id).and(es_grupo_personal.eq(true))
+                }
+
+                // Borramos el usuario
+                TablaUsuario.deleteWhere { TablaUsuario.id.eq(id) } > 0
+            } catch (e: Exception) {
+                false
             }
         }
-
-        // Borramos grupo personal
-        TablaGrupo.deleteWhere {
-            owner.eq(id).and(es_grupo_personal.eq(true))
-        }
-
-        // Luego el usuario
-        return suspendTransaction { TablaUsuario.deleteWhere { TablaUsuario.id.eq(id) } > 0 }
     }
 
     override suspend fun setUserLastLogin(ent: EntidadUsuario) {
