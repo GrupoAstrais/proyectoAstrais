@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { AddUserToGroup, CreateGroup, CreateTask, EditGroup, EditTask, EditUser, EventosGrupos, GroupInvitacion, GroupInvitacionRespuesta, LoginRequest, MembersResponse, PassOwnershipGroup, RegisterRequest, RevokeGroupInvit, SetEmailLogin, SetMemberRole, UserData, UserGroups, UserGroupsResponse, UserTasksResponse, VerifyRequest } from '../types/LoginRequest';
+import type { AddUserToGroup, CreateGroup, CreateTask, DeleteOauthRequest, EditGroup, EditTask, EditUser, EventosGrupos, GoogleAndroidLoginRequest, GroupInvitacion, GroupInvitacionRespuesta, LoginRequest, MembersResponse, PassOwnershipGroup, RegisterRequest, RevokeGroupInvit, SetEmailLogin, SetMemberRole, SetOauthRequest, UserData, UserGroups, UserGroupsResponse, UserTasksResponse, VerifyRequest } from '../types/LoginRequest';
 import type { IGroup, ITarea } from '../types/Interfaces';
 import { applyThemeColors } from '../styles/theme';
 
@@ -193,8 +193,76 @@ export async function confirmRegister(req: VerifyRequest) : Promise<void> {
     }
 }
 
+// Inicia el flujo OAuth con Google redirigiendo al usuario
+export function loginWithGoogle(): void {
+    window.location.href = `${instance.defaults.baseURL}/auth/google/login`;
+}
+
+// Maneja el callback de Google OAuth (tokens en la respuesta)
+export async function handleGoogleCallback(_uid: number, hadToRegister: boolean, jwtAccessToken: string, jwtRefreshTokenValue: string): Promise<{ hadToRegister: boolean }> {
+    jwtToken = jwtAccessToken;
+    jwtRefreshToken = jwtRefreshTokenValue;
+
+    if (typeof window !== 'undefined') {
+        localStorage.setItem('jwtToken', jwtToken!)
+        localStorage.setItem('jwtRefreshToken', jwtRefreshToken!)
+    }
+
+    console.log("TOKEN: " + jwtToken);
+    console.log("REFRESH TOKEN: " + jwtRefreshToken);
+    console.error("Successful Google login!");
+
+    return { hadToRegister };
+}
+
+
+// Vincula un proveedor OAuth a la cuenta del usuario autenticado
+export async function setOauth(req: SetOauthRequest): Promise<void> {
+    try {
+        const data = await instance.post("/auth/setOauth", req);
+        if (data.status >= 200 && data.status < 300) {
+            console.error("Successful OAuth link!");
+            return Promise.resolve();
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            console.error("STATUS:", err.response?.status);
+            console.error("DATA:", err.response?.data);
+        } else {
+            console.error(err);
+        }
+        return Promise.reject();
+    }
+}
+
+// Desvincula un proveedor OAuth de la cuenta del usuario autenticado
+export async function deleteOauth(req: DeleteOauthRequest): Promise<void> {
+    try {
+        const data = await instance.post("/auth/deleteOauth", req);
+        if (data.status >= 200 && data.status < 300) {
+            console.error("Successful OAuth unlink!");
+            return Promise.resolve();
+        } else {
+            console.error("Error en el log! " + data.data["error"]);
+            return Promise.reject();
+        }
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            console.error("STATUS:", err.response?.status);
+            console.error("DATA:", err.response?.data);
+        } else {
+            console.error(err);
+        }
+        return Promise.reject();
+    }
+}
+
 export async function editUser(req: EditUser) : Promise<void> {
     try {
+        console.log("editUser PAYLOAD:", JSON.stringify(req)); 
         const data = await instance.patch("/auth/editUser", req);
         if (data.status >= 200 && data.status < 300) {
             
@@ -308,7 +376,7 @@ export async function getStoreItems() : Promise<StoreItemResponse[]> {
     }
 }
 
-export async function buyStoreItem(id: number) : Promise<void> {
+export async function buyStoreItem(id: number) : Promise<UserData> {
     try {
         const data = await instance.post("/store/buy/" + id);
         if (data.status >= 200 && data.status < 300) {
@@ -1163,7 +1231,7 @@ export const buildTaskFormData = (task: ITarea): ITaskFormData => {
         description: task.descripcion,
         difficulty: normalizeTaskPriority(task.prioridad),
         taskType: task.tipo === "HABITO" ? "HABITO" : task.tipo == "UNICO" ? "UNICO" : "OBJETIVO" ,
-        idObjetivo: task.idObjetivo,
+        idObjetivo: typeof task.idObjetivo === "number" ? task.idObjetivo : undefined,
         habitFrequency: getTaskHabitFrequency(task),
         taskDate: getTaskDate(task)
     };
@@ -1279,7 +1347,8 @@ export const toggleTaskCompleted = (tasks: ITarea[], taskId: string): ITarea[] =
             return {
                 ...task,
                 estado: nextState,
-                fecha_actualizado: updatedAt
+                fecha_actualizado: updatedAt,
+                fecha_completado: nextState === "COMPLETE" ? (task.fecha_completado ?? updatedAt) : task.fecha_completado
             };
         }
 
@@ -1302,7 +1371,8 @@ export const toggleSubtaskCompleted = (tasks: ITarea[], taskId: string, subtaskI
         return {
             ...task,
             estado: nextSubtaskState,
-            fecha_actualizado: updatedAt
+            fecha_actualizado: updatedAt,
+            fecha_completado: nextSubtaskState === "COMPLETE" ? (task.fecha_completado ?? updatedAt) : task.fecha_completado
         };
     });
 
@@ -1319,7 +1389,11 @@ export const toggleSubtaskCompleted = (tasks: ITarea[], taskId: string, subtaskI
         return {
             ...task,
             estado: nextParentState,
-            fecha_actualizado: task.estado === nextParentState ? task.fecha_actualizado : updatedAt
+            fecha_actualizado: task.estado === nextParentState ? task.fecha_actualizado : updatedAt,
+            fecha_completado:
+                nextParentState === "COMPLETE"
+                    ? (task.fecha_completado ?? updatedAt)
+                    : task.fecha_completado
         };
     });
 }

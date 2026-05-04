@@ -87,9 +87,9 @@ export interface EditTask {
 }
 
 export interface EditUser {
-  uid: string,
-  nombreusu: string,
-  lang: string,
+  uid: number,
+  nombreusu?: string,
+  lang?: null,
   utcOffset: number
 }
 
@@ -147,4 +147,17 @@ export interface RevokeGroupInvit {
 export interface PassOwnershipGroup {
   gid: number,
   newOwnerUserId: number
+}
+
+export interface GoogleAndroidLoginRequest {
+  idToken: string;
+}
+
+export interface SetOauthRequest {
+  providerUid: string;
+  authProvider: string;
+}
+
+export interface DeleteOauthRequest {
+  authProvider: string;
 }
