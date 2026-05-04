@@ -8,6 +8,7 @@ import Task from "../../components/ui/Task";
 import Modal from "../../components/modales/TaskModal";
 import GroupSettingsModal from "../../components/modales/GroupSettingsModal";
 import CreateGroupModal from "../../components/modales/CreateGroupModal";
+import NotificationModal from "../../components/modales/NotificationModal";
 import type { IGroup, ITarea } from "../../types/Interfaces";
 import {
   addUserToGroup,
@@ -116,6 +117,11 @@ export default function Groups() {
   const [groupMembersMap, setGroupMembersMap] = useState<Record<number, MembersResponse[]>>({});
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [personalGroupId, setPersonalGroupId] = useState<number | null>(null);
+  const [rewardNotification, setRewardNotification] = useState<{ xp: number; ludiones: number } | null>(null);
+  const showRewardNotification = (xp: number, ludiones: number) => {
+    setRewardNotification(null);
+    window.setTimeout(() => setRewardNotification({ xp, ludiones }), 0);
+  };
 
   const toRenderableGroups = (userGroups: Array<{
     gid?: number;
@@ -184,6 +190,12 @@ export default function Groups() {
 
     void loadGroups();
   }, []);
+
+  useEffect(() => {
+    if (!rewardNotification) return;
+    const timeoutId = window.setTimeout(() => setRewardNotification(null), 2200);
+    return () => window.clearTimeout(timeoutId);
+  }, [rewardNotification]);
 
   useEffect(() => {
     if (groupToDelete.gid === -1) {
@@ -486,6 +498,7 @@ export default function Groups() {
 
     const subtasks = getTaskSubtasks(groupTasks, taskId);
     const willComplete = !isTaskCompleted(task);
+    const wasCompletedBefore = Boolean(task.fecha_completado);
 
     try {
         if (willComplete) {
@@ -507,6 +520,7 @@ export default function Groups() {
         console.error("Error al completar/descompletar tarea del grupo:", err);
     } finally {
         updateActiveGroupTasks((groupTasks) => toggleTaskCompleted(groupTasks, `${taskId}`));
+        if (willComplete && !wasCompletedBefore) showRewardNotification(task.recompensaXp ?? 0, task.recompensaLudion ?? 0);
     }
   };
 
@@ -514,6 +528,7 @@ export default function Groups() {
     const subtask = activeGroupData?.tasks.find((task) => task.id === subtaskId);
     const parentTask = activeGroupData?.tasks.find((task) => task.id === taskId);
     if (!subtask) return;
+    const wasCompletedBefore = Boolean(subtask.fecha_completado);
 
     try {
       if (isTaskCompleted(subtask)) {
@@ -533,6 +548,9 @@ export default function Groups() {
       console.error("Error al completar la subtarea del grupo:", completeError);
     } finally {
       updateActiveGroupTasks((groupTasks) => toggleSubtaskCompleted(groupTasks, `${taskId}`, `${subtaskId}`));
+      if (subtask && !isTaskCompleted(subtask) && !wasCompletedBefore) {
+        showRewardNotification(subtask.recompensaXp ?? 0, subtask.recompensaLudion ?? 0);
+      }
     }
   };
 
@@ -714,6 +732,11 @@ export default function Groups() {
   return (
     <div style={{ backgroundImage: `url(${bgImage})` }} className="relative flex min-h-screen flex-col gap-4 bg-cover bg-center font-['Space_Grotesk'] text-white">
       <Navbar />
+      {rewardNotification ? (
+        <div className="fixed bottom-4 right-4 z-60">
+          <NotificationModal xp={rewardNotification.xp} ludiones={rewardNotification.ludiones} />
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-1 gap-2 px-5 md:flex md:flex-row md:justify-center">
         <div className="flex w-full flex-col gap-2 md:w-1/3">
