@@ -835,7 +835,7 @@ class DatabaseDAOImpl : DatabaseDAO {
 
     override suspend fun adminGetAllUsers() : List<DatosSimpleUsuarios> {
         return suspendTransaction {
-            TablaUsuario.select(listOf(TablaUsuario.id, TablaUsuario.nombre, TablaUsuario.rol, TablaUsuario.nivel)).map {
+            TablaUsuario.select(listOf(TablaUsuario.id, TablaUsuario.nombre, TablaUsuario.rol, TablaUsuario.nivel, TablaUsuario.esta_confirmado)).map {
 
                 val rolFinal = if (it.get(TablaUsuario.rol) == UserRoles.ADMIN_USER){
                     "Admin"
@@ -848,6 +848,7 @@ class DatabaseDAOImpl : DatabaseDAO {
                     nombre = it.get(TablaUsuario.nombre),
                     rol = rolFinal,
                     nivel = it.get(TablaUsuario.nivel),
+                    confirmed = it.get(TablaUsuario.esta_confirmado) == 1
                 )
             }
         }

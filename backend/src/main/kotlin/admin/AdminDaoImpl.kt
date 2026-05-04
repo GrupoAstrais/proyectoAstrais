@@ -178,7 +178,8 @@ class AdminDaoImpl : AdminDao {
                     id = data.id.value,
                     nombre = data.nombre,
                     rol = if (data.rol == UserRoles.ADMIN_USER) {"Admin"} else {"User"},
-                    nivel = data.nivel
+                    nivel = data.nivel,
+                    confirmed = data.esta_confirmado == 1
                 )
             }else{
                 return null

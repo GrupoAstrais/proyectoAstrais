@@ -204,6 +204,7 @@
                             <th style="padding:1rem; text-align:left">Usuario</th>
                             <th style="padding:1rem; text-align:left">Rol</th>
                             <th style="padding:1rem; text-align:left">Nivel</th>
+                            <th style="padding:1rem; text-align:left">Confirmacion</th>
                             <th style="padding:1rem; text-align:right">Acciones</th>
                         </tr>
                     </thead>
@@ -446,6 +447,7 @@
     </main>
 
     <script src="/admin/constant.js"></script>
+    <script src="constant.js"></script>
     <script>
         if (!localStorage.getItem(STORAGE_ACCESS)) window.location.href = LOGIN_URL;
 
@@ -495,11 +497,13 @@
                 const res = await requestServerProtected(API.USERS, { method: 'POST' });
                 if (res.ok) {
                     const users = await res.json();
+                    console.log(users)
                     tbody.innerHTML = users.map(u => `
                         <tr>
                             <td style="padding:1rem; border-top:1px solid var(--border)">${u.nombre}</td>
                             <td style="padding:1rem; border-top:1px solid var(--border)">${u.rol}</td>
                             <td style="padding:1rem; border-top:1px solid var(--border)">${u.nivel}</td>
+                            <td style="padding:1rem; border-top:1px solid var(--border)">${u.confirmed ? "Confirmado" : "Sin confirmar"}</td>
                             <td style="padding:1rem; border-top:1px solid var(--border); text-align:right">
                                 <button class="btn btn-danger" onclick="deleteUser(${u.id})">Borrar</button>
                             </td>
