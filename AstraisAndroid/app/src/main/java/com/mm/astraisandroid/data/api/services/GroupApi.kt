@@ -16,7 +16,7 @@ import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 /**
- * Cliente HTTP para la API de grupos de Astrais.
+ * Cliente HTTP para la API de grupos.
  *
  * Encapsula todas las llamadas de red relacionadas con grupos: listado, creación,
  * edición, eliminación, gestión de miembros, sistema de invitaciones y auditoría.

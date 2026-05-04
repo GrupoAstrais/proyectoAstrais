@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 interface ButtonShowcaseProps {
-  variant: 'primary' | 'secondary' | 'reward';
+  variant: 'primary' | 'secondary' | 'tertiary';
   label: string;
 }
 
@@ -9,32 +9,32 @@ export function ButtonShowcase({ variant, label }: ButtonShowcaseProps) {
   const [state, setState] = useState<'default' | 'hover' | 'pressed' | 'disabled'>('default');
 
   const getButtonStyles = () => {
-    const baseStyles = "px-6 py-3 font-['Press_Start_2P'] text-xs transition-all duration-100 border-4 cursor-pointer select-none";
+    const baseStyles = "px-6 py-3 font-mono text-sm transition-all duration-150 rounded-lg cursor-pointer select-none";
     
     if (variant === 'primary') {
-      if (state === 'disabled') return `${baseStyles} bg-gray-400 border-gray-600 text-gray-600 cursor-not-allowed shadow-none`;
-      if (state === 'pressed') return `${baseStyles} bg-[#4752C4] border-[#1E1E2E] text-white shadow-none translate-y-1`;
-      if (state === 'hover') return `${baseStyles} bg-[#6D75FF] border-[#1E1E2E] text-white shadow-[6px_6px_0px_0px_rgba(30,30,46,1)]`;
-      return `${baseStyles} bg-[#5865F2] border-[#1E1E2E] text-white shadow-[4px_4px_0px_0px_rgba(30,30,46,1)]`;
+      if (state === 'disabled') return `${baseStyles} bg-[#6B7280] text-[#D1D5DB] cursor-not-allowed`;
+      if (state === 'pressed') return `${baseStyles} bg-[#7C3AED] text-white scale-95`;
+      if (state === 'hover') return `${baseStyles} bg-[#9B6CFF] text-white`;
+      return `${baseStyles} bg-[#8B5CF6] text-white`;
     }
     
     if (variant === 'secondary') {
-      if (state === 'disabled') return `${baseStyles} bg-gray-200 border-gray-400 text-gray-500 cursor-not-allowed shadow-none`;
-      if (state === 'pressed') return `${baseStyles} bg-[#C0B08C] border-[#1E1E2E] text-[#1E1E2E] shadow-none translate-y-1`;
-      if (state === 'hover') return `${baseStyles} bg-[#D4C4A8] border-[#1E1E2E] text-[#1E1E2E] shadow-[6px_6px_0px_0px_rgba(30,30,46,1)]`;
-      return `${baseStyles} bg-[#E8DCC4] border-[#1E1E2E] text-[#1E1E2E] shadow-[4px_4px_0px_0px_rgba(30,30,46,1)]`;
+      if (state === 'disabled') return `${baseStyles} bg-[#6B7280] text-[#D1D5DB] cursor-not-allowed`;
+      if (state === 'pressed') return `${baseStyles} bg-[#0284C7] text-white scale-95`;
+      if (state === 'hover') return `${baseStyles} bg-[#7DD3FC] text-[#0D1117]`;
+      return `${baseStyles} bg-[#38BDF8] text-[#0D1117]`;
     }
     
-    // reward
-    if (state === 'disabled') return `${baseStyles} bg-gray-300 border-gray-500 text-gray-600 cursor-not-allowed shadow-none`;
-    if (state === 'pressed') return `${baseStyles} bg-[#6D28D9] border-[#FFD700] text-white shadow-[0_0_12px_rgba(255,215,0,0.4)] translate-y-1`;
-    if (state === 'hover') return `${baseStyles} bg-[#9B6CFF] border-[#FFD700] text-white shadow-[0_0_20px_rgba(255,215,0,0.6),4px_4px_0px_0px_rgba(30,30,46,1)]`;
-    return `${baseStyles} bg-[#8B5CF6] border-[#FFD700] text-white shadow-[0_0_16px_rgba(255,215,0,0.5),4px_4px_0px_0px_rgba(30,30,46,1)]`;
+    // tertiary
+    if (state === 'disabled') return `${baseStyles} bg-transparent text-[#6B7280] cursor-not-allowed border border-[#6B7280]`;
+    if (state === 'pressed') return `${baseStyles} bg-[#10B981]/20 text-[#10B981] border border-[#10B981] scale-95`;
+    if (state === 'hover') return `${baseStyles} bg-[#10B981]/10 text-[#10B981] border border-[#10B981]`;
+    return `${baseStyles} bg-transparent text-[#10B981] border border-[#10B981]`;
   };
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex justify-center p-8 bg-gradient-to-br from-[#0F3547] to-[#1E4A63] rounded">
+      <div className="flex justify-center p-8 bg-[#0D1117] rounded-lg">
         <button className={getButtonStyles()}>
           {label}
         </button>
@@ -42,25 +42,25 @@ export function ButtonShowcase({ variant, label }: ButtonShowcaseProps) {
       <div className="flex gap-2 justify-center">
         <button 
           onClick={() => setState('default')}
-          className={`px-3 py-1 text-xs rounded ${state === 'default' ? 'bg-[#5865F2] text-white' : 'bg-gray-200'}`}
+          className={`px-3 py-1 text-xs rounded ${state === 'default' ? 'bg-[#8B5CF6] text-white' : 'bg-[#1A1D2D] text-[#D1D5DB]'}`}
         >
           Default
         </button>
         <button 
           onClick={() => setState('hover')}
-          className={`px-3 py-1 text-xs rounded ${state === 'hover' ? 'bg-[#5865F2] text-white' : 'bg-gray-200'}`}
+          className={`px-3 py-1 text-xs rounded ${state === 'hover' ? 'bg-[#8B5CF6] text-white' : 'bg-[#1A1D2D] text-[#D1D5DB]'}`}
         >
           Hover
         </button>
         <button 
           onClick={() => setState('pressed')}
-          className={`px-3 py-1 text-xs rounded ${state === 'pressed' ? 'bg-[#5865F2] text-white' : 'bg-gray-200'}`}
+          className={`px-3 py-1 text-xs rounded ${state === 'pressed' ? 'bg-[#8B5CF6] text-white' : 'bg-[#1A1D2D] text-[#D1D5DB]'}`}
         >
           Pressed
         </button>
         <button 
           onClick={() => setState('disabled')}
-          className={`px-3 py-1 text-xs rounded ${state === 'disabled' ? 'bg-[#5865F2] text-white' : 'bg-gray-200'}`}
+          className={`px-3 py-1 text-xs rounded ${state === 'disabled' ? 'bg-[#8B5CF6] text-white' : 'bg-[#1A1D2D] text-[#D1D5DB]'}`}
         >
           Disabled
         </button>
