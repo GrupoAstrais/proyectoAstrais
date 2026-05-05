@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
+import { useNavigate } from 'react-router';
 import bgImage from '../../assets/homeScreenBack.jpg';
 import Navbar from '../../components/layout/Navbar';
 import Achiv from '../../components/ui/Achiv';
@@ -259,6 +260,7 @@ const getFriendStatusClassName = (status: FriendStatus) => {
 };
 
 export default function Profile() {
+  const navigate = useNavigate();
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [profile, setProfile] = useState<ProfileState>(initialProfile);
   const [settings, setSettings] = useState<ProfileSettingsState>(initialSettings);
@@ -371,7 +373,7 @@ export default function Profile() {
 
       try {
         const utcOffset = new Date().getTimezoneOffset() / -60 + 0.0;
-        await editUser({ uid: userId!, nombreusu: cleanedName, utcOffset });
+        await editUser({ uid: userId!, nombreusu: cleanedName, lang: null, utcOffset });
         setProfile((currentProfile) => ({
           ...currentProfile,
           name: cleanedName,
@@ -408,6 +410,23 @@ export default function Profile() {
         setStatusMessage('No se pudieron guardar los ajustes.');
       }
     })();
+  };
+
+  const handleResetLogin = async () => {
+    try {
+      if (!emailDraft.trim() || !passwordDraft.trim()) {
+        setStatusMessage('Para restablecer login debes completar email y contrasena.');
+        return;
+      }
+
+      await setEmailLogin({ email: emailDraft.trim(), passwd: passwordDraft.trim() });
+      setStatusMessage('Login restablecido correctamente.');
+      setEmailDraft('');
+      setPasswordDraft('');
+      setDraftSettings(initialSettings);
+    } catch {
+      setStatusMessage('No se pudo restablecer el login.');
+    }
   };
 
   const profileUrl =
@@ -457,6 +476,16 @@ export default function Profile() {
 
       setShareFeedback('No pude abrir el menu de compartir.');
     }
+  };
+
+  const clearAuthTokens = () => {
+    localStorage.removeItem('jwtToken');
+    localStorage.removeItem('jwtRefreshToken');
+  };
+
+  const handleLogout = () => {
+    clearAuthTokens();
+    navigate('/login', { replace: true });
   };
 
   return (
@@ -706,6 +735,8 @@ export default function Profile() {
             </div>
           </SurfaceCard>
         </div>
+
+
       </section>
 
       <ProfileModal
@@ -788,12 +819,13 @@ export default function Profile() {
         footer={
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
               <button
-                type="submit"
-                form="profile-settings-form"
+                type="button"
                 onClick={async () => {
                   try {
                     await deleteUser();
+                    clearAuthTokens();
                     setStatusMessage('Cuenta eliminada correctamente.');
+                    navigate('/login', { replace: true });
                   } catch {
                     setStatusMessage('No se pudo eliminar la cuenta.');
                   }
@@ -805,7 +837,9 @@ export default function Profile() {
             <div className='flex flex-row gap-3'>
               <button
                 type="button"
-                onClick={() => setDraftSettings(initialSettings)}
+                onClick={() => {
+                  void handleResetLogin();
+                }}
                 className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-white transition-colors duration-200 hover:bg-white/15"
               >
                 Restablecer
@@ -924,6 +958,15 @@ export default function Profile() {
                 placeholder="********"
               />
             </label>
+                    <div className="mt-2 flex justify-center">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="rounded-2xl border border-white/20 bg-white/10 px-6 py-3 font-semibold text-white transition-colors duration-200 hover:bg-white/15"
+            >
+              Salir
+            </button>
+        </div>
           </div>
         </form>
       </ProfileModal>

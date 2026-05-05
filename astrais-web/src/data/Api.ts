@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { AddUserToGroup, CreateGroup, CreateTask, DeleteOauthRequest, EditGroup, EditTask, EditUser, EventosGrupos, GoogleAndroidLoginRequest, GroupInvitacion, GroupInvitacionRespuesta, LoginRequest, MembersResponse, PassOwnershipGroup, RegisterRequest, RevokeGroupInvit, SetEmailLogin, SetMemberRole, SetOauthRequest, UserData, UserGroups, UserGroupsResponse, UserTasksResponse, VerifyRequest } from '../types/LoginRequest';
+import type { AddUserToGroup, CreateGroup, CreateTask, DeleteOauthRequest, EditGroup, EditTask, EditUser, EventosGrupos, GroupInvitacion, GroupInvitacionRespuesta, LoginRequest, MembersResponse, PassOwnershipGroup, RegisterRequest, RevokeGroupInvit, SetEmailLogin, SetMemberRole, SetOauthRequest, UserData, UserGroups, UserGroupsResponse, UserTasksResponse, VerifyRequest } from '../types/LoginRequest';
 import type { IGroup, ITarea } from '../types/Interfaces';
 import { applyThemeColors } from '../styles/theme';
 
@@ -745,9 +745,28 @@ export async function groupInvitacion(req: GroupInvitacion) : Promise<GroupInvit
         const data = await instance.post("/groups/invites", req);
         if (data.status >= 200 && data.status < 300) {
             console.error("Successful crear invitacion ");
+            const payload = data.data as unknown;
 
-            
-            return data.data["inviteUrl"] as GroupInvitacionRespuesta;
+            if (payload && typeof payload === "object") {
+                const obj = payload as Partial<GroupInvitacionRespuesta>;
+                return {
+                    code: typeof obj.code === "string" ? obj.code : "",
+                    inviteUrl: typeof obj.inviteUrl === "string" ? obj.inviteUrl : "",
+                    expiresAt: typeof obj.expiresAt === "string" ? obj.expiresAt : null,
+                    maxUses: typeof obj.maxUses === "number" ? obj.maxUses : 10,
+                    usesCount: typeof obj.usesCount === "number" ? obj.usesCount : 0,
+                    revokedAt: typeof obj.revokedAt === "string" ? obj.revokedAt : null
+                };
+            }
+
+            return {
+                code: "",
+                inviteUrl: "",
+                expiresAt: null,
+                maxUses: 10,
+                usesCount: 0,
+                revokedAt: null
+            };
         } else {
             console.error("Error en el log! " + data.data["error"]);
             return Promise.reject();
@@ -768,8 +787,35 @@ export async function groupInvitacionLista(gid: number) : Promise<GroupInvitacio
         const data = await instance.get("/groups/"+gid+"/invites");
         if (data.status >= 200 && data.status < 300) {
             console.error("Successful lista  invitaciones! ");
+            const payload = data.data as unknown;
 
-            return data.data["inviteUrl"] as GroupInvitacionRespuesta[];
+            const mapInvite = (item: unknown): GroupInvitacionRespuesta => {
+                const invite = (item && typeof item === "object" ? item : {}) as Partial<GroupInvitacionRespuesta>;
+                return {
+                    code: typeof invite.code === "string" ? invite.code : "",
+                    inviteUrl: typeof invite.inviteUrl === "string" ? invite.inviteUrl : "",
+                    expiresAt: typeof invite.expiresAt === "string" ? invite.expiresAt : null,
+                    maxUses: typeof invite.maxUses === "number" ? invite.maxUses : 10,
+                    usesCount: typeof invite.usesCount === "number" ? invite.usesCount : 0,
+                    revokedAt: typeof invite.revokedAt === "string" ? invite.revokedAt : null
+                };
+            };
+
+            if (Array.isArray(payload)) {
+                return payload.map(mapInvite);
+            }
+
+            if (payload && typeof payload === "object") {
+                const obj = payload as Record<string, unknown>;
+                const candidates = [obj.invites, obj.inviteList, obj.items];
+                const firstArray = candidates.find((candidate) => Array.isArray(candidate)) as unknown[] | undefined;
+
+                if (firstArray) {
+                    return firstArray.map(mapInvite);
+                }
+            }
+
+            return [];
         } else {
             console.error("Error en el log! " + data.data["error"]);
             return Promise.reject();
@@ -1075,14 +1121,26 @@ const mapUiFrequencyToServer = (frequency: THabitFrequency | null): THabitFreque
 
 export const mapServerFrequencyToUi = (frequency?: string): THabitFrequency | null => {
     switch (frequency) {
+        case "daily":
+            return "daily";
+        case "weekly":
+            return "weekly";
+        case "monthly":
+            return "monthly";
+        case "hourly":
+            return "hourly";
+        case "yearly":
+            return "yearly";
         case "WEEKLY":
             return "weekly";
         case "MONTHLY":
             return "monthly";
         case "DAILY":
-        case "HOURLY":
-        case "YEARLY":
             return "daily";
+        case "HOURLY":
+            return "hourly";
+        case "YEARLY":
+            return "yearly";
         default:
             return null;
     }
@@ -1179,6 +1237,10 @@ export const getTaskHabitFrequency = (task: ITarea): THabitFrequency | null => {
 
     // Локально созданная задача — массив [numeroFrecuencia, frequency]
     if (typeof task.extraHabito[1] === "string") {
+        const localFrequency = task.extraHabito[1].toLowerCase();
+        if (localFrequency === "daily" || localFrequency === "weekly" || localFrequency === "monthly" || localFrequency === "hourly" || localFrequency === "yearly") {
+            return localFrequency as THabitFrequency;
+        }
         return mapServerFrequencyToUi(task.extraHabito[1]);
     }
 
@@ -1305,7 +1367,16 @@ export const createLocalTask = (
         tipo: taskType,
         prioridad: priority,
         extraUnico: taskType === "UNICO" ? { fechaLimite: formatTaskDateAsIso(data.taskDate) } : undefined,
-        extraHabito: taskType === "HABITO" ? [data.habitFrequency === 'daily' ? 1 : data.habitFrequency === 'monthly' ? 30 : 7, data.habitFrequency as "HOURLY" | "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY" | undefined] : undefined,
+        extraHabito: taskType === "HABITO"
+            ? [
+                data.habitFrequency === "monthly"
+                    ? 30
+                    : data.habitFrequency === "weekly"
+                        ? 7
+                        : 1,
+                mapUiFrequencyToServer(data.habitFrequency) as "HOURLY" | "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY"
+            ]
+            : undefined,
         idObjetivo: options.idObjetivo,
         estado: options.estado ?? "ACTIVE",
         recompensaXp: getTaskXpReward(priority),

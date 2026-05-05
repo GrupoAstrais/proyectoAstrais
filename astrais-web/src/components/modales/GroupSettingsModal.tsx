@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react';
-import type { MembersResponse } from '../../types/LoginRequest';
+import { useEffect, useState } from 'react';
+import type { GroupInvitacionRespuesta, MembersResponse } from '../../types/LoginRequest';
+import { API_BASE_URL } from '../../data/Api';
 
 interface GroupSettingsModalProps {
     isOpen: boolean;
@@ -25,7 +26,9 @@ interface GroupSettingsModalProps {
     members: MembersResponse[];
     onAddMemberByUid: (gid: number, uid: number) => Promise<void>;
     onRemoveMember: (gid: number, uid: number) => Promise<void>;
-    onGenerateInviteLink: (gid: number) => Promise<string>;
+    onGenerateInviteLink: (gid: number) => Promise<GroupInvitacionRespuesta>;
+    onLoadInvites: (gid: number) => Promise<GroupInvitacionRespuesta[]>;
+    onRevokeInvite: (gid: number, code: string) => Promise<void>;
     onSetMemberRole: (gid: number, uid: number, role: number) => Promise<void>;
     onPassOwnership: (gid: number, newOwnerUserId: number) => Promise<void>;
 }
@@ -41,6 +44,8 @@ export default function GroupSettingsModal({
     onAddMemberByUid,
     onRemoveMember,
     onGenerateInviteLink,
+    onLoadInvites,
+    onRevokeInvite,
     onSetMemberRole,
     onPassOwnership
 }: GroupSettingsModalProps) {
@@ -49,11 +54,12 @@ export default function GroupSettingsModal({
     const [description, setDescription] = useState<string>(initialData.description);
     const [photo, setPhoto] = useState<File | null>(null);
     const [memberUidInput, setMemberUidInput] = useState<string>('');
-    const [inviteLink, setInviteLink] = useState<string>('');
+    const [latestInviteCode, setLatestInviteCode] = useState<string>('');
+    const [latestInviteLink, setLatestInviteLink] = useState<string>('');
+    const [latestLegacyRedirectLink, setLatestLegacyRedirectLink] = useState<string>('');
+    const [invites, setInvites] = useState<GroupInvitacionRespuesta[]>([]);
     const [isSubmittingAction, setIsSubmittingAction] = useState<boolean>(false);
     const [actionError, setActionError] = useState<string | null>(null);
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
     const role = initialData.role;
 
     useEffect(() => {
@@ -63,21 +69,12 @@ export default function GroupSettingsModal({
         setDescription(initialData.description);
         setPhoto(null);
         setMemberUidInput('');
-        setInviteLink('');
+        setLatestInviteCode('');
+        setLatestInviteLink('');
+        setLatestLegacyRedirectLink('');
+        setInvites([]);
         setActionError(null);
-        setPreviewUrl(null);
     }, [initialData, isOpen]);
-
-    if (!isOpen) return null;
-
-    const handlePhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setPhoto(file);
-            const url = URL.createObjectURL(file);
-            setPreviewUrl(url);
-        }
-    };
 
     const roleLabel = (roleId: number) => {
         if (roleId === 2) return 'Owner';
@@ -110,10 +107,6 @@ export default function GroupSettingsModal({
         });
     };
 
-    const triggerFileInput = () => {
-        fileInputRef.current?.click();
-    };
-
     const handleAddMemberByUid = async () => {
         const trimmedUid = memberUidInput.trim();
         const parsedUid = Number(trimmedUid);
@@ -127,12 +120,53 @@ export default function GroupSettingsModal({
         });
     };
 
-    const handleGenerateInvite = async () => {
+    const buildLegacyRedirectUrl = (code: string): string => {
+        if (!code.trim()) {
+            return '';
+        }
+        return `${API_BASE_URL}/groups/redirectInvite?code=${encodeURIComponent(code.trim())}`;
+    };
+
+    const handleGenerateInviteCode = async () => {
         await withActionGuard(async () => {
-            const newInviteLink = await onGenerateInviteLink(gid);
-            setInviteLink(newInviteLink);
+            const newInvite = await onGenerateInviteLink(gid);
+            setLatestInviteCode(newInvite.code ?? '');
+            setLatestLegacyRedirectLink(buildLegacyRedirectUrl(newInvite.code ?? ''));
+            await loadInvites();
         });
     };
+
+    const handleGenerateInviteLink = async () => {
+        await withActionGuard(async () => {
+            const newInvite = await onGenerateInviteLink(gid);
+            setLatestInviteLink(newInvite.inviteUrl ?? '');
+            setLatestLegacyRedirectLink(buildLegacyRedirectUrl(newInvite.code ?? ''));
+            await loadInvites();
+        });
+    };
+
+    const getInviteStatus = (invite: GroupInvitacionRespuesta): 'Activa' | 'Revocada' | 'Expirada' => {
+        if (invite.revokedAt) return 'Revocada';
+        if (invite.expiresAt && new Date(invite.expiresAt).getTime() < Date.now()) return 'Expirada';
+        return 'Activa';
+    };
+
+    const loadInvites = async () => {
+        await withActionGuard(async () => {
+            const list = await onLoadInvites(gid);
+            setInvites(Array.isArray(list) ? list : []);
+        });
+    };
+
+    useEffect(() => {
+        if (!isOpen || !canManageMembers) {
+            return;
+        }
+
+        void loadInvites();
+    }, [isOpen, canManageMembers]);
+
+    if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 font-['Space_Grotesk']">
@@ -149,38 +183,6 @@ export default function GroupSettingsModal({
                     </div>
 
                     <div className="space-y-6">
-                        {/* 
-                        <div className="flex flex-col items-center">
-                            <div
-                                className="relative cursor-pointer group"
-                                onClick={triggerFileInput}
-                            >
-                                {previewUrl ? (
-                                    <img
-                                        src={previewUrl}
-                                        alt="Preview"
-                                        className="w-32 h-32 rounded-full object-cover border-4 border-accent-beige-300"
-                                    />
-                                ) : (
-                                    <div className="w-32 h-32 rounded-full bg-gray-700 flex items-center justify-center border-4 border-dashed border-accent-beige-300">
-                                        <span className="text-gray-400 text-sm">Foto</span>
-                                    </div>
-                                )}
-                                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <span className="text-white text-xs">Cambiar</span>
-                                </div>
-                            </div>
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={handlePhotoChange}
-                                accept="image/*"
-                                className="hidden"
-                            />
-                            <p className="mt-2 text-gray-400 text-sm">Haga clic para cambiar la foto</p>
-                        </div>
-                        */}
-
                         <div>
                             <label className="block text-gray-300 mb-2">Nombre del grupo</label>
                             <input
@@ -290,22 +292,106 @@ export default function GroupSettingsModal({
                             <div className="mt-3 flex flex-col gap-2">
                                 <div className="flex gap-2">
                                     <button
-                                        onClick={() => void handleGenerateInvite()}
+                                        onClick={() => void handleGenerateInviteCode()}
                                         disabled={!canManageMembers || isSubmittingAction}
                                         className="bg-accent-beige-300 text-black px-4 py-2 rounded-md font-medium hover:bg-accent-beige-400 transition-colors disabled:opacity-60"
                                     >
-                                        Generar enlace invitacion
+                                        Generar codigo
                                     </button>
-                                    {inviteLink && (
-                                        <input
-                                            type="text"
-                                            value={inviteLink}
-                                            readOnly
-                                            className="grow bg-gray-800 border border-gray-700 rounded-md px-4 py-2 text-white"
-                                        />
-                                    )}
+                                    <button
+                                        onClick={() => void handleGenerateInviteLink()}
+                                        disabled={!canManageMembers || isSubmittingAction}
+                                        className="bg-accent-beige-300 text-black px-4 py-2 rounded-md font-medium hover:bg-accent-beige-400 transition-colors disabled:opacity-60"
+                                    >
+                                        Generar enlace
+                                    </button>
+                                    <button
+                                        onClick={() => void loadInvites()}
+                                        disabled={!canManageMembers || isSubmittingAction}
+                                        className="bg-gray-700 text-white px-4 py-2 rounded-md font-medium hover:bg-gray-600 transition-colors disabled:opacity-60"
+                                    >
+                                        Recargar invitaciones
+                                    </button>
                                 </div>
                             </div>
+
+                            {(latestInviteCode || latestInviteLink || latestLegacyRedirectLink) && (
+                                <div className="mt-3 grid grid-cols-1 gap-2 rounded-md border border-gray-700 bg-gray-900/60 p-3">
+                                    <p className="text-sm text-gray-300">Ultima invitacion generada</p>
+                                    {latestInviteCode ? (
+                                        <input
+                                            type="text"
+                                            value={`Codigo: ${latestInviteCode}`}
+                                            readOnly
+                                            className="w-full bg-gray-800 border border-gray-700 rounded-md px-4 py-2 text-white"
+                                        />
+                                    ) : null}
+                                    {latestInviteLink ? (
+                                        <input
+                                            type="text"
+                                            value={latestInviteLink}
+                                            readOnly
+                                            className="w-full bg-gray-800 border border-gray-700 rounded-md px-4 py-2 text-white"
+                                        />
+                                    ) : null}
+                                    {latestLegacyRedirectLink ? (
+                                        <input
+                                            type="text"
+                                            value={latestLegacyRedirectLink}
+                                            readOnly
+                                            className="w-full bg-gray-800 border border-gray-700 rounded-md px-4 py-2 text-white"
+                                        />
+                                    ) : null}
+                                </div>
+                            )}
+
+                            {canManageMembers && (
+                                <div className="mt-3 max-h-56 overflow-y-auto rounded-md border border-gray-700 bg-gray-900/45 p-3">
+                                    <p className="mb-2 text-sm font-semibold text-white">Invitaciones del grupo</p>
+                                    {invites.length === 0 ? (
+                                        <p className="text-sm text-gray-400">No hay invitaciones registradas.</p>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            {invites.map((invite) => {
+                                                const status = getInviteStatus(invite);
+                                                const canRevoke = status === 'Activa';
+
+                                                return (
+                                                    <div key={`${invite.code}-${invite.inviteUrl}`} className="rounded border border-gray-700 bg-gray-800/70 p-2">
+                                                        <p className="text-sm text-white">Codigo: {invite.code}</p>
+                                                        <p className="text-xs text-gray-300 break-all">{invite.inviteUrl}</p>
+                                                        <p className="text-xs text-gray-400">
+                                                            Estado: {status} · Usos: {invite.usesCount}/{invite.maxUses}
+                                                        </p>
+                                                        <p className="text-xs text-gray-400">
+                                                            Expira: {invite.expiresAt ? new Date(invite.expiresAt).toLocaleString() : 'Sin caducidad'}
+                                                        </p>
+                                                        {invite.code ? (
+                                                            <p className="text-xs text-gray-400 break-all">
+                                                                Redireccion legado: {buildLegacyRedirectUrl(invite.code)}
+                                                            </p>
+                                                        ) : null}
+                                                        {canRevoke ? (
+                                                            <button
+                                                                onClick={() => {
+                                                                    void withActionGuard(async () => {
+                                                                        await onRevokeInvite(gid, invite.code);
+                                                                        await loadInvites();
+                                                                    });
+                                                                }}
+                                                                disabled={isSubmittingAction}
+                                                                className="mt-2 rounded bg-red-500/70 px-3 py-1 text-xs font-medium text-white hover:bg-red-500 disabled:opacity-60"
+                                                            >
+                                                                Revocar
+                                                            </button>
+                                                        ) : null}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             {actionError && <p className="mt-2 text-sm text-red-300">{actionError}</p>}
                         </div>
