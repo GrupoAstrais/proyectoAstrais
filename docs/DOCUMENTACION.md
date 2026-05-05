@@ -293,7 +293,7 @@ Desarrollar una solución multiplataforma (app móvil Android + web) que mejore 
 - **A2: Sesión recordada.** Si existe `AccessToken` válido no expirado, el cliente Android lo renueva automáticamente mediante `RefreshToken` sin mostrar login. En web se mantiene la sesión abierta.
 - **A3: Acceso como invitado.** Usuario elige "Continuar sin cuenta". Sistema crea perfil temporal con funcionalidades limitadas y persistencia local (Room).
 
-![Diagrama de secuencia UML - Flujo de autenticación](diagrams/flow-diagrams/auth-flow.png)
+![Diagrama de secuencia UML - Flujo de autenticación](diagrams/flujo_auth.png)
 
 ### UC-02: Creación y gestión de tareas
 
@@ -754,7 +754,7 @@ Se documentaron los componentes usando el estilo Glassmorphism.
 
 ### 10.4. Mapa de navegación 
 
-![Mapa de navegación - App Android](diagrams/navigation-map.png)
+![Mapa de navegación - App Android](diagrams/navigation-map.html)
 
 ---
 
