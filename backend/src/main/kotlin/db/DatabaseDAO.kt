@@ -34,7 +34,8 @@ data class DatosSimpleUsuarios(
     val id: Int,
     val nombre: String,
     val rol: String,
-    val nivel: Int
+    val nivel: Int,
+    val confirmed : Boolean
 )
 
 @Serializable

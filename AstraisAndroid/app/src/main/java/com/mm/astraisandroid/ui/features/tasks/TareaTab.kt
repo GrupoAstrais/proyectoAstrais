@@ -1,6 +1,10 @@
 package com.mm.astraisandroid.ui.features.tasks
 
+
+import com.mm.astraisandroid.R
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,26 +18,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mm.astraisandroid.ui.components.AstraisScreenHeader
+import com.mm.astraisandroid.ui.theme.Gray300
+import com.mm.astraisandroid.ui.theme.Gray700
 
-/**
- * Pantalla principal de listado de tareas.
- *
- * Gestiona la visualización de tareas pendientes y completadas, permite filtrar
- * por categoría y expandir objetivos para ver sus subtareas. Se integra con
- * [TaskViewModel] para obtener el estado reactivo de la pantalla.
- *
- * @param viewModel ViewModel que expone el estado y las operaciones de tareas.
- * @param onTaskCompleted Callback invocado cuando una tarea se marca como completada.
- */
 @Composable
 fun TasksTab(viewModel: TaskViewModel = hiltViewModel(), onTaskCompleted: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -60,30 +58,40 @@ fun TasksTab(viewModel: TaskViewModel = hiltViewModel(), onTaskCompleted: () -> 
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            AstraisScreenHeader("Mis Tareas")
+            AstraisScreenHeader(stringResource(R.string.task_my_tasks_title))
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(44.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color.White.copy(alpha = 0.08f))
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.3f))
+                    .border(
+                        width = 1.dp,
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color.White.copy(alpha = 0.12f),
+                                Color.White.copy(alpha = 0.04f)
+                            )
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    )
                     .padding(4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TabButton("Pendientes", !state.isShowingCompleted, Modifier.weight(1f)) { viewModel.toggleShowingCompleted(false) }
-                TabButton("Completadas", state.isShowingCompleted, Modifier.weight(1f)) { viewModel.toggleShowingCompleted(true) }
+                GlassTabButton(stringResource(R.string.task_tab_pending), !state.isShowingCompleted, Modifier.weight(1f)) { viewModel.toggleShowingCompleted(false) }
+                GlassTabButton(stringResource(R.string.task_tab_completed), state.isShowingCompleted, Modifier.weight(1f)) { viewModel.toggleShowingCompleted(true) }
             }
 
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 val categorias = listOf(
                     "ALL" to "Todas",
-                    "UNICO" to "Únicas",
-                    "HABITO" to "Hábitos",
+                    "UNICO" to "Unicas",
+                    "HABITO" to "Habitos",
                     "OBJETIVO" to "Objetivos"
                 )
                 items(categorias) { (key, label) ->
-                    CategoryFilterChip(
+                    GlassCategoryChip(
                         text = label,
                         isSelected = state.selectedCategory == key,
                         onClick = { viewModel.setCategory(key) }
@@ -110,17 +118,15 @@ fun TasksTab(viewModel: TaskViewModel = hiltViewModel(), onTaskCompleted: () -> 
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = if (!state.isShowingCompleted) "Todo al día" else "Aún no hay tareas",
+                    text = if (!state.isShowingCompleted) stringResource(R.string.task_all_caught_up) else stringResource(R.string.task_no_tasks_yet),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Monospace
+                    fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = if (!state.isShowingCompleted) "No tienes tareas pendientes en esta categoría." else "No has completado tareas en esta categoría.",
+                    text = if (!state.isShowingCompleted) stringResource(R.string.task_no_pending_category) else stringResource(R.string.task_no_completed_category),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                     fontSize = 14.sp,
-                    fontFamily = FontFamily.Monospace,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp)
                 )
@@ -151,6 +157,11 @@ fun TasksTab(viewModel: TaskViewModel = hiltViewModel(), onTaskCompleted: () -> 
                             ) { onTaskCompleted() }
                         },
                         onAddSubtask = { viewModel.openCreateDialog(parentId = task.id) },
+                        onEditSubtask = { sub -> taskToEdit = sub },
+                        onDeleteSubtask = { sub ->
+                            val gid = state.personalGid ?: -1
+                            viewModel.eliminarTarea(sub.id, gid)
+                        },
                         onEdit = { taskToEdit = task },
                         onDelete = {
                             val gid = state.personalGid ?: -1
@@ -175,65 +186,74 @@ fun TasksTab(viewModel: TaskViewModel = hiltViewModel(), onTaskCompleted: () -> 
     }
 }
 
-/**
- * Botón de pestaña usado para alternar entre "Pendientes" y "Completadas".
- *
- * @param text Etiqueta visible del botón.
- * @param isSelected `true` si esta pestaña está activa.
- * @param modifier Modificador de Compose para ajustar el tamaño o posición.
- * @param onClick Acción al pulsar el botón.
- */
 @Composable
-fun TabButton(text: String, isSelected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun GlassTabButton(text: String, isSelected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val animatedBg by animateColorAsState(
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f) else Color.Transparent,
+        label = "tabBg"
+    )
+    val animatedBorder by animateColorAsState(
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else Color.Transparent,
+        label = "tabBorder"
+    )
+    val animatedTextColor by animateColorAsState(
+        targetValue = if (isSelected) Color.White else Color.White.copy(alpha = 0.5f),
+        label = "tabText"
+    )
+
     Box(
         modifier = modifier
             .fillMaxHeight()
             .clip(RoundedCornerShape(8.dp))
-            .background(if (isSelected) Color.White.copy(alpha = 0.15f) else Color.Transparent)
+            .background(animatedBg)
+            .then(
+                if (isSelected) Modifier.border(1.dp, animatedBorder, RoundedCornerShape(8.dp)) else Modifier
+            )
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            color = if (isSelected) Color.White else Color.White.copy(alpha = 0.5f),
+            color = animatedTextColor,
             fontSize = 14.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            fontFamily = FontFamily.Monospace
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
         )
     }
 }
 
-/**
- * Chip de filtrado por categoría de tarea (Todas, Únicas, Hábitos, Objetivos).
- *
- * @param text Etiqueta visible del chip.
- * @param isSelected `true` si esta categoría está seleccionada como filtro activo.
- * @param onClick Acción al pulsar el chip.
- */
 @Composable
-fun CategoryFilterChip(
+fun GlassCategoryChip(
     text: String,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
+    val animatedBg by animateColorAsState(
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surface.copy(alpha = 0.2f),
+        label = "chipBg"
+    )
+    val animatedBorder by animateColorAsState(
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.1f),
+        label = "chipBorder"
+    )
+    val animatedTextColor by animateColorAsState(
+        targetValue = if (isSelected) Color.White else Gray300,
+        label = "chipText"
+    )
+
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(
-                if (isSelected) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            )
+            .background(animatedBg)
+            .border(1.dp, animatedBorder, RoundedCornerShape(20.dp))
             .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            color = if (isSelected) MaterialTheme.colorScheme.onPrimary
-            else MaterialTheme.colorScheme.onSurfaceVariant,
+            color = animatedTextColor,
             fontSize = 13.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = FontFamily.Monospace
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
         )
     }
 }

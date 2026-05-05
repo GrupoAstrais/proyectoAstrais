@@ -9,6 +9,7 @@ import Task from "../../components/ui/Task";
 import Achiv from "../../components/ui/Achiv";
 import Modal from "../../components/modales/TaskModal";
 import Pet from "../../components/ui/Pet";
+import NotificationModal from "../../components/modales/NotificationModal";
 import {
   buildCreateTaskRequest,
   buildEditTaskRequest,
@@ -32,11 +33,11 @@ import {
   type ITaskFormData
 } from "../../data/Api";
 
-const normalizeObjectiveId = (idObjetivo?: number): number | undefined => {
+const normalizeObjectiveId = (idObjetivo?: number | null): number | undefined => {
   return typeof idObjetivo === "number" && idObjetivo >= 0 ? idObjetivo : undefined;
 };
 
-const normalizeTaskFormData = (data: ITaskFormData, fallbackObjetivoId?: number): ITaskFormData => ({
+const normalizeTaskFormData = (data: ITaskFormData, fallbackObjetivoId?: number | null): ITaskFormData => ({
   ...data,
   idObjetivo: normalizeObjectiveId(data.idObjetivo) ?? normalizeObjectiveId(fallbackObjetivoId)
 });
@@ -50,6 +51,11 @@ export default function Home() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [initialDataModal, setInitialDataModal] = useState<ITarea | null>(null);
+  const [rewardNotification, setRewardNotification] = useState<{ xp: number; ludiones: number } | null>(null);
+  const showRewardNotification = (xp: number, ludiones: number) => {
+    setRewardNotification(null);
+    window.setTimeout(() => setRewardNotification({ xp, ludiones }), 0);
+  };
 
   useEffect(() => {
     const loadTasks = async () => {
@@ -73,6 +79,12 @@ export default function Home() {
 
     void loadTasks();
   }, []);
+
+  useEffect(() => {
+    if (!rewardNotification) return;
+    const timeoutId = window.setTimeout(() => setRewardNotification(null), 2200);
+    return () => window.clearTimeout(timeoutId);
+  }, [rewardNotification]);
 
   const closeModalHandle = () => {
     setInitialDataModal(null);
@@ -171,6 +183,7 @@ export default function Home() {
 
     const subtasks = getTaskSubtasks(tasks, taskId);
     const willComplete = !isTaskCompleted(task);
+    const wasCompletedBefore = Boolean(task.fecha_completado);
 
     try {
         if (willComplete) {
@@ -194,6 +207,7 @@ export default function Home() {
         console.error("Error al completar/descompletar tarea:", err);
     } finally {
         setTasks((prev) => toggleTaskCompleted(prev, `${taskId}`));
+        if (willComplete && !wasCompletedBefore) showRewardNotification(task.recompensaXp ?? 0, task.recompensaLudion ?? 0);
     }
   };
 
@@ -201,6 +215,7 @@ export default function Home() {
     const subtask = tasks.find((currentTask) => currentTask.id === subtaskId);
     const parentTask = tasks.find((currentTask) => currentTask.id === taskId);
     if (!subtask) return;
+    const wasCompletedBefore = Boolean(subtask.fecha_completado);
 
     try {
       if (isTaskCompleted(subtask)) {
@@ -220,10 +235,13 @@ export default function Home() {
       console.error("Error al completar la subtarea:", completeError);
     } finally {
       setTasks((prevTasks) => toggleSubtaskCompleted(prevTasks, `${taskId}`, `${subtaskId}`));
+      if (subtask && !isTaskCompleted(subtask) && !wasCompletedBefore) {
+        showRewardNotification(subtask.recompensaXp ?? 0, subtask.recompensaLudion ?? 0);
+      }
     }
   };
 
-  const dashboardTasks = [...getDailyTasks(tasks), ...getHabitTasks(tasks)].filter((task) => isTaskVisibleInDefaultList(task) && !isTaskCompleted(task) && task.idObjetivo === undefined);
+  const dashboardTasks = [...getDailyTasks(tasks), ...getHabitTasks(tasks)].filter((task) => isTaskVisibleInDefaultList(task) && !isTaskCompleted(task) && task.idObjetivo == null);
   const availableObjectives = tasks.filter((task) => task.id !== initialDataModal?.id);
 
   const editTaskHandle = (taskId: number) => {
@@ -253,6 +271,11 @@ export default function Home() {
       </div>
 
       <Navbar />
+      {rewardNotification ? (
+        <div className="fixed bottom-4 right-4 z-60">
+          <NotificationModal xp={rewardNotification.xp} ludiones={rewardNotification.ludiones} />
+        </div>
+      ) : null}
 
       <section className="mx-auto flex w-full max-w-7xl flex-col items-center justify-center gap-4 px-4 py-6">
         <article className="relative flex w-full max-w-2xl flex-col gap-6 rounded-2xl border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-6 shadow-[0_15px_32px_#090b1f59]">

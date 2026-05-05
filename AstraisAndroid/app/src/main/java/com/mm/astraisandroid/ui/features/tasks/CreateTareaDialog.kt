@@ -1,6 +1,9 @@
 package com.mm.astraisandroid.ui.features.tasks
 
+
+import com.mm.astraisandroid.R
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,28 +22,23 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.res.stringResource
+import com.mm.astraisandroid.ui.theme.Gray300
+import com.mm.astraisandroid.ui.theme.Gray700
+import com.mm.astraisandroid.ui.theme.Primary
+import com.mm.astraisandroid.ui.theme.Surface
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/**
- * Diálogo de creación de tareas para Astrais.
- *
- * Permite al usuario configurar una nueva tarea o subtarea indicando título,
- * descripción, tipo (única, hábito u objetivo), prioridad, y datos adicionales
- * según el tipo seleccionado (frecuencia para hábitos, fecha límite para únicas).
- *
- * @param parentId Identificador del objetivo padre si se crea una subtarea; `null` para tareas padre.
- * @param onDismiss Callback invocado al cerrar el diálogo sin crear la tarea.
- * @param onCreate Callback invocado al confirmar la creación con los datos introducidos por el usuario.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateTareaDialog(
@@ -67,118 +65,151 @@ fun CreateTareaDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(max = 600.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(Color(0xFF1A1A2E))
-                .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(20.dp))
+                .shadow(
+                    elevation = 16.dp,
+                    shape = RoundedCornerShape(28.dp),
+                    ambientColor = Color.Black.copy(alpha = 0.4f),
+                    spotColor = Primary.copy(alpha = 0.1f)
+                )
+                .clip(RoundedCornerShape(28.dp))
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Surface.copy(alpha = 0.92f),
+                            Surface.copy(alpha = 0.85f)
+                        )
+                    )
+                )
+                .border(
+                    width = 1.dp,
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.18f),
+                            Color.White.copy(alpha = 0.06f)
+                        )
+                    ),
+                    shape = RoundedCornerShape(28.dp)
+                )
                 .verticalScroll(rememberScrollState())
-                .padding(20.dp),
+                .padding(24.dp),
         ) {
             Text(
-                text = if (parentId != null) "Nueva subtarea" else "Nueva tarea",
+                text = if (parentId != null) stringResource(R.string.task_new_subtask_title) else stringResource(R.string.task_new_task_title),
                 color = Color.White,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Black,
-                fontFamily = FontFamily.Monospace
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            GlassTextFieldSection(
+                label = stringResource(R.string.task_label_title),
+                value = titulo,
+                onValueChange = { titulo = it },
+                placeholder = stringResource(R.string.task_placeholder_title),
+                singleLine = true
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("TÍTULO", color = Color.White.copy(alpha = 0.4f), fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.5.sp)
-                BasicTextField(
-                    value = titulo,
-                    onValueChange = { titulo = it },
-                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color.White.copy(alpha = 0.07f)).border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(10.dp)).padding(horizontal = 14.dp, vertical = 10.dp),
-                    textStyle = TextStyle(color = Color.White, fontSize = 13.sp, fontFamily = FontFamily.Monospace),
-                    decorationBox = { inner -> if (titulo.isEmpty()) Text("Nombre de la tarea...", color = Color.White.copy(alpha = 0.2f), fontSize = 13.sp, fontFamily = FontFamily.Monospace); inner() }
-                )
-            }
+            GlassTextFieldSection(
+                label = stringResource(R.string.task_label_description),
+                value = desc,
+                onValueChange = { desc = it },
+                placeholder = stringResource(R.string.task_placeholder_description),
+                singleLine = false,
+                minHeight = 60.dp
+            )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("DESCRIPCIÓN", color = Color.White.copy(alpha = 0.4f), fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.5.sp)
-                BasicTextField(
-                    value = desc,
-                    onValueChange = { desc = it },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 60.dp, max = 150.dp).clip(RoundedCornerShape(10.dp)).background(Color.White.copy(alpha = 0.07f)).border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(10.dp)).padding(horizontal = 14.dp, vertical = 10.dp),
-                    textStyle = TextStyle(color = Color.White, fontSize = 13.sp, fontFamily = FontFamily.Monospace),
-                    decorationBox = { inner -> if (desc.isEmpty()) Text("Detalles adicionales...", color = Color.White.copy(alpha = 0.2f), fontSize = 13.sp, fontFamily = FontFamily.Monospace); inner() }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             AnimatedVisibility(visible = parentId == null) {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(bottom = 12.dp)) {
-                    Text("TIPO", color = Color.White.copy(alpha = 0.4f), fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.5.sp)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                        tipos.forEach { t ->
-                            val isSelected = tipo == t
-                            Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).background(if (isSelected) Color.White.copy(alpha = 0.15f) else Color.Transparent).border(1.dp, if (isSelected) Color.White.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.1f), RoundedCornerShape(8.dp)).clickable { tipo = t }.padding(vertical = 7.dp), contentAlignment = Alignment.Center) {
-                                Text(text = t, color = if (isSelected) Color.White else Color.White.copy(alpha = 0.4f), fontSize = 11.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal, fontFamily = FontFamily.Monospace)
-                            }
-                        }
-                    }
+                Column {
+                    GlassToggleSection(
+                        label = stringResource(R.string.task_label_type),
+                        options = tipos,
+                        selectedIndex = tipos.indexOf(tipo).takeIf { it >= 0 } ?: 0,
+                        onSelected = { index -> tipo = tipos[index] }
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
 
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("PRIORIDAD", color = Color.White.copy(alpha = 0.4f), fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.5.sp)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                    prioridades.forEachIndexed { index, p ->
-                        val isSelected = prioridad == index
-                        Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).background(if (isSelected) Color.White.copy(alpha = 0.15f) else Color.Transparent).border(1.dp, if (isSelected) Color.White.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.1f), RoundedCornerShape(8.dp)).clickable { prioridad = index }.padding(vertical = 7.dp), contentAlignment = Alignment.Center) {
-                            Text(text = p, color = if (isSelected) Color.White else Color.White.copy(alpha = 0.4f), fontSize = 11.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal, fontFamily = FontFamily.Monospace)
-                        }
-                    }
-                }
-            }
+            GlassToggleSection(
+                label = stringResource(R.string.task_label_priority),
+                options = prioridades,
+                selectedIndex = prioridad,
+                onSelected = { index -> prioridad = index }
+            )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             AnimatedVisibility(visible = tipo == "HABITO") {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(bottom = 12.dp)) {
-                    Text("FRECUENCIA", color = Color.White.copy(alpha = 0.4f), fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.5.sp)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                        frecuencias.forEach { (clave, etiqueta) ->
-                            val isSelected = frecuencia == clave
-                            Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).background(if (isSelected) Color.White.copy(alpha = 0.15f) else Color.Transparent).border(1.dp, if (isSelected) Color.White.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.1f), RoundedCornerShape(8.dp)).clickable { frecuencia = clave }.padding(vertical = 7.dp), contentAlignment = Alignment.Center) {
-                                Text(text = etiqueta, color = if (isSelected) Color.White else Color.White.copy(alpha = 0.4f), fontSize = 11.sp, fontFamily = FontFamily.Monospace)
-                            }
-                        }
-                    }
+                Column {
+                    GlassToggleSection(
+                        label = stringResource(R.string.task_label_frequency),
+                        options = frecuencias.map { it.second },
+                        selectedIndex = frecuencias.indexOfFirst { it.first == frecuencia }.takeIf { it >= 0 } ?: 0,
+                        onSelected = { index -> frecuencia = frecuencias[index].first }
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
 
             AnimatedVisibility(visible = tipo == "UNICO") {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(bottom = 12.dp)) {
-                    Text("FECHA LÍMITE", color = Color.White.copy(alpha = 0.4f), fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.5.sp)
+                Column {
+                    Text(stringResource(R.string.task_label_due_date), color = Gray300.copy(alpha = 0.6f), fontSize = 10.sp, letterSpacing = 1.5.sp, fontWeight = FontWeight.SemiBold)
+                    Spacer(modifier = Modifier.height(8.dp))
                     Box(
-                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color.White.copy(alpha = 0.07f)).border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(10.dp)).clickable { showDatePicker = true }.padding(horizontal = 14.dp, vertical = 12.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.White.copy(alpha = 0.04f))
+                            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
+                            .clickable { showDatePicker = true }
+                            .padding(horizontal = 14.dp, vertical = 14.dp)
                     ) {
                         Text(
-                            text = if (fechaLimite.isEmpty()) "Seleccionar fecha..." else fechaLimite,
-                            color = if (fechaLimite.isEmpty()) Color.White.copy(alpha = 0.2f) else Color.White,
-                            fontSize = 13.sp,
-                            fontFamily = FontFamily.Monospace
+                            text = if (fechaLimite.isEmpty()) stringResource(R.string.task_select_date) else fechaLimite,
+                            color = if (fechaLimite.isEmpty()) Gray300.copy(alpha = 0.3f) else Color.White,
+                            fontSize = 14.sp
                         )
                     }
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(10.dp)).background(Color.White.copy(alpha = 0.06f)).clickable { onDismiss() }.padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
-                    Text("Cancelar", color = Color.White.copy(alpha = 0.5f), fontSize = 13.sp, fontFamily = FontFamily.Monospace)
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White.copy(alpha = 0.06f))
+                        .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
+                        .clickable { onDismiss() }
+                        .padding(vertical = 14.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(stringResource(R.string.dialog_cancel), color = Gray300, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                 }
-                Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(10.dp)).background(if (titulo.isNotBlank()) Color.White else Color.White.copy(alpha = 0.1f))
-                    .clickable(enabled = titulo.isNotBlank()) {
-                        onCreate(titulo, desc, tipo, prioridad, if (tipo == "HABITO") frecuencia else null, if (tipo == "UNICO") fechaLimite else null)
-                    }
-                    .padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
-                    Text("Crear", color = if (titulo.isNotBlank()) Color.Black else Color.White.copy(alpha = 0.3f), fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (titulo.isNotBlank()) Primary else Gray700)
+                        .shadow(
+                            elevation = if (titulo.isNotBlank()) 8.dp else 0.dp,
+                            shape = RoundedCornerShape(12.dp),
+                            ambientColor = if (titulo.isNotBlank()) Primary.copy(alpha = 0.3f) else Color.Transparent,
+                            spotColor = if (titulo.isNotBlank()) Color.White.copy(alpha = 0.1f) else Color.Transparent
+                        )
+                        .clickable(enabled = titulo.isNotBlank()) {
+                            onCreate(titulo, desc, tipo, prioridad, if (tipo == "HABITO") frecuencia else null, if (tipo == "UNICO") fechaLimite else null)
+                        }
+                        .padding(vertical = 14.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(stringResource(R.string.task_create_button), color = if (titulo.isNotBlank()) Color.White else Gray300.copy(alpha = 0.4f), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -195,10 +226,10 @@ fun CreateTareaDialog(
                         fechaLimite = formatter.format(Date(millis))
                     }
                     showDatePicker = false
-                }) { Text("Aceptar") }
+                }) { Text(stringResource(R.string.dialog_accept)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") }
+                TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.dialog_cancel)) }
             }
         ) {
             DatePicker(state = datePickerState)

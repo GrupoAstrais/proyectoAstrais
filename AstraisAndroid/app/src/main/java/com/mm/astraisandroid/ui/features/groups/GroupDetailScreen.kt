@@ -1,5 +1,8 @@
 package com.mm.astraisandroid.ui.features.groups
 
+
+import com.mm.astraisandroid.R
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -48,13 +51,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mm.astraisandroid.data.api.GroupMemberOut
@@ -63,6 +67,11 @@ import com.mm.astraisandroid.ui.features.tasks.CreateTareaDialog
 import com.mm.astraisandroid.ui.features.tasks.EditTaskDialog
 import com.mm.astraisandroid.ui.features.tasks.TaskCard
 import com.mm.astraisandroid.ui.features.tasks.TaskUIModel
+import com.mm.astraisandroid.ui.theme.Gray300
+import com.mm.astraisandroid.ui.theme.Gray700
+import com.mm.astraisandroid.ui.theme.Primary
+import com.mm.astraisandroid.ui.theme.Secondary
+import com.mm.astraisandroid.ui.theme.Surface
 import kotlinx.coroutines.launch
 
 private const val ROLE_USER = 0
@@ -85,6 +94,7 @@ fun GroupDetailScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var createDialogOpen by remember { mutableStateOf(false) }
+    var createDialogParentId by remember { mutableStateOf<Int?>(null) }
     var membersSheetOpen by remember { mutableStateOf(false) }
     var confirmKick by remember { mutableStateOf<Int?>(null) }
     var expandedTaskId by remember { mutableStateOf<Int?>(null) }
@@ -111,7 +121,7 @@ fun GroupDetailScreen(
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                GroupDetailHeader(
+                GlassGroupDetailHeader(
                     groupName = groupName,
                     groupRole = groupRole,
                     onBack = onBack,
@@ -121,9 +131,8 @@ fun GroupDetailScreen(
                 if (groupDescription.isNotBlank()) {
                     Text(
                         text = groupDescription,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
+                        color = Gray300.copy(alpha = 0.6f),
                         fontSize = 12.sp,
-                        fontFamily = FontFamily.Monospace,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -135,19 +144,10 @@ fun GroupDetailScreen(
                     onTap = { membersSheetOpen = true }
                 )
 
-                if (state.error != null) {
-                    Text(
-                        text = state.error ?: "",
-                        color = MaterialTheme.colorScheme.error,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 12.sp
-                    )
-                }
-
                 val pendingCount = state.tasks.count { it.parentId == null && !it.isCompleted }
                 val completedCount = state.tasks.count { it.parentId == null && it.isCompleted }
 
-                TaskFilterToggle(
+                GlassTaskFilterToggle(
                     showCompleted = showCompleted,
                     pendingCount = pendingCount,
                     completedCount = completedCount,
@@ -163,18 +163,17 @@ fun GroupDetailScreen(
                     when {
                         state.isLoadingTasks && state.tasks.isEmpty() -> {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator(color = MaterialTheme.colorScheme.onBackground)
+                                CircularProgressIndicator(color = Primary)
                             }
                         }
                         topLevel.isEmpty() -> {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                 Text(
                                     text = if (showCompleted)
-                                        "No hay tareas completadas todavía."
+                                        stringResource(R.string.task_no_completed_yet)
                                     else
-                                        "No hay tareas pendientes.",
-                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                                    fontFamily = FontFamily.Monospace
+                                        stringResource(R.string.task_no_pending),
+                                    color = Gray300.copy(alpha = 0.6f),
                                 )
                             }
                         }
@@ -196,6 +195,9 @@ fun GroupDetailScreen(
                                             viewModel.toggleTaskCompletion(gid, t)
                                             onUserStateChanged()
                                         },
+                                        onAddSubtask = { if (canManage) { createDialogParentId = task.id; createDialogOpen = true } },
+                                        onEditSubtask = { sub -> if (canManage) taskToEdit = sub },
+                                        onDeleteSubtask = { sub -> if (canManage) taskToDelete = sub },
                                         onEdit = { if (canManage) taskToEdit = task },
                                         onDelete = { if (canManage) taskToDelete = task }
                                     )
@@ -208,16 +210,16 @@ fun GroupDetailScreen(
 
             if (canManage) {
                 FloatingActionButton(
-                    onClick = { createDialogOpen = true },
-                    containerColor = MaterialTheme.colorScheme.primary,
+                    onClick = { createDialogParentId = null; createDialogOpen = true },
+                    containerColor = Primary,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(20.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Crear tarea",
-                        tint = MaterialTheme.colorScheme.onPrimary
+                        contentDescription = stringResource(R.string.cd_create_task),
+                        tint = Color.White
                     )
                 }
             }
@@ -225,8 +227,10 @@ fun GroupDetailScreen(
     }
 
     if (createDialogOpen) {
+        val parentId = createDialogParentId
         CreateTareaDialog(
-            onDismiss = { createDialogOpen = false },
+            parentId = parentId,
+            onDismiss = { createDialogOpen = false; createDialogParentId = null },
             onCreate = { titulo, desc, tipoStr, prioridadInt, frecuencia, fechaLimite ->
                 viewModel.createTaskFromDialog(
                     gid = gid,
@@ -235,9 +239,11 @@ fun GroupDetailScreen(
                     tipo = tipoStr,
                     prioridad = prioridadInt,
                     frecuencia = frecuencia,
-                    fechaLimite = fechaLimite
+                    fechaLimite = fechaLimite,
+                    parentId = parentId
                 )
                 createDialogOpen = false
+                createDialogParentId = null
             }
         )
     }
@@ -246,7 +252,7 @@ fun GroupDetailScreen(
         ModalBottomSheet(
             onDismissRequest = { membersSheetOpen = false },
             sheetState = sheetState,
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = Surface
         ) {
             MembersSheetContent(
                 members = state.members,
@@ -284,9 +290,9 @@ fun GroupDetailScreen(
 
     taskToDelete?.let { task ->
         ConfirmActionDialog(
-            title = "Eliminar tarea",
-            body = "¿Seguro que quieres eliminar \"${task.title}\"?",
-            confirmText = "Eliminar",
+            title = stringResource(R.string.dialog_delete_task_title),
+            body = stringResource(R.string.dialog_delete_task_body, task.title),
+            confirmText = stringResource(R.string.dialog_delete_confirm),
             onConfirm = {
                 viewModel.deleteTask(gid, task.id)
                 taskToDelete = null
@@ -297,9 +303,9 @@ fun GroupDetailScreen(
 
     if (confirmKick != null) {
         ConfirmActionDialog(
-            title = "Expulsar miembro",
-            body = "¿Confirmas expulsar a este miembro del grupo?",
-            confirmText = "Expulsar",
+            title = stringResource(R.string.dialog_kick_member_title),
+            body = stringResource(R.string.dialog_kick_member_body),
+            confirmText = stringResource(R.string.dialog_kick_confirm),
             onConfirm = {
                 val uid = confirmKick
                 confirmKick = null
@@ -311,27 +317,42 @@ fun GroupDetailScreen(
 }
 
 @Composable
-private fun GroupDetailHeader(
+private fun GlassGroupDetailHeader(
     groupName: String,
     groupRole: Int,
     onBack: () -> Unit,
     onOpenSettings: () -> Unit
 ) {
     val roleLabel = when (groupRole) {
-        ROLE_OWNER -> "Owner"
-        ROLE_MOD -> "Moderador"
-        else -> "Miembro"
+        ROLE_OWNER -> stringResource(R.string.group_role_owner)
+        ROLE_MOD -> stringResource(R.string.group_role_mod)
+        else -> stringResource(R.string.group_role_member)
     }
+
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Surface.copy(alpha = 0.3f))
+            .border(
+                width = 1.dp,
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.12f),
+                        Color.White.copy(alpha = 0.04f)
+                    )
+                ),
+                shape = RoundedCornerShape(16.dp)
+            )
+            .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         IconButton(onClick = onBack) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Volver",
-                tint = MaterialTheme.colorScheme.onBackground
+                contentDescription = stringResource(R.string.cd_back),
+                tint = Color.White
             )
         }
         Column(
@@ -340,26 +361,24 @@ private fun GroupDetailHeader(
         ) {
             Text(
                 text = groupName,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Black,
-                fontFamily = FontFamily.Monospace,
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = roleLabel,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                color = Gray300.copy(alpha = 0.6f),
                 fontSize = 10.sp,
-                fontFamily = FontFamily.Monospace,
                 letterSpacing = 0.5.sp
             )
         }
         IconButton(onClick = onOpenSettings) {
             Icon(
                 imageVector = Icons.Default.Settings,
-                contentDescription = "Ajustes del grupo",
-                tint = MaterialTheme.colorScheme.onBackground
+                contentDescription = stringResource(R.string.cd_group_settings),
+                tint = Color.White
             )
         }
     }
@@ -373,11 +392,10 @@ private fun MembersCarousel(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
-            text = "MIEMBROS · ${members.size}",
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+            text = stringResource(R.string.group_members_header, members.size),
+            color = Gray300.copy(alpha = 0.5f),
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
-            fontFamily = FontFamily.Monospace,
             letterSpacing = 1.sp
         )
         if (isLoading && members.isEmpty()) {
@@ -388,7 +406,7 @@ private fun MembersCarousel(
                 contentAlignment = Alignment.CenterStart
             ) {
                 CircularProgressIndicator(
-                    color = MaterialTheme.colorScheme.onBackground,
+                    color = Primary,
                     modifier = Modifier.size(24.dp),
                     strokeWidth = 2.dp
                 )
@@ -405,7 +423,7 @@ private fun MembersCarousel(
                 }
                 if (remainder > 0) {
                     item(key = "remainder") {
-                        OverflowAvatar(count = remainder, onClick = onTap)
+                        GlassOverflowAvatar(count = remainder, onClick = onTap)
                     }
                 }
             }
@@ -417,20 +435,19 @@ private fun MembersCarousel(
 private fun MemberAvatar(member: GroupMemberOut, onClick: () -> Unit) {
     val initials = remember(member.name) { initialsOf(member.name) }
     val bg = remember(member.uid) { colorForId(member.uid) }
+
+    val borderColor = when (member.role) {
+        ROLE_OWNER -> Color(0xFFE8B94A)
+        ROLE_MOD -> Color(0xFF8CD3FF)
+        else -> Color.White.copy(alpha = 0.2f)
+    }
+
     Box(
         modifier = Modifier
             .size(48.dp)
             .clip(CircleShape)
             .background(bg)
-            .border(
-                width = 2.dp,
-                color = when (member.role) {
-                    ROLE_OWNER -> Color(0xFFE8B94A)
-                    ROLE_MOD -> Color(0xFF8CD3FF)
-                    else -> Color.White.copy(alpha = 0.25f)
-                },
-                shape = CircleShape
-            )
+            .border(2.dp, borderColor, CircleShape)
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
@@ -438,36 +455,40 @@ private fun MemberAvatar(member: GroupMemberOut, onClick: () -> Unit) {
             text = initials,
             color = Color.White,
             fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = FontFamily.Monospace
+            fontWeight = FontWeight.Bold
         )
     }
 }
 
 @Composable
-private fun OverflowAvatar(count: Int, onClick: () -> Unit) {
+private fun GlassOverflowAvatar(count: Int, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .size(48.dp)
             .clip(CircleShape)
+            .shadow(
+                elevation = 4.dp,
+                shape = CircleShape,
+                ambientColor = Color.Black.copy(alpha = 0.2f),
+                spotColor = Color.White.copy(alpha = 0.05f)
+            )
             .background(
                 Brush.linearGradient(
                     colors = listOf(
-                        MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
-                        MaterialTheme.colorScheme.surface.copy(alpha = 0.15f)
+                        Surface.copy(alpha = 0.4f),
+                        Surface.copy(alpha = 0.15f)
                     )
                 )
             )
-            .border(2.dp, Color.White.copy(alpha = 0.25f), CircleShape)
+            .border(2.dp, Color.White.copy(alpha = 0.2f), CircleShape)
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = "+$count",
-            color = MaterialTheme.colorScheme.onBackground,
+            color = Color.White,
             fontSize = 13.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = FontFamily.Monospace
+            fontWeight = FontWeight.Bold
         )
     }
 }
@@ -487,11 +508,10 @@ private fun MembersSheetContent(
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Text(
-            text = "MIEMBROS",
-            color = MaterialTheme.colorScheme.onBackground,
+            text = stringResource(R.string.group_members_sheet_title),
+            color = Color.White,
             fontSize = 14.sp,
-            fontWeight = FontWeight.Black,
-            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Bold,
             letterSpacing = 1.sp
         )
         Spacer(Modifier.size(12.dp))
@@ -500,7 +520,7 @@ private fun MembersSheetContent(
             modifier = Modifier.fillMaxWidth()
         ) {
             items(members, key = { it.uid }) { m ->
-                MemberRow(
+                GlassMemberRow(
                     member = m,
                     viewerRole = viewerRole,
                     onPromote = { onPromote(m.uid) },
@@ -511,13 +531,13 @@ private fun MembersSheetContent(
         }
         Spacer(Modifier.size(12.dp))
         TextButton(onClick = onClose, modifier = Modifier.align(Alignment.End)) {
-            Text("Cerrar", fontFamily = FontFamily.Monospace)
+            Text(stringResource(R.string.dialog_close))
         }
     }
 }
 
 @Composable
-private fun MemberRow(
+private fun GlassMemberRow(
     member: GroupMemberOut,
     viewerRole: Int,
     onPromote: () -> Unit,
@@ -531,7 +551,8 @@ private fun MemberRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(Color.White.copy(alpha = 0.06f))
+            .background(Color.White.copy(alpha = 0.04f))
+            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(14.dp))
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -547,17 +568,15 @@ private fun MemberRow(
                 text = initialsOf(member.name),
                 color = Color.White,
                 fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Monospace
+                fontWeight = FontWeight.Bold
             )
         }
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = member.name,
-                color = MaterialTheme.colorScheme.onBackground,
+                color = Color.White,
                 fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Monospace,
                 fontSize = 13.sp
             )
             RoleChip(role = member.role)
@@ -567,18 +586,16 @@ private fun MemberRow(
             if (member.role == ROLE_MOD) {
                 TextButton(onClick = onDemote) {
                     Text(
-                        "Quitar mod",
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontFamily = FontFamily.Monospace,
+                        stringResource(R.string.group_demote_mod),
+                        color = Color.White,
                         fontSize = 11.sp
                     )
                 }
             } else {
                 TextButton(onClick = onPromote) {
                     Text(
-                        "Hacer mod",
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontFamily = FontFamily.Monospace,
+                        stringResource(R.string.group_promote_mod),
+                        color = Color.White,
                         fontSize = 11.sp
                     )
                 }
@@ -589,7 +606,7 @@ private fun MemberRow(
             IconButton(onClick = onKick) {
                 Icon(
                     Icons.Default.PersonRemove,
-                    contentDescription = "Expulsar",
+                    contentDescription = stringResource(R.string.cd_kick_member),
                     tint = MaterialTheme.colorScheme.error
                 )
             }
@@ -598,26 +615,39 @@ private fun MemberRow(
 }
 
 @Composable
-private fun TaskFilterToggle(
+private fun GlassTaskFilterToggle(
     showCompleted: Boolean,
     pendingCount: Int,
     completedCount: Int,
     onToggle: () -> Unit
 ) {
-    val activeLabel = if (showCompleted) "COMPLETADAS" else "PENDIENTES"
+    val activeLabel = if (showCompleted) stringResource(R.string.task_status_completed) else stringResource(R.string.task_status_pending)
     val activeCount = if (showCompleted) completedCount else pendingCount
-    val inactiveLabel = if (showCompleted) "Ver pendientes" else "Ver completadas"
+    val inactiveLabel = if (showCompleted) stringResource(R.string.task_view_pending) else stringResource(R.string.task_view_completed)
     val inactiveCount = if (showCompleted) pendingCount else completedCount
-    val accent =
-        if (showCompleted) MaterialTheme.colorScheme.primary
-        else MaterialTheme.colorScheme.onBackground
+
+    val animatedBg by animateColorAsState(
+        targetValue = if (showCompleted) Primary.copy(alpha = 0.2f) else Surface.copy(alpha = 0.3f),
+        label = "filterBg"
+    )
+    val animatedBorder by animateColorAsState(
+        targetValue = if (showCompleted) Primary.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.12f),
+        label = "filterBorder"
+    )
+    val accent = if (showCompleted) Primary else Color.White
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(Color.White.copy(alpha = 0.06f))
-            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
+            .background(animatedBg)
+            .border(1.dp, animatedBorder, RoundedCornerShape(12.dp))
+            .shadow(
+                elevation = 4.dp,
+                shape = RoundedCornerShape(12.dp),
+                ambientColor = Color.Black.copy(alpha = 0.15f),
+                spotColor = if (showCompleted) Primary.copy(alpha = 0.1f) else Color.Transparent
+            )
             .clickable { onToggle() }
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -631,18 +661,16 @@ private fun TaskFilterToggle(
         )
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                text = "$activeLabel · $activeCount",
+                text = stringResource(R.string.task_active_status_count, activeLabel, activeCount),
                 color = accent,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Monospace,
                 letterSpacing = 0.8.sp
             )
             Text(
-                text = "$inactiveLabel ($inactiveCount)",
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
-                fontSize = 10.sp,
-                fontFamily = FontFamily.Monospace
+                text = stringResource(R.string.task_inactive_status_count, inactiveLabel, inactiveCount),
+                color = Gray300.copy(alpha = 0.5f),
+                fontSize = 10.sp
             )
         }
     }

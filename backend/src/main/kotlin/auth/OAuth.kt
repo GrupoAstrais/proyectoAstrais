@@ -14,7 +14,9 @@ import com.google.api.client.json.gson.GsonFactory
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.apache.*
+import io.ktor.client.plugins.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -22,6 +24,9 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.receive
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.*
+import io.ktor.server.plugins.contentnegotiation.*
+import kotlinx.serialization.json.Json
 
 
 fun Application.initOauth(authenticationConfig: AuthenticationConfig){
@@ -54,7 +59,13 @@ fun Route.oauthRoutes() {
                 return@get
             }
 
-            val googleInfo = getGoogleInfo(principal.accessToken)
+            val googleInfo = kotlin.runCatching { getGoogleInfo(principal.accessToken) }.onFailure {
+                println(it.message)
+                call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Unknown google error"))
+            }.getOrNull()
+            if (googleInfo == null){
+                return@get
+            }
             val user = getAuthRepoImpl().tryLoginOrRegisterOauth(googleInfo.sub, AuthProvider.GOOGLE)
             if (user.first == -1){
                 call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Couldn't do oauth"))
@@ -178,6 +189,8 @@ fun Route.oauthRoutes() {
     }
 }
 
+val jsonOauth = Json { ignoreUnknownKeys = true }
+
 suspend fun getGoogleInfo(accessToken : String) : GoogleUserInfo{
     val client = HttpClient(Apache)
     val req = client.get("https://openidconnect.googleapis.com/v1/userinfo") {
@@ -188,5 +201,5 @@ suspend fun getGoogleInfo(accessToken : String) : GoogleUserInfo{
 
     //mainlogger.info("Received: ${req.bodyAsText(Charsets.UTF_8)}")
 
-    return req.body()
+    return jsonOauth.decodeFromString(req.bodyAsText(Charsets.UTF_8)) //req.body<GoogleUserInfo>()
 }

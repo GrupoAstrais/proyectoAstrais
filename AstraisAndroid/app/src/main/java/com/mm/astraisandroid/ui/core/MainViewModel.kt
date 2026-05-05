@@ -5,21 +5,16 @@ import androidx.lifecycle.viewModelScope
 import com.mm.astraisandroid.data.preferences.SessionManager
 import com.mm.astraisandroid.data.repository.AuthRepository
 import com.mm.astraisandroid.data.repository.GroupRepository
+import com.mm.astraisandroid.ui.components.SnackbarManager
 import com.mm.astraisandroid.util.logging.AppLogger
 import com.mm.astraisandroid.util.logging.LogFeature
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-sealed class MainUiEvent {
-    data class ShowToast(val message: String) : MainUiEvent()
-}
 
 data class MainUiState(
     val isSessionActive: Boolean = false,
@@ -33,7 +28,8 @@ class MainViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val groupRepository: GroupRepository,
     private val sessionManager: SessionManager,
-    private val logger: AppLogger
+    private val logger: AppLogger,
+    private val snackbarManager: SnackbarManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
@@ -43,9 +39,6 @@ class MainViewModel @Inject constructor(
         )
     )
     val state: StateFlow<MainUiState> = _state.asStateFlow()
-
-    private val _events = Channel<MainUiEvent>(Channel.BUFFERED)
-    val events = _events.receiveAsFlow()
 
     init {
         viewModelScope.launch {
@@ -81,7 +74,7 @@ class MainViewModel @Inject constructor(
 
             if (!state.value.isSessionActive || sessionManager.isGuest()) {
                 sessionManager.savePendingDeepLink(url)
-                _events.send(MainUiEvent.ShowToast("Inicia sesión para usar la invitación"))
+                snackbarManager.showMessage("Inicia sesión para usar la invitación")
                 return@launch
             }
 
@@ -100,11 +93,11 @@ class MainViewModel @Inject constructor(
 
         if (ok) {
             logger.i(LogFeature.AUTH, "Joined group via deep link")
-            _events.send(MainUiEvent.ShowToast("Te has unido al grupo"))
+            snackbarManager.showMessage("Te has unido al grupo")
             _state.update { it.copy(pendingDeepLink = "navigate_to_groups") }
         } else {
             logger.e(LogFeature.AUTH, "Failed to join group via deep link")
-            _events.send(MainUiEvent.ShowToast("No se pudo usar el enlace de invitación"))
+            snackbarManager.showMessage("No se pudo usar el enlace de invitación")
         }
     }
 

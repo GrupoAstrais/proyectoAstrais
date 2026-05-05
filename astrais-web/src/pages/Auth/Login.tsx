@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
 import loginBg from '../../assets/login-bg.jpg'
-import { performLogin } from '../../data/Api'
+import { handleGoogleCallback, loginWithGoogle, performLogin } from '../../data/Api'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -10,6 +10,27 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const uid = params.get('uid')
+    const hadToRegister = params.get('hadToRegister')
+    const jwtAccessToken = params.get('jwtAccessToken')
+    const jwtRefreshToken = params.get('jwtRefreshToken')
+
+    if (!uid || !jwtAccessToken || !jwtRefreshToken || hadToRegister === null) {
+      return
+    }
+
+    void handleGoogleCallback(
+      Number(uid),
+      hadToRegister === 'true',
+      jwtAccessToken,
+      jwtRefreshToken
+    )
+      .then(() => navigate('/home'))
+      .catch(() => setError('No se pudo completar el login con Google.'))
+  }, [navigate])
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -101,6 +122,7 @@ export default function Login() {
           <button
             className="cursor-pointer rounded-xl border border-white/20 bg-white/10 p-3 text-base font-semibold text-white transition duration-150 ease-in hover:-translate-y-px"
             type="button"
+            onClick={loginWithGoogle}
           >
             Continue with Google
           </button>

@@ -1,13 +1,12 @@
 package com.mm.astraisandroid.ui.features.home
 
+
+import com.mm.astraisandroid.R
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -20,15 +19,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.toRoute
@@ -46,6 +46,7 @@ import com.mm.astraisandroid.ui.features.auth.AuthBackground
 import com.mm.astraisandroid.ui.features.groups.GrupoTab
 import com.mm.astraisandroid.ui.features.groups.GroupDetailScreen
 import com.mm.astraisandroid.ui.features.groups.GroupSettingsScreen
+import com.mm.astraisandroid.ui.features.logros.LogrosScreen
 import com.mm.astraisandroid.ui.features.profile.PerfilTab
 import com.mm.astraisandroid.ui.features.store.InventarioTab
 import com.mm.astraisandroid.ui.features.store.TiendaTab
@@ -125,37 +126,14 @@ fun HomeContainer(
 
     val isEffectivelyOffline = !deviceHasInternet || isOffline || isGuest
 
-    AuthBackground {
-        Scaffold(
-            modifier = Modifier.statusBarsPadding(),
-            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-            topBar = {
-                val bannerText = when {
-                    isGuest -> "MODO INVITADO — Registrate para guardar tus tareas"
-                    !deviceHasInternet -> "SIN CONEXIÓN — Se sincronizará al volver"
-                    isOffline -> "MODO OFFLINE — Acceso local activo"
-                    else -> null
-                }
+    val showStatusBanner = isGuest || !deviceHasInternet || isOffline
 
-                if (bannerText != null) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(if (isGuest) Color(0xFFC172FF) else Color(0xFFEF476F))
-                            .padding(vertical = 4.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = bannerText,
-                            color = Color.White,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Monospace
-                        )
-                    }
-                }
-            },
-            containerColor = Color.Transparent,
+    AuthBackground {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Scaffold(
+                modifier = Modifier.statusBarsPadding(),
+                snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+                containerColor = Color.Transparent,
             bottomBar = {
                 if (showBottomBar) {
                     AstraisBottomBar(
@@ -168,7 +146,7 @@ fun HomeContainer(
                             }
 
                             if (isGuest && (index == 3 || index == 4)) {
-                                Toast.makeText(context, "Regístrate para acceder a esta función", Toast.LENGTH_SHORT).show()
+                                snackbarViewModel.showMessage(context.getString(R.string.guest_register_to_access))
                                 return@AstraisBottomBar
                             }
 
@@ -223,6 +201,13 @@ fun HomeContainer(
                         },
                         onNavigateToGroups = {
                             navController.navigate(Route.GroupTab) {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onNavigateToLogros = {
+                            navController.navigate(Route.Logros) {
                                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
@@ -291,8 +276,28 @@ fun HomeContainer(
                 composable<Route.Inventory> {
                     InventarioTab(onCosmeticChanged = { userViewModel.fetchUser() })
                 }
+
+                composable<Route.Logros> {
+                    LogrosScreen(onBack = { navController.popBackStack() })
+                }
             }
         }
+
+        if (showStatusBanner) {
+            GlassStatusBanner(
+                text = when {
+                    isGuest -> stringResource(R.string.banner_guest_mode)
+                    !deviceHasInternet -> stringResource(R.string.banner_offline)
+                    else -> stringResource(R.string.banner_offline_local)
+                },
+                color = if (isGuest) Color(0xFFC172FF) else Color(0xFFEF476F),
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .statusBarsPadding()
+                    .padding(top = 8.dp)
+            )
+        }
+    }
     }
 
     if (taskState.showCreateDialog) {
@@ -321,11 +326,30 @@ fun HomeContainer(
                         frecuencia = frecuencia
                     )
                 } else {
-                    Toast.makeText(context, "Error: Usuario sin grupo personal.", Toast.LENGTH_LONG).show()
+                    snackbarViewModel.showMessage(context.getString(R.string.error_no_personal_group))
                 }
 
                 taskViewModel.closeCreateDialog()
             }
+        )
+    }
+}
+
+@Composable
+private fun GlassStatusBanner(text: String, color: Color, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(999.dp))
+            .background(color.copy(alpha = 0.25f))
+            .border(1.dp, color.copy(alpha = 0.5f), RoundedCornerShape(999.dp))
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = text,
+            color = color,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold
         )
     }
 }

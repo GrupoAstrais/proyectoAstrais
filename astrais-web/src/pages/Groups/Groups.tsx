@@ -8,6 +8,7 @@ import Task from "../../components/ui/Task";
 import Modal from "../../components/modales/TaskModal";
 import GroupSettingsModal from "../../components/modales/GroupSettingsModal";
 import CreateGroupModal from "../../components/modales/CreateGroupModal";
+import NotificationModal from "../../components/modales/NotificationModal";
 import type { IGroup, ITarea } from "../../types/Interfaces";
 import {
   addUserToGroup,
@@ -25,6 +26,7 @@ import {
   filterTasksByCompleted,
   groupInviteLink,
   groupInvitacion,
+  groupInvitacionLista,
   groupJoinByCode,
   groupJoinByLink,
   getTaskSubtasks,
@@ -37,6 +39,7 @@ import {
   passOwnershipGroup,
   removeUserFromGroup,
   removeTaskWithSubtasks,
+  revokeGroupInvit,
   setMemberRole,
   sortTasksByCompleted,
   toggleSubtaskCompleted,
@@ -44,9 +47,10 @@ import {
   uncompleteTask,
   type ITaskFormData,
   userLeaveGroup,
-  membersGroups
+  membersGroups,
+  eventosGroup
 } from "../../data/Api";
-import type { MembersResponse } from "../../types/LoginRequest";
+import type { EventosGrupos, GroupInvitacionRespuesta, MembersResponse } from "../../types/LoginRequest";
 
 const compareGroupsAlphabetically = (firstGroup: IGroup, secondGroup: IGroup): number => {
   return firstGroup.name.localeCompare(secondGroup.name, "es", { sensitivity: "base" });
@@ -82,11 +86,11 @@ const getSortedGroups = (groups: IGroup[], activeGroup: number): IGroup[] => {
   });
 };
 
-const normalizeObjectiveId = (idObjetivo?: number): number | undefined => {
+const normalizeObjectiveId = (idObjetivo?: number | null): number | undefined => {
   return typeof idObjetivo === "number" && idObjetivo >= 0 ? idObjetivo : undefined;
 };
 
-const normalizeTaskFormData = (data: ITaskFormData, fallbackObjetivoId?: number): ITaskFormData => ({
+const normalizeTaskFormData = (data: ITaskFormData, fallbackObjetivoId?: number | null): ITaskFormData => ({
   ...data,
   idObjetivo: normalizeObjectiveId(data.idObjetivo) ?? normalizeObjectiveId(fallbackObjetivoId)
 });
@@ -116,6 +120,14 @@ export default function Groups() {
   const [groupMembersMap, setGroupMembersMap] = useState<Record<number, MembersResponse[]>>({});
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [personalGroupId, setPersonalGroupId] = useState<number | null>(null);
+  const [rewardNotification, setRewardNotification] = useState<{ xp: number; ludiones: number } | null>(null);
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState<boolean>(false);
+  const [auditEvents, setAuditEvents] = useState<EventosGrupos[]>([]);
+  const [loadingAudit, setLoadingAudit] = useState<boolean>(false);
+  const showRewardNotification = (xp: number, ludiones: number) => {
+    setRewardNotification(null);
+    window.setTimeout(() => setRewardNotification({ xp, ludiones }), 0);
+  };
 
   const toRenderableGroups = (userGroups: Array<{
     gid?: number;
@@ -184,6 +196,12 @@ export default function Groups() {
 
     void loadGroups();
   }, []);
+
+  useEffect(() => {
+    if (!rewardNotification) return;
+    const timeoutId = window.setTimeout(() => setRewardNotification(null), 2200);
+    return () => window.clearTimeout(timeoutId);
+  }, [rewardNotification]);
 
   useEffect(() => {
     if (groupToDelete.gid === -1) {
@@ -301,7 +319,7 @@ export default function Groups() {
 
   const sortedGroups = getSortedGroups(groups, activeGroup);
   const activeGroupData = groups.find((group) => group.gid === activeGroup);
-  const filteredGroupTasks = sortTasksByCompleted(filterTasksByCompleted((activeGroupData?.tasks ?? []).filter((task) => isTaskVisibleInDefaultList(task)), groupTaskFilters).filter((t) => t.idObjetivo === undefined));
+  const filteredGroupTasks = sortTasksByCompleted(filterTasksByCompleted((activeGroupData?.tasks ?? []).filter((task) => isTaskVisibleInDefaultList(task)), groupTaskFilters).filter((t) => t.idObjetivo == null));
   const availableObjectives = (activeGroupData?.tasks ?? []).filter((task) => task.tipo === "OBJETIVO");
 
   const updateActiveGroupTasks = (updater: (tasks: ITarea[]) => ITarea[]) => {
@@ -486,6 +504,7 @@ export default function Groups() {
 
     const subtasks = getTaskSubtasks(groupTasks, taskId);
     const willComplete = !isTaskCompleted(task);
+    const wasCompletedBefore = Boolean(task.fecha_completado);
 
     try {
         if (willComplete) {
@@ -507,6 +526,7 @@ export default function Groups() {
         console.error("Error al completar/descompletar tarea del grupo:", err);
     } finally {
         updateActiveGroupTasks((groupTasks) => toggleTaskCompleted(groupTasks, `${taskId}`));
+        if (willComplete && !wasCompletedBefore) showRewardNotification(task.recompensaXp ?? 0, task.recompensaLudion ?? 0);
     }
   };
 
@@ -514,6 +534,7 @@ export default function Groups() {
     const subtask = activeGroupData?.tasks.find((task) => task.id === subtaskId);
     const parentTask = activeGroupData?.tasks.find((task) => task.id === taskId);
     if (!subtask) return;
+    const wasCompletedBefore = Boolean(subtask.fecha_completado);
 
     try {
       if (isTaskCompleted(subtask)) {
@@ -533,6 +554,9 @@ export default function Groups() {
       console.error("Error al completar la subtarea del grupo:", completeError);
     } finally {
       updateActiveGroupTasks((groupTasks) => toggleSubtaskCompleted(groupTasks, `${taskId}`, `${subtaskId}`));
+      if (subtask && !isTaskCompleted(subtask) && !wasCompletedBefore) {
+        showRewardNotification(subtask.recompensaXp ?? 0, subtask.recompensaLudion ?? 0);
+      }
     }
   };
 
@@ -594,29 +618,91 @@ export default function Groups() {
     }
   };
 
-  const generateInviteLinkHandler = async (gid: number): Promise<string> => {
+  const normalizeInvite = (inviteLike: unknown): GroupInvitacionRespuesta => {
+    if (inviteLike && typeof inviteLike === "object") {
+      const invite = inviteLike as Partial<GroupInvitacionRespuesta>;
+      return {
+        code: typeof invite.code === "string" ? invite.code : "",
+        inviteUrl: typeof invite.inviteUrl === "string" ? invite.inviteUrl : "",
+        expiresAt: typeof invite.expiresAt === "string" ? invite.expiresAt : null,
+        maxUses: typeof invite.maxUses === "number" ? invite.maxUses : 0,
+        usesCount: typeof invite.usesCount === "number" ? invite.usesCount : 0,
+        revokedAt: typeof invite.revokedAt === "string" ? invite.revokedAt : null
+      };
+    }
+
+    if (typeof inviteLike === "string") {
+      return {
+        code: "",
+        inviteUrl: inviteLike,
+        expiresAt: null,
+        maxUses: 0,
+        usesCount: 0,
+        revokedAt: null
+      };
+    }
+
+    return {
+      code: "",
+      inviteUrl: "",
+      expiresAt: null,
+      maxUses: 0,
+      usesCount: 0,
+      revokedAt: null
+    };
+  };
+
+  const generateInviteHandler = async (gid: number): Promise<GroupInvitacionRespuesta> => {
     try {
       const inviteResponse = await groupInvitacion({ gid });
-      const linkFromInviteResponse =
-        typeof inviteResponse === "string"
-          ? inviteResponse
-          : typeof inviteResponse?.inviteUrl === "string"
-            ? inviteResponse.inviteUrl
-            : "";
+      const normalizedFromCreate = normalizeInvite(inviteResponse);
 
-      if (linkFromInviteResponse) {
-        return linkFromInviteResponse;
+      let inviteUrl = normalizedFromCreate.inviteUrl;
+      if (!inviteUrl) {
+        inviteUrl = await groupInviteLink(gid);
       }
 
-      const fallbackLink = await groupInviteLink(gid);
-      if (typeof fallbackLink === "string" && fallbackLink.trim()) {
-        return fallbackLink;
+      // Si el endpoint de crear devuelve solo inviteUrl, buscamos el code en el listado.
+      const invites = await groupInvitacionLista(gid);
+      const normalizedInvites = (Array.isArray(invites) ? invites : []).map(normalizeInvite);
+      const inviteFromList = normalizedInvites.find((invite) => invite.inviteUrl === inviteUrl);
+
+      if (inviteFromList) {
+        return inviteFromList;
       }
 
-      throw new Error("No se recibio enlace de invitacion");
+      return {
+        code: normalizedFromCreate.code ?? "",
+        inviteUrl,
+        expiresAt: normalizedFromCreate.expiresAt ?? null,
+        maxUses: normalizedFromCreate.maxUses ?? 10,
+        usesCount: normalizedFromCreate.usesCount ?? 0,
+        revokedAt: normalizedFromCreate.revokedAt ?? null
+      };
     } catch (saveError) {
       console.error("Error al generar invitacion del grupo:", saveError);
       setError("No se pudo generar la invitacion.");
+      throw saveError;
+    }
+  };
+
+  const loadInvitesHandler = async (gid: number): Promise<GroupInvitacionRespuesta[]> => {
+    try {
+      const list = await groupInvitacionLista(gid);
+      return (Array.isArray(list) ? list : []).map(normalizeInvite);
+    } catch (loadError) {
+      console.error("Error al cargar invitaciones del grupo:", loadError);
+      setError("No se pudieron cargar las invitaciones.");
+      throw loadError;
+    }
+  };
+
+  const revokeInviteHandler = async (gid: number, code: string): Promise<void> => {
+    try {
+      await revokeGroupInvit({ gid, code });
+    } catch (saveError) {
+      console.error("Error al revocar invitacion del grupo:", saveError);
+      setError("No se pudo revocar la invitacion.");
       throw saveError;
     }
   };
@@ -707,6 +793,24 @@ export default function Groups() {
     }
   };
 
+  const openAuditModal = async () => {
+    if (!activeGroupData) {
+      return;
+    }
+
+    try {
+      setLoadingAudit(true);
+      const events = await eventosGroup(activeGroupData.gid);
+      setAuditEvents(Array.isArray(events) ? events : []);
+      setIsAuditModalOpen(true);
+    } catch (loadError) {
+      console.error("Error al cargar auditoria del grupo:", loadError);
+      setError("No se pudo cargar el historial de auditoria.");
+    } finally {
+      setLoadingAudit(false);
+    }
+  };
+
 
 
 
@@ -714,6 +818,11 @@ export default function Groups() {
   return (
     <div style={{ backgroundImage: `url(${bgImage})` }} className="relative flex min-h-screen flex-col gap-4 bg-cover bg-center font-['Space_Grotesk'] text-white">
       <Navbar />
+      {rewardNotification ? (
+        <div className="fixed bottom-4 right-4 z-60">
+          <NotificationModal xp={rewardNotification.xp} ludiones={rewardNotification.ludiones} />
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-1 gap-2 px-5 md:flex md:flex-row md:justify-center">
         <div className="flex w-full flex-col gap-2 md:w-1/3">
@@ -736,6 +845,9 @@ export default function Groups() {
           <div className="flex w-full flex-row">
             <button disabled={!activeGroupData} onClick={() => setIsSettingsModalOpen(true)} className="rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
               <span className="text-2xl font-bold">Configuracion</span>
+            </button>
+            <button disabled={!activeGroupData || loadingAudit} onClick={() => { void openAuditModal(); }} className="ml-2 rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
+              <span className="text-2xl font-bold">Historial</span>
             </button>
             <button disabled={!activeGroupData} onClick={() => {setInitialDataModal(null); setIsOpenModal(true);}}
               className="ml-auto rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
@@ -802,11 +914,60 @@ export default function Groups() {
           members={groupMembersMap[activeGroupData.gid] ?? []}
           onAddMemberByUid={addMemberByUidHandler}
           onRemoveMember={removeMemberHandler}
-          onGenerateInviteLink={generateInviteLinkHandler}
+          onGenerateInviteLink={generateInviteHandler}
+          onLoadInvites={loadInvitesHandler}
+          onRevokeInvite={revokeInviteHandler}
           onSetMemberRole={setMemberRoleHandler}
           onPassOwnership={passOwnershipHandler}
         />
       )}
+
+      {isAuditModalOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 font-['Space_Grotesk']">
+          <div className="bg-[linear-gradient(160deg,#0a101ff2,#3c1480d9,#142f42e6)] rounded-lg shadow-xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-gray-700">
+              <h2 className="text-xl font-bold text-white">Historial de auditoria</h2>
+              <button
+                onClick={() => setIsAuditModalOpen(false)}
+                className="text-gray-300 hover:text-white text-2xl"
+              >
+                &times;
+              </button>
+            </div>
+            <div className="p-5 overflow-y-auto">
+              {auditEvents.length === 0 ? (
+                <p className="text-gray-300">No hay eventos para mostrar.</p>
+              ) : (
+                <div className="space-y-2">
+                  {auditEvents.map((event) => (
+                    <div key={event.id} className="rounded-md border border-gray-700 bg-gray-900/45 p-3">
+                      <p className="text-sm text-white">
+                        #{event.id} · Actor UID: {event.actorUid} · {event.eventType}
+                      </p>
+                      <p className="text-xs text-gray-300">
+                        Fecha: {new Date(event.createdAt).toLocaleString()}
+                      </p>
+                      {event.payloadJson ? (
+                        <pre className="mt-2 max-w-full overflow-x-auto rounded bg-black/25 p-2 text-xs text-gray-200">
+                          {event.payloadJson}
+                        </pre>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="border-t border-gray-700 p-4 flex justify-end">
+              <button
+                onClick={() => setIsAuditModalOpen(false)}
+                className="px-6 py-2 border border-gray-600 rounded-md text-white hover:bg-gray-700 transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <CreateGroupModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} onSave={handleCreateGroup} />
 

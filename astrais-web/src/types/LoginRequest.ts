@@ -24,9 +24,11 @@ export interface UserData {
   nivel: number;
   xpActual: number;
   xpTotal: number; 
+  ludiones: number;
   personalGid: number;
-  equipperPetRef: number; 
-  themeColors: number | null; 
+  equippedPetRef: string | null;
+  themeColors: string | null;
+  isAdmin: boolean;
 }
 
 export interface UserGroups {
@@ -85,9 +87,9 @@ export interface EditTask {
 }
 
 export interface EditUser {
-  uid: string,
-  nombreusu: string,
-  lang: string,
+  uid: number,
+  nombreusu?: string,
+  lang?: null,
   utcOffset: number
 }
 
@@ -145,4 +147,13 @@ export interface RevokeGroupInvit {
 export interface PassOwnershipGroup {
   gid: number,
   newOwnerUserId: number
+}
+
+export interface SetOauthRequest {
+  providerUid: string;
+  authProvider: string;
+}
+
+export interface DeleteOauthRequest {
+  authProvider: string;
 }

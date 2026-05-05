@@ -85,4 +85,10 @@ sealed interface Route {
      */
     @Serializable
     data object StoreTab : Route
+
+    /**
+     * Ruta hacia la pantalla de Logros.
+     */
+    @Serializable
+    data object Logros : Route
 }

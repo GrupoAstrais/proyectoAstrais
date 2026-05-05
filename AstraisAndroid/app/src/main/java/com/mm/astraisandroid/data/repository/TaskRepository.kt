@@ -22,7 +22,7 @@ import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 /**
- * Repositorio de tareas de la capa de datos del cliente Android.
+ * Repositorio de tareas de la capa de datos.
  *
  * Actúa como única fuente de verdad para los datos de tareas, coordinando las
  * operaciones de red ([TaskApi]) con el almacenamiento local ([TareaDao]) y la
@@ -31,7 +31,7 @@ import javax.inject.Inject
  * Estrategia general:
  * - **Lectura**: se expone [allTareas] como [Flow] de Room, actualizando la UI
  *   de forma reactiva sin bloqueos.
- * - **Escritura en línea**: el método de red se llama directamente (sin caché).
+ * - **Escritura en línea**: el método de red se llama directamente.
  * - **Escritura optimista**: los métodos `*Optimistic` modifican Room de inmediato
  *   y encolan una [PendingAction] en [ActionDao] para que [SyncWorker] la envíe
  *   al servidor cuando haya conectividad.
@@ -400,7 +400,7 @@ class TaskRepository @Inject constructor(
         dueDate: String? = null,
         frecuencia: HabitFrequency? = null
     ): Result<Unit> {
-        tareaDao.updateTareaDetails(titulo, descripcion, prioridad.ordinal, tid)
+        tareaDao.updateTareaDetails(titulo, descripcion, prioridad.ordinal, dueDate, frecuencia?.value, tid)
 
         val extraUnico = dueDate?.let { CreateTareaUniqueData(it) }
         val extraHabito = frecuencia?.let { CreateTareaHabitData(1, it) }

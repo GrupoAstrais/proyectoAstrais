@@ -111,7 +111,7 @@ class AdminDaoImpl : AdminDao {
                 desc = formData.desc,
                 type = formData.type,
                 price = formData.price,
-                assetRef = formData.fileName,
+                assetRef = if (formData.fileBytes != null) formData.fileName else ent.assetRef,
                 theme = formData.theme ?: "",
                 coleccion = formData.collection,
                 rarity = formData.rarity
@@ -178,7 +178,8 @@ class AdminDaoImpl : AdminDao {
                     id = data.id.value,
                     nombre = data.nombre,
                     rol = if (data.rol == UserRoles.ADMIN_USER) {"Admin"} else {"User"},
-                    nivel = data.nivel
+                    nivel = data.nivel,
+                    confirmed = data.esta_confirmado == 1
                 )
             }else{
                 return null

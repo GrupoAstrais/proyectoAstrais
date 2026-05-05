@@ -556,11 +556,11 @@ class TaskViewModel @Inject constructor(
         frecuencia: String? = null
     ) {
         viewModelScope.launch {
-            tareaDao.updateTareaDetails(titulo, descripcion, prioridad.ordinal, tid)
-
             val habitFrequencyEnum = try {
                 frecuencia?.let { HabitFrequency.valueOf(it) }
             } catch (e: Exception) { null }
+
+            tareaDao.updateTareaDetails(titulo, descripcion, prioridad.ordinal, fechaLimite, habitFrequencyEnum?.value, tid)
 
             val request = EditTareaRequest(
                 titulo = titulo,

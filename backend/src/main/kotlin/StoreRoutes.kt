@@ -19,6 +19,7 @@ data class CosmeticResponseDTO(
         val assetRef: String,
         val theme: String,
         val coleccion: String,
+        val rarity: String,
         val owned: Boolean,
         val equipped: Boolean
 )
@@ -59,9 +60,8 @@ fun Route.storeRoutes() {
                     BuyCosmeticResponse.OKAY -> call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
                     BuyCosmeticResponse.USER_NOT_FOUND -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "User was not found"))
                     BuyCosmeticResponse.COSMETIC_NOT_FOUND -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "The cosmetic was not found"))
-                    BuyCosmeticResponse.INSUFICIENT_CURRENCY -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Insuficient funds"))
                     BuyCosmeticResponse.ALREADY_HAS_OBJECT -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCENOTCREATED.ordinal, "Not owned"))
-                    else -> call.respond("what?")
+                    else -> call.respond(HttpStatusCode.InternalServerError)
                 }
             }
         }

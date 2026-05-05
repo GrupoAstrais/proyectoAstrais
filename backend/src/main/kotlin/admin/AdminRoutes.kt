@@ -593,7 +593,13 @@ suspend fun receiveFormDataFromClient(multipart : MultiPartData) : FormClientDat
                     "price" -> price = part.value.toIntOrNull() ?: 0
                     "theme" -> theme = part.value
                     "collection" -> collection = part.value
-                    "rarity" -> rarityStr = part.value
+                    "rarity" -> rarityStr = when (part.value) {
+                        "COMMON" -> "COMUN"
+                        "RARE" -> "RARO"
+                        "EPIC" -> "EPICO"
+                        "LEGENDARY" -> "LEGENDARIO"
+                        else -> part.value
+                    }
                 }
             }
             is PartData.FileItem -> {

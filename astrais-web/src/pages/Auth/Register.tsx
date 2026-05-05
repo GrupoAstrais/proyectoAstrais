@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
 import loginBg from '../../assets/login-bg.jpg'
-import { confirmRegister, createUser } from '../../data/Api'
+import { confirmRegister, createUser, handleGoogleCallback, loginWithGoogle } from '../../data/Api'
+
+const PASSWORD_SECURITY_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{12,}$/
 
 export default function Register() {
   const navigate = useNavigate()
@@ -14,6 +16,29 @@ export default function Register() {
   const [codeSent, setCodeSent] = useState(false)
   const [error, setError] = useState('')
 
+  const isPasswordSecure = (value: string) => PASSWORD_SECURITY_PATTERN.test(value)
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const uid = params.get('uid')
+    const hadToRegister = params.get('hadToRegister')
+    const jwtAccessToken = params.get('jwtAccessToken')
+    const jwtRefreshToken = params.get('jwtRefreshToken')
+
+    if (!uid || !jwtAccessToken || !jwtRefreshToken || hadToRegister === null) {
+      return
+    }
+
+    void handleGoogleCallback(
+      Number(uid),
+      hadToRegister === 'true',
+      jwtAccessToken,
+      jwtRefreshToken
+    )
+      .then(() => navigate('/home'))
+      .catch(() => setError('No se pudo completar el registro con Google.'))
+  }, [navigate])
+
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
@@ -24,6 +49,9 @@ export default function Register() {
       } else {
         if (password !== passwordVer) {
           setError('Passwords do not match.')
+          return
+        } else if (!isPasswordSecure(password)) {
+          setError('Password must have at least 12 characters, including uppercase, lowercase and a number.')
           return
         } else {
           await createUser({name: name, email: email, passwd: password, lang: 'ENG'}).then( () => {
@@ -105,6 +133,9 @@ export default function Register() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="current-password"
+              minLength={12}
+              pattern={`${PASSWORD_SECURITY_PATTERN}`}
+              title="Minimum 12 characters, with uppercase, lowercase and a number."
               required
               className="rounded-xl border border-white/25 bg-black/25 px-3.5 py-3 text-base text-white placeholder:text-white/65 focus-visible:outline-2 focus-visible:outline-[#ff66dd] focus-visible:outline-offset-1"
             />
@@ -119,6 +150,9 @@ export default function Register() {
               value={passwordVer}
               onChange={(event) => setPasswordVer(event.target.value)}
               autoComplete="current-password"
+              minLength={12}
+              pattern={`${PASSWORD_SECURITY_PATTERN}`}
+              title="Minimum 1 characters, with uppercase, lowercase and a number."
               required
               className="rounded-xl border border-white/25 bg-black/25 px-3.5 py-3 text-base text-white placeholder:text-white/65 focus-visible:outline-2 focus-visible:outline-[#ff66dd] focus-visible:outline-offset-1"
             />
@@ -149,6 +183,14 @@ export default function Register() {
             type="submit"
           >
             Sign Up
+          </button>
+
+          <button
+            className="cursor-pointer rounded-xl border border-white/20 bg-white/10 p-3 text-base font-semibold text-white transition duration-150 ease-in hover:-translate-y-px"
+            type="button"
+            onClick={loginWithGoogle}
+          >
+            Continue with Google
           </button>
 
           <p className="m-0 text-center text-[0.95rem] text-[rgba(246,232,255,0.92)]">

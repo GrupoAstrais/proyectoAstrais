@@ -89,6 +89,7 @@
         </form>
     </div>
 
+    <script src="/admin/constant.js"></script>
     <script src="constant.js"></script>
 
     <script>
@@ -118,8 +119,8 @@
                     if (await checkIfAdmin(data.jwtAccessToken)) {
                         window.location.href = INDEX_URL;
                     } else {
-                        localStorage.setItem(STORAGE_ACCESS, null);
-                        localStorage.setItem(STORAGE_REFRESH, null);
+                        localStorage.removeItem(STORAGE_ACCESS);
+                        localStorage.removeItem(STORAGE_REFRESH);
                         err.style.display = 'block';
                         err.textContent = "You are not admin";
                     }

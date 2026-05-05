@@ -8,14 +8,14 @@ import kotlinx.serialization.json.Json
 
 /* Así es la estructura del JSON para los colores
 {
-    "primary": "#39FF14",
-    "secondary": "#00C800",
-    "tertiary": "#007A00",
-    "background": "#050B05",
-    "backgroundAlt": "#1A331A",
-    "surface": "#101A10",
-    "text": "#E0FFE0",
-    "error": "#FF3366"
+  "primary": "#8B5CF6",
+  "secondary": "#38BDF8 ",
+  "tertiary": "#10B981",
+  "background": "#0D1117",
+  "backgroundAlt": "#11161D",
+  "surface": "#1A1D2D",
+  "text": "#F8FAFC",
+  "error": "#F43F5E"
 }
 * */
 
@@ -34,14 +34,14 @@ import kotlinx.serialization.json.Json
  */
 @Serializable
 data class ThemeConfig(
-    val primary: String,
-    val secondary: String,
-    val tertiary: String,
-    val background: String,
-    val backgroundAlt: String,
-    val surface: String,
-    val text: String,
-    val error: String
+    val primary: String = "#8B5CF6",
+    val secondary: String = "#38BDF8",
+    val tertiary: String = "#10B981",
+    val background: String = "#0D1117",
+    val backgroundAlt: String = "#11161D",
+    val surface: String = "#1A1D2D",
+    val text: String = "#F8FAFC",
+    val error: String = "#F43F5E"
 )
 
 /**
@@ -69,6 +69,7 @@ data class UserMeResponse(
     val personalGid: Int?,
     val equippedPetRef: String?,
     val equippedAvatarRef: String? = null,
+    @SerialName("language") val language: String? = null,
     val themeColors: String? = null
 )
 
@@ -110,6 +111,7 @@ fun UserMeResponse.toDomain(): User {
         personalGid = this.personalGid,
         equippedPetRef = this.equippedPetRef,
         equippedAvatarRef = this.equippedAvatarRef,
+        language = this.language,
         theme = parsedTheme
     )
 }

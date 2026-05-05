@@ -58,8 +58,8 @@ interface TareaDao {
     @Query("UPDATE tareas SET estado = 'ACTIVE', isPendingSync = 1 WHERE id = :id")
     suspend fun markAsActive(id: Int)
 
-    @Query("UPDATE tareas SET titulo = :titulo, descripcion = :desc, prioridad = :prio, isPendingSync = 1 WHERE id = :tid")
-    suspend fun updateTareaDetails(titulo: String, desc: String, prio: Int, tid: Int)
+    @Query("UPDATE tareas SET titulo = :titulo, descripcion = :desc, prioridad = :prio, extraUnicoFecha = :dueDate, extraHabitoFrecuencia = :freq, isPendingSync = 1 WHERE id = :tid")
+    suspend fun updateTareaDetails(titulo: String, desc: String, prio: Int, dueDate: String?, freq: String?, tid: Int)
 
     @Query("DELETE FROM tareas WHERE isPendingSync = 0 AND id >= 0")
     suspend fun clearSyncedTareas(): Int

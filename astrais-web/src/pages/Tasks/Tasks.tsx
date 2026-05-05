@@ -7,6 +7,7 @@ import Calendar from "../../components/layout/Calendar";
 import Modal from "../../components/modales/TaskModal";
 import ButtonFilter from "../../components/ui/ButtonFilter";
 import ButtonComplete from "../../components/ui/ButtonComplete";
+import NotificationModal from "../../components/modales/NotificationModal";
 import {
   buildCreateTaskRequest,
   buildEditTaskRequest,
@@ -37,10 +38,10 @@ import {
 // Helpers
 // ---------------------------------------------------------------------------
 
-const normalizeObjectiveId = (id?: number): number | undefined =>
+const normalizeObjectiveId = (id?: number | null): number | undefined =>
   typeof id === "number" ? id : undefined;
 
-const normalizeTaskFormData = (data: ITaskFormData, fallbackObjetivoId?: number): ITaskFormData => ({
+const normalizeTaskFormData = (data: ITaskFormData, fallbackObjetivoId?: number | null): ITaskFormData => ({
   ...data,
   idObjetivo: normalizeObjectiveId(data.idObjetivo) ?? normalizeObjectiveId(fallbackObjetivoId)
 });
@@ -62,6 +63,11 @@ export default function Tasks() {
   const [diariasCompletedFilters, setDiariasCompletedFilters] = useState({ completed: false, pending: false });
   const [habitosCompletedFilters, setHabitosCompletedFilters] = useState({ completed: false, pending: false });
   const [initialDataModal, setInitialDataModal] = useState<ITarea | null>(null);
+  const [rewardNotification, setRewardNotification] = useState<{ xp: number; ludiones: number } | null>(null);
+  const showRewardNotification = (xp: number, ludiones: number) => {
+    setRewardNotification(null);
+    window.setTimeout(() => setRewardNotification({ xp, ludiones }), 0);
+  };
 
   useEffect(() => {
     const loadTasks = async () => {
@@ -81,6 +87,12 @@ export default function Tasks() {
 
     void loadTasks();
   }, []);
+
+  useEffect(() => {
+    if (!rewardNotification) return;
+    const timeoutId = window.setTimeout(() => setRewardNotification(null), 2200);
+    return () => window.clearTimeout(timeoutId);
+  }, [rewardNotification]);
 
   //console.log("DE TASKS: "+JSON.stringify(tasks, null, 2));
   // ---------------------------------------------------------------------------
@@ -163,6 +175,7 @@ export default function Tasks() {
 
     const subtasks = getTaskSubtasks(tasks, taskId);
     const willComplete = !isTaskCompleted(task);
+    const wasCompletedBefore = Boolean(task.fecha_completado);
 
     try {
         if (willComplete) {
@@ -186,6 +199,7 @@ export default function Tasks() {
         console.error("Error al completar/descompletar tarea:", err);
     } finally {
         setTasks((prev) => toggleTaskCompleted(prev, `${taskId}`));
+        if (willComplete && !wasCompletedBefore) showRewardNotification(task.recompensaXp ?? 0, task.recompensaLudion ?? 0);
     }
   };
 
@@ -193,6 +207,7 @@ export default function Tasks() {
     const subtask = tasks.find((t) => t.id === subtaskId);
     const parentTask = tasks.find((t) => t.id === taskId);
     if (!subtask) return;
+    const wasCompletedBefore = Boolean(subtask.fecha_completado);
 
     try {
       if (isTaskCompleted(subtask)) {
@@ -209,6 +224,9 @@ export default function Tasks() {
       }
     } finally {
       setTasks((prev) => toggleSubtaskCompleted(prev, `${taskId}`, `${subtaskId}`));
+      if (subtask && !isTaskCompleted(subtask) && !wasCompletedBefore) {
+        showRewardNotification(subtask.recompensaXp ?? 0, subtask.recompensaLudion ?? 0);
+      }
     }
   };
 
@@ -241,7 +259,7 @@ export default function Tasks() {
       filterTasksByCompleted(filterTasksByTime(source, timeFilter, selectedDate), completedFilters)
     );
 
-  const filteredDiariasTasks = getFilteredTasks(getDailyTasks(tasks).filter((t) => t.idObjetivo === undefined), activeDiarias, diariasCompletedFilters);
+  const filteredDiariasTasks = getFilteredTasks(getDailyTasks(tasks).filter((t) => t.idObjetivo == null), activeDiarias, diariasCompletedFilters);
   const filteredHabitosTasks = getFilteredTasks(getHabitTasks(tasks), activeHabitos, habitosCompletedFilters);
   const availableObjectives = tasks.filter((t) => t.tipo === "OBJETIVO");
   console.log(tasks);
@@ -299,6 +317,11 @@ export default function Tasks() {
       </div>
 
       <Navbar />
+      {rewardNotification ? (
+        <div className="fixed bottom-4 right-4 z-60">
+          <NotificationModal xp={rewardNotification.xp} ludiones={rewardNotification.ludiones} />
+        </div>
+      ) : null}
 
       <div className="flex flex-col gap-6 px-2">
         <button

@@ -1,17 +1,20 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
+import { useNavigate } from 'react-router';
 import bgImage from '../../assets/homeScreenBack.jpg';
 import Navbar from '../../components/layout/Navbar';
 import Achiv from '../../components/ui/Achiv';
 import ProgressBar from '../../components/ui/Reward';
 import astra from '../../assets/astra2.png';
 import astraAvatar from '../../assets/astra.png';
+import { deleteUser, editUser, getUserData, setEmailLogin } from '../../data/Api';
 
 type ModalType = 'edit' | 'settings' | 'friends' | 'share' | null;
 type VisibilitySetting = 'public' | 'friends' | 'private';
 type FriendStatus = 'En linea' | 'Estudiando' | 'Descansando';
 
 interface ProfileState {
+  uid: number;
   name: string;
   username: string;
   description: string;
@@ -77,10 +80,11 @@ interface ToggleRowProps {
 }
 
 const initialProfile: ProfileState = {
+  uid: 103944384,
   name: 'Astra',
   username: 'astra',
   description:
-    'Mascota oficial de Astrais. Ordeno tareas, acompano grupos y convierto cada racha completada en una pequena celebracion.',
+    'Mascota oficial de Astraïs.',
   level: 3,
   xp: 45,
   joinDate: '16 diciembre 2025',
@@ -256,6 +260,7 @@ const getFriendStatusClassName = (status: FriendStatus) => {
 };
 
 export default function Profile() {
+  const navigate = useNavigate();
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [profile, setProfile] = useState<ProfileState>(initialProfile);
   const [settings, setSettings] = useState<ProfileSettingsState>(initialSettings);
@@ -263,6 +268,31 @@ export default function Profile() {
   const [draftSettings, setDraftSettings] = useState<ProfileSettingsState>(initialSettings);
   const [statusMessage, setStatusMessage] = useState<string>('');
   const [shareFeedback, setShareFeedback] = useState<string>('');
+  const [userId, setUserId] = useState<number | null>(null);
+  const [emailDraft, setEmailDraft] = useState('');
+  const [passwordDraft, setPasswordDraft] = useState('');
+
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const user = await getUserData();
+        const normalizedUsername = user.nombre.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9._-]/g, '');
+
+        setUserId(user.id);
+        setProfile((currentProfile) => ({
+          ...currentProfile,
+          name: user.nombre,
+          username: normalizedUsername || currentProfile.username,
+          level: user.nivel,
+          xp: user.xpActual
+        }));
+      } catch {
+        setStatusMessage('No se pudieron cargar los datos del usuario.');
+      }
+    };
+
+    void loadUserProfile();
+  }, []);
 
   useEffect(() => {
     if (!activeModal) return;
@@ -335,21 +365,68 @@ export default function Profile() {
       return;
     }
 
-    setProfile((currentProfile) => ({
-      ...currentProfile,
-      name: cleanedName,
-      username: cleanedUsername,
-      description: cleanedDescription || currentProfile.description
-    }));
-    setStatusMessage('Perfil actualizado correctamente.');
-    closeModal();
+    void (async () => {
+      if (!userId) {
+        setStatusMessage('No se pudo identificar al usuario.');
+        return;
+      }
+
+      try {
+        const utcOffset = new Date().getTimezoneOffset() / -60 + 0.0;
+        await editUser({ uid: userId!, nombreusu: cleanedName, lang: null, utcOffset });
+        setProfile((currentProfile) => ({
+          ...currentProfile,
+          name: cleanedName,
+          username: cleanedUsername,
+          description: cleanedDescription || currentProfile.description
+        }));
+        setStatusMessage('Perfil actualizado correctamente.');
+        closeModal();
+      } catch {
+        setStatusMessage('No se pudo actualizar el perfil.');
+      }
+    })();
   };
 
   const handleSaveSettings = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setSettings(draftSettings);
-    setStatusMessage('Ajustes guardados.');
-    closeModal();
+    void (async () => {
+      try {
+        if (emailDraft.trim() || passwordDraft.trim()) {
+          if (!emailDraft.trim() || !passwordDraft.trim()) {
+            setStatusMessage('Para activar login por email debes completar email y contrasena.');
+            return;
+          }
+
+          await setEmailLogin({ email: emailDraft.trim(), passwd: passwordDraft.trim() });
+          setEmailDraft('');
+          setPasswordDraft('');
+        }
+
+        setSettings(draftSettings);
+        setStatusMessage('Ajustes guardados.');
+        closeModal();
+      } catch {
+        setStatusMessage('No se pudieron guardar los ajustes.');
+      }
+    })();
+  };
+
+  const handleResetLogin = async () => {
+    try {
+      if (!emailDraft.trim() || !passwordDraft.trim()) {
+        setStatusMessage('Para restablecer login debes completar email y contrasena.');
+        return;
+      }
+
+      await setEmailLogin({ email: emailDraft.trim(), passwd: passwordDraft.trim() });
+      setStatusMessage('Login restablecido correctamente.');
+      setEmailDraft('');
+      setPasswordDraft('');
+      setDraftSettings(initialSettings);
+    } catch {
+      setStatusMessage('No se pudo restablecer el login.');
+    }
   };
 
   const profileUrl =
@@ -399,6 +476,16 @@ export default function Profile() {
 
       setShareFeedback('No pude abrir el menu de compartir.');
     }
+  };
+
+  const clearAuthTokens = () => {
+    localStorage.removeItem('jwtToken');
+    localStorage.removeItem('jwtRefreshToken');
+  };
+
+  const handleLogout = () => {
+    clearAuthTokens();
+    navigate('/login', { replace: true });
   };
 
   return (
@@ -648,6 +735,8 @@ export default function Profile() {
             </div>
           </SurfaceCard>
         </div>
+
+
       </section>
 
       <ProfileModal
@@ -728,21 +817,41 @@ export default function Profile() {
         isOpen={activeModal === 'settings'}
         onClose={closeModal}
         footer={
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-            <button
-              type="button"
-              onClick={() => setDraftSettings(initialSettings)}
-              className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-white transition-colors duration-200 hover:bg-white/15"
-            >
-              Restablecer
-            </button>
-            <button
-              type="submit"
-              form="profile-settings-form"
-              className="rounded-2xl border border-accent-beige-300/20 bg-accent-beige-300/90 px-4 py-3 font-semibold text-primary-900 transition-colors duration-200 hover:bg-accent-beige-300"
-            >
-              Guardar ajustes
-            </button>
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await deleteUser();
+                    clearAuthTokens();
+                    setStatusMessage('Cuenta eliminada correctamente.');
+                    navigate('/login', { replace: true });
+                  } catch {
+                    setStatusMessage('No se pudo eliminar la cuenta.');
+                  }
+                }}
+                className="rounded-2xl border border-accent-beige-300/20 bg-state-error px-4 py-3 font-semibold text-primary-900 transition-colors duration-200 hover:bg-state-error/80"
+              >
+                Borrar cuenta
+              </button>
+            <div className='flex flex-row gap-3'>
+              <button
+                type="button"
+                onClick={() => {
+                  void handleResetLogin();
+                }}
+                className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-white transition-colors duration-200 hover:bg-white/15"
+              >
+                Restablecer
+              </button>
+              <button
+                type="submit"
+                form="profile-settings-form"
+                className="rounded-2xl border border-accent-beige-300/20 bg-accent-beige-300/90 px-4 py-3 font-semibold text-primary-900 transition-colors duration-200 hover:bg-accent-beige-300"
+              >
+                Guardar ajustes
+              </button>
+            </div>
           </div>
         }
       >
@@ -822,6 +931,42 @@ export default function Profile() {
                 }))
               }
             />
+          </div>
+
+          <div className="space-y-3">
+            <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[#c9b7ff]">Cuenta (OAuth)</p>
+            <p className="text-sm text-white/70">
+              Si te registraste con Google, aqui puedes definir email y contrasena para iniciar sesion tambien con credenciales.
+            </p>
+            <label className="flex flex-col gap-2">
+              <span className="text-sm font-semibold text-white">Email</span>
+              <input
+                type="email"
+                value={emailDraft}
+                onChange={(event) => setEmailDraft(event.target.value)}
+                className="rounded-2xl border border-white/15 bg-black/20 px-4 py-3 text-white outline-none transition-colors duration-200 focus:border-accent-mint-300"
+                placeholder="usuario@mail.com"
+              />
+            </label>
+            <label className="flex flex-col gap-2">
+              <span className="text-sm font-semibold text-white">Contrasena</span>
+              <input
+                type="password"
+                value={passwordDraft}
+                onChange={(event) => setPasswordDraft(event.target.value)}
+                className="rounded-2xl border border-white/15 bg-black/20 px-4 py-3 text-white outline-none transition-colors duration-200 focus:border-accent-mint-300"
+                placeholder="********"
+              />
+            </label>
+                    <div className="mt-2 flex justify-center">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="rounded-2xl border border-white/20 bg-white/10 px-6 py-3 font-semibold text-white transition-colors duration-200 hover:bg-white/15"
+            >
+              Salir
+            </button>
+        </div>
           </div>
         </form>
       </ProfileModal>

@@ -3,7 +3,7 @@ const STORAGE_ACCESS = 'astrais_access';
 const STORAGE_REFRESH = 'astrais_refresh';
 
 var url_login = "/admin/login.html";
-var url_index = "/admin/login.html";
+var url_index = "/admin/index.html";
 
 if (window.location.port == "5500"){
     url_login = "/login.html";
@@ -58,8 +58,9 @@ async function requestServer(url, options = {}, retryIfRefresh = true) {
 
 async function requestServerProtected(url, options = {}, retryIfRefresh = true) {
     const accessToken = localStorage.getItem(STORAGE_ACCESS);
-    if (accessToken == null) {
-        throw EvalError("Error! Access token is not set")
+    if (!accessToken) {
+        window.location.href = LOGIN_URL;
+        throw new Error("Error! Access token is not set")
     }
 
     const res = await fetch(url, {

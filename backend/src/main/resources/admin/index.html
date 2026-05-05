@@ -204,6 +204,7 @@
                             <th style="padding:1rem; text-align:left">Usuario</th>
                             <th style="padding:1rem; text-align:left">Rol</th>
                             <th style="padding:1rem; text-align:left">Nivel</th>
+                            <th style="padding:1rem; text-align:left">Confirmacion</th>
                             <th style="padding:1rem; text-align:right">Acciones</th>
                         </tr>
                     </thead>
@@ -445,6 +446,7 @@
         </section>
     </main>
 
+    <script src="/admin/constant.js"></script>
     <script src="constant.js"></script>
     <script>
         if (!localStorage.getItem(STORAGE_ACCESS)) window.location.href = LOGIN_URL;
@@ -495,11 +497,13 @@
                 const res = await requestServerProtected(API.USERS, { method: 'POST' });
                 if (res.ok) {
                     const users = await res.json();
+                    console.log(users)
                     tbody.innerHTML = users.map(u => `
                         <tr>
                             <td style="padding:1rem; border-top:1px solid var(--border)">${u.nombre}</td>
                             <td style="padding:1rem; border-top:1px solid var(--border)">${u.rol}</td>
                             <td style="padding:1rem; border-top:1px solid var(--border)">${u.nivel}</td>
+                            <td style="padding:1rem; border-top:1px solid var(--border)">${u.confirmed ? "Confirmado" : "Sin confirmar"}</td>
                             <td style="padding:1rem; border-top:1px solid var(--border); text-align:right">
                                 <button class="btn btn-danger" onclick="deleteUser(${u.id})">Borrar</button>
                             </td>
@@ -557,7 +561,7 @@
             if (confirm("¿Estás seguro de que deseas eliminar a este usuario?")) {
                 try {
                     const res = await requestServerProtected(`${API.DELETE_USER}/${id}`, {
-                        method: 'DELETE'
+                        method: 'POST'
                     });
                     
                     if (res.ok) {
@@ -698,7 +702,7 @@
                         </td>
                         <td style="padding: 0.8rem; text-align:right">
                             <button class="btn btn-danger" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" 
-                                onclick="removeMember(${groupId}, ${m.id})">Expulsar</button>
+                                onclick="removeMember(${groupId}, ${m.uid})">Expulsar</button>
                         </td>
                     </tr>
                 `
@@ -729,7 +733,26 @@
                 `}).join('');
 
                 const auditLog = document.getElementById('audit-log');
-                auditLog.innerHTML = (data.audit) ? data.audit.map(log => `<div>[${log.createdAt}] ${log.eventType}</div>`).join('') : 'Sin registros recientes.';
+                auditLog.innerHTML = (data.events) ? data.events.map(log => `<div>[${log.createdAt}] ${log.eventType}</div>`).join('') : 'Sin registros recientes.';
+            }
+        }
+
+        async function removeMember(gid, uid) {
+            if (!confirm("¿Expulsar a este miembro del grupo?")) return;
+            try {
+                const res = await requestServerProtected(API_URL + '/groups/removeUser', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gid: gid, userId: uid })
+                });
+                if (res.ok) {
+                    fetchGroupDetails(gid);
+                } else {
+                    alert("Error: " + await res.text());
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Error de conexión");
             }
         }
 
@@ -754,6 +777,25 @@
                 }
             } catch (e){
                 alert(e);
+            }
+        }
+
+        async function revokeInvite(code) {
+            if (!confirm("¿Revocar esta invitación?")) return;
+            try {
+                const res = await requestServerProtected(API_URL + '/groups/invites/revoke', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gid: currentAdminGroupId, code: code })
+                });
+                if (res.ok) {
+                    fetchGroupDetails(currentAdminGroupId);
+                } else {
+                    alert("Error: " + await res.text());
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Error de conexión");
             }
         }
 
@@ -815,7 +857,7 @@
             if (type === 'PET') {
                 if (fileInput.files[0]) {
                     formData.append("file", fileInput.files[0]);
-                } else if (typeof id !== "string") {
+                } else if (!id) {
                     alert("Debes seleccionar un archivo .json para el Pet");
                     return;
                 }
@@ -823,7 +865,7 @@
                 const fileImageInput = document.getElementById('item-file');
                 if (fileImageInput.files[0]) {
                     formData.append("file", fileImageInput.files[0]);
-                } else if (typeof id !== "string") {
+                } else if (!id) {
                     alert("Debes seleccionar un archivo de icono");
                     return;
                 }
