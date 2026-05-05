@@ -33,11 +33,11 @@ import {
   type ITaskFormData
 } from "../../data/Api";
 
-const normalizeObjectiveId = (idObjetivo?: number): number | undefined => {
+const normalizeObjectiveId = (idObjetivo?: number | null): number | undefined => {
   return typeof idObjetivo === "number" && idObjetivo >= 0 ? idObjetivo : undefined;
 };
 
-const normalizeTaskFormData = (data: ITaskFormData, fallbackObjetivoId?: number): ITaskFormData => ({
+const normalizeTaskFormData = (data: ITaskFormData, fallbackObjetivoId?: number | null): ITaskFormData => ({
   ...data,
   idObjetivo: normalizeObjectiveId(data.idObjetivo) ?? normalizeObjectiveId(fallbackObjetivoId)
 });
@@ -241,7 +241,7 @@ export default function Home() {
     }
   };
 
-  const dashboardTasks = [...getDailyTasks(tasks), ...getHabitTasks(tasks)].filter((task) => isTaskVisibleInDefaultList(task) && !isTaskCompleted(task) && task.idObjetivo === undefined);
+  const dashboardTasks = [...getDailyTasks(tasks), ...getHabitTasks(tasks)].filter((task) => isTaskVisibleInDefaultList(task) && !isTaskCompleted(task) && task.idObjetivo == null);
   const availableObjectives = tasks.filter((task) => task.id !== initialDataModal?.id);
 
   const editTaskHandle = (taskId: number) => {

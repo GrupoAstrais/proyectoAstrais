@@ -38,10 +38,10 @@ import {
 // Helpers
 // ---------------------------------------------------------------------------
 
-const normalizeObjectiveId = (id?: number): number | undefined =>
+const normalizeObjectiveId = (id?: number | null): number | undefined =>
   typeof id === "number" ? id : undefined;
 
-const normalizeTaskFormData = (data: ITaskFormData, fallbackObjetivoId?: number): ITaskFormData => ({
+const normalizeTaskFormData = (data: ITaskFormData, fallbackObjetivoId?: number | null): ITaskFormData => ({
   ...data,
   idObjetivo: normalizeObjectiveId(data.idObjetivo) ?? normalizeObjectiveId(fallbackObjetivoId)
 });
@@ -259,7 +259,7 @@ export default function Tasks() {
       filterTasksByCompleted(filterTasksByTime(source, timeFilter, selectedDate), completedFilters)
     );
 
-  const filteredDiariasTasks = getFilteredTasks(getDailyTasks(tasks).filter((t) => t.idObjetivo === undefined), activeDiarias, diariasCompletedFilters);
+  const filteredDiariasTasks = getFilteredTasks(getDailyTasks(tasks).filter((t) => t.idObjetivo == null), activeDiarias, diariasCompletedFilters);
   const filteredHabitosTasks = getFilteredTasks(getHabitTasks(tasks), activeHabitos, habitosCompletedFilters);
   const availableObjectives = tasks.filter((t) => t.tipo === "OBJETIVO");
   console.log(tasks);

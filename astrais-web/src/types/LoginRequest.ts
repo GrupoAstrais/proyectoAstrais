@@ -149,10 +149,6 @@ export interface PassOwnershipGroup {
   newOwnerUserId: number
 }
 
-export interface GoogleAndroidLoginRequest {
-  idToken: string;
-}
-
 export interface SetOauthRequest {
   providerUid: string;
   authProvider: string;
