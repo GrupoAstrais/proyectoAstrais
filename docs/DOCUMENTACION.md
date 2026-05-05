@@ -438,7 +438,7 @@ Desarrollar una solución multiplataforma (app móvil Android + web) que mejore 
 
 El modelo de datos está implementado en **PostgreSQL 17** y definido mediante **Exposed ORM** en el backend Kotlin.
 
-### 7.2. Descripción de tablas
+### 7.1. Descripción de tablas
 
 #### `Users`
 Almacena los datos centrales de cada aventurero.
@@ -937,7 +937,7 @@ El JAR resultante se ubicará en `backend/build/libs/`.
 
 13. **Configuración de Nginx como proxy inverso:** terminación SSL, rate limiting y servicio de assets estáticos.
 14. **Despliegue en Proxmox:** migración de los contenedores Docker al entorno de virtualización del centro educativo.
-16. **Backups automatizados:** política de snapshots de la base de datos PostgreSQL y volúmenes de uploads.
+15. **Backups automatizados:** política de snapshots de la base de datos PostgreSQL y volúmenes de uploads.
 
 ![Mockup conceptual - Sistema de amigos](images/screenshots/app/friends-mockup.png)
 
