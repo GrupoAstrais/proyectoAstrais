@@ -12,6 +12,7 @@ import com.astrais.db.initDatabase
 import com.astrais.groups.groupRoutes
 import com.auth0.jwt.exceptions.TokenExpiredException
 import installSSE
+import io.ktor.client.plugins.cookies.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*

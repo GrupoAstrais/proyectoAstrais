@@ -2,6 +2,7 @@ import axios from 'axios';
 import type { AddUserToGroup, CreateGroup, CreateTask, DeleteOauthRequest, EditGroup, EditTask, EditUser, EventosGrupos, GroupInvitacion, GroupInvitacionRespuesta, LoginRequest, MembersResponse, PassOwnershipGroup, RegisterRequest, RevokeGroupInvit, SetEmailLogin, SetMemberRole, SetOauthRequest, UserData, UserGroups, UserGroupsResponse, UserTasksResponse, VerifyRequest } from '../types/LoginRequest';
 import type { IGroup, ITarea } from '../types/Interfaces';
 import { applyThemeColors } from '../styles/theme';
+import process from 'process';
 
 //export const API_BASE_URL = 'http://192.168.3.148:5684' //url desde las practicas
 // export const API_BASE_URL = 'http://192.168.56.1:5684' //url desde casa
@@ -195,7 +196,11 @@ export async function confirmRegister(req: VerifyRequest) : Promise<void> {
 
 // Inicia el flujo OAuth con Google redirigiendo al usuario
 export function loginWithGoogle(): void {
-    window.location.href = `${instance.defaults.baseURL}/auth/google/login`;
+    let API_URL = '5173';
+    if (import.meta.env.PROD){
+        API_URL = '8080';
+    }
+    window.location.href = `${instance.defaults.baseURL}/auth/google/login?api_url=${API_URL}`;
 }
 
 // Maneja el callback de Google OAuth (tokens en la respuesta)
