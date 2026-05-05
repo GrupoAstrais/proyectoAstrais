@@ -113,7 +113,7 @@ class AuthRepoImpl : AuthRepo {
                 email.addTo(toAddress)
                 email.send()
             } catch (e: Exception) {
-                log.error("Error al enviar correo: ${e.message}")
+                log.error("Error al enviar correo: ${e.message}", e)
             }
         }
     }
