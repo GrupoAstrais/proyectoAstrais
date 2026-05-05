@@ -105,7 +105,8 @@ class AuthRepoImpl : AuthRepo {
                     mailPass = mailPass2,
                     toAddress = toAddress,
                     htmlText = htmlText,
-                    textContent = code)
+                    textContent = code
+                )
             }
         }
     }

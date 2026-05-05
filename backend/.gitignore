@@ -34,3 +34,24 @@ out/
 
 ### VS Code ###
 .vscode/
+
+.venv/
+*.pyc
+__pycache__/
+*.pyo
+.pytest_cache/
+test_results.json
+.test_tokens.json
+.env
+
+### Python ###
+*.egg-info/
+dist/
+.eggs/
+
+### OS ###
+.DS_Store
+Thumbs.db
+
+### Logs ###
+*.log
