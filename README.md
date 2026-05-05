@@ -2,7 +2,7 @@
 
 # Proyecto final: Astraïs
 
-![Banner principal](./docs/images/banner.svg)
+![Banner principal](./docs/images/branding/banner.svg)
 
 [![Kotlin Backend](https://img.shields.io/badge/Kotlin_Backend-2.1.0-purple.svg?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
 [![Kotlin Android](https://img.shields.io/badge/Kotlin_Android-2.0.21-purple.svg?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
@@ -18,7 +18,7 @@
 
 <a href="#"><img src="https://img.shields.io/badge/Descargar-Android-3DDC84?style=flat&logo=android&logoColor=white" alt="Descargar Android"></a>
 <a href="#"><img src="https://img.shields.io/badge/Visitar-Web_App-0078D7?style=flat&logo=googlechrome&logoColor=white" alt="Web App"></a>
-<a href="./API.md"><img src="https://img.shields.io/badge/Leer-Documentación-FFB000?style=flat&logo=readme&logoColor=white" alt="Documentación"></a>
+<a href="./docs/API.md"><img src="https://img.shields.io/badge/Leer-Documentación-FFB000?style=flat&logo=readme&logoColor=white" alt="Documentación"></a>
 <a href="https://github.com/GrupoAstrais/proyectoAstrais/issues"><img src="https://img.shields.io/badge/Reportar-Issues-EA4335?style=flat&logo=github&logoColor=white" alt="Reportar Issues"></a>
 
 </div>
@@ -45,17 +45,17 @@ Astraïs resuelve uno de los mayores obstáculos para mantener la productividad 
 ## Capturas de Pantalla
 
 ### Interfaz Principal
-![Dashboard principal](./docs/images/dashboard.png)
+![Dashboard principal](./docs/images/screenshots/app/dashboard.png)
 
 ### Gestión de Tareas
-![Tareas](./docs/images/dashboard.png)
+![Tareas](./docs/images/screenshots/app/tasks.png)
 
 ### Sistema de Grupos
-![Grupos](./docs/images/dashboard.png)
+![Grupos](./docs/images/screenshots/app/groups.png)
 
 
 ### Tienda de Cosméticos
-![Tienda](./docs/images/dashboard.png)
+![Tienda](./docs/images/screenshots/app/store.png)
 
 
 ## Características Principales
@@ -131,8 +131,15 @@ proyectoAstrais/
 ├── docker/               
 ├── HojaDeEstilos/        
 ├── docs/                 
-├── API.md                
-├── MANUAL_DE_USUARIO_ASTRAIS.md
+│   ├── README.md
+│   ├── DOCUMENTACIÓN.md
+│   ├── MANUAL_DE_USUARIO_ASTRAIS.md
+│   ├── PLAN_DE_PRUEBAS_ANDROID.md
+│   ├── PRUEBAS_ANDROID_ISSUES.md
+│   ├── API.md
+│   ├── images/
+│   ├── diagrams/
+│   └── taiga/
 ├── docker-compose.yml    
 └── README.md             
 ```
@@ -143,8 +150,7 @@ proyectoAstrais/
 - **AstraisAndroid/**: contiene la aplicación móvil Android desarrollada con Kotlin y Jetpack Compose.
 - **docker/**: contiene los Dockerfiles usados para construir los servicios del proyecto.
 - **HojaDeEstilos/**: contiene el prototipo visual, guía de estilos y recursos de identidad corporativa.
-- **API.md**: contiene la documentación completa de endpoints del backend.
-- **MANUAL_DE_USUARIO_ASTRAIS.md**: contiene la guía de uso de la aplicación.
+- **docs/**: contiene toda la documentación del proyecto: documentación técnica, manual de usuario, plan de pruebas, referencia de API, imágenes y diagramas.
 
 ## Instalación y Ejecución
 
@@ -220,10 +226,13 @@ Para ejecutar la aplicación Android:
 
 ## Documentación
 
-El proyecto incluye varios documentos de apoyo para entender tanto el desarrollo como el uso de la aplicación:
+El proyecto incluye varios documentos de apoyo para entender tanto el desarrollo como el uso de la aplicación. Toda la documentación se encuentra en la carpeta [`docs/`](./docs/):
 
-- **API.md**: documentación técnica de los endpoints del backend.
-- **MANUAL_DE_USUARIO_ASTRAIS.md**: manual de usuario con explicación de las pantallas y funcionalidades.
+- [**DOCUMENTACIÓN.md**](./docs/DOCUMENTACIÓN.md): documentación técnica completa del proyecto intermodular.
+- [**MANUAL_DE_USUARIO_ASTRAIS.md**](./docs/MANUAL_DE_USUARIO_ASTRAIS.md): manual de usuario con explicación de las pantallas y funcionalidades.
+- [**API.md**](./docs/API.md): documentación técnica de los endpoints del backend.
+- [**PLAN_DE_PRUEBAS_ANDROID.md**](./docs/PLAN_DE_PRUEBAS_ANDROID.md): plan de pruebas manuales de la app Android.
+- [**PRUEBAS_ANDROID_ISSUES.md**](./docs/PRUEBAS_ANDROID_ISSUES.md): registro de resultados de pruebas.
 - **Documentacion_Astrais.pdf**: documentación general del proyecto intermodular.
 - **HojaDeEstilos/**: guía visual, prototipo e identidad corporativa del proyecto.
 
@@ -237,7 +246,7 @@ La API del backend está organizada en diferentes módulos funcionales:
 - **Store**: consulta de cosméticos, compra de artículos, inventario y equipamiento.
 - **Admin**: gestión administrativa de usuarios, catálogo de cosméticos y configuración de la tienda.
 
-La documentación completa de endpoints, cuerpos de petición, respuestas y códigos de error se encuentra en [`API.md`](./API.md).
+La documentación completa de endpoints, cuerpos de petición, respuestas y códigos de error se encuentra en [`docs/API.md`](./docs/API.md).
 
 ## Modelo de Base de Datos
 
@@ -261,7 +270,7 @@ El modelo de datos está basado en PostgreSQL y se define desde el backend media
 - **Awards**: define la base para el sistema de logros.
 
 ```markdown
-![Modelo de base de datos](./docs/images/database-model.png)
+![Modelo de base de datos](./docs/diagrams/database-er.png)
 ```
 
 ## Estado del Proyecto
