@@ -21,7 +21,6 @@ export default function Login() {
     if (!uid || !jwtAccessToken || !jwtRefreshToken || hadToRegister === null) {
       return
     }
-
     void handleGoogleCallback(
       Number(uid),
       hadToRegister === 'true',
