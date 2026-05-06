@@ -195,7 +195,7 @@ export async function confirmRegister(req: VerifyRequest) : Promise<void> {
 
 // Inicia el flujo OAuth con Google redirigiendo al usuario
 export function loginWithGoogle(): void {
-    window.location.href = `http://${window.location.host}/auth/google/login`;
+    window.location.href = `http://${window.location.host}:5684/auth/google/login`;
 }
 
 // Maneja el callback de Google OAuth (tokens en la respuesta)
