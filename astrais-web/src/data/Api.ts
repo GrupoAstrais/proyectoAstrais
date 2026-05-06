@@ -5,7 +5,7 @@ import { applyThemeColors } from '../styles/theme';
 
 //export const API_BASE_URL = 'http://192.168.3.148:5684' //url desde las practicas
 // export const API_BASE_URL = 'http://192.168.56.1:5684' //url desde casa
- export const API_BASE_URL = 'http://127.0.0.1:5684' //variable de entorno para la url, con fallback a localhost
+export const API_BASE_URL = `http://${window.location.hostname}:5684`; //'http://127.0.0.1:5684' //variable de entorno para la url, con fallback a localhost
 
 
 // TOKENS
@@ -195,11 +195,7 @@ export async function confirmRegister(req: VerifyRequest) : Promise<void> {
 
 // Inicia el flujo OAuth con Google redirigiendo al usuario
 export function loginWithGoogle(): void {
-    let API_URL = '5173';
-    if (import.meta.env.PROD){
-        API_URL = '8080';
-    }
-    window.location.href = `${instance.defaults.baseURL}/auth/google/login?api_url=${API_URL}`;
+    window.location.href = `http://${window.location.hostname}:5684/auth/google/login`;
 }
 
 // Maneja el callback de Google OAuth (tokens en la respuesta)

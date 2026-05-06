@@ -30,6 +30,7 @@ import io.ktor.server.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.sessions.*
 import kotlinx.serialization.json.Json
+import java.net.InetAddress
 import java.util.Base64
 
 
@@ -88,7 +89,7 @@ fun Route.oauthRoutes() {
                     println("OAUTH? En esta economia??")
 
                     //val targetOrigin = call.parameters["frontendOrigin"] ?: "http://localhost:8080"
-                    val targetOrigin = if (System.getenv("IS_DEV").equals("0")) "8080" else "5173"
+                    val targetOrigin = if (System.getenv("IS_DEV").equals("0")) "8080" else "5684"
 
                     /*call.response.header("Cross-Origin-Opener-Policy", "same-origin-allow-popups")
                     call.respondText(
@@ -96,7 +97,7 @@ fun Route.oauthRoutes() {
                         contentType = ContentType.Text.Html,
                         status = HttpStatusCode.OK
                     )*/
-                    call.respondRedirect("http://localhost:$targetOrigin/")
+                    call.respondRedirect("http://${InetAddress.getLocalHost().hostAddress}:$targetOrigin/oauthCallback?accessToken=${loginResponse.jwtAccessToken}&refreshToken=${loginResponse.jwtRefreshToken}&hadToRegister=${loginResponse.hadToRegister}")
                 } else {
                     call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "Missing user account"))
                 }
