@@ -96,7 +96,7 @@ fun Route.oauthRoutes() {
                         contentType = ContentType.Text.Html,
                         status = HttpStatusCode.OK
                     )*/
-                    call.respondRedirect("http://localhost:$targetOrigin/")
+                    call.respondRedirect("http://localhost:$targetOrigin/oauthCallback?accessToken=${loginResponse.jwtAccessToken}&refreshToken=${loginResponse.jwtRefreshToken}&hadToRegister=${loginResponse.hadToRegister}")
                 } else {
                     call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "Missing user account"))
                 }
