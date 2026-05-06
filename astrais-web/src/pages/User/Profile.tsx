@@ -140,7 +140,7 @@ const profileFriends: FriendCardData[] = [
 ];
 
 const surfaceCardClassName =
-  'rounded-2xl border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-5 shadow-[0_15px_32px_#090b1f59] backdrop-blur-sm';
+  'rounded-2xl border border-white/15 bg-[var(--astrais-panel-bg)] p-5 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)] backdrop-blur-sm';
 
 const visibilityText: Record<VisibilitySetting, string> = {
   public: 'Perfil publico',
@@ -158,7 +158,7 @@ function SurfaceCard({ eyebrow, title, children, className = '' }: SurfaceCardPr
   return (
     <article className={`${surfaceCardClassName} ${className}`}>
       <header className="mb-4">
-        <p className="pb-2 text-[0.78rem] uppercase tracking-[0.08em] text-[#c9b7ff]">{eyebrow}</p>
+      <p className="pb-2 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--astrais-rarity-epic)]">{eyebrow}</p>
         <h2 className="font-['Press_Start_2P'] text-base leading-6 sm:text-lg">{title}</h2>
       </header>
       {children}
@@ -194,16 +194,16 @@ function ProfileModal({ title, subtitle, isOpen, onClose, children, footer }: Pr
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[#090b1fcc] px-4 py-6 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[color-mix(in_srgb,var(--astrais-background)_80%,transparent)] px-4 py-6 backdrop-blur-sm"
       onClick={onClose}
     >
       <section
-        className="w-full max-w-3xl overflow-hidden rounded-3xl border border-white/15 bg-[linear-gradient(160deg,#0F3547f2,#8B5CF6d9)] shadow-[0_22px_60px_#090b1fb3]"
+        className="w-full max-w-3xl overflow-hidden rounded-3xl border border-white/15 bg-[var(--astrais-panel-bg)] shadow-[0_22px_60px_color-mix(in_srgb,var(--astrais-background)_70%,transparent)]"
         onClick={(event) => event.stopPropagation()}
       >
         <header className="flex items-start justify-between gap-4 border-b border-white/10 px-6 py-5">
           <div>
-            <p className="pb-2 text-[0.78rem] uppercase tracking-[0.08em] text-[#c9b7ff]">Perfil</p>
+            <p className="pb-2 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--astrais-rarity-epic)]">Perfil</p>
             <h2 className="font-['Press_Start_2P'] text-base leading-6 sm:text-lg">{title}</h2>
             <p className="mt-2 text-sm text-white/75">{subtitle}</p>
           </div>
@@ -498,7 +498,7 @@ export default function Profile() {
       <section className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-6">
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.65fr_1fr]">
           <article className={`${surfaceCardClassName} relative overflow-hidden px-6 py-6`}>
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,#9FE8C533,transparent_36%),radial-gradient(circle_at_bottom_left,#D9D9D926,transparent_28%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,color-mix(in_srgb,var(--astrais-tertiary)_20%,transparent),transparent_36%),radial-gradient(circle_at_bottom_left,color-mix(in_srgb,var(--astrais-text)_15%,transparent),transparent_28%)]" />
             <img
               src={astraAvatar}
               alt="Mascota Astrais"
@@ -508,7 +508,7 @@ export default function Profile() {
             <div className="relative flex flex-col gap-6">
               <header className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <p className="pb-2 text-[0.78rem] uppercase tracking-[0.08em] text-[#c9b7ff]">Perfil de usuario</p>
+                <p className="pb-2 text-[0.78rem] uppercase tracking-[0.08em] text-[var(--astrais-rarity-epic)]">Perfil de usuario</p>
                   <h1 className="font-['Press_Start_2P'] text-xl leading-7 sm:text-2xl">{profile.name}</h1>
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-white/75">
                     <span className="rounded-full border border-white/15 bg-black/20 px-3 py-1">@{profile.username}</span>
@@ -530,7 +530,7 @@ export default function Profile() {
 
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-[auto_1fr]">
                 <div className="flex flex-col items-center gap-3">
-                  <div className="rounded-full border border-white/15 bg-accent-beige-300/20 p-3 shadow-[0_10px_24px_#090b1f45]">
+                  <div className="rounded-full border border-white/15 bg-accent-beige-300/20 p-3 shadow-[0_10px_24px_color-mix(in_srgb,var(--astrais-background)_30%,transparent)]">
                     <div className="rounded-full bg-white/95 p-2">
                       <img src={astra} alt="Avatar de Astra" className="w-28 sm:w-34" />
                     </div>
@@ -857,7 +857,7 @@ export default function Profile() {
       >
         <form id="profile-settings-form" className="space-y-5" onSubmit={handleSaveSettings}>
           <div className="space-y-3">
-            <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[#c9b7ff]">Privacidad</p>
+                  <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[var(--astrais-rarity-epic)]">Privacidad</p>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
               {(['public', 'friends', 'private'] as VisibilitySetting[]).map((option) => (
                 <button
@@ -878,7 +878,7 @@ export default function Profile() {
           </div>
 
           <div className="space-y-3">
-            <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[#c9b7ff]">Actividad</p>
+                  <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[var(--astrais-rarity-epic)]">Actividad</p>
             <ToggleRow
               title="Recordatorios del perfil"
               description="Muestra avisos cuando tengas metas o tareas importantes pendientes."
@@ -934,7 +934,7 @@ export default function Profile() {
           </div>
 
           <div className="space-y-3">
-            <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[#c9b7ff]">Cuenta (OAuth)</p>
+                  <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[var(--astrais-rarity-epic)]">Cuenta (OAuth)</p>
             <p className="text-sm text-white/70">
               Si te registraste con Google, aqui puedes definir email y contrasena para iniciar sesion tambien con credenciales.
             </p>

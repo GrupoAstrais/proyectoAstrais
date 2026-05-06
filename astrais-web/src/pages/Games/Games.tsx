@@ -69,7 +69,7 @@ export default function Games() {
       style={{ backgroundImage: `url(${bgImage})` }}
       className="relative h-screen w-screen overflow-hidden bg-cover bg-center font-['Space_Grotesk'] text-white"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.28),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(34,197,94,0.16),transparent_38%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,color-mix(in_srgb,var(--astrais-primary)_28%,transparent),transparent_36%),radial-gradient(circle_at_bottom_right,color-mix(in_srgb,var(--astrais-tertiary)_16%,transparent),transparent_38%)]" />
       <div className="pointer-events-none absolute inset-0 bg-black/62" />
       <div className="scanlines pointer-events-none absolute inset-0 opacity-25" />
 
@@ -78,7 +78,7 @@ export default function Games() {
 
         <main className="flex min-h-0 flex-1 px-3 pb-3 pt-1 md:px-4 md:pb-4 xl:px-6 xl:pb-5">
           <section className="games-stage mx-auto hidden h-full w-full gap-3 lg:grid lg:grid-cols-[minmax(17rem,0.52fr)_minmax(0,1.28fr)_minmax(18rem,0.72fr)] min-[1400px]:gap-4 min-[1400px]:grid-cols-[minmax(20rem,0.5fr)_minmax(0,1.44fr)_minmax(22rem,0.78fr)]">
-            <aside className="panel-glow relative grid min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(180deg,rgba(15,23,42,0.88),rgba(76,29,149,0.48))] p-3.5 shadow-[0_20px_54px_rgba(7,12,24,0.45)] min-[1400px]:p-4">
+            <aside className="panel-glow relative grid min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--astrais-background)_88%,transparent),color-mix(in_srgb,var(--astrais-primary)_48%,transparent))] p-3.5 shadow-[0_20px_54px_color-mix(in_srgb,var(--astrais-background)_48%,transparent)] min-[1400px]:p-4">
               <div className="pointer-events-none absolute -left-16 top-8 h-40 w-40 rounded-full bg-secondary-500/18 blur-3xl" />
               <header className="relative z-10">
                 <p className="text-[0.62rem] uppercase tracking-[0.24em] text-accent-beige-300">Catalogo arcade</p>
@@ -102,7 +102,7 @@ export default function Games() {
                       onClick={() => setSelectedGameId(game.id)}
                       className={`w-full rounded-[22px] border p-3 text-left transition ${
                         isSelected
-                          ? 'border-accent-beige-300/42 bg-white/12 shadow-[0_14px_30px_rgba(15,23,42,0.3)]'
+                          ? 'border-accent-beige-300/42 bg-white/12 shadow-[0_14px_30px_color-mix(in_srgb,var(--astrais-background)_38%,transparent)]'
                           : 'border-white/10 bg-black/16 hover:border-white/20 hover:bg-white/8'
                       }`}
                     >
@@ -144,7 +144,7 @@ export default function Games() {
               </div>
             </aside>
 
-            <article className="panel-glow relative grid min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-[28px] border border-white/15 bg-[linear-gradient(150deg,rgba(15,23,42,0.9),rgba(30,74,99,0.78))] p-3.5 shadow-[0_22px_60px_rgba(7,12,24,0.52)] min-[1400px]:p-4">
+            <article className="panel-glow relative grid min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-[28px] border border-white/15 bg-[linear-gradient(150deg,color-mix(in_srgb,var(--astrais-background)_90%,transparent),color-mix(in_srgb,var(--astrais-secondary)_30%,var(--astrais-surface)_70%))] p-3.5 shadow-[0_22px_60px_color-mix(in_srgb,var(--astrais-background)_54%,transparent)] min-[1400px]:p-4">
               <div className="retro-grid pointer-events-none absolute inset-0 opacity-28" />
               <div className="pointer-events-none absolute bottom-0 right-0 h-56 w-56 rounded-full bg-primary-500/18 blur-3xl" />
 
@@ -170,12 +170,12 @@ export default function Games() {
                   </div>
                   <div className="rounded-2xl border border-white/10 bg-black/22 px-3 py-3">
                     <p className="text-[0.58rem] uppercase tracking-[0.2em] text-slate-400">Rango</p>
-                    <p className="mt-2 text-[0.74rem] font-semibold text-[#f5c6ff]">{selectedRank}</p>
+                    <p className="mt-2 text-[0.74rem] font-semibold text-[var(--astrais-rarity-epic)]">{selectedRank}</p>
                   </div>
                 </div>
               </header>
 
-              <div className="relative z-10 min-h-0 overflow-hidden rounded-[22px] border border-white/15 bg-black/35 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]">
+              <div className="relative z-10 min-h-0 overflow-hidden rounded-[22px] border border-white/15 bg-black/35 shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--astrais-text)_4%,transparent)]">
                 {selectedGame ? (
                   <iframe
                     id="preview-iframe"
@@ -188,7 +188,7 @@ export default function Games() {
             </article>
 
             <aside className="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-3 min-[1400px]:gap-4">
-              <article className="panel-glow relative overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(160deg,rgba(15,23,42,0.88),rgba(30,74,99,0.74))] p-3.5 shadow-[0_18px_44px_rgba(7,12,24,0.42)] min-[1400px]:p-4">
+              <article className="panel-glow relative overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(160deg,color-mix(in_srgb,var(--astrais-background)_88%,transparent),color-mix(in_srgb,var(--astrais-secondary)_28%,var(--astrais-surface)_72%))] p-3.5 shadow-[0_18px_44px_color-mix(in_srgb,var(--astrais-background)_46%,transparent)] min-[1400px]:p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-[0.62rem] uppercase tracking-[0.24em] text-accent-beige-300">Panel de sesion</p>
@@ -202,7 +202,7 @@ export default function Games() {
                   <img
                     src={gamePreview}
                     alt="Vista previa del arcade"
-                    className="h-16 w-16 rounded-2xl border border-white/5 object-cover pl-3 shadow-[0_14px_24px_rgba(15,23,42,0.2)] min-[1400px]:h-24 min-[1400px]:w-40"
+                    className="h-16 w-16 rounded-2xl border border-white/5 object-cover pl-3 shadow-[0_14px_24px_color-mix(in_srgb,var(--astrais-background)_28%,transparent)] min-[1400px]:h-24 min-[1400px]:w-40"
                   />
                 </div>
 
@@ -217,13 +217,13 @@ export default function Games() {
                   </div>
                   <div className="rounded-2xl border border-white/10 bg-white/8 p-3">
                     <p className="text-[0.56rem] uppercase tracking-[0.2em] text-slate-400">Ludiones</p>
-                    <p className="mt-2 text-[1.02rem] font-semibold text-[#f5c6ff]">{arcadeStats.totalLudionsEarned}</p>
+                    <p className="mt-2 text-[1.02rem] font-semibold text-[var(--astrais-rarity-epic)]">{arcadeStats.totalLudionsEarned}</p>
                   </div>
                 </div>
               </article>
 
               <div className="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-3 min-[1400px]:gap-4">
-                <article className="panel-glow relative overflow-hidden rounded-3xl border border-white/15 bg-[linear-gradient(180deg,rgba(15,23,42,0.84),rgba(76,29,149,0.42))] p-3.5 shadow-[0_18px_42px_rgba(7,12,24,0.38)] min-[1400px]:p-4">
+                <article className="panel-glow relative overflow-hidden rounded-3xl border border-white/15 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--astrais-background)_84%,transparent),color-mix(in_srgb,var(--astrais-primary)_42%,transparent))] p-3.5 shadow-[0_18px_42px_color-mix(in_srgb,var(--astrais-background)_42%,transparent)] min-[1400px]:p-4">
                   <p className="text-[0.62rem] uppercase tracking-[0.24em] text-accent-beige-300">Ultima ronda</p>
                   <h2 className="mt-2 font-['Press_Start_2P'] text-[0.86rem] text-white min-[1400px]:text-[0.94rem]">
                     Resultado
@@ -240,7 +240,7 @@ export default function Games() {
                           </div>
                           <div>
                             <p className="text-[0.54rem] uppercase tracking-[0.16em] text-slate-500">Premio</p>
-                            <p className="mt-1 text-[0.92rem] font-semibold text-[#f8d089]">{lastRound.reward}</p>
+                            <p className="mt-1 text-[0.92rem] font-semibold text-[var(--astrais-reward)]">{lastRound.reward}</p>
                           </div>
                           <div>
                             <p className="text-[0.54rem] uppercase tracking-[0.16em] text-slate-500">Tiempo</p>
@@ -256,7 +256,7 @@ export default function Games() {
                   </div>
                 </article>
 
-                <article className="panel-glow relative min-h-0 overflow-hidden rounded-3xl border border-white/15 bg-[linear-gradient(180deg,rgba(15,23,42,0.84),rgba(30,41,59,0.82))] p-3.5 shadow-[0_18px_42px_rgba(7,12,24,0.38)] min-[1400px]:p-4">
+                <article className="panel-glow relative min-h-0 overflow-hidden rounded-3xl border border-white/15 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--astrais-background)_84%,transparent),color-mix(in_srgb,var(--astrais-surface)_82%,transparent))] p-3.5 shadow-[0_18px_42px_color-mix(in_srgb,var(--astrais-background)_42%,transparent)] min-[1400px]:p-4">
                   <p className="text-[0.62rem] uppercase tracking-[0.24em] text-accent-beige-300">Progreso</p>
                   <h2 className="mt-2 font-['Press_Start_2P'] text-[0.86rem] text-white min-[1400px]:text-[0.94rem]">
                     Carrera
@@ -270,14 +270,14 @@ export default function Games() {
                       </div>
                       <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
                         <div
-                          className="h-full rounded-full bg-linear-to-r from-accent-mint-300 via-[#f59e0b] to-[#ec4899] transition-all duration-300"
+                          className="h-full rounded-full bg-linear-to-r from-accent-mint-300 via-[var(--astrais-rarity-legendary)] to-[var(--astrais-rarity-epic)] transition-all duration-300"
                           style={{ width: `${Math.min(100, Math.round((arcadeStats.totalScore / 220) * 100))}%` }}
                         />
                       </div>
                     </div>
                     <div className="rounded-2xl border border-white/10 bg-black/18 px-3 py-3">
                       <p className="text-[0.58rem] uppercase tracking-[0.2em] text-slate-400">Rango global</p>
-                      <p className="mt-2 text-[0.92rem] font-semibold text-[#f5c6ff]">{careerRank}</p>
+                      <p className="mt-2 text-[0.92rem] font-semibold text-[var(--astrais-rarity-epic)]">{careerRank}</p>
                     </div>
                     <NavLink
                       to="/achievements"
@@ -292,7 +292,7 @@ export default function Games() {
           </section>
 
           <section className="mx-auto flex h-full max-w-md items-center justify-center lg:hidden">
-            <article className="rounded-[28px] border border-white/15 bg-[rgba(15,23,42,0.84)] p-6 text-center shadow-[0_24px_60px_rgba(7,12,24,0.45)] backdrop-blur-sm">
+            <article className="rounded-[28px] border border-white/15 bg-[color-mix(in_srgb,var(--astrais-background)_84%,transparent)] p-6 text-center shadow-[0_24px_60px_color-mix(in_srgb,var(--astrais-background)_50%,transparent)] backdrop-blur-sm">
               <p className="text-[0.72rem] uppercase tracking-[0.28em] text-accent-beige-300">Arcade Astrais</p>
               <h1 className="mt-4 font-['Press_Start_2P'] text-lg text-white">Vista de escritorio</h1>
               <p className="mt-4 text-sm leading-6 text-slate-300">
@@ -310,17 +310,17 @@ export default function Games() {
 
         .retro-grid {
           background-image:
-            linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+            linear-gradient(color-mix(in srgb, var(--astrais-text) 6%, transparent) 1px, transparent 1px),
+            linear-gradient(90deg, color-mix(in srgb, var(--astrais-text) 6%, transparent) 1px, transparent 1px);
           background-size: 32px 32px;
-          mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), transparent);
+          mask-image: linear-gradient(to bottom, color-mix(in srgb, var(--astrais-background) 80%, transparent), transparent);
         }
 
         .scanlines {
           background-image: repeating-linear-gradient(
             180deg,
-            rgba(255, 255, 255, 0.06) 0,
-            rgba(255, 255, 255, 0.06) 1px,
+            color-mix(in srgb, var(--astrais-text) 6%, transparent) 0,
+            color-mix(in srgb, var(--astrais-text) 6%, transparent) 1px,
             transparent 1px,
             transparent 4px
           );
@@ -331,7 +331,7 @@ export default function Games() {
           position: absolute;
           inset: 0;
           border-radius: inherit;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+          box-shadow: inset 0 1px 0 color-mix(in srgb, var(--astrais-text) 12%, transparent);
           pointer-events: none;
         }
 

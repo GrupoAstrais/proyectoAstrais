@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { ITarea } from "../../types/Interfaces";
 import {
   buildTaskFormData,
@@ -28,6 +28,14 @@ const getDefaultFormData = (): ITaskFormData => ({
   taskDate: formatTaskDate(new Date())
 });
 
+const getTaskFormKey = (task?: ITarea | null) => {
+  return task ? `${task.id}:${task.fecha_actualizado ?? ""}` : "new";
+};
+
+const getInitialFormData = (task?: ITarea | null) => {
+  return task ? buildTaskFormData(task) : getDefaultFormData();
+};
+
 export default function Modal({
   onSubmit,
   onCancel,
@@ -35,19 +43,16 @@ export default function Modal({
   initialData,
   tareasObjetivos
 }: ModalProps) {
-  const [formData, setFormData] = useState<ITaskFormData>(getDefaultFormData);
-  const [objetivo, setObjetivo] = useState<number>();
+  const currentFormKey = getTaskFormKey(initialData);
+  const [formKey, setFormKey] = useState(currentFormKey);
+  const [formData, setFormData] = useState<ITaskFormData>(() => getInitialFormData(initialData));
+  const [objetivo, setObjetivo] = useState<number | undefined>(() => initialData?.idObjetivo ?? undefined);
 
-  useEffect(() => {
-    if (!initialData) {
-      setFormData(getDefaultFormData());
-      setObjetivo(undefined);
-      return;
-    }
-
-    setFormData(buildTaskFormData(initialData));
-    setObjetivo(initialData.idObjetivo);
-  }, [initialData]);
+  if (formKey !== currentFormKey) {
+    setFormKey(currentFormKey);
+    setFormData(getInitialFormData(initialData));
+    setObjetivo(initialData?.idObjetivo ?? undefined);
+  }
 
 
   const setDifficulty = (difficulty: TTaskPriority) => {
@@ -120,7 +125,7 @@ export default function Modal({
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4">
       <form
         onSubmit={handleSubmit}
-        className="flex h-auto w-full max-w-2xl flex-col gap-3 rounded-md border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-4 font-['Space_Grotesk']"
+      className="flex h-auto w-full max-w-2xl flex-col gap-3 rounded-md border border-white/15 bg-[linear-gradient(150deg,color-mix(in_srgb,var(--astrais-primary)_74%,transparent),color-mix(in_srgb,var(--astrais-secondary)_38%,transparent))] p-4 font-['Space_Grotesk']"
       >
         <h1 className="text-center font-['Press_Start_2P'] text-xl">
           {initialData ? "Editar tarea" : "Anadir tarea"}
@@ -233,7 +238,7 @@ export default function Modal({
             <button
               type="button"
               onClick={() => void onDelete()}
-              className="min-w-25 rounded-md border border-primary-900 bg-state-error p-2 font-bold text-[#460018]"
+              className="min-w-25 rounded-md border border-primary-900 bg-state-error p-2 font-bold text-primary-900"
             >
               Borrar tarea
             </button>
@@ -244,7 +249,7 @@ export default function Modal({
           <div className="flex flex-row gap-3">
             <button
               type="submit"
-              className="min-w-25 rounded-md border border-primary-900 bg-state-success p-2 font-bold text-[#00371A]"
+              className="min-w-25 rounded-md border border-primary-900 bg-state-success p-2 font-bold text-primary-900"
             >
               {initialData ? "Guardar cambios" : "Confirmar"}
             </button>

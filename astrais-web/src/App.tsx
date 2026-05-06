@@ -10,7 +10,7 @@ import Group from './pages/Groups/Groups'
 import Shop from './pages/Shop/Shop'
 import Tasks from './pages/Tasks/Tasks'
 import Profile from './pages/User/Profile'
-import { getUserData } from './data/Api'
+import { getStoreItems, getUserData } from './data/Api'
 import './styles/colors.css'
 import { applyThemeColors } from './styles/theme'
 
@@ -45,7 +45,38 @@ export default function App() {
       return
     }
 
-    void getUserData().catch(() => undefined)
+    let isMounted = true
+
+    const loadCurrentTheme = async () => {
+      try {
+        const userData = await getUserData()
+
+        if (!isMounted) {
+          return
+        }
+
+        if (userData.themeColors) {
+          applyThemeColors(userData.themeColors)
+          return
+        }
+
+        const storeItems = await getStoreItems()
+
+        if (isMounted) {
+          applyThemeColors(null, storeItems)
+        }
+      } catch {
+        if (isMounted) {
+          applyThemeColors()
+        }
+      }
+    }
+
+    void loadCurrentTheme()
+
+    return () => {
+      isMounted = false
+    }
   }, [location.pathname])
 
   return (

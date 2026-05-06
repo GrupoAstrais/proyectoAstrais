@@ -826,10 +826,10 @@ export default function Groups() {
 
       <div className="grid grid-cols-1 gap-2 px-5 md:flex md:flex-row md:justify-center">
         <div className="flex w-full flex-col gap-2 md:w-1/3">
-          <button onClick={() => setIsCreateModalOpen(true)} className="w-full rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
+                <button onClick={() => setIsCreateModalOpen(true)} className="w-full rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
             <span className="text-2xl font-bold">Crear grupo</span>
           </button>
-          <button onClick={() => setIsJoinModalOpen(true)} className="w-full rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
+                <button onClick={() => setIsJoinModalOpen(true)} className="w-full rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
             <span className="text-2xl font-bold">Unir al grupo</span>
           </button>
           {loadingGroups ? (
@@ -843,14 +843,14 @@ export default function Groups() {
 
         <div className={`${isOpen ? "" : "hidden"} flex w-full flex-col gap-2 md:w-1/2`}>
           <div className="flex w-full flex-row">
-            <button disabled={!activeGroupData} onClick={() => setIsSettingsModalOpen(true)} className="rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
+              <button disabled={!activeGroupData} onClick={() => setIsSettingsModalOpen(true)} className="rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
               <span className="text-2xl font-bold">Configuracion</span>
             </button>
-            <button disabled={!activeGroupData || loadingAudit} onClick={() => { void openAuditModal(); }} className="ml-2 rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
+              <button disabled={!activeGroupData || loadingAudit} onClick={() => { void openAuditModal(); }} className="ml-2 rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
               <span className="text-2xl font-bold">Historial</span>
             </button>
             <button disabled={!activeGroupData} onClick={() => {setInitialDataModal(null); setIsOpenModal(true);}}
-              className="ml-auto rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
+                className="ml-auto rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
                 <span className="text-2xl font-bold">+ Anadir tarea</span>
             </button>
           </div>
@@ -924,7 +924,7 @@ export default function Groups() {
 
       {isAuditModalOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 font-['Space_Grotesk']">
-          <div className="bg-[linear-gradient(160deg,#0a101ff2,#3c1480d9,#142f42e6)] rounded-lg shadow-xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+            <div className="bg-[var(--astrais-panel-bg)] rounded-lg shadow-xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between p-5 border-b border-gray-700">
               <h2 className="text-xl font-bold text-white">Historial de auditoria</h2>
               <button
@@ -973,7 +973,7 @@ export default function Groups() {
 
       {isJoinModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 font-['Space_Grotesk']">
-          <div className="bg-[linear-gradient(160deg,#0a101ff2,#3c1480d9,#142f42e6)] rounded-lg shadow-xl w-full max-w-xl p-6">
+          <div className="bg-[var(--astrais-panel-bg)] rounded-lg shadow-xl w-full max-w-xl p-6">
             <h2 className="text-2xl font-bold text-white mb-3">Unir al grupo</h2>
             <p className="text-sm text-gray-300 mb-3">Introduce un codigo o un enlace de invitacion.</p>
             <input

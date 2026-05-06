@@ -203,7 +203,7 @@ export default function NebulaDashGame({ gameId }: NebulaDashGameProps) {
   }, [finishRound, lane, status])
 
   return (
-    <main className="relative h-screen min-h-112 overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(34,197,94,0.18),transparent_34%),linear-gradient(140deg,#07111f,#172554_50%,#042f2e)] p-4 font-['Space_Grotesk'] text-white">
+    <main className="relative h-screen min-h-112 overflow-hidden bg-[radial-gradient(circle_at_top_left,color-mix(in_srgb,var(--astrais-tertiary)_18%,transparent),transparent_34%),linear-gradient(140deg,var(--astrais-background),color-mix(in_srgb,var(--astrais-secondary)_42%,var(--astrais-background))_50%,color-mix(in_srgb,var(--astrais-tertiary)_32%,var(--astrais-background)))] p-4 font-['Space_Grotesk'] text-white">
       <div className="dash-stars pointer-events-none absolute inset-0 opacity-40" />
       <section className="relative z-10 grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-3">
         <header className="grid grid-cols-[minmax(0,1fr)_18rem] gap-3">
@@ -233,7 +233,7 @@ export default function NebulaDashGame({ gameId }: NebulaDashGameProps) {
           </div>
         </header>
 
-        <div className="relative min-h-0 overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(180deg,rgba(15,23,42,0.8),rgba(8,47,73,0.58))]">
+        <div className="relative min-h-0 overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--astrais-background)_80%,transparent),color-mix(in_srgb,var(--astrais-secondary)_24%,var(--astrais-surface)_76%))]">
           <div className="absolute inset-x-5 top-0 bottom-0 grid grid-cols-5 gap-2">
             {Array.from({ length: LANES }).map((_, laneIndex) => (
               <div key={laneIndex} className="relative border-x border-white/8 bg-white/[0.025]">
@@ -245,10 +245,10 @@ export default function NebulaDashGame({ gameId }: NebulaDashGameProps) {
           {items.map((item) => (
             <div
               key={item.id}
-              className={`absolute flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border text-lg shadow-[0_0_18px_rgba(255,255,255,0.16)] ${
+              className={`absolute flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border text-lg shadow-[0_0_18px_color-mix(in_srgb,var(--astrais-text)_16%,transparent)] ${
                 item.kind === 'fragment'
                   ? 'border-accent-mint-300/55 bg-accent-mint-300/18 text-accent-mint-300'
-                  : 'border-[#f97316]/45 bg-[#f97316]/16 text-[#f8d089]'
+                  : 'border-[color-mix(in_srgb,var(--astrais-rarity-legendary)_45%,transparent)] bg-[color-mix(in_srgb,var(--astrais-rarity-legendary)_16%,transparent)] text-[var(--astrais-rarity-legendary)]'
               }`}
               style={{ left: `${10 + item.lane * 20}%`, top: `${item.top}%` }}
             >
@@ -257,7 +257,7 @@ export default function NebulaDashGame({ gameId }: NebulaDashGameProps) {
           ))}
 
           <div
-            className="absolute top-[82%] flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-[18px] border border-accent-mint-300/55 bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,0.35),rgba(34,197,94,0.3),rgba(15,23,42,0.9))] font-['Press_Start_2P'] text-[0.7rem] text-white shadow-[0_0_28px_rgba(34,197,94,0.28)] transition-all duration-150"
+            className="absolute top-[82%] flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-[18px] border border-accent-mint-300/55 bg-[radial-gradient(circle_at_35%_30%,color-mix(in_srgb,var(--astrais-text)_35%,transparent),color-mix(in_srgb,var(--astrais-tertiary)_30%,transparent),color-mix(in_srgb,var(--astrais-background)_90%,transparent))] font-['Press_Start_2P'] text-[0.7rem] text-white shadow-[0_0_28px_color-mix(in_srgb,var(--astrais-tertiary)_28%,transparent)] transition-all duration-150"
             style={{ left: `${10 + lane * 20}%` }}
           >
             A
@@ -265,7 +265,7 @@ export default function NebulaDashGame({ gameId }: NebulaDashGameProps) {
 
           {status !== 'playing' ? (
             <div className="absolute inset-0 grid place-items-center bg-black/32 backdrop-blur-[1px]">
-              <div className="max-w-md rounded-[26px] border border-white/15 bg-slate-950/82 p-6 text-center shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
+              <div className="max-w-md rounded-[26px] border border-white/15 bg-slate-950/82 p-6 text-center shadow-[0_20px_50px_color-mix(in_srgb,var(--astrais-background)_42%,transparent)]">
                 <p className="text-[0.64rem] uppercase tracking-[0.24em] text-accent-beige-300">
                   {status === 'finished' ? 'Carrera registrada' : 'Preparado para despegar'}
                 </p>
@@ -273,7 +273,7 @@ export default function NebulaDashGame({ gameId }: NebulaDashGameProps) {
                 <button
                   type="button"
                   onClick={startRound}
-                  className="mt-5 rounded-2xl bg-linear-to-r from-accent-mint-300 via-[#22c55e] to-[#38bdf8] px-5 py-3 text-[0.78rem] font-semibold text-slate-950 transition hover:-translate-y-0.5"
+                  className="mt-5 rounded-2xl bg-linear-to-r from-accent-mint-300 via-accent-mint-500 to-secondary-500 px-5 py-3 text-[0.78rem] font-semibold text-slate-950 transition hover:-translate-y-0.5"
                 >
                   {status === 'finished' ? 'Nueva carrera' : 'Empezar'}
                 </button>
@@ -310,8 +310,8 @@ export default function NebulaDashGame({ gameId }: NebulaDashGameProps) {
       <style>{`
         .dash-stars {
           background-image:
-            radial-gradient(circle, rgba(255,255,255,0.55) 1px, transparent 1px),
-            radial-gradient(circle, rgba(159,232,197,0.5) 1px, transparent 1px);
+            radial-gradient(circle, color-mix(in srgb, var(--astrais-text) 55%, transparent) 1px, transparent 1px),
+            radial-gradient(circle, color-mix(in srgb, var(--astrais-tertiary) 50%, transparent) 1px, transparent 1px);
           background-position: 0 0, 18px 28px;
           background-size: 54px 54px, 72px 72px;
         }

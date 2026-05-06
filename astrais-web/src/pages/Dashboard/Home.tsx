@@ -10,6 +10,8 @@ import Achiv from "../../components/ui/Achiv";
 import Modal from "../../components/modales/TaskModal";
 import Pet from "../../components/ui/Pet";
 import NotificationModal from "../../components/modales/NotificationModal";
+import { buildAchievements } from "../Achiv/achievementCatalog";
+import { readArcadeStats } from "../Games/gameStorage";
 import {
   buildCreateTaskRequest,
   buildEditTaskRequest,
@@ -42,11 +44,17 @@ const normalizeTaskFormData = (data: ITaskFormData, fallbackObjetivoId?: number 
   idObjetivo: normalizeObjectiveId(data.idObjetivo) ?? normalizeObjectiveId(fallbackObjetivoId)
 });
 
+const buildHomeAchievements = () =>
+  buildAchievements(readArcadeStats(), [])
+    .sort((leftAchievement, rightAchievement) => Number(rightAchievement.unlocked) - Number(leftAchievement.unlocked) || rightAchievement.percent - leftAchievement.percent)
+    .slice(0, 8);
+
 
 export default function Home() {
   const [notif] = useState<number>(0);
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [tasks, setTasks] = useState<ITarea[]>([]);
+  const [homeAchievements] = useState(buildHomeAchievements);
   const [personalGroupId, setPersonalGroupId] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -258,7 +266,7 @@ export default function Home() {
   return (
     <main
       style={{ backgroundImage: `url(${bgImage})` }}
-      className="relative min-h-screen bg-cover bg-center font-['Space_Grotesk'] text-white"
+      className="overflow-hidden h-screen w-screen bg-cover bg-center font-['Space_Grotesk'] text-white"
     >
       <div className={`${isOpen ? "" : "hidden"} fixed inset-0 z-50 flex items-center justify-center`}>
         <Modal
@@ -277,10 +285,11 @@ export default function Home() {
         </div>
       ) : null}
 
-      <section className="mx-auto flex w-full max-w-7xl flex-col items-center justify-center gap-4 px-4 py-6">
-        <article className="relative flex w-full max-w-2xl flex-col gap-6 rounded-2xl border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-6 shadow-[0_15px_32px_#090b1f59]">
+      
+        <section className="mx-auto flex-1 flex max-w-7xl flex-col items-center justify-center gap-4 px-4">
+        <article className="relative flex w-full max-w-2xl mt-5 flex-col gap-6 rounded-2xl border border-white/15 bg-(--astrais-panel-bg) p-6 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
           <header>
-            <p className="pb-2 text-[0.78rem] uppercase tracking-[0.08em] text-[#c9b7ff]">Bienvenido de vuelta</p>
+            <p className="pb-2 text-[0.78rem] uppercase tracking-[0.08em] text-(--astrais-rarity-epic)">Bienvenido de vuelta</p>
             <h1 className="font-['Press_Start_2P'] text-xl sm:text-2xl">Hi, Astrais</h1>
             <p className="mt-1">Que te queda por hacer?</p>
           </header>
@@ -290,55 +299,59 @@ export default function Home() {
                 setInitialDataModal(null);
                 setIsOpen(true);
               }}
-              className="cursor-pointer rounded-xl border border-transparent bg-[linear-gradient(90deg,#8b5cf6,#3b82f6)] px-3 py-2 text-[#f8f9ff] transition-colors duration-200"
+              className="cursor-pointer rounded-xl border border-transparent [background:var(--astrais-cta-bg)] px-3 py-2 text-white transition-colors duration-200"
             >
               Crear tarea
             </button>
-            <NavLink className="cursor-pointer rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-center text-[#f8f9ff] backdrop-blur-sm transition-colors duration-200 hover:bg-white/20" to="/groups?openCreateModal=true">
+            <NavLink className="cursor-pointer rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-center text-white backdrop-blur-sm transition-colors duration-200 hover:bg-white/20" to="/groups?openCreateModal=true">
               <button>Crear un grupo</button>
             </NavLink>
-            <NavLink className="cursor-pointer rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-center text-[#f8f9ff] backdrop-blur-sm transition-colors duration-200 hover:bg-white/20" to="/profile">
+            <NavLink className="cursor-pointer rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-center text-white backdrop-blur-sm transition-colors duration-200 hover:bg-white/20" to="/profile">
               <button>Ver perfil</button>
             </NavLink>
-            <NavLink className="cursor-pointer rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-center text-[#f8f9ff] backdrop-blur-sm transition-colors duration-200 hover:bg-white/20" to="/shop">
+            <NavLink className="cursor-pointer rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-center text-white backdrop-blur-sm transition-colors duration-200 hover:bg-white/20" to="/shop">
               <button>Cambiar la mascota</button>
             </NavLink>
           </div>
           <img className="absolute -bottom-7 -right-56 z-10 w-9/10" src={astra} alt="Astra" />
         </article>
 
-        <div className="grid w-full grid-cols-1 gap-4 lg:grid-cols-3">
-          <article className="rounded-2xl border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-4 shadow-[0_15px_32px_#090b1f59]">
+        <div className="grid w-full mb-5 grid-cols-1 gap-4 lg:grid-cols-3"> 
+          {/*Tareas Pendientes*/}
+          <article className="flex h-80 min-h-0 flex-col rounded-2xl border border-white/15 bg-(--astrais-panel-bg) p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
             <header className="mb-3">
               <NavLink to="/tasks">
                 <h2 className="font-['Press_Start_2P'] text-lg">Tareas Pendientes</h2>
               </NavLink>
             </header>
             {error && <p className="pb-3 text-sm text-red-200">{error}</p>}
-            <div className="flex flex-col gap-3">
-              {loading ? (
-                <p className="py-4 text-center italic text-gray-300">Cargando tareas...</p>
-              ) : dashboardTasks.length === 0 ? (
-                <p className="py-4 text-center italic text-gray-400">No hay tareas</p>
-              ) : (
-                dashboardTasks.map((task) => (
-                  <Task
-                    key={task.id}
-                    data={task}
-                    subtasks={getTaskSubtasks(tasks, task.id)}
-                    onComplete={handleToggleTaskCompleted}
-                    onToggleSubtask={handleToggleSubtaskCompleted}
-                    onToggleConfig={editTaskHandle}
-                  />
-                ))
-              )}
-            </div>
+            <section className="home-scroll min-h-0 max-h-104 overflow-y-auto pr-1">
+              <div className="flex flex-col gap-3">
+                {loading ? (
+                  <p className="py-4 text-center italic text-gray-300">Cargando tareas...</p>
+                ) : dashboardTasks.length === 0 ? (
+                  <p className="py-4 text-center italic text-gray-400">No hay tareas</p>
+                ) : (
+                  dashboardTasks.map((task) => (
+                    <Task
+                      key={task.id}
+                      data={task}
+                      subtasks={getTaskSubtasks(tasks, task.id)}
+                      onComplete={handleToggleTaskCompleted}
+                      onToggleSubtask={handleToggleSubtaskCompleted}
+                      onToggleConfig={editTaskHandle}
+                    />
+                  ))
+                )}
+              </div>
+            </section>
           </article>
 
-          <div className="flex flex-col gap-4 lg:col-span-2">
+          <div className="flex flex-col gap-4 lg:col-span-2">            
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {/*Tienda*/}
               <NavLink to="/shop">
-                <article className="h-full rounded-2xl border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-4 shadow-[0_15px_32px_#090b1f59]">
+                <article className="h-80 rounded-2xl border border-white/15 bg-[var(--astrais-panel-bg)] p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
                   <header className="mb-3">
                     <h2 className="font-['Press_Start_2P'] text-lg">Tienda</h2>
                   </header>
@@ -349,7 +362,7 @@ export default function Home() {
               </NavLink>
 
               <div className="flex flex-col gap-4">
-                <article className="rounded-2xl border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-4 shadow-[0_15px_32px_#090b1f59]">
+                <article className="rounded-2xl h-20 border border-white/15 bg-(--astrais-panel-bg) p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
                   <header className="mb-3">
                     <button className="flex items-center gap-2">
                       <h2 className="font-['Press_Start_2P'] text-lg">Notificaciones</h2>
@@ -358,29 +371,50 @@ export default function Home() {
                   </header>
                 </article>
 
+                {/*Logros*/}
                 <NavLink to="/achievements">
-                  <article className="flex h-full flex-col gap-4 rounded-2xl border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-4 shadow-[0_15px_32px_#090b1f59]">
+                  <article className="flex h-56 flex-col gap-4 rounded-2xl border border-white/15 bg-(--astrais-panel-bg) p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
                     <header className="mb-3">
                       <h2 className="font-['Press_Start_2P'] text-lg">Logros</h2>
                     </header>
-                    <div className="flex flex-row justify-between">
-                      <Achiv />
-                      <Achiv />
-                      <Achiv />
-                    </div>
+                    <section className="home-scroll min-h-0 max-h-44 overflow-y-auto pr-1">
+                      <div className="flex flex-col gap-3">
+                        {homeAchievements.map((achievement) => (
+                          <div
+                            key={achievement.id}
+                            className={`flex items-center justify-between gap-3 rounded-2xl border p-3 transition ${
+                              achievement.unlocked
+                                ? "border-accent-mint-300/22 bg-[color-mix(in_srgb,var(--astrais-background)_80%,transparent)]"
+                                : "border-white/10 bg-[color-mix(in_srgb,var(--astrais-background)_74%,transparent)]"
+                            }`}
+                          >
+                            <div className="flex min-w-0 items-center gap-3">
+                              <Achiv />
+                              <div className="min-w-0">
+                                <p className="text-[0.58rem] uppercase tracking-[0.18em] text-slate-400">{achievement.category}</p>
+                                <h3 className="mt-1 truncate text-[0.78rem] font-semibold text-white">{achievement.title}</h3>
+                              </div>
+                            </div>
+                            <span className="shrink-0 rounded-full border border-white/15 bg-white/8 px-2 py-1 text-[0.58rem] font-semibold text-(--astrais-reward)">
+                              {achievement.percent}%
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
                   </article>
                 </NavLink>
               </div>
             </div>
 
-            <article className="rounded-2xl border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-4 shadow-[0_15px_32px_#090b1f59]">
+            <article className="rounded-2xl border border-white/15 bg-(--astrais-panel-bg) p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
               <header className="mb-3">
                 <h2 className="font-['Press_Start_2P'] text-lg">Minijuegos</h2>
               </header>
               <div className="flex flex-col items-center gap-4">
                 <img src={game} className="h-auto w-1/2 max-w-30 rounded-lg" alt="Juego" />
                 <NavLink to="/games">
-                  <button className="w-full max-w-xs cursor-pointer rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-[#f8f9ff] transition-colors duration-200 hover:bg-white/20">
+                  <button className="w-full max-w-xs cursor-pointer rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-white transition-colors duration-200 hover:bg-white/20">
                     Jugar ahora
                   </button>
                 </NavLink>
@@ -389,6 +423,18 @@ export default function Home() {
           </div>
         </div>
       </section>
+      
+      <style>{`
+        .home-scroll {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+          overscroll-behavior: contain;
+        }
+
+        .home-scroll::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </main>
   );
 }

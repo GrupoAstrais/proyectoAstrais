@@ -326,7 +326,7 @@ export default function Tasks() {
       <div className="flex flex-col gap-6 px-2">
         <button
           onClick={() => { setInitialDataModal(null); setIsOpen(true); }}
-          className="ml-auto w-full rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm md:w-1/5"
+          className="ml-auto w-full rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm md:w-1/5"
         >
           <span className="text-2xl font-bold">+ Anadir tarea</span>
         </button>

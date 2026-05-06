@@ -1,10 +1,18 @@
-// components/modales/GroupSettingsModal.tsx
-import { useRef, useState, type ChangeEvent } from 'react';
+import { useState } from 'react';
+
+interface CreateGroupModalData {
+    name: string;
+    description: string;
+    photo: File | null;
+    members: [];
+    tasks: [];
+    role: number;
+}
 
 interface CreateGroupModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (data: any) => void;
+    onSave: (data: CreateGroupModalData) => void;
 }
 
 export default function CreateGroupModal({
@@ -15,21 +23,8 @@ export default function CreateGroupModal({
     const [name, setName] = useState<string>("");
     const [description, setDescription] = useState<string>("");
     const [photo, setPhoto] = useState<File | null>(null);
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
 
     if (!isOpen) return null;
-
-    const handlePhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setPhoto(file);
-            const url = URL.createObjectURL(file);
-            setPreviewUrl(url);
-        }
-    };
-
 
     const handleSubmit = () => {
         onSave({
@@ -52,16 +47,11 @@ export default function CreateGroupModal({
         setName("");
         setDescription("");
         setPhoto(null);
-        setPreviewUrl(null);
     }
-
-    const triggerFileInput = () => {
-        fileInputRef.current?.click();
-    };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 font-['Space_Grotesk']">
-            <div className="bg-[linear-gradient(160deg,#0a101ff2,#3c1480d9,#142f42e6)] rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="bg-[var(--astrais-panel-bg)] rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
                 <div className="overflow-y-auto grow p-6">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-2xl font-bold text-white">Crear grupo</h2>
