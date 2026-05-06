@@ -1,5 +1,5 @@
 // components/modales/GroupSettingsModal.tsx
-import { useRef, useState, type ChangeEvent } from 'react';
+import { useState } from 'react';
 
 interface CreateGroupModalProps {
     isOpen: boolean;
@@ -15,20 +15,9 @@ export default function CreateGroupModal({
     const [name, setName] = useState<string>("");
     const [description, setDescription] = useState<string>("");
     const [photo, setPhoto] = useState<File | null>(null);
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
 
     if (!isOpen) return null;
-
-    const handlePhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setPhoto(file);
-            const url = URL.createObjectURL(file);
-            setPreviewUrl(url);
-        }
-    };
 
 
     const handleSubmit = () => {
@@ -52,12 +41,7 @@ export default function CreateGroupModal({
         setName("");
         setDescription("");
         setPhoto(null);
-        setPreviewUrl(null);
     }
-
-    const triggerFileInput = () => {
-        fileInputRef.current?.click();
-    };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 font-['Space_Grotesk']">
@@ -74,37 +58,6 @@ export default function CreateGroupModal({
                     </div>
 
                     <div className="space-y-6">
-                        {/*
-                        <div className="flex flex-col items-center">
-                            <div
-                                className="relative cursor-pointer group"
-                                onClick={triggerFileInput}
-                            >
-                                {previewUrl ? (
-                                    <img
-                                        src={previewUrl}
-                                        alt="Preview"
-                                        className="w-32 h-32 rounded-full object-cover border-4 border-accent-beige-300"
-                                    />
-                                ) : (
-                                    <div className="w-32 h-32 rounded-full bg-gray-700 flex items-center justify-center border-4 border-dashed border-accent-beige-300">
-                                        <span className="text-gray-400 text-sm">Foto</span>
-                                    </div>
-                                )}
-                                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <span className="text-white text-xs">Cambiar</span>
-                                </div>
-                            </div>
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={handlePhotoChange}
-                                accept="image/*"
-                                className="hidden"
-                            />
-                            <p className="mt-2 text-gray-400 text-sm">Haga clic para cambiar la foto</p>
-                        </div>
-                        */}
 
                         <div>
                             <label className="block text-gray-300 mb-2">Nombre del grupo</label>

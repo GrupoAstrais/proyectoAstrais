@@ -2,7 +2,6 @@ import axios from 'axios';
 import type { AddUserToGroup, CreateGroup, CreateTask, DeleteOauthRequest, EditGroup, EditTask, EditUser, EventosGrupos, GroupInvitacion, GroupInvitacionRespuesta, LoginRequest, MembersResponse, PassOwnershipGroup, RegisterRequest, RevokeGroupInvit, SetEmailLogin, SetMemberRole, SetOauthRequest, UserData, UserGroups, UserGroupsResponse, UserTasksResponse, VerifyRequest } from '../types/LoginRequest';
 import type { IGroup, ITarea } from '../types/Interfaces';
 import { applyThemeColors } from '../styles/theme';
-import process from 'process';
 
 //export const API_BASE_URL = 'http://192.168.3.148:5684' //url desde las practicas
 // export const API_BASE_URL = 'http://192.168.56.1:5684' //url desde casa
