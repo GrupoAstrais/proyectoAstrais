@@ -1,0 +1,22 @@
+{
+    "type" : "theme",
+    "names" : {
+        "esp" : "Musgo",
+        "eng" : "Moss",
+        "rus" : "Мох"
+    },
+    "desc" : "",
+    "collection" : "Bosque Encantado",
+    "price" : 100,
+    "rarity" : "RARO",
+    "colors" : {
+        "primary": "#4ADE80",
+        "secondary": "#A3E635",
+        "tertiary": "#FBBF24",
+        "background": "#14532D",
+        "backgroundAlt": "#11161D",
+        "surface": "#1A1D2D",
+        "text": "#F8FAFC",
+        "error": "#F43F5E"
+    }
+}

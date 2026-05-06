@@ -21,7 +21,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
 /** URL base del servidor. */
-const val BASE_URL = "http://192.168.1.133:5684"
+const val BASE_URL = "http://172.22.238.162:5684"
 
 /**
  * Crea y configura un cliente HTTP de Ktor con todas las capacidades necesarias.

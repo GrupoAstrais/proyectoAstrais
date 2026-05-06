@@ -1,0 +1,13 @@
+{
+    "type" : "avatar",
+    "names" : {
+        "esp" : "Rey Alfredo",
+        "eng" : "The King Alfredo",
+        "rus" : "Король Альфред"
+    },
+    "desc" : "El rey Alfredo de la mesa cuadrada en todo su esplendor",
+    "collection" : "Bosque Encantado",
+    "price" : 2000,
+    "rarity" : "LEGENDARIO",
+    "imageRef":"avatars/avatar_primavera_2.png"
+}
