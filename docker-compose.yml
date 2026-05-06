@@ -43,8 +43,12 @@ services:
       JWT_SECRET_REFRESH: ${JWT_SECRET_REFRESH}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_SECRET_ID: ${GOOGLE_SECRET_ID}
+<<<<<<< HEAD
       SMTP_EMAIL: ${SMTP_EMAIL}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
+=======
+      IS_DEV: ${IS_DEV}
+>>>>>>> 193f2d803ac2b4eb181254ee041f06450065c39c
 
     volumes:
       - upload-data:/uploads

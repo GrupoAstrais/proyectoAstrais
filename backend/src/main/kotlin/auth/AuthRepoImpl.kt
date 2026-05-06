@@ -84,36 +84,29 @@ class AuthRepoImpl : AuthRepo {
 
     private suspend fun sendEmail(toAddress: String, code: String) {
         withContext(Dispatchers.IO) {
-            try {
-                val mailUser = System.getenv("SMTP_EMAIL") ?: ""
-                val mailPass = System.getenv("SMTP_PASSWORD") ?: ""
+            val mailUser1 = System.getenv("SMTP_EMAIL") ?: ""
+            val mailPass1 = System.getenv("SMTP_PASSWORD") ?: ""
 
-                val email = HtmlEmail()
-                email.hostName = "smtp.gmail.com"
-                email.setSmtpPort(465)
-                email.setAuthenticator(DefaultAuthenticator(mailUser, mailPass))
-                email.isSSLOnConnect = true
+            val htmlStream = this@AuthRepoImpl::class.java.getResourceAsStream("/templates/verification.html")
+            val htmlText = htmlStream?.bufferedReader()?.use { it.readText() }
+                ?.replace("{{CODE}}", code) ?: "<h1>Codigo: ${code} </h1>"
 
-                email.setFrom(mailUser, "Registro Astrais")
-                email.subject = "Código de verificación"
+            if (!sendMailWith(
+                    mailUser = mailUser1,
+                    mailPass = mailPass1,
+                    toAddress = toAddress,
+                    htmlText = htmlText,
+                    textContent = code
+                )) {
+                val mailUser2 = System.getenv("SMTP_EMAIL_2") ?: ""
+                val mailPass2 = System.getenv("SMTP_PASSWORD_2") ?: ""
 
-                val htmlStream = this@AuthRepoImpl::class.java.getResourceAsStream("/templates/verification.html")
-                val htmlText = htmlStream?.bufferedReader()?.use { it.readText() }
-                    ?.replace("{{CODE}}", code)
-
-                val textContent = code
-
-                if (htmlText != null) {
-                    email.setHtmlMsg(htmlText)
-                    email.setTextMsg(textContent)
-                } else {
-                    email.setMsg(textContent)
-                }
-
-                email.addTo(toAddress)
-                email.send()
-            } catch (e: Exception) {
-                log.error("Error al enviar correo: ${e.message}", e)
+                sendMailWith(mailUser = mailUser2,
+                    mailPass = mailPass2,
+                    toAddress = toAddress,
+                    htmlText = htmlText,
+                    textContent = code
+                )
             }
         }
     }
@@ -194,5 +187,34 @@ class AuthRepoImpl : AuthRepo {
             UserBusSSE.publishSignOff(uid)
         }
         return resp
+    }
+}
+
+
+fun sendMailWith(mailUser : String, mailPass : String, toAddress : String, htmlText : String, textContent : String) : Boolean{
+    try {
+
+        val email = HtmlEmail()
+        email.hostName = "smtp.gmail.com"
+        email.setAuthenticator(DefaultAuthenticator(mailUser, mailPass))
+        email.isSSLOnConnect = true
+
+        email.setFrom(mailUser, "Registro Astrais")
+        email.subject = "Código de verificación"
+
+        if (htmlText != null) {
+            email.setHtmlMsg(htmlText)
+            email.setTextMsg(textContent)
+        } else {
+            email.setMsg(textContent)
+        }
+
+        email.addTo(toAddress)
+        email.send()
+
+        return true
+    } catch (e: Exception) {
+        log.error("Error al enviar correo: ${e.message}")
+        return false
     }
 }
