@@ -71,6 +71,11 @@ instance.interceptors.response.use(
             return Promise.reject(error);
         }
 
+        // 👇 Añade esto: si hay params de OAuth en la URL, no interceptes
+        if (window.location.search.includes('jwtAccessToken')) {
+            return Promise.reject(error);
+        }
+
         if (isRefreshing) {
             // Ставим в очередь, ждём пока первый обновит токен
             return new Promise((resolve, reject) => {
@@ -208,6 +213,8 @@ export async function handleGoogleCallback(_uid: number, hadToRegister: boolean,
         localStorage.setItem('jwtRefreshToken', jwtRefreshToken!)
     }
 
+    window.history.replaceState({}, document.title, window.location.pathname)
+
     console.log("TOKEN: " + jwtToken);
     console.log("REFRESH TOKEN: " + jwtRefreshToken);
     console.error("Successful Google login!");
@@ -331,6 +338,7 @@ export async function getUserData() : Promise<UserData> {
     try {
         const response = await instance.get<UserData>("/auth/me");
         console.error("Successful user data retrieval! ");
+        console.log(response.data);
         const result = response.data;
         applyThemeColors(result.themeColors);
         return result;

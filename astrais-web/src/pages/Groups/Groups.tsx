@@ -193,6 +193,23 @@ const normalizeAuditEvents = (eventsLike: unknown): EventosGrupos[] => {
   return [];
 };
 
+const getAuditEventLabel = (eventType: string): string => {
+  switch (eventType) {
+    case "invite_created":
+      return "Se ha creado una invitacion.";
+    case "invite_revoked":
+      return "Se ha revocado una invitacion.";
+    case "member_joined_by_invite":
+      return "Un miembro se ha unido con una invitacion.";
+    case "member_left":
+      return "Un miembro ha abandonado el grupo.";
+    case "member_role_changed":
+      return "Se ha cambiado el rol de un miembro.";
+    default:
+      return eventType;
+  }
+};
+
 export default function Groups() {
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
   const [isOpenModal, setIsOpenModal] = React.useState<boolean>(false);
@@ -1064,7 +1081,7 @@ export default function Groups() {
                 <div className="space-y-2">
                   {auditEvents.map((event) => (
                     <div key={event.id} className="rounded-md border border-gray-700 bg-gray-900/45 p-3">
-                      <p className="text-sm text-white">{event.eventType}</p>
+                      <p className="text-sm text-white">{getAuditEventLabel(event.eventType)}</p>
                       <p className="text-xs text-gray-300">{new Date(event.createdAt).toLocaleString()}</p>
                     </div>
                   ))}

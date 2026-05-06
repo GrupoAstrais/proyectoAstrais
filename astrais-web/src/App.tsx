@@ -13,6 +13,7 @@ import Profile from './pages/User/Profile'
 import { getUserData } from './data/Api'
 import './styles/colors.css'
 import { applyThemeColors } from './styles/theme'
+import GoogleCallback from './pages/Auth/GoogleCallback'
 
 function Placeholder({ title }: { title: string }) {
   return (
@@ -29,6 +30,15 @@ function RequireAuth() {
 
   const token = window.localStorage.getItem('jwtToken')
   return token ? <Outlet /> : <Navigate to="/login" replace />
+}
+
+function RequireGuest() {
+  if (typeof window === 'undefined') {
+    return <Outlet />
+  }
+
+  const token = window.localStorage.getItem('jwtToken')
+  return token ? <Navigate to="/home" replace /> : <Outlet />
 }
 
 export default function App() {
@@ -50,10 +60,13 @@ export default function App() {
 
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/" element={<Login />} />
+      <Route element={<RequireGuest />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+      </Route>
       <Route path="/forgot-password" element={<Placeholder title="Recuperacion de contrasena (proximamente)" />} />
-      <Route path="/register" element={<Register />} />
+      <Route path="/oauthCallback" element={<GoogleCallback />} />  
       <Route element={<RequireAuth />}>
         <Route path="/home" element={<Home />} />
         <Route path="/groups" element={<Group />} />
