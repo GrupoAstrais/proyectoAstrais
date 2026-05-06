@@ -29,12 +29,21 @@ import com.mm.astraisandroid.util.LocaleHelper
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
+/**
+ * Activity principal de la aplicación Astrais.
+ *
+ * Configura la UI con Compose, gestiona deep links e inicializa el grafo de navegación.
+ * Determina el destino inicial según si el usuario tiene una sesión activa.
+ * Soporta cambios de idioma vía [LocaleHelper] y display edge-to-edge.
+ */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    /** Gestor de sesión para verificación de estado de autenticación. */
     @Inject
     lateinit var sessionManager: SessionManager
 
+    /** Contiene una URL de deep link pendiente del intent de lanzamiento, limpiada tras procesarse. */
     private val pendingDeepLinkUrl = mutableStateOf<String?>(null)
 
     override fun attachBaseContext(newBase: Context) {

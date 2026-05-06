@@ -71,6 +71,20 @@ private const val ROLE_USER_S = 0
 private const val ROLE_MOD_S = 1
 private const val ROLE_OWNER_S = 2
 
+/**
+ * Pantalla de configuración de un grupo con secciones para editar metadatos, gestionar
+ * invitaciones, ver historial de auditoría, transferir propiedad y abandonar el grupo.
+ *
+ * Las acciones administrativas (editar, crear invitaciones, revocar, transferir propiedad)
+ * están restringidas según el rol del usuario (Owner o Moderador).
+ *
+ * @param gid Identificador del grupo a configurar.
+ * @param groupName Nombre actual del grupo usado para prellenar el campo de edición.
+ * @param groupDescription Descripción actual del grupo usada para prellenar el campo de edición.
+ * @param groupRole Rol del usuario actual en este grupo (0=Miembro, 1=Moderador, 2=Owner).
+ * @param onBack Acción ejecutada al pulsar el botón de volver.
+ * @param viewModel ViewModel de detalle de grupo inyectado por Hilt.
+ */
 @Composable
 fun GroupSettingsScreen(
     gid: Int,

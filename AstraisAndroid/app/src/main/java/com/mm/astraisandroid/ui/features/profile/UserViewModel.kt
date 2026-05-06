@@ -16,6 +16,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * Estado de la pantalla de perfil de usuario.
+ *
+ * @property isLoading Indica si hay una operación de red en curso.
+ * @property isOffline `true` si el último intento de sincronización falló.
+ * @property user Modelo de usuario cargado, o `null` si no hay datos.
+ * @property error Mensaje de error de la última operación fallida, o `null`.
+ */
 data class UserScreenState(
     val isLoading: Boolean = false,
     val isOffline: Boolean = false,
@@ -23,6 +31,16 @@ data class UserScreenState(
     val error: String? = null
 )
 
+/**
+ * ViewModel de la pantalla de perfil de usuario.
+ *
+ * Gestiona la carga de datos del usuario, actualización de nombre y preferencias de idioma.
+ * Soporta modo invitado con persistencia local de preferencias.
+ *
+ * @property repository Repositorio de usuario para operaciones de red.
+ * @property sessionManager Gestor de sesión para validar si el usuario es invitado.
+ * @property appContext Contexto de la aplicación para gestión de idioma.
+ */
 @HiltViewModel
 class UserViewModel @Inject constructor(
     private val repository: UserRepository,
@@ -33,6 +51,10 @@ class UserViewModel @Inject constructor(
     private val _state = MutableStateFlow(UserScreenState())
     val state: StateFlow<UserScreenState> = _state.asStateFlow()
 
+    /**
+     * Obtiene los datos del usuario desde el servidor y aplica su preferencia de idioma.
+     * Bloqueada para usuarios invitados (guest).
+     */
     fun fetchUser() {
         if (sessionManager.isGuest()) return
         viewModelScope.launch {
@@ -60,6 +82,11 @@ class UserViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Actualiza el nombre de usuario en el servidor y en el estado local.
+     *
+     * @param newName Nuevo nombre del usuario.
+     */
     fun updateUsername(newName: String) {
         viewModelScope.launch {
             val user = state.value.user ?: return@launch
@@ -76,6 +103,14 @@ class UserViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Actualiza el perfil del usuario (nombre e idioma) en el servidor.
+     * Para invitados, solo aplica el idioma localmente.
+     *
+     * @param newName Nuevo nombre del usuario.
+     * @param language Código de idioma a aplicar (p. ej. "ESP", "ENG").
+     * @param onSuccess Callback ejecutado tras la actualización exitosa.
+     */
     fun updateProfile(newName: String, language: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
             val user = state.value.user ?: return@launch

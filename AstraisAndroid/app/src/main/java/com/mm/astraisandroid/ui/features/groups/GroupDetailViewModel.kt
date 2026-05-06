@@ -190,12 +190,14 @@ class GroupDetailViewModel @Inject constructor(
      *
      * @param gid Identificador del grupo al que pertenece la tarea.
      * @param tid Identificador de la tarea a completar.
+     * @param onUserStateChanged Callback ejecutado tras confirmar la operación en el servidor.
      */
-    fun completeTask(gid: Int, tid: Int) {
+    fun completeTask(gid: Int, tid: Int, onUserStateChanged: () -> Unit = {}) {
         viewModelScope.launch {
             try {
                 taskRepository.completarTarea(tid)
                 loadTasks(gid)
+                onUserStateChanged()
             } catch (e: Exception) {
                 _state.update { it.copy() }
                 snackbarManager.showMessage(e.message ?: "Error")
@@ -209,12 +211,14 @@ class GroupDetailViewModel @Inject constructor(
      *
      * @param gid Identificador del grupo al que pertenece la tarea.
      * @param tid Identificador de la tarea a revertir.
+     * @param onUserStateChanged Callback ejecutado tras confirmar la operación en el servidor.
      */
-    fun uncompleteTask(gid: Int, tid: Int) {
+    fun uncompleteTask(gid: Int, tid: Int, onUserStateChanged: () -> Unit = {}) {
         viewModelScope.launch {
             try {
                 taskRepository.uncompleteTarea(tid)
                 loadTasks(gid)
+                onUserStateChanged()
             } catch (e: Exception) {
                 _state.update { it.copy() }
                 snackbarManager.showMessage(e.message ?: "Error")
@@ -228,9 +232,10 @@ class GroupDetailViewModel @Inject constructor(
      *
      * @param gid Identificador del grupo al que pertenece la tarea.
      * @param task Modelo de UI de la tarea cuyo estado se va a alternar.
+     * @param onUserStateChanged Callback ejecutado tras confirmar la operación en el servidor.
      */
-    fun toggleTaskCompletion(gid: Int, task: TaskUIModel) {
-        if (task.isCompleted) uncompleteTask(gid, task.id) else completeTask(gid, task.id)
+    fun toggleTaskCompletion(gid: Int, task: TaskUIModel, onUserStateChanged: () -> Unit = {}) {
+        if (task.isCompleted) uncompleteTask(gid, task.id, onUserStateChanged) else completeTask(gid, task.id, onUserStateChanged)
     }
 
     /**

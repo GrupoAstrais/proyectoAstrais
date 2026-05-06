@@ -65,6 +65,16 @@ import com.mm.astraisandroid.ui.theme.Secondary
 import com.mm.astraisandroid.ui.theme.Surface
 import com.mm.astraisandroid.ui.theme.Tertiary
 
+/**
+ * Pantalla de configuración inicial del perfil tras el registro.
+ *
+ * Permite al usuario elegir su nombre de usuario (3-20 caracteres) y su idioma preferido
+ * (Español o Inglés). Muestra una vista previa en tiempo real del perfil y valida
+ * la entrada antes de permitir el envío.
+ *
+ * @param onFinish Callback ejecutado tras completar exitosamente el onboarding.
+ * @param userViewModel ViewModel para obtener y actualizar el perfil del usuario.
+ */
 @Composable
 fun OnboardingScreen(
     onFinish: () -> Unit,
@@ -359,6 +369,15 @@ fun OnboardingScreen(
     }
 }
 
+/**
+ * Chip seleccionable de idioma con animaciones de borde, fondo y escala.
+ *
+ * @param label Texto descriptivo del idioma (ej. "Español", "English").
+ * @param code Código de idioma asociado (ej. "ESP", "ENG").
+ * @param isSelected Indica si este chip es el seleccionado actualmente.
+ * @param onClick Acción ejecutada al pulsar el chip.
+ * @param modifier Modificador de composición para personalizar layout y estilo.
+ */
 @Composable
 fun LanguageChip(
     label: String,

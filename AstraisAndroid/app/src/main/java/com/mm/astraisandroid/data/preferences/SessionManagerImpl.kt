@@ -100,9 +100,18 @@ class SessionManagerImpl @Inject constructor(
         sharedPreferences.edit()?.putInt(GID_KEY, gid)?.apply()
     }
 
-    /** @return Token de acceso almacenado o `null`. */
+    /**
+     * Obtiene el token de acceso almacenado para autenticación de API.
+     *
+     * @return Token de acceso o `null` si no hay sesión de usuario registrado.
+     */
     override fun getAccessToken(): String? = sharedPreferences.getString(ACCESS_KEY, null)
-    /** @return Token de refresco almacenado o `null`. */
+
+    /**
+     * Obtiene el token de refresco almacenado para renovar la sesión.
+     *
+     * @return Token de refresco o `null` si no hay sesión de usuario registrado.
+     */
     override fun getRefreshToken(): String? = sharedPreferences.getString(REFRESH_KEY, null)
 
     /**
@@ -137,11 +146,25 @@ class SessionManagerImpl @Inject constructor(
         return value
     }
 
-    /** @return `true` si existe un token de acceso (sesión de usuario registrado). */
+    /**
+     * Verifica si existe una sesión de usuario registrado activa.
+     *
+     * @return `true` si hay un token de acceso almacenado.
+     */
     override fun hasSession(): Boolean = getAccessToken() != null
-    /** @return `true` si la sesión actual es de invitado. */
+
+    /**
+     * Verifica si la sesión actual es de invitado (sin registro).
+     *
+     * @return `true` si el usuario está en modo invitado.
+     */
     override fun isGuest(): Boolean = _isGuestSession.value
-    /** @return `true` si existe cualquier tipo de sesión (registrada o invitada). */
+
+    /**
+     * Verifica si existe cualquier tipo de sesión activa (registrada o invitada).
+     *
+     * @return `true` si hay sesión de cualquier tipo.
+     */
     override fun hasAnySession(): Boolean = hasSession() || isGuest()
 
     /**

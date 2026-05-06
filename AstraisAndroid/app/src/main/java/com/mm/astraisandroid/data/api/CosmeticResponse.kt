@@ -6,6 +6,18 @@ import kotlinx.serialization.Serializable
 
 /**
  * DTO que representa la respuesta del servidor al consultar cosméticos.
+ *
+ * @property id Identificador único del cosmético.
+ * @property name Nombre visible del cosmético.
+ * @property desc Descripción del cosmético.
+ * @property type Tipo de cosmético como cadena (se mapea a [CosmeticType] en el dominio).
+ * @property price Precio en Ludiones.
+ * @property assetRef Referencia al asset gráfico del cosmético.
+ * @property theme Tema visual asociado al cosmético.
+ * @property rarity Rareza del cosmético (por defecto `COMUN`).
+ * @property owned Indica si el usuario ya posee este cosmético.
+ * @property coleccion Colección a la que pertenece el cosmético.
+ * @property equipped Indica si el usuario tiene actualmente equipado este cosmético.
  */
 @Serializable
 data class CosmeticResponse(

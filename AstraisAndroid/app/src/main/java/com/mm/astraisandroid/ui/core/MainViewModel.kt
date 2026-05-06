@@ -16,6 +16,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * Estado de la interfaz de usuario gestionado por [MainViewModel].
+ *
+ * @property isSessionActive Indica si hay una sesión activa (registrada o invitada).
+ * @property isGuest Indica si la sesión activa es de invitado.
+ * @property shouldNavigateToOnboarding Flag que señala si se debe navegar a la pantalla de onboarding.
+ * @property pendingDeepLink URL de deep link pendiente de procesamiento tras autenticación.
+ */
 data class MainUiState(
     val isSessionActive: Boolean = false,
     val isGuest: Boolean = false,
@@ -23,6 +31,18 @@ data class MainUiState(
     val pendingDeepLink: String? = null
 )
 
+/**
+ * ViewModel global que gestiona el estado de sesión, deep links y navegación a onboarding.
+ *
+ * Observa los cambios de sesión desde [SessionManager] y coordina las acciones
+ * de logout, procesamiento de enlaces de invitación y verificación de onboarding.
+ *
+ * @property authRepository Repositorio de autenticación para logout y verificación de onboarding.
+ * @property groupRepository Repositorio de grupos para unirse mediante deep links.
+ * @property sessionManager Gestor de sesión para consultar y observar estado de autenticación.
+ * @property logger Sistema de logging estructurado.
+ * @property snackbarManager Gestor de mensajes tipo snackbar para notificaciones al usuario.
+ */
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val authRepository: AuthRepository,
@@ -51,6 +71,10 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Inicia el proceso de cierre de sesión en una corrutina del ViewModelScope.
+     * Limpia tokens, datos locales y detiene la sincronización.
+     */
     fun onLogout() {
         viewModelScope.launch {
             logger.i(LogFeature.AUTH, "Logout initiated")
@@ -58,6 +82,12 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Procesa un deep link recibido. Si es un enlace de unión a grupo y el usuario
+     * está autenticado, lo procesa inmediatamente. Si no, lo almacena para después del login.
+     *
+     * @param url URL del deep link recibido.
+     */
     fun onDeepLinkReceived(url: String) {
         viewModelScope.launch {
             logger.i(LogFeature.AUTH, "Deep link received: $url")
@@ -101,6 +131,10 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Intenta procesar un deep link de unión a grupo almacenado previamente.
+     * Solo se ejecuta si hay una sesión activa no invitada.
+     */
     fun consumePendingDeepLink() {
         viewModelScope.launch {
             if (!state.value.isSessionActive || sessionManager.isGuest()) return@launch
@@ -109,6 +143,10 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Verifica si el usuario autenticado necesita completar el onboarding.
+     * Si es así, actualiza el estado para disparar la navegación.
+     */
     suspend fun checkOnboarding() {
         if (!state.value.isSessionActive || sessionManager.isGuest()) return
         val shouldGo = runCatching { authRepository.needsOnboarding() }.getOrDefault(false)
@@ -118,10 +156,16 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Marca la navegación a onboarding como consumida, reseteando la flag de estado.
+     */
     fun onOnboardingConsumed() {
         _state.update { it.copy(shouldNavigateToOnboarding = false) }
     }
 
+    /**
+     * Marca el deep link pendiente como consumido, reseteando la URL en el estado.
+     */
     fun onDeepLinkConsumed() {
         _state.update { it.copy(pendingDeepLink = null) }
     }

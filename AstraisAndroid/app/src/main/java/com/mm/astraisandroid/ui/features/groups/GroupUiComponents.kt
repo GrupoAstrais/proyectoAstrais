@@ -39,6 +39,16 @@ private const val ROLE_USER = 0
 private const val ROLE_MOD = 1
 private const val ROLE_OWNER = 2
 
+/**
+ * Componente contenedor que muestra estados de carga, vacío o error para la lista de grupos.
+ *
+ * @param isLoading Indica si hay una operación de carga en curso.
+ * @param isEmpty Indica si la lista de grupos está vacía.
+ * @param emptyText Texto mostrado cuando no hay grupos.
+ * @param errorText Mensaje de error a mostrar, o `null` si no hay error.
+ * @param onRetry Acción ejecutada al pulsar el botón de reintentar (solo si hay error).
+ * @param content Contenido principal mostrado cuando no hay carga ni errores.
+ */
 @Composable
 fun GroupStateView(
     isLoading: Boolean,
@@ -69,6 +79,11 @@ fun GroupStateView(
     }
 }
 
+/**
+ * Chip visual que muestra el rol de un miembro con colores distintivos.
+ *
+ * @param role Rol del miembro (0=Miembro, 1=Moderador, 2=Owner).
+ */
 @Composable
 fun RoleChip(role: Int) {
     val label = when (role) {
@@ -122,6 +137,15 @@ fun RoleChip(role: Int) {
     }
 }
 
+/**
+ * Diálogo modal de confirmación para acciones destructivas o irreversibles.
+ *
+ * @param title Título del diálogo.
+ * @param body Texto descriptivo de la acción a confirmar.
+ * @param confirmText Texto del botón de confirmación.
+ * @param onConfirm Acción ejecutada al confirmar.
+ * @param onDismiss Acción ejecutada al cancelar o cerrar el diálogo.
+ */
 @Composable
 fun ConfirmActionDialog(
     title: String,
@@ -212,6 +236,12 @@ fun ConfirmActionDialog(
     }
 }
 
+/**
+ * Encabezado de sección con título opcionalmente acompañado de un componente trailing.
+ *
+ * @param title Texto del encabezado.
+ * @param trailing Componente opcional renderizado a la derecha del título.
+ */
 @Composable
 fun GroupSectionHeader(title: String, trailing: @Composable (() -> Unit)? = null) {
     Row(

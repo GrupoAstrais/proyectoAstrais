@@ -77,6 +77,18 @@ import com.mm.astraisandroid.ui.theme.Surface
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+/**
+ * Pantalla de inicio de sesión con soporte para email/contraseña, Google Sign-In y modo invitado.
+ *
+ * Muestra un formulario de autenticación con validación de campos, indicador de carga
+ * y gestión de errores. Integra CredentialManager para autenticación con Google.
+ *
+ * @param onNavigateToHome Callback ejecutado tras login exitoso sin necesidad de onboarding.
+ * @param onNavigateToRegister Callback ejecutado al pulsar el enlace de registro.
+ * @param onNavigateToOnboarding Callback ejecutado tras login exitoso cuando se requiere onboarding.
+ * @param ViewModel ViewModel de login inyectado por Hilt.
+ * @param snackbarViewModel ViewModel para mostrar mensajes snackbar.
+ */
 @Composable
 fun LoginScreen(
     onNavigateToHome: () -> Unit,

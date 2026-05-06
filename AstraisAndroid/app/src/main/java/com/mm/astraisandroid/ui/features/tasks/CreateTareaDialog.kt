@@ -40,6 +40,16 @@ import java.util.Date
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Diálogo modal para la creación rápida de una nueva tarea.
+ *
+ * Permite al usuario configurar título, descripción, tipo (Única, Hábito, Objetivo),
+ * prioridad, fecha límite (para únicas) y frecuencia (para hábitos).
+ *
+ * @param parentId ID del objetivo padre si la nueva tarea será una subtarea, o `null`.
+ * @param onDismiss Acción ejecutada al cerrar el diálogo sin crear.
+ * @param onCreate Callback con los datos de la tarea cuando el usuario confirma la creación.
+ */
 @Composable
 fun CreateTareaDialog(
     parentId: Int? = null,
