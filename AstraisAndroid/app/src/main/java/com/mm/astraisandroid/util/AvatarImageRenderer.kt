@@ -24,6 +24,18 @@ import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import com.mm.astraisandroid.data.api.BASE_URL
 
+/**
+ * Componente Compose que renderiza el avatar del usuario.
+ *
+ * Intenta cargar la imagen del avatar desde el servidor usando Coil.
+ * Si no hay referencia de asset o falla la carga, muestra la inicial del nombre
+ * como fallback. Incluye indicador de carga circular durante la descarga.
+ *
+ * @param assetRef Referencia del asset del avatar en el servidor, o `null` para mostrar inicial.
+ * @param initial Inicial del nombre a mostrar como fallback.
+ * @param size Tamaño del avatar en dp.
+ * @param modifier Modificador de composición para personalizar layout.
+ */
 @Composable
 fun AvatarImageRenderer(
     assetRef: String?,

@@ -43,6 +43,15 @@ import com.mm.astraisandroid.util.LottiePetRenderer
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.serialization.json.Json
 
+/**
+ * Pantalla de inventario personal con filtrado por tipo de cosmético y diálogo de equipamiento.
+ *
+ * Muestra los artículos adquiridos por el usuario organizados en tabs (Mascotas, Avatares, Temas).
+ * Al pulsar un artículo se abre un diálogo de detalle con opción de equipar/desequipar.
+ *
+ * @param storeViewModel ViewModel de la tienda inyectado por Hilt.
+ * @param onCosmeticChanged Callback ejecutado tras equipar/desequipar un artículo (refresca datos del usuario).
+ */
 @Composable
 fun InventarioTab(
     storeViewModel: StoreViewModel = hiltViewModel(),
@@ -170,6 +179,14 @@ fun InventarioTab(
     }
 }
 
+/**
+ * Botón de tab para el inventario con estilo glassmorphism.
+ *
+ * @param text Texto descriptivo del tab.
+ * @param isSelected Indica si este tab es el seleccionado actualmente.
+ * @param modifier Modificador de composición para personalizar layout.
+ * @param onClick Acción ejecutada al pulsar el tab.
+ */
 @Composable
 fun GlassTabSelector(text: String, isSelected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Box(
@@ -192,6 +209,12 @@ fun GlassTabSelector(text: String, isSelected: Boolean, modifier: Modifier = Mod
     }
 }
 
+/**
+ * Tarjeta de mascota/avatar en el inventario con indicador de equipamiento.
+ *
+ * @param item Modelo de cosmético a mostrar.
+ * @param onClick Acción ejecutada al pulsar la tarjeta.
+ */
 @Composable
 fun GlassPetInventoryCard(item: Cosmetic, onClick: () -> Unit) {
     val isEquipped = item.equipped
@@ -296,6 +319,12 @@ fun GlassPetInventoryCard(item: Cosmetic, onClick: () -> Unit) {
     }
 }
 
+/**
+ * Tarjeta de tema de aplicación en el inventario con preview de colores.
+ *
+ * @param item Modelo de cosmético de tipo APP_THEME a mostrar.
+ * @param onClick Acción ejecutada al pulsar la tarjeta.
+ */
 @Composable
 fun GlassThemeInventoryCard(item: Cosmetic, onClick: () -> Unit) {
     val isEquipped = item.equipped
@@ -417,6 +446,12 @@ fun GlassThemeInventoryCard(item: Cosmetic, onClick: () -> Unit) {
     }
 }
 
+/**
+ * Círculo de color para preview de temas en el inventario.
+ *
+ * @param hex Color en formato hexadecimal.
+ * @param size Tamaño del círculo en dp.
+ */
 @Composable
 fun GlassColorCircle(hex: String, size: Int = 16) {
     Box(
@@ -428,6 +463,17 @@ fun GlassColorCircle(hex: String, size: Int = 16) {
     )
 }
 
+/**
+ * Diálogo modal de detalle de cosmético en el inventario con opción de equipar/desequipar.
+ *
+ * Muestra preview del artículo, nombre, descripción, tipo y botón para alternar
+ * su estado de equipamiento.
+ *
+ * @param item Modelo de cosmético a mostrar.
+ * @param onDismiss Acción ejecutada al cerrar el diálogo.
+ * @param onEquip Acción ejecutada al equipar el artículo.
+ * @param onUnequip Acción ejecutada al desequipar el artículo.
+ */
 @Composable
 fun GlassCosmeticDetailDialog(
     item: Cosmetic,

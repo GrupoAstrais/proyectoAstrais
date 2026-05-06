@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router'
-import logo from '../../assets/logo_b.svg'
+import logo from '../../assets/logo_w.svg'
 
 const links = [
   { to: '/home', label: 'Inicio' },
@@ -27,9 +27,9 @@ export default function Navbar() {
               key={link.to}
               to={link.to}
               className={({ isActive }) =>
-                `inline-flex min-h-10 items-center justify-center rounded-[0.9rem] px-2 py-2 text-left text-[0.5rem] uppercase tracking-widest text-[var(--astrais-tab-text)] no-underline transition duration-200 hover:translate-y-px hover:bg-[var(--astrais-tab-hover)] min-[1400px]:min-h-11 min-[1400px]:px-3 min-[1400px]:py-2.5 min-[1400px]:text-[0.8rem] ${
+                `inline-flex min-h-10 items-center justify-center rounded-[0.9rem] px-2 py-2 text-left text-[0.5rem] uppercase tracking-widest text-(--astrais-tab-text) no-underline transition duration-200 hover:translate-y-px hover:bg-(--astrais-tab-hover) min-[1400px]:min-h-11 min-[1400px]:px-3 min-[1400px]:py-2.5 min-[1400px]:text-[0.8rem] ${
                   isActive
-                    ? 'border border-[var(--astrais-tab-active-border)] [background:var(--astrais-tab-active-bg)] shadow-[0_10px_24px_color-mix(in_srgb,var(--astrais-background)_36%,transparent)] transition duration-200 text-[1rem] min-[1400px]:text-[0.9rem]'
+                    ? 'border border-(--astrais-tab-active-border) [background:var(--astrais-tab-active-bg)] shadow-[0_10px_24px_color-mix(in_srgb,var(--astrais-background)_36%,transparent)] transition duration-200 text-[1rem] min-[1400px]:text-[0.9rem]'
                     : 'border border-transparent'
                 }`
               }

@@ -38,22 +38,56 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 
+/**
+ * Constantes de opacidad para el sistema de diseño glassmorphism de Astrais.
+ *
+ * Define los valores alfa utilizados para fondos, bordes, texto e iconos
+ * en las superficies con efecto de cristal esmerilado.
+ */
 object Glassmorphism {
+    /** Opacidad ultra ligera para fondos sutilísimos. */
     const val BG_ULTRA_LIGHT = 0.015f
+    /** Opacidad estándar para fondos de superficies de cristal. */
     const val BG_PRIMARY = 0.04f
+    /** Opacidad reducida para fondos secundarios como chips. */
     const val BG_SECONDARY = 0.02f
+    /** Opacidad elevada para fondos destacados. */
     const val BG_TERTIARY = 0.08f
+    /** Opacidad premium para elementos de máxima relevancia visual. */
     const val BG_PREMIUM = 0.12f
+    /** Opacidad estándar para bordes de superficies de cristal. */
     const val BORDER_PRIMARY = 0.15f
+    /** Opacidad reducida para bordes secundarios. */
     const val BORDER_SECONDARY = 0.08f
+    /** Opacidad para texto principal sobre fondos de cristal. */
     const val TEXT_PRIMARY = 0.95f
+    /** Opacidad para texto secundario. */
     const val TEXT_SECONDARY = 0.70f
+    /** Opacidad para texto terciario o placeholders. */
     const val TEXT_TERTIARY = 0.45f
+    /** Opacidad para iconos sobre fondos de cristal. */
     const val ICON_ALPHA = 0.85f
 }
 
+/**
+ * Estilos visuales disponibles para el botón [AstraisButton].
+ *
+ * @property Primary Botón principal con color de énfasis de la aplicación.
+ * @property Secondary Botón secundario con color de superficie variante.
+ * @property Destructive Botón de acción destructiva con color de error.
+ */
 enum class AstraisButtonStyle { Primary, Secondary, Destructive }
 
+/**
+ * Botón reutilizable con soporte para tres estilos visuales y estado de carga.
+ *
+ * @param text Texto mostrado en el botón.
+ * @param onClick Acción ejecutada al pulsar el botón.
+ * @param modifier Modificador de composición para personalizar layout y estilo.
+ * @param enabled Indica si el botón está habilitado para interacción.
+ * @param loading Cuando es `true`, muestra un indicador de progreso en lugar del texto.
+ * @param style Estilo visual del botón según [AstraisButtonStyle].
+ */
 @Composable
 fun AstraisButton(
     text: String,
@@ -86,6 +120,13 @@ fun AstraisButton(
     }
 }
 
+/**
+ * Botón con borde delineado (outlined) para acciones secundarias.
+ *
+ * @param text Texto mostrado en el botón.
+ * @param onClick Acción ejecutada al pulsar el botón.
+ * @param modifier Modificador de composición para personalizar layout y estilo.
+ */
 @Composable
 fun AstraisOutlinedButton(
     text: String,
@@ -101,6 +142,12 @@ fun AstraisOutlinedButton(
     }
 }
 
+/**
+ * Tarjeta con fondo de superficie variante semitransparente y forma media.
+ *
+ * @param modifier Modificador de composición para personalizar layout y estilo.
+ * @param content Contenido composable renderizado dentro de la tarjeta.
+ */
 @Composable
 fun AstraisCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Card(
@@ -114,6 +161,14 @@ fun AstraisCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) 
     }
 }
 
+/**
+ * Campo de texto delineado (outlined) con etiqueta para formularios.
+ *
+ * @param value Contenido actual del campo de texto.
+ * @param onValueChange Callback invocado cuando el usuario modifica el texto.
+ * @param label Etiqueta descriptiva mostrada sobre el campo.
+ * @param modifier Modificador de composición para personalizar layout y estilo.
+ */
 @Composable
 fun AstraisTextField(
     value: String,
@@ -129,6 +184,17 @@ fun AstraisTextField(
     )
 }
 
+/**
+ * Vista de estado que muestra loading, error, vacío o contenido según las condiciones.
+ *
+ * Evalúa las banderas en orden de prioridad: loading > error > vacío > contenido.
+ *
+ * @param isLoading Cuando es `true`, muestra un indicador de progreso centrado.
+ * @param error Mensaje de error a mostrar; si no es `null`, se muestra sobre el contenido.
+ * @param isEmpty Cuando es `true` y no hay error, muestra el texto de estado vacío.
+ * @param emptyText Texto mostrado cuando la lista de datos está vacía.
+ * @param content Contenido principal mostrado cuando no hay loading, error ni estado vacío.
+ */
 @Composable
 fun AstraisStateView(
     isLoading: Boolean,
@@ -151,6 +217,15 @@ fun AstraisStateView(
     }
 }
 
+/**
+ * Diálogo de confirmación genérico con botones de confirmar y cancelar.
+ *
+ * @param title Título del diálogo.
+ * @param body Cuerpo o descripción del diálogo.
+ * @param confirmText Texto del botón de confirmación.
+ * @param onConfirm Acción ejecutada al pulsar el botón de confirmar.
+ * @param onDismiss Acción ejecutada al descartar el diálogo.
+ */
 @Composable
 fun AstraisConfirmDialog(
     title: String,
@@ -168,6 +243,12 @@ fun AstraisConfirmDialog(
     )
 }
 
+/**
+ * Encabezado de sección con título y contenido opcional en el extremo derecho.
+ *
+ * @param title Título de la sección.
+ * @param trailing Contenido composable opcional alineado a la derecha (ej. botón de acción).
+ */
 @Composable
 fun AstraisSectionHeader(title: String, trailing: @Composable (() -> Unit)? = null) {
     Row(
@@ -179,6 +260,16 @@ fun AstraisSectionHeader(title: String, trailing: @Composable (() -> Unit)? = nu
     }
 }
 
+/**
+ * Encabezado de pantalla con título, botón de retroceso opcional y contenido trailing.
+ *
+ * Utiliza tipografía monoespaciada en negrita y respeta el estilo glassmorphism.
+ *
+ * @param title Título principal de la pantalla.
+ * @param modifier Modificador de composición para personalizar layout.
+ * @param onBackClick Acción al pulsar el botón de retroceso; si es `null`, no se muestra.
+ * @param trailing Contenido composable opcional alineado a la derecha.
+ */
 @Composable
 fun AstraisScreenHeader(
     title: String,
@@ -224,6 +315,16 @@ fun AstraisScreenHeader(
     }
 }
 
+/**
+ * Superficie con efecto glassmorphism configurable (fondo semitransparente + borde).
+ *
+ * @param modifier Modificador de composición para personalizar layout y estilo.
+ * @param shape Forma de la superficie (por defecto [MaterialTheme.shapes.extraLarge]).
+ * @param backgroundAlpha Opacidad del fondo de cristal.
+ * @param borderAlpha Opacidad del borde de cristal.
+ * @param onClick Si se proporciona, la superficie es clicable.
+ * @param content Contenido composable renderizado dentro de la superficie.
+ */
 @Composable
 fun AstraisGlassSurface(
     modifier: Modifier = Modifier,
@@ -252,6 +353,15 @@ fun AstraisGlassSurface(
     )
 }
 
+/**
+ * Tarjeta con efecto glassmorphism y padding interno predefinido.
+ *
+ * Envuelve [AstraisGlassSurface] con forma extra-large y 20dp de padding.
+ *
+ * @param modifier Modificador de composición para personalizar layout y estilo.
+ * @param onClick Si se proporciona, la tarjeta es clicable.
+ * @param content Contenido composable renderizado dentro de la tarjeta.
+ */
 @Composable
 fun AstraisGlassCard(
     modifier: Modifier = Modifier,
@@ -269,6 +379,16 @@ fun AstraisGlassCard(
     }
 }
 
+/**
+ * Chip con efecto glassmorphism de menor opacidad y forma grande.
+ *
+ * Utiliza [Glassmorphism.BG_SECONDARY] y [Glassmorphism.BORDER_SECONDARY]
+ * para un aspecto más sutil que [AstraisGlassCard].
+ *
+ * @param modifier Modificador de composición para personalizar layout y estilo.
+ * @param onClick Si se proporciona, el chip es clicable.
+ * @param content Contenido composable renderizado dentro del chip.
+ */
 @Composable
 fun AstraisGlassChip(
     modifier: Modifier = Modifier,

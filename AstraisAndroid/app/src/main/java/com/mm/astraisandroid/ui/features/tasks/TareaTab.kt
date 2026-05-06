@@ -32,6 +32,16 @@ import com.mm.astraisandroid.ui.components.AstraisScreenHeader
 import com.mm.astraisandroid.ui.theme.Gray300
 import com.mm.astraisandroid.ui.theme.Gray700
 
+/**
+ * Pantalla principal de gestión de tareas con filtrado por estado y categoría.
+ *
+ * Muestra las tareas raíz (sin padre) con soporte para expandir objetivos y ver subtareas.
+ * Incluye tabs para alternar entre pendientes/completadas y chips de categoría para filtrar
+ * por tipo (Todas, Únicas, Hábitos, Objetivos).
+ *
+ * @param ViewModel ViewModel de tareas inyectado por Hilt.
+ * @param onTaskCompleted Callback ejecutado tras completar una tarea (refresca datos del usuario).
+ */
 @Composable
 fun TasksTab(viewModel: TaskViewModel = hiltViewModel(), onTaskCompleted: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -186,6 +196,14 @@ fun TasksTab(viewModel: TaskViewModel = hiltViewModel(), onTaskCompleted: () -> 
     }
 }
 
+/**
+ * Botón de tab con estilo glassmorphism y animaciones de fondo, borde y texto.
+ *
+ * @param text Texto descriptivo del tab.
+ * @param isSelected Indica si este tab es el seleccionado actualmente.
+ * @param modifier Modificador de composición para personalizar layout.
+ * @param onClick Acción ejecutada al pulsar el tab.
+ */
 @Composable
 fun GlassTabButton(text: String, isSelected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val animatedBg by animateColorAsState(
@@ -221,6 +239,13 @@ fun GlassTabButton(text: String, isSelected: Boolean, modifier: Modifier = Modif
     }
 }
 
+/**
+ * Chip de categoría con estilo glassmorphism para filtrar tareas por tipo.
+ *
+ * @param text Texto descriptivo de la categoría.
+ * @param isSelected Indica si este chip es el seleccionado actualmente.
+ * @param onClick Acción ejecutada al pulsar el chip.
+ */
 @Composable
 fun GlassCategoryChip(
     text: String,

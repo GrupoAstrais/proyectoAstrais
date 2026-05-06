@@ -3,7 +3,6 @@ package com.mm.astraisandroid.ui.theme
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-
 data class AstraisSpacing(
     val xs: Dp = 4.dp,
     val sm: Dp = 8.dp,

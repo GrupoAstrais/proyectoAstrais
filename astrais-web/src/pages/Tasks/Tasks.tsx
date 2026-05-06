@@ -304,7 +304,7 @@ export default function Tasks() {
   return (
     <div
       style={{ backgroundImage: `url(${bgImage})` }}
-      className="relative flex min-h-screen flex-col gap-4 bg-cover bg-center font-['Space_Grotesk'] text-white"
+      className="relative flex overflow-hidden h-screen w-screen flex-col gap-4 bg-cover bg-center font-['Space_Grotesk'] text-white"
     >
       <div className={`${isOpen ? "" : "hidden"} fixed inset-0 z-50 flex items-center justify-center`}>
         <Modal
@@ -346,24 +346,25 @@ export default function Tasks() {
                 <div className="flex flex-row justify-center gap-2.5">
                   {renderCompletedFilters(diariasCompletedFilters, toggleCompletedFilter(setDiariasCompletedFilters))}
                 </div>
-              </div>
-
-              {loading ? (
-                <p className="py-4 text-center italic text-gray-300">Cargando tareas...</p>
-              ) : filteredDiariasTasks.length === 0 ? (
-                <p className="py-4 text-center italic text-gray-400">No hay tareas diarias</p>
-              ) : (
-                filteredDiariasTasks.map((task) => (
-                  <Task
-                    key={task.id}
-                    data={task}
-                    subtasks={getTaskSubtasks(tasks, task.id)}
-                    onComplete={handleToggleTask}
-                    onToggleSubtask={handleToggleSubtask}
-                    onToggleConfig={openEditModal}
-                  />
-                ))
-              )}
+                <div className="flex flex-col task-scroll min-h-0 max-h-150 max-[1537px]:max-h-96 overflow-y-auto gap-2">
+                  {loading ? (
+                  <p className="py-4 text-center italic text-gray-300">Cargando tareas...</p>
+                  ) : filteredDiariasTasks.length === 0 ? (
+                    <p className="py-4 text-center italic text-gray-400">No hay tareas diarias</p>
+                  ) : (
+                    filteredDiariasTasks.map((task) => (
+                      <Task
+                        key={task.id}
+                        data={task}
+                        subtasks={getTaskSubtasks(tasks, task.id)}
+                        onComplete={handleToggleTask}
+                        onToggleSubtask={handleToggleSubtask}
+                        onToggleConfig={openEditModal}
+                      />
+                    ))
+                  )}
+                </div>
+              </div>              
             </div>
           </div>
 
@@ -380,32 +381,45 @@ export default function Tasks() {
                 </div>
               </div>
 
-              {loading ? (
-                <p className="py-4 text-center italic text-gray-300">Cargando habitos...</p>
-              ) : filteredHabitosTasks.length === 0 ? (
-                <p className="py-4 text-center italic text-gray-400">No hay habitos</p>
-              ) : (
-                filteredHabitosTasks.map((task) => (
-                  <Task
-                    key={task.id}
-                    data={task}
-                    subtasks={[]}
-                    onComplete={handleToggleTask}
-                    onToggleSubtask={handleToggleSubtask}
-                    onToggleConfig={openEditModal}
-                  />
-                ))
-              )}
+              <div className="flex flex-col task-scroll min-h-0 max-h-150 max-[1537px]:max-h-96 overflow-y-auto gap-2">
+                {loading ? (
+                  <p className="py-4 text-center italic text-gray-300">Cargando habitos...</p>
+                ) : filteredHabitosTasks.length === 0 ? (
+                  <p className="py-4 text-center italic text-gray-400">No hay habitos</p>
+                ) : (
+                  filteredHabitosTasks.map((task) => (
+                    <Task
+                      key={task.id}
+                      data={task}
+                      subtasks={[]}
+                      onComplete={handleToggleTask}
+                      onToggleSubtask={handleToggleSubtask}
+                      onToggleConfig={openEditModal}
+                    />
+                  ))
+                )}
+              </div>
             </div>
           </div>
 
           {/* Calendar */}
-          <div className="flex flex-col md:w-1/3">
+          <div className="flex flex-col md:w-1/3 2xl:my-auto">
             <Calendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
           </div>
 
         </div>
       </div>
+      <style>{`
+        .task-scroll {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+          overscroll-behavior: contain;
+        }
+
+        .task-scroll::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 }

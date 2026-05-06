@@ -52,7 +52,6 @@ private fun parseHexColor(hexString: String, fallback: Color): Color {
         fallback
     }
 }
-
 @Composable
 fun AstraisandroidTheme(
     userTheme: Theme? = null,

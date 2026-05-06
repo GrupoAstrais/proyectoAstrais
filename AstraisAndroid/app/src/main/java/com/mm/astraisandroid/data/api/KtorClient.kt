@@ -20,8 +20,23 @@ import io.ktor.http.encodedPath
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
+/** URL base del servidor. */
 const val BASE_URL = "http://192.168.1.133:5684"
 
+/**
+ * Crea y configura un cliente HTTP de Ktor con todas las capacidades necesarias.
+ *
+ * Instala los siguientes plugins:
+ * - [ContentNegotiation]: Serialización/deserialización JSON con kotlinx.serialization.
+ * - [Logging]: Registro de peticiones y respuestas a través de [AppLogger].
+ * - [HttpTimeout]: Timeout de 15 segundos para todas las peticiones.
+ * - [Auth]: Autenticación Bearer con renovación automática de tokens mediante refresh token.
+ *
+ * @param sessionManager Gestor de sesiones para obtener y guardar tokens JWT.
+ * @param json Configuración de serialización JSON compartida.
+ * @param appLogger Sistema de logging estructurado para registrar actividad de red.
+ * @return [HttpClient] configurado y listo para realizar peticiones autenticadas.
+ */
 fun createHttpClient(sessionManager: SessionManager, json: Json, appLogger: AppLogger): HttpClient {
     val client = HttpClient(Android) {
         install(ContentNegotiation) {

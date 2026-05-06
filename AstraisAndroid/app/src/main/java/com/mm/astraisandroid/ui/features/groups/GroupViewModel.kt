@@ -64,6 +64,10 @@ class GroupViewModel @Inject constructor(
         loadGroups()
     }
 
+    /**
+     * Carga los grupos del usuario desde el servidor.
+     * Bloqueada para usuarios invitados (guest) que no pueden acceder al backend.
+     */
     fun loadGroups() {
         if (sessionManager.isGuest()) return
         viewModelScope.launch {
@@ -77,6 +81,12 @@ class GroupViewModel @Inject constructor(
         _state.update { it.copy(isLoading = false, isOffline = result.isFailure) }
     }
 
+    /**
+     * Crea un nuevo grupo con nombre y descripción, luego refresca la lista.
+     *
+     * @param name Nombre del nuevo grupo.
+     * @param desc Descripción del nuevo grupo.
+     */
     fun createGroup(name: String, desc: String) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
@@ -91,6 +101,13 @@ class GroupViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Edita los metadatos de un grupo existente y refresca la lista.
+     *
+     * @param gid Identificador del grupo a editar.
+     * @param name Nuevo nombre del grupo, o `null` para no cambiarlo.
+     * @param desc Nueva descripción del grupo, o `null` para no cambiarla.
+     */
     fun editGroup(gid: Int, name: String?, desc: String?) {
         viewModelScope.launch {
             try {
@@ -103,6 +120,11 @@ class GroupViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Elimina un grupo y refresca la lista.
+     *
+     * @param gid Identificador del grupo a eliminar.
+     */
     fun deleteGroup(gid: Int) {
         viewModelScope.launch {
             try {
@@ -115,10 +137,19 @@ class GroupViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Limpia la URL de invitación generada almacenada en el estado.
+     */
     fun clearInviteUrl() {
         _state.update { it.copy(generatedInviteUrl = null) }
     }
 
+    /**
+     * Agrega un usuario existente a un grupo por su ID.
+     *
+     * @param gid Identificador del grupo.
+     * @param userId Identificador del usuario a agregar.
+     */
     fun addUser(gid: Int, userId: Int) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
@@ -133,6 +164,12 @@ class GroupViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Elimina un usuario de un grupo.
+     *
+     * @param gid Identificador del grupo.
+     * @param userId Identificador del usuario a eliminar.
+     */
     fun removeUser(gid: Int, userId: Int) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
@@ -147,6 +184,12 @@ class GroupViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Transfiere la propiedad del grupo a otro usuario.
+     *
+     * @param gid Identificador del grupo.
+     * @param newOwnerUserId Identificador del nuevo propietario.
+     */
     fun passOwnership(gid: Int, newOwnerUserId: Int) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
@@ -161,6 +204,11 @@ class GroupViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Genera una URL de invitación para un grupo y la almacena en el estado.
+     *
+     * @param gid Identificador del grupo.
+     */
     fun createInviteUrl(gid: Int) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, generatedInviteUrl = null) }
@@ -175,6 +223,11 @@ class GroupViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Une al usuario actual a un grupo mediante una URL de invitación.
+     *
+     * @param inviteUrl URL de invitación generada por un administrador del grupo.
+     */
     fun joinByUrl(inviteUrl: String) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }

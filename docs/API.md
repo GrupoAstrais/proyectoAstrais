@@ -1717,9 +1717,4 @@ Elimina un usuario del servidor. El `cid` (ID del usuario) va en la URL.
 | `ERR_FORBIDDEN (8)` | El usuario no es admin |
 | `ERR_RESOURCENOTCREATED (7)` | No se pudo eliminar el usuario |
 
----
 
-## Pendiente (TODO)
-
-- Seguridad: invalidar tokens en el servidor al cerrar sesión para evitar uso posterior.
-- Mejora del flujo `setOauth`: redirigir al proveedor para más seguridad y llamar a `addOauthToAccount` en el callback.

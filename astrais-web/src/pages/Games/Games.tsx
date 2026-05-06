@@ -3,7 +3,7 @@ import { NavLink } from 'react-router'
 import Navbar from '../../components/layout/Navbar'
 import bgImage from '../../assets/homeScreenBack.jpg'
 import gamePreview from '../../assets/game.png'
-import { gameCatalog, getGameById } from './gameCatalog'
+import { getGameById, visibleGameCatalog } from './gameCatalog'
 import { isGameRoundCompletedMessage } from './gameMessages'
 import {
   buildArcadeStatsAfterRound,
@@ -21,14 +21,14 @@ interface LastRoundSummary {
 }
 
 export default function Games() {
-  const [selectedGameId, setSelectedGameId] = React.useState(() => gameCatalog[0]?.id ?? '')
+  const [selectedGameId, setSelectedGameId] = React.useState(() => visibleGameCatalog[0]?.id ?? '')
   const [arcadeStats, setArcadeStats] = React.useState(() => readArcadeStats())
   const [lastRound, setLastRound] = React.useState<LastRoundSummary | null>(null)
   const arcadeStatsRef = React.useRef(arcadeStats)
 
-  const selectedGame = getGameById(selectedGameId) ?? gameCatalog[0]
+  const selectedGame = getGameById(selectedGameId) ?? visibleGameCatalog[0]
   const selectedGameStats = selectedGame ? getGameStats(arcadeStats, selectedGame.id) : null
-  const playableGames = gameCatalog.filter((game) => game.availability === 'available').length
+  const playableGames = visibleGameCatalog.filter((game) => game.availability === 'available').length
   const careerRank = getArenaRank(arcadeStats.bestScore)
   const selectedRank = selectedGameStats ? getArenaRank(selectedGameStats.bestScore) : getArenaRank(0)
 
@@ -91,7 +91,7 @@ export default function Games() {
               </header>
 
               <div className="relative z-10 mt-4 min-h-0 space-y-2 overflow-y-auto pr-1 catalog-scroll">
-                {gameCatalog.map((game, index) => {
+                {visibleGameCatalog.map((game, index) => {
                   const isSelected = selectedGame?.id === game.id
                   const gameStats = getGameStats(arcadeStats, game.id)
 
@@ -196,7 +196,7 @@ export default function Games() {
                       Arcade activo
                     </h2>
                     <p className="mt-2 text-[0.76rem] leading-5 text-slate-300 min-[1400px]:text-[0.84rem]">
-                      {playableGames} cabina jugable de {gameCatalog.length} registradas.
+                      {playableGames} cabina jugable de {visibleGameCatalog.length} registradas.
                     </p>
                   </div>
                   <img

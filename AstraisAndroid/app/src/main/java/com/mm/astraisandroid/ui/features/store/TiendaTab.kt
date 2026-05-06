@@ -48,6 +48,12 @@ import com.mm.astraisandroid.util.LottiePetRenderer
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.serialization.json.Json
 
+/**
+ * Obtiene el color asociado a la rareza de un cosmético.
+ *
+ * @param rareza Cadena de rareza (LEGENDARIO, EPICO, RARO, etc.).
+ * @return Color correspondiente a la rareza, o blanco semitransparente por defecto.
+ */
 fun getRarityColor(rarity: String): Color {
     return when (rarity.uppercase()) {
         "LEGENDARIO" -> Color(0xFFFFCA28)
@@ -57,6 +63,17 @@ fun getRarityColor(rarity: String): Color {
     }
 }
 
+/**
+ * Pantalla de la tienda de cosméticos con filtrado por categoría y diálogo de compra.
+ *
+ * Muestra los artículos disponibles organizados por tabs (Todos, Mascotas, Avatares, Temas)
+ * y agrupados por colección. Al pulsar un artículo se abre un diálogo de detalle con
+ * información de rareza, descripción y opción de compra con Ludiones.
+ *
+ * @param ludiones Cantidad actual de Ludiones del usuario para validar compras.
+ * @param storeViewModel ViewModel de la tienda inyectado por Hilt.
+ * @param onCosmeticChanged Callback ejecutado tras comprar un artículo (refresca datos del usuario).
+ */
 @Composable
 fun TiendaTab(
     ludiones: Int,
@@ -250,6 +267,14 @@ fun TiendaTab(
     }
 }
 
+/**
+ * Botón de tab para la tienda con estilo glassmorphism.
+ *
+ * @param text Texto descriptivo del tab.
+ * @param isSelected Indica si este tab es el seleccionado actualmente.
+ * @param modifier Modificador de composición para personalizar layout.
+ * @param onClick Acción ejecutada al pulsar el tab.
+ */
 @Composable
 fun GlassStoreTabSelector(text: String, isSelected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val bgColor = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Transparent
@@ -276,6 +301,13 @@ fun GlassStoreTabSelector(text: String, isSelected: Boolean, modifier: Modifier 
     }
 }
 
+/**
+ * Tarjeta de artículo de mascota/avatar en la tienda con preview y precio.
+ *
+ * @param item Modelo de cosmético a mostrar.
+ * @param modifier Modificador de composición para personalizar layout.
+ * @param onClick Acción ejecutada al pulsar la tarjeta.
+ */
 @Composable
 fun GlassPetStoreCard(item: Cosmetic, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val isOwned = item.owned
@@ -412,6 +444,13 @@ fun GlassPetStoreCard(item: Cosmetic, modifier: Modifier = Modifier, onClick: ()
     }
 }
 
+/**
+ * Tarjeta de tema de aplicación en la tienda con preview de colores.
+ *
+ * @param item Modelo de cosmético de tipo APP_THEME a mostrar.
+ * @param modifier Modificador de composición para personalizar layout.
+ * @param onClick Acción ejecutada al pulsar la tarjeta.
+ */
 @Composable
 fun GlassThemeStoreCard(item: Cosmetic, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val isOwned = item.owned
@@ -554,6 +593,12 @@ fun GlassThemeStoreCard(item: Cosmetic, modifier: Modifier = Modifier, onClick: 
     }
 }
 
+/**
+ * Círculo de color para preview de temas en la tienda.
+ *
+ * @param hex Color en formato hexadecimal.
+ * @param size Tamaño del círculo en dp.
+ */
 @Composable
 fun GlassStoreColorCircle(hex: String, size: Int = 16) {
     Box(
@@ -565,6 +610,17 @@ fun GlassStoreColorCircle(hex: String, size: Int = 16) {
     )
 }
 
+/**
+ * Diálogo modal de detalle de artículo en la tienda con opción de compra.
+ *
+ * Muestra preview del cosmético, nombre, descripción, rareza, precio en Ludiones
+ * y botón de compra (deshabilitado si no hay fondos suficientes o ya es propiedad).
+ *
+ * @param item Modelo de cosmético a mostrar.
+ * @param ludiones Cantidad actual de Ludiones del usuario.
+ * @param onDismiss Acción ejecutada al cerrar el diálogo sin comprar.
+ * @param onBuy Acción ejecutada al confirmar la compra.
+ */
 @Composable
 fun GlassStoreDetailDialog(item: Cosmetic, ludiones: Int, onDismiss: () -> Unit, onBuy: () -> Unit) {
     val canAfford = ludiones >= item.price

@@ -48,12 +48,21 @@ import {
   type ITaskFormData,
   userLeaveGroup,
   membersGroups,
-  eventosGroup
+  eventosGroup,
 } from "../../data/Api";
-import type { EventosGrupos, GroupInvitacionRespuesta, MembersResponse } from "../../types/LoginRequest";
+import type {
+  EventosGrupos,
+  GroupInvitacionRespuesta,
+  MembersResponse,
+} from "../../types/LoginRequest";
 
-const compareGroupsAlphabetically = (firstGroup: IGroup, secondGroup: IGroup): number => {
-  return firstGroup.name.localeCompare(secondGroup.name, "es", { sensitivity: "base" });
+const compareGroupsAlphabetically = (
+  firstGroup: IGroup,
+  secondGroup: IGroup,
+): number => {
+  return firstGroup.name.localeCompare(secondGroup.name, "es", {
+    sensitivity: "base",
+  });
 };
 
 const mapUserGroupToLocalGroup = (group: {
@@ -70,7 +79,7 @@ const mapUserGroupToLocalGroup = (group: {
     description: group.description,
     members: [],
     tasks: [],
-    role: group.role
+    role: group.role,
   };
 };
 
@@ -86,41 +95,63 @@ const getSortedGroups = (groups: IGroup[], activeGroup: number): IGroup[] => {
   });
 };
 
-const normalizeObjectiveId = (idObjetivo?: number | null): number | undefined => {
-  return typeof idObjetivo === "number" && idObjetivo >= 0 ? idObjetivo : undefined;
+const normalizeObjectiveId = (
+  idObjetivo?: number | null,
+): number | undefined => {
+  return typeof idObjetivo === "number" && idObjetivo >= 0
+    ? idObjetivo
+    : undefined;
 };
 
-const normalizeTaskFormData = (data: ITaskFormData, fallbackObjetivoId?: number | null): ITaskFormData => ({
+const normalizeTaskFormData = (
+  data: ITaskFormData,
+  fallbackObjetivoId?: number | null,
+): ITaskFormData => ({
   ...data,
-  idObjetivo: normalizeObjectiveId(data.idObjetivo) ?? normalizeObjectiveId(fallbackObjetivoId)
+  idObjetivo:
+    normalizeObjectiveId(data.idObjetivo) ??
+    normalizeObjectiveId(fallbackObjetivoId),
 });
 
 export default function Groups() {
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
   const [isOpenModal, setIsOpenModal] = React.useState<boolean>(false);
   const [activeGroup, setActiveGroup] = useState<number>(-1);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = React.useState<boolean>(false);
-  const [isCreateModalOpen, setIsCreateModalOpen] = React.useState<boolean>(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] =
+    React.useState<boolean>(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] =
+    React.useState<boolean>(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = React.useState<boolean>(false);
   const [joinGroupInput, setJoinGroupInput] = React.useState<string>("");
-  const [joinGroupLoading, setJoinGroupLoading] = React.useState<boolean>(false);
-  const [joinGroupError, setJoinGroupError] = React.useState<string | null>(null);
+  const [joinGroupLoading, setJoinGroupLoading] =
+    React.useState<boolean>(false);
+  const [joinGroupError, setJoinGroupError] = React.useState<string | null>(
+    null,
+  );
   const [initialDataModal, setInitialDataModal] = useState<ITarea | null>(null);
   const [groupTaskFilters, setGroupTaskFilters] = useState({
     completed: false,
-    pending: false
+    pending: false,
   });
-  const [groupToDelete, setGroupToDelete] = useState<{ gid: number; role: number }>({ gid: -1, role: -1 });
+  const [groupToDelete, setGroupToDelete] = useState<{
+    gid: number;
+    role: number;
+  }>({ gid: -1, role: -1 });
   const [groups, setGroups] = useState<IGroup[]>([]);
   const [loadedGroupIds, setLoadedGroupIds] = useState<number[]>([]);
   const [loadingGroups, setLoadingGroups] = useState<boolean>(true);
   const [loadingTasks, setLoadingTasks] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [groupMembersMap, setGroupMembersMap] = useState<Record<number, MembersResponse[]>>({});
+  const [groupMembersMap, setGroupMembersMap] = useState<
+    Record<number, MembersResponse[]>
+  >({});
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [personalGroupId, setPersonalGroupId] = useState<number | null>(null);
-  const [rewardNotification, setRewardNotification] = useState<{ xp: number; ludiones: number } | null>(null);
+  const [rewardNotification, setRewardNotification] = useState<{
+    xp: number;
+    ludiones: number;
+  } | null>(null);
   const [isAuditModalOpen, setIsAuditModalOpen] = useState<boolean>(false);
   const [auditEvents, setAuditEvents] = useState<EventosGrupos[]>([]);
   const [loadingAudit, setLoadingAudit] = useState<boolean>(false);
@@ -129,46 +160,53 @@ export default function Groups() {
     window.setTimeout(() => setRewardNotification({ xp, ludiones }), 0);
   };
 
-  const toRenderableGroups = (userGroups: Array<{
-    gid?: number;
-    id?: number;
-    name?: string;
-    nombre?: string;
-    description: string;
-    role: number;
-  }>): IGroup[] =>
+  const toRenderableGroups = (
+    userGroups: Array<{
+      gid?: number;
+      id?: number;
+      name?: string;
+      nombre?: string;
+      description: string;
+      role: number;
+    }>,
+  ): IGroup[] =>
     userGroups
       .filter((group) => (group.gid ?? group.id ?? -1) !== personalGroupId)
       .map(mapUserGroupToLocalGroup);
 
-  const preloadMembersForGroups = async (baseGroups: IGroup[]): Promise<IGroup[]> => {
+  const preloadMembersForGroups = async (
+    baseGroups: IGroup[],
+  ): Promise<IGroup[]> => {
     const entries = await Promise.all(
       baseGroups.map(async (group) => {
         try {
           const serverMembers = await membersGroups(group.gid);
-          const normalizedMembers = (Array.isArray(serverMembers) ? serverMembers : []).filter(
+          const normalizedMembers = (
+            Array.isArray(serverMembers) ? serverMembers : []
+          ).filter(
             (member): member is MembersResponse =>
               !!member &&
               typeof member.uid === "number" &&
               Number.isFinite(member.uid) &&
-              typeof member.name === "string"
+              typeof member.name === "string",
           );
           return [group.gid, normalizedMembers] as const;
         } catch {
           return [group.gid, []] as const;
         }
-      })
+      }),
     );
 
-    const mapFromServer: Record<number, MembersResponse[]> = Object.fromEntries(entries);
+    const mapFromServer: Record<number, MembersResponse[]> =
+      Object.fromEntries(entries);
     setGroupMembersMap((prevMap) => ({ ...prevMap, ...mapFromServer }));
 
     return baseGroups.map((group) => ({
       ...group,
       members: (mapFromServer[group.gid] ?? []).map((member) => ({
         id: member.uid,
-        name: member.name
-      }))
+        name: member.name,
+      })),
     }));
   };
 
@@ -178,11 +216,16 @@ export default function Groups() {
         setLoadingGroups(true);
         setError(null);
 
-        const [userGroups, userData] = await Promise.all([getUserGroup(), getUserData()]);
+        const [userGroups, userData] = await Promise.all([
+          getUserGroup(),
+          getUserData(),
+        ]);
         setCurrentUserId(userData.id);
         setPersonalGroupId(userData.personalGid);
         const baseGroups = userGroups
-          .filter((group) => (group.gid ?? group.id ?? -1) !== userData.personalGid)
+          .filter(
+            (group) => (group.gid ?? group.id ?? -1) !== userData.personalGid,
+          )
           .map(mapUserGroupToLocalGroup);
         const groupsWithMembers = await preloadMembersForGroups(baseGroups);
         setGroups(groupsWithMembers);
@@ -199,7 +242,10 @@ export default function Groups() {
 
   useEffect(() => {
     if (!rewardNotification) return;
-    const timeoutId = window.setTimeout(() => setRewardNotification(null), 2200);
+    const timeoutId = window.setTimeout(
+      () => setRewardNotification(null),
+      2200,
+    );
     return () => window.clearTimeout(timeoutId);
   }, [rewardNotification]);
 
@@ -212,8 +258,12 @@ export default function Groups() {
       try {
         await deleteGroup(groupToDelete.gid, groupToDelete.role);
 
-        setGroups((prevGroups) => prevGroups.filter((group) => group.gid !== groupToDelete.gid));
-        setLoadedGroupIds((prevIds) => prevIds.filter((gid) => gid !== groupToDelete.gid));
+        setGroups((prevGroups) =>
+          prevGroups.filter((group) => group.gid !== groupToDelete.gid),
+        );
+        setLoadedGroupIds((prevIds) =>
+          prevIds.filter((gid) => gid !== groupToDelete.gid),
+        );
 
         if (groupToDelete.gid === activeGroup) {
           setActiveGroup(-1);
@@ -248,10 +298,10 @@ export default function Groups() {
             group.gid === activeGroup
               ? {
                   ...group,
-                  tasks: serverTasks ?? []
+                  tasks: serverTasks ?? [],
                 }
-              : group
-          )
+              : group,
+          ),
         );
         setLoadedGroupIds((prevIds) => [...prevIds, activeGroup]);
       } catch (loadError) {
@@ -268,15 +318,20 @@ export default function Groups() {
   const loadGroupMembers = async (gid: number) => {
     try {
       const serverMembers = await membersGroups(gid);
-      const normalizedMembers = (Array.isArray(serverMembers) ? serverMembers : []).filter(
+      const normalizedMembers = (
+        Array.isArray(serverMembers) ? serverMembers : []
+      ).filter(
         (member): member is MembersResponse =>
           !!member &&
           typeof member.uid === "number" &&
           Number.isFinite(member.uid) &&
-          typeof member.name === "string"
+          typeof member.name === "string",
       );
 
-      setGroupMembersMap((prevMap) => ({ ...prevMap, [gid]: normalizedMembers }));
+      setGroupMembersMap((prevMap) => ({
+        ...prevMap,
+        [gid]: normalizedMembers,
+      }));
       setGroups((prevGroups) =>
         prevGroups.map((group) =>
           group.gid === gid
@@ -284,11 +339,11 @@ export default function Groups() {
                 ...group,
                 members: normalizedMembers.map((member) => ({
                   id: member.uid,
-                  name: member.name
-                }))
+                  name: member.name,
+                })),
               }
-            : group
-        )
+            : group,
+        ),
       );
     } catch (loadError) {
       console.error("Error al cargar los miembros del grupo:", loadError);
@@ -303,7 +358,6 @@ export default function Groups() {
 
     void loadGroupMembers(activeGroup);
   }, [activeGroup]);
-  
 
   React.useEffect(() => {
     if (searchParams.get("openCreateModal") !== "true") {
@@ -319,8 +373,17 @@ export default function Groups() {
 
   const sortedGroups = getSortedGroups(groups, activeGroup);
   const activeGroupData = groups.find((group) => group.gid === activeGroup);
-  const filteredGroupTasks = sortTasksByCompleted(filterTasksByCompleted((activeGroupData?.tasks ?? []).filter((task) => isTaskVisibleInDefaultList(task)), groupTaskFilters).filter((t) => t.idObjetivo == null));
-  const availableObjectives = (activeGroupData?.tasks ?? []).filter((task) => task.tipo === "OBJETIVO");
+  const filteredGroupTasks = sortTasksByCompleted(
+    filterTasksByCompleted(
+      (activeGroupData?.tasks ?? []).filter((task) =>
+        isTaskVisibleInDefaultList(task),
+      ),
+      groupTaskFilters,
+    ).filter((t) => t.idObjetivo == null),
+  );
+  const availableObjectives = (activeGroupData?.tasks ?? []).filter(
+    (task) => task.tipo === "OBJETIVO",
+  );
 
   const updateActiveGroupTasks = (updater: (tasks: ITarea[]) => ITarea[]) => {
     setGroups((prevGroups) =>
@@ -328,10 +391,10 @@ export default function Groups() {
         group.gid === activeGroup
           ? {
               ...group,
-              tasks: updater(group.tasks)
+              tasks: updater(group.tasks),
             }
-          : group
-      )
+          : group,
+      ),
     );
   };
 
@@ -357,20 +420,24 @@ export default function Groups() {
     }
 
     const normalizedData = normalizeTaskFormData(data);
-    const createdTaskId = await createTask(buildCreateTaskRequest(activeGroup, normalizedData));
+    const createdTaskId = await createTask(
+      buildCreateTaskRequest(activeGroup, normalizedData),
+    );
 
     updateActiveGroupTasks((groupTasks) => [
       ...groupTasks,
       createLocalTask(normalizedData, {
         gid: activeGroup,
         id: createdTaskId,
-        idObjetivo: normalizedData.idObjetivo
-      })
+        idObjetivo: normalizedData.idObjetivo,
+      }),
     ]);
   };
 
-
-  const editTaskWithSubtasks = async (currentTask: ITarea, data: ITaskFormData) => {
+  const editTaskWithSubtasks = async (
+    currentTask: ITarea,
+    data: ITaskFormData,
+  ) => {
     const normalizedData = normalizeTaskFormData(data, currentTask.idObjetivo);
     await editTask(currentTask.id, buildEditTaskRequest(normalizedData));
 
@@ -381,16 +448,19 @@ export default function Groups() {
             titulo: normalizedData.name.trim(),
             descripcion: normalizedData.description.trim(),
             prioridad: normalizedData.difficulty,
-            recompensaXp: getTaskXpReward(normalizedData.difficulty)
+            recompensaXp: getTaskXpReward(normalizedData.difficulty),
           }
-        : task
+        : task,
     );
 
     updateActiveGroupTasks(() => nextTasks);
   };
 
   const handleModalSubmit = async (data: ITaskFormData) => {
-    const normalizedData = normalizeTaskFormData(data, initialDataModal?.idObjetivo);
+    const normalizedData = normalizeTaskFormData(
+      data,
+      initialDataModal?.idObjetivo,
+    );
 
     try {
       setError(null);
@@ -401,9 +471,7 @@ export default function Groups() {
         return;
       }
 
-      
       await editTaskWithSubtasks(initialDataModal, normalizedData);
-      
 
       closeTaskModalHandle();
     } catch (submitError) {
@@ -418,14 +486,19 @@ export default function Groups() {
     }
 
     try {
-      const currentSubtasks = getTaskSubtasks(activeGroupData.tasks, initialDataModal.id);
+      const currentSubtasks = getTaskSubtasks(
+        activeGroupData.tasks,
+        initialDataModal.id,
+      );
 
       for (const subtask of currentSubtasks) {
         await deleteTask(subtask.id);
       }
 
       await deleteTask(initialDataModal.id);
-      updateActiveGroupTasks((groupTasks) => removeTaskWithSubtasks(groupTasks, initialDataModal.id));
+      updateActiveGroupTasks((groupTasks) =>
+        removeTaskWithSubtasks(groupTasks, initialDataModal.id),
+      );
       closeTaskModalHandle();
     } catch (deleteError) {
       console.error("Error al borrar la tarea del grupo:", deleteError);
@@ -433,9 +506,16 @@ export default function Groups() {
     }
   };
 
-  const handleCreateGroup = async (data: { name: string; description: string; photo?: File | null }) => {
+  const handleCreateGroup = async (data: {
+    name: string;
+    description: string;
+    photo?: File | null;
+  }) => {
     try {
-      const createdGroupId = await createGroup({ name: data.name, desc: data.description });
+      const createdGroupId = await createGroup({
+        name: data.name,
+        desc: data.description,
+      });
       const newGroup: IGroup = createNewGroup(data, createdGroupId);
       setGroups((prevGroups) => [...prevGroups, newGroup]);
       setIsCreateModalOpen(false);
@@ -456,13 +536,19 @@ export default function Groups() {
     }
 
     try {
-      await editGroup({ gid: settings.gid, name: settings.name, desc: settings.description });
+      await editGroup({
+        gid: settings.gid,
+        name: settings.name,
+        desc: settings.description,
+      });
     } catch (saveError) {
       console.error("Error al guardar la configuracion del grupo:", saveError);
       setError("No se pudieron guardar los cambios del grupo.");
     }
 
-    const newPhotoUrl = settings.photo ? URL.createObjectURL(settings.photo) : undefined;
+    const newPhotoUrl = settings.photo
+      ? URL.createObjectURL(settings.photo)
+      : undefined;
 
     setGroups((prevGroups) =>
       prevGroups.map((group) => {
@@ -474,9 +560,9 @@ export default function Groups() {
           ...group,
           name: settings.name,
           description: settings.description,
-          photoUrl: newPhotoUrl ?? group.photoUrl ?? null
+          photoUrl: newPhotoUrl ?? group.photoUrl ?? null,
         };
-      })
+      }),
     );
 
     setIsSettingsModalOpen(false);
@@ -486,14 +572,14 @@ export default function Groups() {
     if (active === "Completadas") {
       setGroupTaskFilters((prev) => ({
         ...prev,
-        completed: !prev.completed
+        completed: !prev.completed,
       }));
       return;
     }
 
     setGroupTaskFilters((prev) => ({
       ...prev,
-      pending: !prev.pending
+      pending: !prev.pending,
     }));
   };
 
@@ -507,32 +593,45 @@ export default function Groups() {
     const wasCompletedBefore = Boolean(task.fecha_completado);
 
     try {
-        if (willComplete) {
-            await Promise.all(
-                subtasks
-                    .filter((s) => !isTaskCompleted(s))
-                    .map((s) => completeTask(s.id))
-            );
-            await completeTask(taskId);
-        } else {
-            await uncompleteTask(taskId);
-            await Promise.all(
-                subtasks
-                    .filter((s) => isTaskCompleted(s))
-                    .map((s) => uncompleteTask(s.id))
-            );
-        }
+      if (willComplete) {
+        await Promise.all(
+          subtasks
+            .filter((s) => !isTaskCompleted(s))
+            .map((s) => completeTask(s.id)),
+        );
+        await completeTask(taskId);
+      } else {
+        await uncompleteTask(taskId);
+        await Promise.all(
+          subtasks
+            .filter((s) => isTaskCompleted(s))
+            .map((s) => uncompleteTask(s.id)),
+        );
+      }
     } catch (err) {
-        console.error("Error al completar/descompletar tarea del grupo:", err);
+      console.error("Error al completar/descompletar tarea del grupo:", err);
     } finally {
-        updateActiveGroupTasks((groupTasks) => toggleTaskCompleted(groupTasks, `${taskId}`));
-        if (willComplete && !wasCompletedBefore) showRewardNotification(task.recompensaXp ?? 0, task.recompensaLudion ?? 0);
+      updateActiveGroupTasks((groupTasks) =>
+        toggleTaskCompleted(groupTasks, `${taskId}`),
+      );
+      if (willComplete && !wasCompletedBefore)
+        showRewardNotification(
+          task.recompensaXp ?? 0,
+          task.recompensaLudion ?? 0,
+        );
     }
   };
 
-  const handleToggleSubtaskCompleted = async (taskId: number, subtaskId: number) => {
-    const subtask = activeGroupData?.tasks.find((task) => task.id === subtaskId);
-    const parentTask = activeGroupData?.tasks.find((task) => task.id === taskId);
+  const handleToggleSubtaskCompleted = async (
+    taskId: number,
+    subtaskId: number,
+  ) => {
+    const subtask = activeGroupData?.tasks.find(
+      (task) => task.id === subtaskId,
+    );
+    const parentTask = activeGroupData?.tasks.find(
+      (task) => task.id === taskId,
+    );
     if (!subtask) return;
     const wasCompletedBefore = Boolean(subtask.fecha_completado);
 
@@ -544,18 +643,30 @@ export default function Groups() {
         }
       } else {
         await completeTask(subtaskId);
-        const siblingSubtasks = getTaskSubtasks(activeGroupData?.tasks ?? [], taskId).filter((task) => task.id !== subtaskId);
+        const siblingSubtasks = getTaskSubtasks(
+          activeGroupData?.tasks ?? [],
+          taskId,
+        ).filter((task) => task.id !== subtaskId);
 
-        if (parentTask && !isTaskCompleted(parentTask) && siblingSubtasks.every((task) => isTaskCompleted(task))) {
+        if (
+          parentTask &&
+          !isTaskCompleted(parentTask) &&
+          siblingSubtasks.every((task) => isTaskCompleted(task))
+        ) {
           await completeTask(taskId);
         }
       }
     } catch (completeError) {
       console.error("Error al completar la subtarea del grupo:", completeError);
     } finally {
-      updateActiveGroupTasks((groupTasks) => toggleSubtaskCompleted(groupTasks, `${taskId}`, `${subtaskId}`));
+      updateActiveGroupTasks((groupTasks) =>
+        toggleSubtaskCompleted(groupTasks, `${taskId}`, `${subtaskId}`),
+      );
       if (subtask && !isTaskCompleted(subtask) && !wasCompletedBefore) {
-        showRewardNotification(subtask.recompensaXp ?? 0, subtask.recompensaLudion ?? 0);
+        showRewardNotification(
+          subtask.recompensaXp ?? 0,
+          subtask.recompensaLudion ?? 0,
+        );
       }
     }
   };
@@ -578,8 +689,12 @@ export default function Groups() {
   const leaveGroupHandler = async (gid: number) => {
     try {
       await userLeaveGroup(gid);
-      setGroups((prevGroups) => prevGroups.filter((group) => group.gid !== gid));
-      setLoadedGroupIds((prevIds) => prevIds.filter((loadedGid) => loadedGid !== gid));
+      setGroups((prevGroups) =>
+        prevGroups.filter((group) => group.gid !== gid),
+      );
+      setLoadedGroupIds((prevIds) =>
+        prevIds.filter((loadedGid) => loadedGid !== gid),
+      );
       setGroupMembersMap((prevMap) => {
         const nextMap = { ...prevMap };
         delete nextMap[gid];
@@ -594,7 +709,7 @@ export default function Groups() {
       console.error("Error al guardar la configuracion del grupo:", saveError);
       setError("No se pudieron guardar los cambios del grupo.");
     }
-  }
+  };
 
   const addMemberByUidHandler = async (gid: number, uid: number) => {
     try {
@@ -624,10 +739,12 @@ export default function Groups() {
       return {
         code: typeof invite.code === "string" ? invite.code : "",
         inviteUrl: typeof invite.inviteUrl === "string" ? invite.inviteUrl : "",
-        expiresAt: typeof invite.expiresAt === "string" ? invite.expiresAt : null,
+        expiresAt:
+          typeof invite.expiresAt === "string" ? invite.expiresAt : null,
         maxUses: typeof invite.maxUses === "number" ? invite.maxUses : 0,
         usesCount: typeof invite.usesCount === "number" ? invite.usesCount : 0,
-        revokedAt: typeof invite.revokedAt === "string" ? invite.revokedAt : null
+        revokedAt:
+          typeof invite.revokedAt === "string" ? invite.revokedAt : null,
       };
     }
 
@@ -638,7 +755,7 @@ export default function Groups() {
         expiresAt: null,
         maxUses: 0,
         usesCount: 0,
-        revokedAt: null
+        revokedAt: null,
       };
     }
 
@@ -648,11 +765,13 @@ export default function Groups() {
       expiresAt: null,
       maxUses: 0,
       usesCount: 0,
-      revokedAt: null
+      revokedAt: null,
     };
   };
 
-  const generateInviteHandler = async (gid: number): Promise<GroupInvitacionRespuesta> => {
+  const generateInviteHandler = async (
+    gid: number,
+  ): Promise<GroupInvitacionRespuesta> => {
     try {
       const inviteResponse = await groupInvitacion({ gid });
       const normalizedFromCreate = normalizeInvite(inviteResponse);
@@ -664,8 +783,12 @@ export default function Groups() {
 
       // Si el endpoint de crear devuelve solo inviteUrl, buscamos el code en el listado.
       const invites = await groupInvitacionLista(gid);
-      const normalizedInvites = (Array.isArray(invites) ? invites : []).map(normalizeInvite);
-      const inviteFromList = normalizedInvites.find((invite) => invite.inviteUrl === inviteUrl);
+      const normalizedInvites = (Array.isArray(invites) ? invites : []).map(
+        normalizeInvite,
+      );
+      const inviteFromList = normalizedInvites.find(
+        (invite) => invite.inviteUrl === inviteUrl,
+      );
 
       if (inviteFromList) {
         return inviteFromList;
@@ -677,7 +800,7 @@ export default function Groups() {
         expiresAt: normalizedFromCreate.expiresAt ?? null,
         maxUses: normalizedFromCreate.maxUses ?? 10,
         usesCount: normalizedFromCreate.usesCount ?? 0,
-        revokedAt: normalizedFromCreate.revokedAt ?? null
+        revokedAt: normalizedFromCreate.revokedAt ?? null,
       };
     } catch (saveError) {
       console.error("Error al generar invitacion del grupo:", saveError);
@@ -686,7 +809,9 @@ export default function Groups() {
     }
   };
 
-  const loadInvitesHandler = async (gid: number): Promise<GroupInvitacionRespuesta[]> => {
+  const loadInvitesHandler = async (
+    gid: number,
+  ): Promise<GroupInvitacionRespuesta[]> => {
     try {
       const list = await groupInvitacionLista(gid);
       return (Array.isArray(list) ? list : []).map(normalizeInvite);
@@ -697,7 +822,10 @@ export default function Groups() {
     }
   };
 
-  const revokeInviteHandler = async (gid: number, code: string): Promise<void> => {
+  const revokeInviteHandler = async (
+    gid: number,
+    code: string,
+  ): Promise<void> => {
     try {
       await revokeGroupInvit({ gid, code });
     } catch (saveError) {
@@ -746,7 +874,10 @@ export default function Groups() {
       setJoinGroupLoading(true);
       setJoinGroupError(null);
 
-      const isLink = value.startsWith("http://") || value.startsWith("https://") || value.includes("/");
+      const isLink =
+        value.startsWith("http://") ||
+        value.startsWith("https://") ||
+        value.includes("/");
       if (isLink) {
         await joinByLinkHandler(value);
       } else {
@@ -761,12 +892,22 @@ export default function Groups() {
     }
   };
 
-  const setMemberRoleHandler = async (gid: number, uid: number, role: number) => {
+  const setMemberRoleHandler = async (
+    gid: number,
+    uid: number,
+    role: number,
+  ) => {
     try {
       await setMemberRole({ gid, userId: uid, role });
       await loadGroupMembers(gid);
     } catch (saveError) {
-      console.error("Error al cambiar rol del miembro (gid/uid/role):", gid, uid, role, saveError);
+      console.error(
+        "Error al cambiar rol del miembro (gid/uid/role):",
+        gid,
+        uid,
+        role,
+        saveError,
+      );
       setError("No se pudo cambiar el rol del miembro.");
       throw saveError;
     }
@@ -781,10 +922,10 @@ export default function Groups() {
           group.gid === gid
             ? {
                 ...group,
-                role: currentUserId === newOwnerUserId ? 2 : 1
+                role: currentUserId === newOwnerUserId ? 2 : 1,
               }
-            : group
-        )
+            : group,
+        ),
       );
     } catch (saveError) {
       console.error("Error al ceder ownership del grupo:", saveError);
@@ -811,47 +952,84 @@ export default function Groups() {
     }
   };
 
-
-
-
-  
   return (
-    <div style={{ backgroundImage: `url(${bgImage})` }} className="relative flex min-h-screen flex-col gap-4 bg-cover bg-center font-['Space_Grotesk'] text-white">
+    <div
+      style={{ backgroundImage: `url(${bgImage})` }}
+      className="relative flex h-screen w-screen overflow-hidden flex-col gap-4 bg-cover bg-center font-['Space_Grotesk'] text-white"
+    >
       <Navbar />
       {rewardNotification ? (
         <div className="fixed bottom-4 right-4 z-60">
-          <NotificationModal xp={rewardNotification.xp} ludiones={rewardNotification.ludiones} />
+          <NotificationModal
+            xp={rewardNotification.xp}
+            ludiones={rewardNotification.ludiones}
+          />
         </div>
       ) : null}
 
       <div className="grid grid-cols-1 gap-2 px-5 md:flex md:flex-row md:justify-center">
         <div className="flex w-full flex-col gap-2 md:w-1/3">
-                <button onClick={() => setIsCreateModalOpen(true)} className="w-full rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="w-full rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60"
+          >
             <span className="text-2xl font-bold">Crear grupo</span>
           </button>
-                <button onClick={() => setIsJoinModalOpen(true)} className="w-full rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
+          <button
+            onClick={() => setIsJoinModalOpen(true)}
+            className="w-full rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60"
+          >
             <span className="text-2xl font-bold">Unir al grupo</span>
           </button>
-          {loadingGroups ? (
-            <p className="py-4 text-center italic text-gray-300">Cargando grupos...</p>
+          <div className="flex flex-col groups-scroll min-h-0 max-h-176 max-[1537px]:max-h-118 overflow-y-auto gap-2">
+            {loadingGroups ? (
+            <p className="py-4 text-center italic text-gray-300">
+              Cargando grupos...
+            </p>
           ) : (
             sortedGroups.map((group) => (
-              <GroupCard key={`${group.gid}-${group.name}`} onClick={handleActiveGroup} id={group.gid} activeId={activeGroup} data={group} />
+              <GroupCard
+                key={`${group.gid}-${group.name}`}
+                onClick={handleActiveGroup}
+                id={group.gid}
+                activeId={activeGroup}
+                data={group}
+              />
             ))
           )}
+          </div>
+          
         </div>
 
-        <div className={`${isOpen ? "" : "hidden"} flex w-full flex-col gap-2 md:w-1/2`}>
+        <div
+          className={`${isOpen ? "" : "hidden"} flex w-full flex-col gap-2 md:w-1/2`}
+        >
           <div className="flex w-full flex-row">
-              <button disabled={!activeGroupData} onClick={() => setIsSettingsModalOpen(true)} className="rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
+            <button
+              disabled={!activeGroupData}
+              onClick={() => setIsSettingsModalOpen(true)}
+              className="rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60"
+            >
               <span className="text-2xl font-bold">Configuracion</span>
             </button>
-              <button disabled={!activeGroupData || loadingAudit} onClick={() => { void openAuditModal(); }} className="ml-2 rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
+            <button
+              disabled={!activeGroupData || loadingAudit}
+              onClick={() => {
+                void openAuditModal();
+              }}
+              className="ml-2 rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60"
+            >
               <span className="text-2xl font-bold">Historial</span>
             </button>
-            <button disabled={!activeGroupData} onClick={() => {setInitialDataModal(null); setIsOpenModal(true);}}
-                className="ml-auto rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
-                <span className="text-2xl font-bold">+ Anadir tarea</span>
+            <button
+              disabled={!activeGroupData}
+              onClick={() => {
+                setInitialDataModal(null);
+                setIsOpenModal(true);
+              }}
+              className="ml-auto rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <span className="text-2xl font-bold">+ Anadir tarea</span>
             </button>
           </div>
 
@@ -867,21 +1045,36 @@ export default function Groups() {
                 <p className="text-white">Filtrar:</p>
               </div>
 
-              <ButtonComplete title="Completadas" active={groupTaskFilters.completed} handleActive={handleActiveTaskFilter} />
-              <ButtonComplete title="Pendientes" active={groupTaskFilters.pending} handleActive={handleActiveTaskFilter} />
+              <ButtonComplete
+                title="Completadas"
+                active={groupTaskFilters.completed}
+                handleActive={handleActiveTaskFilter}
+              />
+              <ButtonComplete
+                title="Pendientes"
+                active={groupTaskFilters.pending}
+                handleActive={handleActiveTaskFilter}
+              />
             </div>
 
             <div className="flex flex-col gap-2">
               {loadingTasks ? (
-                <p className="py-4 text-center italic text-gray-300">Cargando tareas...</p>
+                <p className="py-4 text-center italic text-gray-300">
+                  Cargando tareas...
+                </p>
               ) : filteredGroupTasks.length === 0 ? (
-                <p className="py-4 text-center italic text-gray-400">No hay tareas</p>
+                <p className="py-4 text-center italic text-gray-400">
+                  No hay tareas
+                </p>
               ) : (
                 filteredGroupTasks.map((task) => (
                   <Task
                     key={task.id}
                     data={task}
-                    subtasks={getTaskSubtasks(activeGroupData?.tasks ?? [], task.id)}
+                    subtasks={getTaskSubtasks(
+                      activeGroupData?.tasks ?? [],
+                      task.id,
+                    )}
                     onComplete={handleToggleTaskCompleted}
                     onToggleSubtask={handleToggleSubtaskCompleted}
                     onToggleConfig={editTaskHandle}
@@ -893,7 +1086,9 @@ export default function Groups() {
         </div>
       </div>
 
-      <div className={`${isOpenModal ? "" : "hidden"} fixed inset-0 z-50 flex items-center justify-center`}>
+      <div
+        className={`${isOpenModal ? "" : "hidden"} fixed inset-0 z-50 flex items-center justify-center`}
+      >
         <Modal
           onSubmit={handleModalSubmit}
           onCancel={closeTaskModalHandle}
@@ -924,9 +1119,11 @@ export default function Groups() {
 
       {isAuditModalOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 font-['Space_Grotesk']">
-            <div className="bg-[var(--astrais-panel-bg)] rounded-lg shadow-xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+          <div className="bg-[var(--astrais-panel-bg)] rounded-lg shadow-xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between p-5 border-b border-gray-700">
-              <h2 className="text-xl font-bold text-white">Historial de auditoria</h2>
+              <h2 className="text-xl font-bold text-white">
+                Historial de auditoria
+              </h2>
               <button
                 onClick={() => setIsAuditModalOpen(false)}
                 className="text-gray-300 hover:text-white text-2xl"
@@ -940,9 +1137,13 @@ export default function Groups() {
               ) : (
                 <div className="space-y-2">
                   {auditEvents.map((event) => (
-                    <div key={event.id} className="rounded-md border border-gray-700 bg-gray-900/45 p-3">
+                    <div
+                      key={event.id}
+                      className="rounded-md border border-gray-700 bg-gray-900/45 p-3"
+                    >
                       <p className="text-sm text-white">
-                        #{event.id} · Actor UID: {event.actorUid} · {event.eventType}
+                        #{event.id} · Actor UID: {event.actorUid} ·{" "}
+                        {event.eventType}
                       </p>
                       <p className="text-xs text-gray-300">
                         Fecha: {new Date(event.createdAt).toLocaleString()}
@@ -969,13 +1170,21 @@ export default function Groups() {
         </div>
       ) : null}
 
-      <CreateGroupModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} onSave={handleCreateGroup} />
+      <CreateGroupModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSave={handleCreateGroup}
+      />
 
       {isJoinModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 font-['Space_Grotesk']">
           <div className="bg-[var(--astrais-panel-bg)] rounded-lg shadow-xl w-full max-w-xl p-6">
-            <h2 className="text-2xl font-bold text-white mb-3">Unir al grupo</h2>
-            <p className="text-sm text-gray-300 mb-3">Introduce un codigo o un enlace de invitacion.</p>
+            <h2 className="text-2xl font-bold text-white mb-3">
+              Unir al grupo
+            </h2>
+            <p className="text-sm text-gray-300 mb-3">
+              Introduce un codigo o un enlace de invitacion.
+            </p>
             <input
               type="text"
               value={joinGroupInput}
@@ -983,7 +1192,9 @@ export default function Groups() {
               placeholder="Codigo o enlace"
               className="w-full bg-gray-800 border border-gray-700 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-accent-beige-300"
             />
-            {joinGroupError && <p className="mt-2 text-sm text-red-300">{joinGroupError}</p>}
+            {joinGroupError && (
+              <p className="mt-2 text-sm text-red-300">{joinGroupError}</p>
+            )}
             <div className="mt-4 flex justify-end gap-3">
               <button
                 onClick={() => {
@@ -1006,6 +1217,18 @@ export default function Groups() {
           </div>
         </div>
       )}
+
+    <style>{`
+      .groups-scroll {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        overscroll-behavior: contain;
+      }
+
+      .groups-scroll::-webkit-scrollbar {
+        display: none;
+      }
+    `}</style>
     </div>
   );
 }

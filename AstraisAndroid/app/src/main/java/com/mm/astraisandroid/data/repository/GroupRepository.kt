@@ -291,6 +291,11 @@ class GroupRepository @Inject constructor(
         return api.getAudit(gid, limit = limit, offset = offset)
     }
 
+    /**
+     * Limpia todos los datos locales de grupos.
+     * Invocado durante el cierre de sesión para evitar que datos de un usuario
+     * anterior sean visibles al siguiente usuario de la aplicación.
+     */
     suspend fun clearLocalData() {
         dao.clearAll()
     }

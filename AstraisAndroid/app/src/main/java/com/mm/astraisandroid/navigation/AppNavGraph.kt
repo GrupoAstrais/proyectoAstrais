@@ -19,6 +19,22 @@ import com.mm.astraisandroid.ui.features.home.HomeContainer
 import com.mm.astraisandroid.ui.features.profile.PerfilTab
 import com.mm.astraisandroid.ui.features.profile.UserViewModel
 
+/**
+ * Grafo de navegación principal de la aplicación Astrais.
+ *
+ * Define el [NavHost] de nivel superior que gestiona las pantallas de autenticación
+ * (Login, Register, Onboarding) y la pantalla principal (Home) con sus sub-rutas.
+ * Observa el estado de [MainViewModel] para reaccionar a cambios de sesión,
+ * deep links y navegación a onboarding.
+ *
+ * @param navController Controlador de navegación que gestiona la pila de pantallas.
+ * @param startDestination Ruta inicial determinada por el estado de sesión del usuario.
+ * @param mainViewModel ViewModel global para estado de sesión y deep links.
+ * @param userViewModel ViewModel para datos del perfil de usuario.
+ * @param sessionManager Gestor de sesión para verificar estado de autenticación.
+ * @param onDeepLinkConsumed Callback ejecutado cuando un deep link ha sido procesado.
+ * @param onLogout Callback ejecutado al cerrar sesión, reinicia el grafo de navegación.
+ */
 @Composable
 fun AppNavGraph(
     navController: NavHostController,

@@ -30,6 +30,10 @@ abstract class AstraisDb : RoomDatabase() {
      */
     abstract fun tareaDao(): TareaDao
 
+    /**
+     * Acceso a las operaciones de datos para la entidad de Grupos.
+     * @return El DAO encargado de la gestión de grupos.
+     */
     abstract fun grupoDao(): GrupoDao
 
     /**

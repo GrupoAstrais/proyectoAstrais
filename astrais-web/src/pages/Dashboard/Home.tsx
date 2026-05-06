@@ -286,20 +286,20 @@ export default function Home() {
       ) : null}
 
       
-        <section className="mx-auto flex-1 flex max-w-7xl flex-col items-center justify-center gap-4 px-4">
+      <section className="mx-auto overflow-hidden flex-1 flex max-w-7xl flex-col items-center justify-center gap-4 px-4">
         <article className="relative flex w-full max-w-2xl mt-5 flex-col gap-6 rounded-2xl border border-white/15 bg-(--astrais-panel-bg) p-6 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
           <header>
             <p className="pb-2 text-[0.78rem] uppercase tracking-[0.08em] text-(--astrais-rarity-epic)">Bienvenido de vuelta</p>
             <h1 className="font-['Press_Start_2P'] text-xl sm:text-2xl">Hi, Astrais</h1>
             <p className="mt-1">Que te queda por hacer?</p>
           </header>
-          <div className="grid w-2/3 grid-cols-1 gap-2.5 sm:grid-cols-2">
+          <div className="grid w-2/3 grid-cols-1 z-20 gap-2.5 sm:grid-cols-2">
             <button
               onClick={() => {
                 setInitialDataModal(null);
                 setIsOpen(true);
               }}
-              className="cursor-pointer rounded-xl border border-transparent [background:var(--astrais-cta-bg)] px-3 py-2 text-white transition-colors duration-200"
+              className="cursor-pointer rounded-xl border-0 [background:var(--astrais-cta-bg)] px-3 py-2 text-white transition-colors duration-200"
             >
               Crear tarea
             </button>
@@ -313,19 +313,19 @@ export default function Home() {
               <button>Cambiar la mascota</button>
             </NavLink>
           </div>
-          <img className="absolute -bottom-7 -right-56 z-10 w-9/10" src={astra} alt="Astra" />
+          <img className="absolute -bottom-7 -right-56 z-0 w-9/10" src={astra} alt="Astra" />
         </article>
 
-        <div className="grid w-full mb-5 grid-cols-1 gap-4 lg:grid-cols-3"> 
+        <div className="grid w-full home-scroll min-h-0 max-[1537px]:max-h-80 overflow-y-auto grid-cols-1 gap-4 lg:grid-cols-3"> 
           {/*Tareas Pendientes*/}
-          <article className="flex h-80 min-h-0 flex-col rounded-2xl border border-white/15 bg-(--astrais-panel-bg) p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
+          <article className="flex h-80 lg:h-full min-h-0 flex-col rounded-2xl border border-white/15 bg-(--astrais-panel-bg) p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
             <header className="mb-3">
               <NavLink to="/tasks">
                 <h2 className="font-['Press_Start_2P'] text-lg">Tareas Pendientes</h2>
               </NavLink>
             </header>
             {error && <p className="pb-3 text-sm text-red-200">{error}</p>}
-            <section className="home-scroll min-h-0 max-h-104 overflow-y-auto pr-1">
+            <section className="home-scroll min-h-0 max-h-114 overflow-y-auto pr-1">
               <div className="flex flex-col gap-3">
                 {loading ? (
                   <p className="py-4 text-center italic text-gray-300">Cargando tareas...</p>
@@ -351,7 +351,7 @@ export default function Home() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/*Tienda*/}
               <NavLink to="/shop">
-                <article className="h-80 rounded-2xl border border-white/15 bg-[var(--astrais-panel-bg)] p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
+                <article className="h-80 rounded-2xl border border-white/15 bg-(--astrais-panel-bg)x p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
                   <header className="mb-3">
                     <h2 className="font-['Press_Start_2P'] text-lg">Tienda</h2>
                   </header>
