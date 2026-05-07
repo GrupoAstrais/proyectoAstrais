@@ -1,7 +1,6 @@
 import axios from 'axios';
 import type { AddUserToGroup, CreateGroup, CreateTask, DeleteOauthRequest, EditGroup, EditTask, EditUser, EventosGrupos, GroupInvitacion, GroupInvitacionRespuesta, LoginRequest, MembersResponse, PassOwnershipGroup, RegisterRequest, RevokeGroupInvit, SetEmailLogin, SetMemberRole, SetOauthRequest, UserData, UserGroups, UserGroupsResponse, UserTasksResponse, VerifyRequest } from '../types/LoginRequest';
 import type { IGroup, ITarea } from '../types/Interfaces';
-import { applyThemeColors } from '../styles/theme';
 
 //export const API_BASE_URL = 'http://192.168.3.148:5684' //url desde las practicas
 // export const API_BASE_URL = 'http://192.168.56.1:5684' //url desde casa
@@ -71,7 +70,6 @@ instance.interceptors.response.use(
             return Promise.reject(error);
         }
 
-        // 👇 Añade esto: si hay params de OAuth en la URL, no interceptes
         if (window.location.search.includes('jwtAccessToken')) {
             return Promise.reject(error);
         }
@@ -340,7 +338,6 @@ export async function getUserData() : Promise<UserData> {
         console.error("Successful user data retrieval! ");
         console.log(response.data);
         const result = response.data;
-        applyThemeColors(result.themeColors);
         return result;
     } catch (err) {
         if (axios.isAxiosError(err)) {
@@ -1240,7 +1237,7 @@ export const getTaskHabitFrequency = (task: ITarea): THabitFrequency | null => {
 
     // С сервера приходит объект, не массив
     if (!Array.isArray(task.extraHabito)) {
-        return mapServerFrequencyToUi((task.extraHabito as any).frequency);
+        return mapServerFrequencyToUi(task.extraHabito.frequency);
     }
 
     // Локально созданная задача — массив [numeroFrecuencia, frequency]
@@ -1393,7 +1390,13 @@ export const createLocalTask = (
     };
 }
 
-export const createNewGroup = (data: any, gid: number) : IGroup => {
+interface CreateNewGroupData {
+    name: string;
+    description: string;
+    photo?: Blob | MediaSource | null;
+}
+
+export const createNewGroup = (data: CreateNewGroupData, gid: number) : IGroup => {
     return {
         gid: gid,
         name: data.name,

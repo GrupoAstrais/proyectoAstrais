@@ -85,11 +85,11 @@ function glyphForCategory(category: AchievementCategory) {
 
 function rarityClasses(rarity: AchievementRarity) {
   if (rarity === 'Legendario') {
-    return 'border-[#f59e0b]/40 bg-[#f59e0b]/10 text-[#f8d089]'
+    return 'border-[color-mix(in_srgb,var(--astrais-rarity-legendary)_40%,transparent)] bg-[color-mix(in_srgb,var(--astrais-rarity-legendary)_10%,transparent)] text-[var(--astrais-rarity-legendary)]'
   }
 
   if (rarity === 'Epico') {
-    return 'border-[#ec4899]/35 bg-[#ec4899]/10 text-[#f5b6dc]'
+    return 'border-[color-mix(in_srgb,var(--astrais-rarity-epic)_35%,transparent)] bg-[color-mix(in_srgb,var(--astrais-rarity-epic)_10%,transparent)] text-[var(--astrais-rarity-epic)]'
   }
 
   if (rarity === 'Raro') {
@@ -160,9 +160,9 @@ export default function Achivs() {
   return (
     <div
       style={{ backgroundImage: `url(${bgImage})` }}
-      className="relative h-screen overflow-hidden bg-cover bg-center font-['Space_Grotesk'] text-white"
+      className="relative h-screen bg-cover bg-center font-['Space_Grotesk'] text-white"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(236,72,153,0.20),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(34,197,94,0.16),transparent_34%),radial-gradient(circle_at_center,rgba(99,102,241,0.22),transparent_46%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,color-mix(in_srgb,var(--astrais-rarity-epic)_20%,transparent),transparent_34%),radial-gradient(circle_at_bottom_left,color-mix(in_srgb,var(--astrais-tertiary)_16%,transparent),transparent_34%),radial-gradient(circle_at_center,color-mix(in_srgb,var(--astrais-primary)_22%,transparent),transparent_46%)]" />
       <div className="pointer-events-none absolute inset-0 bg-black/62" />
       <div className="scanlines pointer-events-none absolute inset-0 opacity-25" />
 
@@ -172,7 +172,7 @@ export default function Achivs() {
         <main className="flex min-h-0 flex-1 px-3 pb-3 pt-1 md:px-4 md:pb-4 xl:px-6 xl:pb-5">
           <section className="mx-auto hidden h-full w-full gap-3 lg:grid lg:grid-cols-[minmax(0,1.08fr)_minmax(19rem,0.88fr)] min-[1400px]:gap-4 min-[1400px]:grid-cols-[minmax(0,1.24fr)_minmax(24rem,0.92fr)]">
             <div className="grid min-h-0 grid-rows-[auto_auto_minmax(0,1fr)] gap-3 min-[1400px]:gap-4">
-              <article className="panel-glow relative overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(160deg,rgba(15,23,42,0.88),rgba(91,33,182,0.54),rgba(30,74,99,0.74))] p-3.5 shadow-[0_20px_58px_rgba(7,12,24,0.5)] min-[1400px]:p-4">
+              <article className="panel-glow relative rounded-[26px] border border-white/15 bg-[var(--astrais-panel-bg)] p-3.5 shadow-[0_20px_58px_color-mix(in_srgb,var(--astrais-background)_52%,transparent)] min-[1400px]:p-4">
                 <div className="pointer-events-none absolute -right-10 top-0 h-40 w-40 rounded-full bg-secondary-500/18 blur-3xl" />
                 <div className="grid grid-cols-[minmax(0,1fr)_15rem] items-start gap-3 min-[1400px]:grid-cols-[minmax(0,1fr)_18rem] min-[1400px]:gap-4">
                   <div>
@@ -196,13 +196,13 @@ export default function Achivs() {
                     </div>
                     <div className="rounded-2xl border border-white/10 bg-black/18 p-3">
                       <p className="text-[0.58rem] uppercase tracking-[0.22em] text-slate-400">Pendiente</p>
-                      <p className="mt-2 text-[1rem] font-semibold text-[#f8d089] xl:text-[1.14rem]">{pendingRewards}</p>
+                      <p className="mt-2 text-[1rem] font-semibold text-[var(--astrais-reward)] xl:text-[1.14rem]">{pendingRewards}</p>
                     </div>
                   </div>
                 </div>
               </article>
 
-              <article className="panel-glow rounded-[22px] border border-white/15 bg-[rgba(15,23,42,0.82)] p-3 shadow-[0_18px_40px_rgba(7,12,24,0.35)]">
+              <article className="panel-glow rounded-[22px] border border-white/15 bg-[color-mix(in_srgb,var(--astrais-background)_82%,transparent)] p-3 shadow-[0_18px_40px_color-mix(in_srgb,var(--astrais-background)_40%,transparent)]">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex flex-wrap gap-2">
                     {filters.map((filter) => (
@@ -212,7 +212,7 @@ export default function Achivs() {
                         onClick={() => setActiveFilter(filter.key)}
                         className={`rounded-full border px-4 py-2 text-[0.76rem] font-semibold transition xl:text-[0.82rem] ${
                           activeFilter === filter.key
-                            ? 'border-0 bg-linear-to-r from-[#f97316] via-[#ec4899] to-[#8b5cf6] text-white shadow-[0_10px_24px_rgba(236,72,153,0.22)]'
+                            ? 'border-0 [background:var(--astrais-cta-bg)] text-white shadow-[0_10px_24px_color-mix(in_srgb,var(--astrais-rarity-epic)_24%,transparent)]'
                             : 'border-white/15 bg-white/6 text-slate-200 hover:bg-white/10'
                         }`}
                       >
@@ -236,10 +236,10 @@ export default function Achivs() {
                       onClick={() => setSelectedId(achievement.id)}
                       className={`achievement-card flex min-h-43 flex-col rounded-[22px] border p-3 text-left transition min-[1400px]:p-4 ${
                         selectedAchievement?.id === achievement.id
-                          ? 'border-accent-beige-300/40 bg-[linear-gradient(160deg,rgba(255,255,255,0.12),rgba(129,140,248,0.12))] shadow-[0_16px_38px_rgba(15,23,42,0.36)]'
+                          ? 'border-accent-beige-300/40 bg-[linear-gradient(160deg,color-mix(in_srgb,var(--astrais-text)_12%,transparent),color-mix(in_srgb,var(--astrais-primary)_18%,transparent))] shadow-[0_16px_38px_color-mix(in_srgb,var(--astrais-background)_42%,transparent)]'
                           : achievement.unlocked
-                            ? 'border-accent-mint-300/22 bg-[rgba(15,23,42,0.8)] hover:border-accent-mint-300/36 hover:bg-white/8'
-                            : 'border-white/10 bg-[rgba(15,23,42,0.74)] hover:border-white/18 hover:bg-white/8'
+                            ? 'border-accent-mint-300/22 bg-[color-mix(in_srgb,var(--astrais-background)_80%,transparent)] hover:border-accent-mint-300/36 hover:bg-white/8'
+                            : 'border-white/10 bg-[color-mix(in_srgb,var(--astrais-background)_74%,transparent)] hover:border-white/18 hover:bg-white/8'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -258,7 +258,7 @@ export default function Achivs() {
                         </span>
                       </div>
 
-                      <p className="mt-3 text-[0.72rem] leading-5 text-slate-300 line-clamp-achievement min-[1400px]:text-[0.8rem]">
+                      <p className="mt-3 text-[0.72rem] leading-5 text-slate-300 min-[1400px]:text-[0.8rem]">
                         {achievement.description}
                       </p>
 
@@ -275,13 +275,13 @@ export default function Achivs() {
                                   : 'Bloqueado'}
                           </span>
                         </div>
-                        <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                        <div className="h-2 rounded-full bg-white/10">
                           <div
                             className={`h-full rounded-full transition-all duration-300 ${
                               achievement.claimed
-                                ? 'bg-linear-to-r from-accent-mint-300 to-[#10b981]'
+                                ? 'bg-linear-to-r from-accent-mint-300 to-accent-mint-500'
                                 : achievement.unlocked
-                                  ? 'bg-linear-to-r from-[#f59e0b] to-[#ec4899]'
+                                  ? 'bg-linear-to-r from-[var(--astrais-rarity-legendary)] to-[var(--astrais-rarity-epic)]'
                                   : 'bg-linear-to-r from-secondary-500 to-primary-500'
                             }`}
                             style={{ width: `${achievement.percent}%` }}
@@ -290,7 +290,7 @@ export default function Achivs() {
                       </div>
 
                       <div className="mt-auto flex items-center justify-between pt-3">
-                        <span className="text-[0.72rem] font-semibold text-[#f8d089] min-[1400px]:text-[0.82rem]">+{achievement.reward} ludiones</span>
+                        <span className="text-[0.72rem] font-semibold text-[var(--astrais-reward)] min-[1400px]:text-[0.82rem]">+{achievement.reward} ludiones</span>
                         <span className="text-[0.58rem] uppercase tracking-[0.16em] text-slate-400">{achievement.percent}%</span>
                       </div>
                     </button>
@@ -302,12 +302,12 @@ export default function Achivs() {
             <aside className="grid min-h-0 grid-rows-[minmax(0,1fr)_auto] gap-3 min-[1400px]:gap-4">
               {selectedAchievement ? (
                 <>
-                  <article className="panel-glow relative min-h-0 overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(180deg,rgba(15,23,42,0.9),rgba(30,74,99,0.76))] p-3.5 shadow-[0_22px_56px_rgba(7,12,24,0.46)] min-[1400px]:p-5">
+                  <article className="panel-glow relative min-h-0 overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--astrais-background)_90%,transparent),color-mix(in_srgb,var(--astrais-secondary)_30%,var(--astrais-surface)_70%))] p-3.5 shadow-[0_22px_56px_color-mix(in_srgb,var(--astrais-background)_50%,transparent)] min-[1400px]:p-5">
                     <div className="pointer-events-none absolute -right-8 top-6 h-36 w-36 rounded-full bg-secondary-500/18 blur-3xl" />
                     <img
                       src={astra}
                       alt="Mascota Astrais"
-                      className="pointer-events-none absolute bottom-0 right-0 hidden h-[clamp(6rem,13vh,8rem)] opacity-75 drop-shadow-[0_14px_28px_rgba(15,23,42,0.55)] min-[1400px]:block"
+                      className="pointer-events-none absolute bottom-0 right-0 hidden h-[clamp(6rem,13vh,8rem)] opacity-75 drop-shadow-[0_14px_28px_color-mix(in_srgb,var(--astrais-background)_58%,transparent)] min-[1400px]:block"
                     />
 
                     <div className="relative z-10 grid h-full min-h-0 grid-rows-[auto_auto_auto_auto_auto]">
@@ -342,7 +342,7 @@ export default function Achivs() {
                         </div>
                         <div className="rounded-2xl border border-white/10 bg-black/18 p-3">
                           <p className="text-[0.56rem] uppercase tracking-[0.18em] text-slate-400">Premio</p>
-                          <p className="mt-2 text-[0.84rem] font-semibold text-[#f8d089] min-[1400px]:text-[1rem]">{selectedAchievement.reward}</p>
+                          <p className="mt-2 text-[0.84rem] font-semibold text-[var(--astrais-reward)] min-[1400px]:text-[1rem]">{selectedAchievement.reward}</p>
                         </div>
                         <div className="rounded-2xl border border-white/10 bg-black/18 p-3">
                           <p className="text-[0.56rem] uppercase tracking-[0.18em] text-slate-400">Estado</p>
@@ -361,13 +361,13 @@ export default function Achivs() {
                           <span>Porcentaje completado</span>
                           <span>{selectedAchievement.percent}%</span>
                         </div>
-                        <div className="h-3 overflow-hidden rounded-full bg-white/10">
+                        <div className="h-3 rounded-full bg-white/10">
                           <div
                             className={`h-full rounded-full transition-all duration-300 ${
                               selectedAchievement.claimed
-                                ? 'bg-linear-to-r from-accent-mint-300 to-[#10b981]'
+                                ? 'bg-linear-to-r from-accent-mint-300 to-accent-mint-500'
                                 : selectedAchievement.unlocked
-                                  ? 'bg-linear-to-r from-[#f59e0b] to-[#ec4899]'
+                                  ? 'bg-linear-to-r from-[var(--astrais-rarity-legendary)] to-[var(--astrais-rarity-epic)]'
                                   : 'bg-linear-to-r from-secondary-500 to-primary-500'
                             }`}
                             style={{ width: `${selectedAchievement.percent}%` }}
@@ -389,7 +389,7 @@ export default function Achivs() {
                             selectedAchievement.claimed
                               ? 'cursor-default border border-accent-mint-300/25 bg-accent-mint-300/12 text-accent-mint-300'
                               : selectedAchievement.unlocked
-                                ? '<border-0></border-0> bg-linear-to-r from-[#f59e0b] via-[#ec4899] to-[#8b5cf6] text-white shadow-[0_14px_28px_rgba(236,72,153,0.24)] hover:-translate-y-0.5'
+                                ? 'border-0 [background:var(--astrais-cta-bg)] text-white shadow-[0_14px_28px_color-mix(in_srgb,var(--astrais-rarity-epic)_24%,transparent)] hover:-translate-y-0.5'
                                 : 'cursor-not-allowed border border-white/10 bg-white/8 text-slate-400'
                           }`}
                         >
@@ -407,7 +407,7 @@ export default function Achivs() {
                   </article>
 
                   <div className="grid grid-cols-2 gap-3 min-[1400px]:gap-4">
-                    <article className="panel-glow rounded-[22px] border border-white/15 bg-[rgba(15,23,42,0.82)] p-3.5 shadow-[0_16px_36px_rgba(7,12,24,0.34)] min-[1400px]:p-4">
+                    <article className="panel-glow rounded-[22px] border border-white/15 bg-[color-mix(in_srgb,var(--astrais-background)_82%,transparent)] p-3.5 shadow-[0_16px_36px_color-mix(in_srgb,var(--astrais-background)_38%,transparent)] min-[1400px]:p-4">
                       <p className="text-[0.58rem] uppercase tracking-[0.2em] text-accent-beige-300">Sincronizado</p>
                       <h3 className="mt-2 font-['Press_Start_2P'] text-[0.74rem] leading-snug text-white min-[1400px]:text-[0.88rem]">Datos del arcade</h3>
                       <div className="mt-3 space-y-2.5 text-[0.72rem] text-slate-300 min-[1400px]:text-[0.82rem]">
@@ -426,7 +426,7 @@ export default function Achivs() {
                       </div>
                     </article>
 
-                    <article className="panel-glow rounded-[22px] border border-white/15 bg-[rgba(15,23,42,0.82)] p-3.5 shadow-[0_16px_36px_rgba(7,12,24,0.34)] min-[1400px]:p-4">
+                    <article className="panel-glow rounded-[22px] border border-white/15 bg-[color-mix(in_srgb,var(--astrais-background)_82%,transparent)] p-3.5 shadow-[0_16px_36px_color-mix(in_srgb,var(--astrais-background)_38%,transparent)] min-[1400px]:p-4">
                       <p className="text-[0.58rem] uppercase tracking-[0.2em] text-accent-beige-300">Objetivo activo</p>
                       <h3 className="mt-2 font-['Press_Start_2P'] text-[0.74rem] leading-snug text-white min-[1400px]:text-[0.88rem]">Siguiente paso</h3>
                       <p className="mt-3 text-[0.72rem] leading-5 text-slate-300 min-[1400px]:text-[0.82rem] min-[1400px]:leading-6">
@@ -444,7 +444,7 @@ export default function Achivs() {
           </section>
 
           <section className="mx-auto flex h-full max-w-md items-center justify-center lg:hidden">
-            <article className="rounded-[28px] border border-white/15 bg-[rgba(15,23,42,0.84)] p-6 text-center shadow-[0_24px_60px_rgba(7,12,24,0.45)] backdrop-blur-sm">
+            <article className="rounded-[28px] border border-white/15 bg-[color-mix(in_srgb,var(--astrais-background)_84%,transparent)] p-6 text-center shadow-[0_24px_60px_color-mix(in_srgb,var(--astrais-background)_50%,transparent)] backdrop-blur-sm">
               <p className="text-[0.72rem] uppercase tracking-[0.28em] text-accent-beige-300">Vitrina Astrais</p>
               <h1 className="mt-4 font-['Press_Start_2P'] text-lg text-white">Vista de escritorio</h1>
               <p className="mt-4 text-sm leading-6 text-slate-300">
@@ -459,8 +459,8 @@ export default function Achivs() {
         .scanlines {
           background-image: repeating-linear-gradient(
             180deg,
-            rgba(255, 255, 255, 0.06) 0,
-            rgba(255, 255, 255, 0.06) 1px,
+            color-mix(in srgb, var(--astrais-text) 6%, transparent) 0,
+            color-mix(in srgb, var(--astrais-text) 6%, transparent) 1px,
             transparent 1px,
             transparent 4px
           );
@@ -471,12 +471,12 @@ export default function Achivs() {
           position: absolute;
           inset: 0;
           border-radius: inherit;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+          box-shadow: inset 0 1px 0 color-mix(in srgb, var(--astrais-text) 10%, transparent);
           pointer-events: none;
         }
 
         .achievement-card {
-          box-shadow: 0 14px 30px rgba(7, 12, 24, 0.22);
+          box-shadow: 0 14px 30px color-mix(in srgb, var(--astrais-background) 28%, transparent);
         }
 
         .achievements-scroll {
@@ -487,13 +487,6 @@ export default function Achivs() {
 
         .achievements-scroll::-webkit-scrollbar {
           display: none;
-        }
-
-        .line-clamp-achievement {
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 2;
-          overflow: hidden;
         }
       `}</style>
     </div>

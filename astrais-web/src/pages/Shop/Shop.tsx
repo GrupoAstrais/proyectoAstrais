@@ -10,7 +10,7 @@ import {
   getUserData,
   type StoreItemResponse,
 } from '../../data/Api'
-import { parseThemeConfig } from '../../styles/theme'
+import { applyThemeColors, parseThemeConfig } from '../../styles/theme'
 
 const PAGE_SIZE = 4
 
@@ -49,11 +49,11 @@ function normalizeRarity(rarity?: string): ShopRarity {
 
 function getRarityClasses(rarity: ShopRarity) {
   if (rarity === 'Legendario') {
-    return 'border-[#f59e0b]/45 bg-[#f59e0b]/10 text-[#f8d089]'
+    return 'border-[color-mix(in_srgb,var(--astrais-rarity-legendary)_45%,transparent)] bg-[color-mix(in_srgb,var(--astrais-rarity-legendary)_10%,transparent)] text-[var(--astrais-rarity-legendary)]'
   }
 
   if (rarity === 'Epico') {
-    return 'border-[var(--astrais-error)]/35 bg-[var(--astrais-error)]/10 text-[var(--astrais-error)]'
+    return 'border-[color-mix(in_srgb,var(--astrais-rarity-epic)_35%,transparent)] bg-[color-mix(in_srgb,var(--astrais-rarity-epic)_10%,transparent)] text-[var(--astrais-rarity-epic)]'
   }
 
   if (rarity === 'Raro') {
@@ -139,6 +139,7 @@ export default function Shop() {
   const loadShopData = React.useCallback(async () => {
     const [userData, storeItems] = await Promise.all([getUserData(), getStoreItems()])
 
+    applyThemeColors(userData.themeColors, storeItems)
     setAvailableBalance(userData.ludiones)
     setItems(storeItems.map(toDisplayItem))
   }, [])
@@ -244,6 +245,11 @@ export default function Shop() {
     try {
       setMutationItemId(selectedItem.id)
       await equipStoreItem(selectedItem.id)
+
+      if (selectedItem.type === 'APP_THEME') {
+        applyThemeColors(selectedItem.theme)
+      }
+
       await refreshAfterMutation()
     } catch {
       setError('No se pudo equipar el cosmetico.')
@@ -269,7 +275,7 @@ export default function Shop() {
 
         <main className="flex min-h-0 flex-1 px-3 pb-3 pt-1 md:px-4 md:pb-4 xl:px-6 xl:pb-5">
           <section className="mx-auto hidden h-full w-full gap-3 lg:grid lg:grid-cols-12 min-[1400px]:grid-cols-[15.75rem_minmax(0,1.24fr)_20.25rem] min-[1400px]:gap-4">
-            <aside className="panel-glow relative col-span-2 grid min-h-0 grid-rows-[auto_auto_auto_minmax(0,1fr)] overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(170deg,color-mix(in_srgb,var(--astrais-background)_90%,black_10%),color-mix(in_srgb,var(--astrais-background-alt)_82%,var(--astrais-secondary)_18%))] p-3.5 shadow-[0_20px_56px_rgba(7,12,24,0.46)] min-[1400px]:p-5">
+            <aside className="panel-glow relative col-span-2 grid min-h-0 grid-rows-[auto_auto_auto_minmax(0,1fr)] overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(170deg,color-mix(in_srgb,var(--astrais-background)_90%,var(--astrais-background-alt)_10%),color-mix(in_srgb,var(--astrais-background-alt)_82%,var(--astrais-secondary)_18%))] p-3.5 shadow-[0_20px_56px_color-mix(in_srgb,var(--astrais-background)_50%,transparent)] min-[1400px]:p-5">
               <div className="pointer-events-none absolute -left-12 top-3 h-36 w-36 rounded-full bg-secondary-500/16 blur-3xl" />
               <div className="relative z-10 flex items-start justify-between gap-3">
                 <div>
@@ -291,7 +297,7 @@ export default function Shop() {
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-black/18 p-3">
                   <p className="text-[0.56rem] uppercase tracking-[0.18em] text-slate-400">Gastado</p>
-                  <p className="mt-2 text-[1rem] font-semibold text-[#f8d089] xl:text-[1.12rem]">{spentLudions}</p>
+                  <p className="mt-2 text-[1rem] font-semibold text-[var(--astrais-reward)] xl:text-[1.12rem]">{spentLudions}</p>
                 </div>
               </div>
 
@@ -328,7 +334,7 @@ export default function Shop() {
                       onClick={() => setActiveCategory(category)}
                       className={`rounded-2xl border px-3 py-2.5 text-left text-[0.76rem] font-semibold xl:text-[0.82rem] ${
                         activeCategory === category
-                          ? 'border-0 bg-linear-to-r from-(--astrais-primary) via-(--astrais-error) to-(--astrais-secondary) text-white shadow-[0_10px_24px_rgba(236,72,153,0.20)]'
+                          ? 'border-0 [background:var(--astrais-cta-bg)] text-white shadow-[0_10px_24px_color-mix(in_srgb,var(--astrais-rarity-epic)_24%,transparent)]'
                           : 'border-white/12 bg-white/6 text-slate-200 hover:bg-white/10'
                       }`}
                     >
@@ -339,8 +345,8 @@ export default function Shop() {
               </div>
             </aside>
 
-            <section className="panel-glow relative col-span-7 grid min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-[28px] border border-white/15 bg-[linear-gradient(160deg,color-mix(in_srgb,var(--astrais-background)_88%,black_12%),color-mix(in_srgb,var(--astrais-primary)_42%,transparent),color-mix(in_srgb,var(--astrais-background-alt)_82%,var(--astrais-secondary)_18%))] p-3.5 shadow-[0_20px_58px_rgba(7,12,24,0.48)] min-[1400px]:p-5">
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.10),transparent_25%)]" />
+            <section className="panel-glow relative col-span-7 grid min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-[28px] border border-white/15 bg-[linear-gradient(160deg,color-mix(in_srgb,var(--astrais-background)_88%,var(--astrais-background-alt)_12%),color-mix(in_srgb,var(--astrais-primary)_42%,transparent),color-mix(in_srgb,var(--astrais-background-alt)_82%,var(--astrais-secondary)_18%))] p-3.5 shadow-[0_20px_58px_color-mix(in_srgb,var(--astrais-background)_52%,transparent)] min-[1400px]:p-5">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,color-mix(in_srgb,var(--astrais-text)_10%,transparent),transparent_25%)]" />
               <header className="relative z-10 flex items-start justify-between gap-3 min-[1400px]:gap-4">
                 <div>
                   <p className="text-[0.64rem] uppercase tracking-[0.28em] text-accent-beige-300">Catalogo activo</p>
@@ -397,15 +403,15 @@ export default function Shop() {
                       onClick={() => setSelectedItemId(item.id)}
                       className={`catalog-card flex min-h-0 cursor-pointer flex-col rounded-3xl border p-3 transition min-[1400px]:p-4 ${
                         selectedItem?.id === item.id
-                          ? 'border-accent-beige-300/40 bg-[linear-gradient(160deg,rgba(255,255,255,0.12),rgba(129,140,248,0.10))] shadow-[0_16px_38px_rgba(15,23,42,0.36)]'
-                          : 'border-white/12 bg-[rgba(15,23,42,0.74)] hover:border-white/18 hover:bg-white/8'
+                          ? 'border-accent-beige-300/40 bg-[linear-gradient(160deg,color-mix(in_srgb,var(--astrais-text)_12%,transparent),color-mix(in_srgb,var(--astrais-primary)_16%,transparent))] shadow-[0_16px_38px_color-mix(in_srgb,var(--astrais-background)_42%,transparent)]'
+                          : 'border-white/12 bg-[color-mix(in_srgb,var(--astrais-background)_74%,transparent)] hover:border-white/18 hover:bg-white/8'
                       }`}
                     >
                       <div
                         className="relative overflow-hidden rounded-[20px] border border-white/10 px-3 py-3"
                         style={{ background: getSoftGradient(item.accentFrom, item.accentTo) }}
                       >
-                        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.16),transparent_34%)]" />
+                        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,color-mix(in_srgb,var(--astrais-text)_16%,transparent),transparent_34%)]" />
                         <div className="relative flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <p className="text-[0.58rem] uppercase tracking-[0.18em] text-slate-300">{item.category}</p>
@@ -425,7 +431,7 @@ export default function Shop() {
                       </div>
 
                       <div className="mt-3 flex items-center justify-between">
-                        <span className="text-[0.8rem] font-semibold text-[#f8d089] min-[1400px]:text-[0.9rem]">{item.price} L</span>
+                        <span className="text-[0.8rem] font-semibold text-[var(--astrais-reward)] min-[1400px]:text-[0.9rem]">{item.price} L</span>
                         <span className="rounded-full border border-white/12 bg-white/6 px-2 py-1 text-[0.54rem] uppercase tracking-[0.14em] text-slate-300">
                           {item.equipped ? 'Equipado' : item.owned ? 'Comprado' : 'Disponible'}
                         </span>
@@ -437,13 +443,13 @@ export default function Shop() {
             </section>
 
             {selectedItem ? (
-              <aside className="panel-glow relative col-span-3 grid min-h-0 grid-rows-[minmax(0,1fr)_auto] overflow-y-scroll rounded-[26px] border border-white/15 bg-[linear-gradient(170deg,color-mix(in_srgb,var(--astrais-background)_90%,black_10%),color-mix(in_srgb,var(--astrais-background-alt)_82%,var(--astrais-secondary)_18%))] p-3.5 shadow-[0_20px_56px_rgba(7,12,24,0.46)] min-[1400px]:p-5">
+              <aside className="panel-glow relative col-span-3 grid min-h-0 grid-rows-[minmax(0,1fr)_auto] overflow-y-scroll rounded-[26px] border border-white/15 bg-[linear-gradient(170deg,color-mix(in_srgb,var(--astrais-background)_90%,var(--astrais-background-alt)_10%),color-mix(in_srgb,var(--astrais-background-alt)_82%,var(--astrais-secondary)_18%))] p-3.5 shadow-[0_20px_56px_color-mix(in_srgb,var(--astrais-background)_50%,transparent)] min-[1400px]:p-5">
                 <div className="pointer-events-none absolute -right-10 top-6 h-36 w-36 rounded-full bg-secondary-500/18 blur-3xl" />
                 <div
                   className="relative min-h-0 overflow-hidden rounded-3xl border border-white/10 p-4"
                   style={{ background: getSoftGradient(selectedItem.accentFrom, selectedItem.accentTo, '19%', '10%') }}
                 >
-                  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.16),transparent_34%)]" />
+                  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,color-mix(in_srgb,var(--astrais-text)_16%,transparent),transparent_34%)]" />
 
                   <div className="relative z-10 grid h-full min-h-0 grid-rows-[auto_auto_auto_auto_auto_auto]">
                     <div className="flex items-start justify-between gap-3">
@@ -463,7 +469,7 @@ export default function Shop() {
                     <div className="mt-4 grid grid-cols-2 gap-3">
                       <div className="rounded-2xl border border-white/10 bg-black/18 p-3">
                         <p className="text-[0.56rem] uppercase tracking-[0.16em] text-slate-400">Precio</p>
-                        <p className="mt-2 text-[0.86rem] font-semibold text-[#f8d089] min-[1400px]:text-[1.04rem]">{selectedItem.price} L</p>
+                        <p className="mt-2 text-[0.86rem] font-semibold text-[var(--astrais-reward)] min-[1400px]:text-[1.04rem]">{selectedItem.price} L</p>
                       </div>
                       <div className="rounded-2xl border border-white/10 bg-black/18 p-3">
                         <p className="text-[0.56rem] uppercase tracking-[0.16em] text-slate-400">Slot</p>
@@ -503,7 +509,7 @@ export default function Shop() {
                             ? 'cursor-default border border-accent-mint-300/25 bg-accent-mint-300/12 text-accent-mint-300'
                             : availableBalance < selectedItem.price || isMutatingSelected
                               ? 'cursor-not-allowed border border-white/10 bg-white/8 text-slate-400'
-                              : 'border border-transparent bg-linear-to-r from-(--astrais-primary) via-(--astrais-error) to-(--astrais-secondary) text-white shadow-[0_14px_28px_rgba(236,72,153,0.22)] hover:-translate-y-0.5'
+                              : 'border border-transparent [background:var(--astrais-cta-bg)] text-white shadow-[0_14px_28px_color-mix(in_srgb,var(--astrais-rarity-epic)_24%,transparent)] hover:-translate-y-0.5'
                         }`}
                       >
                         {isMutatingSelected ? 'Procesando...' : isOwned ? 'Ya comprado' : 'Comprar ahora'}
@@ -543,7 +549,7 @@ export default function Shop() {
           </section>
 
           <section className="mx-auto flex h-full max-w-md items-center justify-center lg:hidden">
-            <article className="rounded-[28px] border border-white/15 bg-[rgba(15,23,42,0.84)] p-6 text-center shadow-[0_24px_60px_rgba(7,12,24,0.45)] backdrop-blur-sm">
+            <article className="rounded-[28px] border border-white/15 bg-[color-mix(in_srgb,var(--astrais-background)_84%,transparent)] p-6 text-center shadow-[0_24px_60px_color-mix(in_srgb,var(--astrais-background)_50%,transparent)] backdrop-blur-sm">
               <p className="text-[0.72rem] uppercase tracking-[0.28em] text-accent-beige-300">Astrais Store</p>
               <h1 className="mt-4 font-['Press_Start_2P'] text-lg text-white">Vista de escritorio</h1>
               <p className="mt-4 text-sm leading-6 text-slate-300">
@@ -558,8 +564,8 @@ export default function Shop() {
         .scanlines {
           background-image: repeating-linear-gradient(
             180deg,
-            rgba(255, 255, 255, 0.06) 0,
-            rgba(255, 255, 255, 0.06) 1px,
+            color-mix(in srgb, var(--astrais-text) 6%, transparent) 0,
+            color-mix(in srgb, var(--astrais-text) 6%, transparent) 1px,
             transparent 1px,
             transparent 4px
           );
@@ -570,12 +576,12 @@ export default function Shop() {
           position: absolute;
           inset: 0;
           border-radius: inherit;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+          box-shadow: inset 0 1px 0 color-mix(in srgb, var(--astrais-text) 10%, transparent);
           pointer-events: none;
         }
 
         .catalog-card {
-          box-shadow: 0 14px 32px rgba(7, 12, 24, 0.22);
+          box-shadow: 0 14px 32px color-mix(in srgb, var(--astrais-background) 28%, transparent);
         }
 
         ::-webkit-scrollbar {

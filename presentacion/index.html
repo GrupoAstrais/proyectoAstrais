@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astraïs - Presentación</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --astrais-primary: #8B5CF6;
+            --astrais-secondary: #38BDF8;
+            --astrais-tertiary: #10B981;
+            --astrais-background: #0D1117;
+            --astrais-background-alt: #11161D;
+            --astrais-surface: #1A1D2D;
+            --astrais-text: #F8FAFC;
+            --astrais-muted: rgba(248, 250, 252, 0.6);
+            --astrais-border: rgba(139, 92, 246, 0.2);
+            --astrais-error: #F43F5E;
+            --astrais-warning: #FFD93D;
+            --header-height: 64px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--astrais-background);
+            color: var(--astrais-text);
+        }
+
+        /* Estrellas de fondo fijas */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.6), transparent),
+                radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.4), transparent),
+                radial-gradient(1.5px 1.5px at 50% 10%, rgba(255,255,255,0.7), transparent),
+                radial-gradient(1px 1px at 70% 40%, rgba(255,255,255,0.4), transparent),
+                radial-gradient(1px 1px at 90% 80%, rgba(255,255,255,0.5), transparent),
+                radial-gradient(1px 1px at 15% 85%, rgba(255,255,255,0.4), transparent),
+                radial-gradient(1.5px 1.5px at 45% 45%, rgba(255,255,255,0.6), transparent),
+                radial-gradient(1px 1px at 80% 15%, rgba(255,255,255,0.4), transparent),
+                radial-gradient(1px 1px at 25% 35%, rgba(255,255,255,0.5), transparent),
+                radial-gradient(1px 1px at 60% 75%, rgba(255,255,255,0.4), transparent);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Header fijo */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: var(--header-height);
+            z-index: 100;
+            background: rgba(13, 17, 23, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--astrais-border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+
+        header h1 {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.1rem;
+            color: var(--astrais-primary);
+            letter-spacing: 0.05em;
+        }
+
+        header .participants {
+            font-size: 0.8rem;
+            color: var(--astrais-muted);
+            letter-spacing: 0.08em;
+        }
+
+        header .participants span {
+            color: var(--astrais-secondary);
+            font-weight: 500;
+        }
+
+        /* Contenedor de slides */
+        .slides-container {
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            width: 100%;
+            height: calc(100% - var(--header-height));
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+            z-index: 1;
+        }
+
+        .slide {
+            width: 100%;
+            height: 100%;
+            scroll-snap-align: start;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 5rem 2rem 2rem;
+            position: relative;
+        }
+
+        .slide-inner {
+            max-width: 960px;
+            width: 100%;
+            max-height: 100%;
+            overflow-y: auto;
+        }
+
+        /* Títulos de slide */
+        .slide-title-main {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.6rem;
+            color: var(--astrais-primary);
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        .slide-subtitle {
+            font-size: 1.1rem;
+            color: var(--astrais-secondary);
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+        }
+
+        /* Tarjetas */
+        .card {
+            background: var(--astrais-background-alt);
+            border: 1px solid var(--astrais-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .card-title {
+            color: var(--astrais-secondary);
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .card p, .card li {
+            color: rgba(248, 250, 252, 0.8);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.25rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.25rem;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.25rem;
+        }
+
+        .flex-row {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .flex-col {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* Listas */
+        ul.plain {
+            list-style: none;
+            padding: 0;
+        }
+
+        ul.plain li {
+            padding: 0.4rem 0;
+            padding-left: 1.25rem;
+            position: relative;
+            color: rgba(248, 250, 252, 0.85);
+        }
+
+        ul.plain li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.85rem;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--astrais-primary);
+        }
+
+        /* Tags */
+        .tag {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin: 0.2rem;
+            border: 1px solid;
+            background: transparent;
+        }
+
+        .tag-primary {
+            border-color: rgba(139, 92, 246, 0.5);
+            color: var(--astrais-primary);
+        }
+
+        .tag-secondary {
+            border-color: rgba(56, 189, 248, 0.5);
+            color: var(--astrais-secondary);
+        }
+
+        .tag-tertiary {
+            border-color: rgba(16, 185, 129, 0.5);
+            color: var(--astrais-tertiary);
+        }
+
+        /* Tabla */
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 0.4rem;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 0.6rem 1rem;
+            color: var(--astrais-secondary);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .data-table td {
+            padding: 0.75rem 1rem;
+            background: var(--astrais-background-alt);
+            font-size: 0.9rem;
+            color: rgba(248, 250, 252, 0.85);
+        }
+
+        .data-table tr td:first-child {
+            border-radius: 8px 0 0 8px;
+        }
+
+        .data-table tr td:last-child {
+            border-radius: 0 8px 8px 0;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-green {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--astrais-tertiary);
+        }
+
+        .badge-yellow {
+            background: rgba(255, 217, 61, 0.15);
+            color: var(--astrais-warning);
+        }
+
+        .badge-red {
+            background: rgba(244, 63, 94, 0.15);
+            color: var(--astrais-error);
+        }
+
+        /* Árbol de carpetas */
+        .tree {
+            font-family: 'Space Grotesk', monospace;
+            font-size: 0.9rem;
+            line-height: 1.8;
+            color: rgba(248, 250, 252, 0.75);
+        }
+
+        .tree .folder {
+            color: var(--astrais-secondary);
+        }
+
+        .tree .file {
+            color: rgba(248, 250, 252, 0.5);
+        }
+
+        /* Pasos numerados */
+        .steps {
+            display: flex;
+            gap: 1rem;
+            counter-reset: step;
+        }
+
+        .step {
+            flex: 1;
+            background: var(--astrais-background-alt);
+            border: 1px solid var(--astrais-border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            position: relative;
+        }
+
+        .step::before {
+            counter-increment: step;
+            content: counter(step);
+            display: block;
+            width: 28px;
+            height: 28px;
+            background: var(--astrais-primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Citas */
+        .quote {
+            border-left: 3px solid var(--astrais-primary);
+            padding-left: 1.5rem;
+            font-style: italic;
+            font-size: 1.2rem;
+            color: rgba(248, 250, 252, 0.8);
+        }
+
+        .quote-author {
+            margin-top: 1rem;
+            font-style: normal;
+            font-size: 0.9rem;
+            color: var(--astrais-muted);
+        }
+
+        /* Números grandes (estadísticas) */
+        .stat-number {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 2.5rem;
+            color: var(--astrais-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--astrais-muted);
+        }
+
+        /* Placeholders para imágenes */
+        .img-placeholder {
+            width: 100%;
+            max-height: 220px;
+            aspect-ratio: 16/9;
+            background: var(--astrais-surface);
+            border: 2px dashed var(--astrais-border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--astrais-muted);
+            font-size: 0.85rem;
+            object-fit: cover;
+        }
+
+        .img-placeholder.square {
+            aspect-ratio: 1/1;
+            max-height: 180px;
+        }
+
+        /* Centro de slide (para portadas) */
+        .centered {
+            text-align: center;
+        }
+
+        .centered .slide-title-main {
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .centered .slide-subtitle {
+            font-size: 1.2rem;
+            color: var(--astrais-muted);
+            margin-bottom: 2rem;
+        }
+
+        /* Botones de navegación */
+        .nav-buttons {
+            position: fixed;
+            right: 1.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .nav-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid var(--astrais-border);
+            background: rgba(17, 22, 29, 0.9);
+            backdrop-filter: blur(8px);
+            color: var(--astrais-text);
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            border-color: var(--astrais-primary);
+            color: var(--astrais-primary);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            border-color: var(--astrais-border);
+            color: var(--astrais-muted);
+        }
+
+        .nav-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        /* Contador */
+        .slide-counter {
+            position: fixed;
+            right: 1.25rem;
+            bottom: 1.25rem;
+            z-index: 100;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.65rem;
+            color: var(--astrais-primary);
+            background: rgba(17, 22, 29, 0.9);
+            backdrop-filter: blur(8px);
+            padding: 0.4rem 0.6rem;
+            border-radius: 6px;
+            border: 1px solid var(--astrais-border);
+        }
+
+        /* Hint de teclado */
+        .keyboard-hint {
+            position: fixed;
+            left: 50%;
+            bottom: 1.25rem;
+            transform: translateX(-50%);
+            z-index: 100;
+            font-size: 0.75rem;
+            color: rgba(248, 250, 252, 0.35);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            pointer-events: none;
+        }
+
+        .keyboard-hint kbd {
+            background: rgba(17, 22, 29, 0.8);
+            border: 1px solid var(--astrais-border);
+            border-radius: 3px;
+            padding: 0.15rem 0.35rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.7rem;
+        }
+
+        /* Bloques de código */
+        .code-block {
+            background: #0a0c10;
+            border: 1px solid var(--astrais-border);
+            border-radius: 10px;
+            overflow: hidden;
+            font-family: 'Fira Code', 'SF Mono', Consolas, monospace;
+            font-size: 0.82rem;
+            line-height: 1.5;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.9rem;
+            background: rgba(139, 92, 246, 0.08);
+            border-bottom: 1px solid var(--astrais-border);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.75rem;
+            color: var(--astrais-muted);
+        }
+
+        .code-header .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .code-header .dot.red { background: #ff5f56; }
+        .code-header .dot.yellow { background: #ffbd2e; }
+        .code-header .dot.green { background: #27c93f; }
+
+        .code-header .filename {
+            margin-left: auto;
+            font-family: 'Fira Code', monospace;
+            color: var(--astrais-primary);
+        }
+
+        .code-block pre {
+            padding: 1rem 1.1rem;
+            overflow-x: auto;
+            color: #c9d1d9;
+            margin: 0;
+        }
+
+        .code-block code {
+            font-family: inherit;
+        }
+
+        /* Colores de sintaxis básicos */
+        .code-keyword { color: #ff7b72; }
+        .code-string  { color: #a5d6ff; }
+        .code-func    { color: #d2a8ff; }
+        .code-comment { color: #8b949e; font-style: italic; }
+        .code-number  { color: #79c0ff; }
+        .code-type    { color: #ffa657; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .slide {
+                padding: 1.5rem 4rem 1.5rem 1.5rem;
+            }
+
+            .slide-title-main {
+                font-size: 1.1rem;
+            }
+
+            .centered .slide-title-main {
+                font-size: 1.4rem;
+            }
+
+            .grid-2, .grid-3, .grid-4 {
+                grid-template-columns: 1fr;
+            }
+
+            .steps {
+                flex-direction: column;
+            }
+
+            .flex-row {
+                flex-direction: column;
+            }
+
+            .nav-buttons {
+                right: 0.75rem;
+            }
+
+            .img-placeholder {
+                max-height: 160px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER FIJO 
+     
+    
+    <header>
+        <h1>Astraïs</h1>
+        <div class="participants">
+            <span>Olga</span> · <span>Samuel</span> · <span>Manuel</span> · <span>Elías</span>
+        </div>
+    </header>
+    
+    -->
+    
+
+    <!-- BOTONES DE NAVEGACIÓN -->
+    <nav class="nav-buttons">
+        <button class="nav-btn" id="btnUp" onclick="goToSlide(current - 1)" disabled>
+            <svg viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
+        </button>
+        <button class="nav-btn" id="btnDown" onclick="goToSlide(current + 1)">
+            <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+        </button>
+    </nav>
+
+    <!-- CONTADOR -->
+    <div class="slide-counter">
+        <span id="cur">1</span> /         <span id="tot">17</span>
+    </div>
+
+    <div class="keyboard-hint">
+        <kbd>↑</kbd> <kbd>↓</kbd> para navegar
+    </div>
+
+    <!-- CONTENEDOR DE SLIDES -->
+    <main class="slides-container">
+
+        <!-- SLIDE 1: PORTADA -->
+        <section class="slide">
+            <div class="slide-inner centered">
+                <h2 class="slide-title-main">Astraïs</h2>
+                <p class="slide-subtitle">Convierte tu productividad en una aventura</p>
+                <p class="slide-subtitle">Olga, Manuel, Samuel, Elías</p>
+                <div>
+                    <span class="tag tag-primary">Tag 1</span>
+                    <span class="tag tag-secondary">Tag 2</span>
+                    <span class="tag tag-tertiary">Tag 3</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 2: ÍNDICE / AGENDA -->
+        <section class="slide">
+            <div class="slide-inner">
+                <h2 class="slide-title-main">Índice</h2>
+                <ul class="plain">
+                    <li>1. Introducción</li>                    
+                    <li>2. Descripción y justificación</li>
+                    <li>3. ERP y reparto de tareas</li>
+                    <li>4. Casos de uso</li>
+                    <li>5. Stack tecnológico</li>
+                    <li>6. Retos y dificultades</li>
+                    <li>7. Ampliaciones</li>
+                    <li>8. Conclusiones</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- SLIDE 3: TEXTO + IMAGEN (2 columnas) -->
+        <section class="slide">
+            <div class="slide-inner">
+                <h2 class="slide-title-main">Introducción</h2>
+                <div class="flex-row">
+                    <div style="flex:1;">
+                        <p style="color:rgba(248,250,252,0.8); line-height:1.7;">
+                            <h2>Astraïs</h2>
+                            Aplicación de productividad gamificada orientada a mejorar la constancia y motivación del usuario mediante mecánicas inspiradas en videojuegos:
+                        <ul class="plain">
+                            <li>Gestión de tareas y hábitos</li>
+                            <li>Sistema de niveles, XP y recompensas</li>
+                            <li>Personalización y economía virtual</li>
+                            <li>Funciones sociales y colaborativas</li>
+                            <li>Minijuegos y eventos interactivos</li>
+                        </ul>
+
+
+ <relevante class="ddd">
+
+
+                                <br><br><br><br><br><br><br><br><br><br><br>
+                                
+                            </relevante>
+                        </p>
+                    </div>
+                    <div style="flex:1;">
+                        
+                            <img class="img-placeholder"  src="img/banner.svg" alt="Imagen de introducción">
+                    
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 4: LISTA DE VIÑETAS -->
+        <section class="slide">
+            <div class="slide-inner">
+                <h2 class="slide-title-main">Descripción y justificación</h2>
+                <ul class="plain">
+                    <li>Astraïs nace para resolver un problema <b>real</b>: la dificultad de mantener la constancia en la productividad personal. 
+                    Las herramientas tradicionales de organización suelen abandonarse por falta de motivación, monotonía y ausencia de recompensas visibles.</li>
+                    <li>Este proyecto propone una solución innovadora basada en la <b>gamificación</b>, transformando la gestión de tareas y hábitos en una experiencia interactiva inspirada en videojuegos..</li>                    
+                    <li>Su valor diferencial está en convertir la productividad en algo motivador y continuo, combinando utilidad real con elementos de juego como economía virtual, logros, minijuegos y funciones sociales.</li>
+                    <li>De esta forma, Astraïs organiza tareas y <b>crea una experiencia que fomenta la constancia, el compromiso y la mejora personal a largo plazo</b>, haciendo que el usuario quiera volver cada día.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- SLIDE 5: 3 TARJETAS -->
+        <section class="slide">
+            <div class="slide-inner">
+                <h2 class="slide-title-main">ERP y reparto de tareas</h2>
+                <div class="grid-3">
+                    <div class="card">
+                        <div class="card-title">Taiga</div>
+                        <p>Esta plataforma permite planificar y coordinar el trabajo del equipo durante el desarrollo del proyecto.</p>
+                    </div>
+                    <div class="card">
+                        <img class="img-placeholder"  src="img/tareas.png" alt="Imagen de introducción">
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Reparto de tareas</div>
+                        <p>Una vez definidas las tareas, se llevó a cabo su reparto entre los distintos miembros del equipo. La asignación se realizó de la forma más equitativa posible.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 6: 2 TARJETAS GRANDES -->
+        <section class="slide">
+            <div class="slide-inner">
+                <h2 class="slide-title-main">Casos de uso</h2>
+                <div class="grid-2">
+                    <div class="card" >
+                        <ul class="plain">
+                            <li>Video</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 7: COMPARATIVA (Problema vs Solución) -->
+                 <section class="slide">
+            <div class="slide-inner">
+                <h2 class="slide-title-main">Stack tecnológico</h2>
+                <div class="grid-3">
+                    <div class="card">
+                        <div class="card-title">App</div>
+                        <ul class="plain">
+                            <li>Kotlin</li>
+                            <li>Jetpack Compose</li>
+                            <li>Android Studio</li>
+                            <li>MVVM + StateFlow</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Web</div>
+                        <ul class="plain">
+                            <li>React + TypeScript</li>
+                            <li>Vite</li>
+                            <li>Tailwindcss</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Backend</div>
+                        <ul class="plain">
+                            <li>Ktor (Kotlin)</li>
+                            <li>Exposed</li>
+                            <li>Postgres</li>
+                            <li>Docker</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 8: PASOS NUMERADOS -->
+        <section class="slide">
+            <div class="slide-inner">
+                <h2 class="slide-title-main">Retos y dificultades</h2>
+                <div class="steps">
+                    <div class="step">
+                        <strong>App</strong><br>
+                        <span style="font-size:0.85rem; color:rgba(248,250,252,0.7);">Descripción del primer paso del proceso.</span>
+                    </div>
+                    <div class="step">
+                        <strong>Web</strong><br>
+                        <span style="font-size:0.85rem; color:rgba(248,250,252,0.7);">Descripción del segundo paso del proceso.</span>
+                    </div>
+                    <div class="step">
+                        <strong>Backend</strong><br>
+                        <span style="font-size:0.85rem; color:rgba(248,250,252,0.7);">Descripción del tercer paso del proceso.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 9: TECNOLOGÍAS / STACK -->
+        <section class="slide">
+            <div class="slide-inner">
+                <h2 class="slide-title-main">Ampliaciones</h2>
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-title">Bloque izquierdo</div>
+                        <div>
+                            <span class="tag tag-primary">Tecnología 1</span>
+                            <span class="tag tag-secondary">Tecnología 2</span>
+                            <span class="tag tag-tertiary">Tecnología 3</span>
+                            <span class="tag tag-primary">Tecnología 4</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Bloque derecho</div>
+                        <div>
+                            <span class="tag tag-secondary">Tecnología 5</span>
+                            <span class="tag tag-tertiary">Tecnología 6</span>
+                            <span class="tag tag-primary">Tecnología 7</span>
+                            <span class="tag tag-secondary">Tecnología 8</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 10: TABLA / ESTADO -->
+        <section class="slide">
+            <div class="slide-inner">
+                <h2 class="slide-title-main">Conclusión</h2>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Columna 1</th>
+                            <th>Columna 2</th>
+                            <th>Columna 3</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Fila 1 - Dato A</td>
+                            <td>Fila 1 - Dato B</td>
+                            <td><span class="badge badge-green">Completado</span></td>
+                        </tr>
+                        <tr>
+                            <td>Fila 2 - Dato A</td>
+                            <td>Fila 2 - Dato B</td>
+                            <td><span class="badge badge-yellow">En progreso</span></td>
+                        </tr>
+                        <tr>
+                            <td>Fila 3 - Dato A</td>
+                            <td>Fila 3 - Dato B</td>
+                            <td><span class="badge badge-red">Pendiente</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SLIDE 11: DIAGRAMA / FLUJO -->
+        <section class="slide">
+            <div class="slide-inner">
+                <h2 class="slide-title-main">Título de la diapositiva</h2>
+                <div class="img-placeholder">
+                    Diagrama / Flujo / SVG
+                </div>
+                <p style="margin-top:1rem; text-align:center; color:var(--astrais-muted); font-size:0.9rem;">
+                    Pie de foto o explicación del diagrama.
+                </p>
+            </div>
+        </section>
+
+        <!-- SLIDE 12: GALERÍA DE CAPTURAS -->
+        <section class="slide">
+            <div class="slide-inner">
+                <h2 class="slide-title-main">Título de la diapositiva</h2>
+                <div class="grid-2">
+                    <div class="img-placeholder">Captura 1</div>
+                    <div class="img-placeholder">Captura 2</div>
+                    <div class="img-placeholder">Captura 3</div>
+                    <div class="img-placeholder">Captura 4</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 13: CITA DESTACADA -->
+        <section class="slide">
+            <div class="slide-inner centered">
+                <h2 class="slide-title-main">Título de la diapositiva</h2>
+                <blockquote class="quote" style="max-width:700px; margin:0 auto;">
+                    "Escribe aquí una frase destacada, una cita importante o un mensaje clave que quieras resaltar en la presentación."
+                </blockquote>
+                <p class="quote-author">— Autor o contexto de la cita</p>
+            </div>
+        </section>
+
+
+        <!-- SLIDE 14: ESTADÍSTICAS / DATOS -->
+        <section class="slide">
+            <div class="slide-inner">
+                <h2 class="slide-title-main">Título de la diapositiva</h2>
+                <div class="grid-4" style="text-align:center;">
+                    <div class="card">
+                        <div class="stat-number">12</div>
+                        <div class="stat-label">Dato descriptivo</div>
+                    </div>
+                    <div class="card">
+                        <div class="stat-number">85%</div>
+                        <div class="stat-label">Dato descriptivo</div>
+                    </div>
+                    <div class="card">
+                        <div class="stat-number">3.2K</div>
+                        <div class="stat-label">Dato descriptivo</div>
+                    </div>
+                    <div class="card">
+                        <div class="stat-number">+50</div>
+                        <div class="stat-label">Dato descriptivo</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 15: CÓDIGO SIMPLE -->
+        <section class="slide">
+            <div class="slide-inner">
+                <h2 class="slide-title-main">Título de la diapositiva</h2>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">archivo.kt</span>
+                    </div>
+                    <pre><code><span class="code-keyword">fun</span> <span class="code-func">main</span>() {
+                        <span class="code-keyword">val</span> mensaje = <span class="code-string">"Hola, Astraïs"</span>
+                        <span class="code-func">println</span>(mensaje)
+
+                        <span class="code-comment">// Ejemplo de función</span>
+                        <span class="code-keyword">val</span> resultado = <span class="code-func">sumar</span>(<span class="code-number">5</span>, <span class="code-number">3</span>)
+                        <span class="code-func">println</span>(<span class="code-string">"Resultado: </span><span class="code-number">$resultado</span><span class="code-string">"</span>)
+                    }
+
+<span class="code-keyword">fun</span> <span class="code-func">sumar</span>(a: <span class="code-type">Int</span>, b: <span class="code-type">Int</span>): <span class="code-type">Int</span> = a + b</code></pre>
+                </div>
+                <p style="margin-top:1rem; color:var(--astrais-muted); font-size:0.85rem;">
+                    Pie de código: explicación breve de lo que hace el snippet.
+                </p>
+            </div>
+        </section>
+
+        <!-- SLIDE 16: CÓDIGO + TEXTO (2 columnas) -->
+        <section class="slide">
+            <div class="slide-inner">
+                <h2 class="slide-title-main">Título de la diapositiva</h2>
+                <div class="grid-2">
+                    <div class="flex-col">
+                        <p style="color:rgba(248,250,252,0.85); line-height:1.7; font-size:0.9rem;">
+                            Explicación del fragmento de código. Puedes describir qué hace,
+                            por qué es importante o cómo encaja en la arquitectura del proyecto.
+                        </p>
+                        <ul class="plain">
+                            <li>Punto clave del código</li>
+                            <li>Otro detalle relevante</li>
+                            <li>Buena práctica aplicada</li>
+                        </ul>
+                    </div>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">UserRepository.kt</span>
+                        </div>
+                        <pre><code><span class="code-keyword">class</span> <span class="code-type">UserRepository</span>(
+    <span class="code-keyword">private val</span> db: <span class="code-type">Database</span>
+) {
+    <span class="code-keyword">suspend fun</span> <span class="code-func">findById</span>(
+        id: <span class="code-type">UUID</span>
+    ): <span class="code-type">User</span>? {
+        <span class="code-keyword">return</span> db.<span class="code-func">query</span> {
+            <span class="code-type">Users</span>
+                .<span class="code-func">select</span> { <span class="code-type">Users</span>.id eq id }
+                .<span class="code-func">map</span> { <span class="code-type">User</span>(it) }
+                .<span class="code-func">singleOrNull</span>()
+        }
+    }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 17: CIERRE / EQUIPO / CONTACTO -->
+        <section class="slide">
+            <div class="slide-inner centered">
+                <h2 class="slide-title-main">Gracias</h2>
+                <p class="slide-subtitle">Preguntas o contacto</p>
+                <div class="grid-4" style="margin-top:2rem;">
+                    <div class="card" style="text-align:center;">
+                        <div style="width:60px; height:60px; border-radius:50%; background:var(--astrais-primary); margin:0 auto 0.75rem; display:flex; align-items:center; justify-content:center; font-family:'Press Start 2P'; font-size:1.2rem;">O</div>
+                        <strong>Olga</strong>
+                    </div>
+                    <div class="card" style="text-align:center;">
+                        <div style="width:60px; height:60px; border-radius:50%; background:var(--astrais-primary); margin:0 auto 0.75rem; display:flex; align-items:center; justify-content:center; font-family:'Press Start 2P'; font-size:1.2rem;">S</div>
+                        <strong>Samuel</strong>
+                    </div>
+                    <div class="card" style="text-align:center;">
+                        <div style="width:60px; height:60px; border-radius:50%; background:var(--astrais-primary); margin:0 auto 0.75rem; display:flex; align-items:center; justify-content:center; font-family:'Press Start 2P'; font-size:1.2rem;">M</div>
+                        <strong>Manuel</strong>
+                    </div>
+                    <div class="card" style="text-align:center;">
+                        <div style="width:60px; height:60px; border-radius:50%; background:var(--astrais-primary); margin:0 auto 0.75rem; display:flex; align-items:center; justify-content:center; font-family:'Press Start 2P'; font-size:1.2rem;">E</div>
+                        <strong>Elías</strong>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const total = slides.length;
+        let current = 0;
+
+        document.getElementById('tot').textContent = total;
+
+        function updateNav() {
+            document.getElementById('cur').textContent = current + 1;
+            document.getElementById('btnUp').disabled = current === 0;
+            document.getElementById('btnDown').disabled = current === total - 1;
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < total) {
+                current = index;
+                slides[current].scrollIntoView({ behavior: 'smooth' });
+                updateNav();
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+                e.preventDefault();
+                goToSlide(current + 1);
+            } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+                e.preventDefault();
+                goToSlide(current - 1);
+            }
+        });
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const idx = Array.from(slides).indexOf(entry.target);
+                    current = idx;
+                    updateNav();
+                }
+            });
+        }, { threshold: 0.5 });
+
+        slides.forEach(s => observer.observe(s));
+
+        updateNav();
+    </script>
+</body>
+</html>
