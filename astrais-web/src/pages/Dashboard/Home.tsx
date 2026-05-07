@@ -49,6 +49,20 @@ const buildHomeAchievements = () =>
     .sort((leftAchievement, rightAchievement) => Number(rightAchievement.unlocked) - Number(leftAchievement.unlocked) || rightAchievement.percent - leftAchievement.percent)
     .slice(0, 8);
 
+const hasTaskBeenCompletedOnce = (task: ITarea): boolean => {
+  return typeof task.fecha_completado === "string" && task.fecha_completado.trim().length > 0;
+};
+
+const getRewardedTaskStorageKey = (task: ITarea): string => `rewarded-task:${task.gid}:${task.id}`;
+
+const wasTaskRewardedBefore = (task: ITarea): boolean => {
+  if (hasTaskBeenCompletedOnce(task)) return true;
+  return localStorage.getItem(getRewardedTaskStorageKey(task)) === "1";
+};
+
+const markTaskAsRewarded = (task: ITarea): void => {
+  localStorage.setItem(getRewardedTaskStorageKey(task), "1");
+};
 
 export default function Home() {
   const [notif] = useState<number>(0);
@@ -191,7 +205,7 @@ export default function Home() {
 
     const subtasks = getTaskSubtasks(tasks, taskId);
     const willComplete = !isTaskCompleted(task);
-    const wasCompletedBefore = Boolean(task.fecha_completado);
+    const wasCompletedBefore = wasTaskRewardedBefore(task);
 
     try {
         if (willComplete) {
@@ -215,7 +229,10 @@ export default function Home() {
         console.error("Error al completar/descompletar tarea:", err);
     } finally {
         setTasks((prev) => toggleTaskCompleted(prev, `${taskId}`));
-        if (willComplete && !wasCompletedBefore) showRewardNotification(task.recompensaXp ?? 0, task.recompensaLudion ?? 0);
+        if (willComplete && !wasCompletedBefore) {
+          markTaskAsRewarded(task);
+          showRewardNotification(task.recompensaXp ?? 0, task.recompensaLudion ?? 0);
+        }
     }
   };
 
@@ -223,7 +240,7 @@ export default function Home() {
     const subtask = tasks.find((currentTask) => currentTask.id === subtaskId);
     const parentTask = tasks.find((currentTask) => currentTask.id === taskId);
     if (!subtask) return;
-    const wasCompletedBefore = Boolean(subtask.fecha_completado);
+    const wasCompletedBefore = wasTaskRewardedBefore(subtask);
 
     try {
       if (isTaskCompleted(subtask)) {
@@ -244,6 +261,7 @@ export default function Home() {
     } finally {
       setTasks((prevTasks) => toggleSubtaskCompleted(prevTasks, `${taskId}`, `${subtaskId}`));
       if (subtask && !isTaskCompleted(subtask) && !wasCompletedBefore) {
+        markTaskAsRewarded(subtask);
         showRewardNotification(subtask.recompensaXp ?? 0, subtask.recompensaLudion ?? 0);
       }
     }

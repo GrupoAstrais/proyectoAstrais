@@ -132,7 +132,7 @@ proyectoAstrais/
 ├── HojaDeEstilos/        
 ├── docs/                 
 │   ├── README.md
-│   ├── DOCUMENTACIÓN.md
+│   ├── DOCUMENTACION.md
 │   ├── MANUAL_DE_USUARIO_ASTRAIS.md
 │   ├── PLAN_DE_PRUEBAS_ANDROID.md
 │   ├── PRUEBAS_ANDROID_ISSUES.md
@@ -228,11 +228,9 @@ Para ejecutar la aplicación Android:
 
 El proyecto incluye varios documentos de apoyo para entender tanto el desarrollo como el uso de la aplicación. Toda la documentación se encuentra en la carpeta [`docs/`](./docs/):
 
-- [**DOCUMENTACIÓN.md**](./docs/DOCUMENTACIÓN.md): documentación técnica completa del proyecto intermodular.
+- [**DOCUMENTACION.md**](./docs/DOCUMENTACION.md): documentación técnica completa del proyecto intermodular.
 - [**MANUAL_DE_USUARIO_ASTRAIS.md**](./docs/MANUAL_DE_USUARIO_ASTRAIS.md): manual de usuario con explicación de las pantallas y funcionalidades.
 - [**API.md**](./docs/API.md): documentación técnica de los endpoints del backend.
-- [**PLAN_DE_PRUEBAS_ANDROID.md**](./docs/PLAN_DE_PRUEBAS_ANDROID.md): plan de pruebas manuales de la app Android.
-- [**PRUEBAS_ANDROID_ISSUES.md**](./docs/PRUEBAS_ANDROID_ISSUES.md): registro de resultados de pruebas.
 - **Documentacion_Astrais.pdf**: documentación general del proyecto intermodular.
 - **HojaDeEstilos/**: guía visual, prototipo e identidad corporativa del proyecto.
 

@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5684";
+const API_URL = window.location.origin;
 const STORAGE_ACCESS = 'astrais_access';
 const STORAGE_REFRESH = 'astrais_refresh';
 

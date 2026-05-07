@@ -195,6 +195,13 @@ class DatabaseDAOImpl : DatabaseDAO {
                     this.ultimo_login = LocalDate.now().toKotlinLocalDate()
                 }
 
+                val newgroup = EntidadGrupo.new {
+                    this.nombre = "Astrais User"
+                    this.descripcion=""
+                    this.owner = newuser.id
+                    this.es_grupo_personal = true
+                }
+
                 TablaCredencialesAuth.insert {
                     it[uid] = newuser.id.value
                     it[provider] = auth

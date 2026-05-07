@@ -1,0 +1,13 @@
+{
+    "type" : "avatar",
+    "names" : {
+        "esp" : "Corona primaveral",
+        "eng" : "Spring crown",
+        "rus" : "весенняя корона"
+    },
+    "desc" : "Una corona muy guapa",
+    "collection" : "Bosque Encantado",
+    "price" : 200,
+    "rarity" : "COMUN",
+    "imageRef":"avatars/avatar_primavera_1.png"
+}

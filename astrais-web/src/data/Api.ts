@@ -4,7 +4,7 @@ import type { IGroup, ITarea } from '../types/Interfaces';
 
 //export const API_BASE_URL = 'http://192.168.3.148:5684' //url desde las practicas
 // export const API_BASE_URL = 'http://192.168.56.1:5684' //url desde casa
- export const API_BASE_URL = 'http://127.0.0.1:5684' //variable de entorno para la url, con fallback a localhost
+export const API_BASE_URL = `http://${window.location.hostname}:5684`; //'http://127.0.0.1:5684' //variable de entorno para la url, con fallback a localhost
 
 
 // TOKENS
@@ -67,6 +67,10 @@ instance.interceptors.response.use(
         const status = error.response?.status;
 
         if (status !== 401 || originalRequest._retry) {
+            return Promise.reject(error);
+        }
+
+        if (window.location.search.includes('jwtAccessToken')) {
             return Promise.reject(error);
         }
 
@@ -194,11 +198,7 @@ export async function confirmRegister(req: VerifyRequest) : Promise<void> {
 
 // Inicia el flujo OAuth con Google redirigiendo al usuario
 export function loginWithGoogle(): void {
-    let API_URL = '5173';
-    if (import.meta.env.PROD){
-        API_URL = '8080';
-    }
-    window.location.href = `${instance.defaults.baseURL}/auth/google/login?api_url=${API_URL}`;
+    window.location.href = `http://${window.location.hostname}:5684/auth/google/login`;
 }
 
 // Maneja el callback de Google OAuth (tokens en la respuesta)
@@ -210,6 +210,8 @@ export async function handleGoogleCallback(_uid: number, hadToRegister: boolean,
         localStorage.setItem('jwtToken', jwtToken!)
         localStorage.setItem('jwtRefreshToken', jwtRefreshToken!)
     }
+
+    window.history.replaceState({}, document.title, window.location.pathname)
 
     console.log("TOKEN: " + jwtToken);
     console.log("REFRESH TOKEN: " + jwtRefreshToken);
@@ -334,6 +336,7 @@ export async function getUserData() : Promise<UserData> {
     try {
         const response = await instance.get<UserData>("/auth/me");
         console.error("Successful user data retrieval! ");
+        console.log(response.data);
         const result = response.data;
         return result;
     } catch (err) {

@@ -301,37 +301,56 @@ export default function Profile() {
   const navigate = useNavigate();
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [profile, setProfile] = useState<ProfileState>(initialProfile);
-  const [settings, setSettings] =
-    useState<ProfileSettingsState>(initialSettings);
-  const [draftProfile, setDraftProfile] =
-    useState<ProfileState>(initialProfile);
-  const [draftSettings, setDraftSettings] =
-    useState<ProfileSettingsState>(initialSettings);
-  const [statusMessage, setStatusMessage] = useState<string>("");
-  const [shareFeedback, setShareFeedback] = useState<string>("");
+  const [isProfileLoading, setIsProfileLoading] = useState<boolean>(true);
+  const [settings, setSettings] = useState<ProfileSettingsState>(initialSettings);
+  const [draftProfile, setDraftProfile] = useState<ProfileState>(initialProfile);
+  const [draftSettings, setDraftSettings] = useState<ProfileSettingsState>(initialSettings);
+  const [statusMessage, setStatusMessage] = useState<string>('');
+  const [shareFeedback, setShareFeedback] = useState<string>('');
   const [userId, setUserId] = useState<number | null>(null);
-  const [emailDraft, setEmailDraft] = useState("");
-  const [passwordDraft, setPasswordDraft] = useState("");
+  const [emailDraft, setEmailDraft] = useState('');
+  const [passwordDraft, setPasswordDraft] = useState('');
+  const [authDraftDirty, setAuthDraftDirty] = useState(false);
 
   useEffect(() => {
     const loadUserProfile = async () => {
       try {
+        setIsProfileLoading(true);
         const user = await getUserData();
-        const normalizedUsername = user.nombre
+        const rawUser = user as unknown as Record<string, unknown>;
+        const rawName =
+          typeof rawUser.nombre === 'string'
+            ? rawUser.nombre
+            : typeof rawUser.name === 'string'
+              ? rawUser.name
+              : '';
+        const normalizedUsername = rawName
           .toLowerCase()
-          .replace(/\s+/g, "")
-          .replace(/[^a-z0-9._-]/g, "");
+          .replace(/\s+/g, '')
+          .replace(/[^a-z0-9._-]/g, '');
+        const normalizedLevel = Number(
+          typeof rawUser.nivel !== 'undefined' ? rawUser.nivel : rawUser.level
+        );
+        const normalizedXp = Number(
+          typeof rawUser.xpActual !== 'undefined' ? rawUser.xpActual : rawUser.xp
+        );
+        const resolvedLevel = Number.isFinite(normalizedLevel) ? normalizedLevel : initialProfile.level;
+        const resolvedXp = Number.isFinite(normalizedXp) ? normalizedXp : initialProfile.xp;
+        const resolvedName = rawName || initialProfile.name;
 
-        setUserId(user.id);
+        setUserId(typeof user.id === 'number' ? user.id : null);
         setProfile((currentProfile) => ({
           ...currentProfile,
-          name: user.nombre,
+          uid: typeof user.id === 'number' ? user.id : currentProfile.uid,
+          name: resolvedName,
           username: normalizedUsername || currentProfile.username,
-          level: user.nivel,
-          xp: user.xpActual,
+          level: resolvedLevel,
+          xp: resolvedXp
         }));
       } catch {
-        setStatusMessage("No se pudieron cargar los datos del usuario.");
+        setStatusMessage('No se pudieron cargar los datos del usuario.');
+      } finally {
+        setIsProfileLoading(false);
       }
     };
 
@@ -389,7 +408,10 @@ export default function Profile() {
 
   const closeModal = () => {
     setActiveModal(null);
-    setShareFeedback("");
+    setShareFeedback('');
+    setEmailDraft('');
+    setPasswordDraft('');
+    setAuthDraftDirty(false);
   };
 
   const handleSaveProfile = (event: FormEvent<HTMLFormElement>) => {
@@ -443,7 +465,7 @@ export default function Profile() {
     event.preventDefault();
     void (async () => {
       try {
-        if (emailDraft.trim() || passwordDraft.trim()) {
+        if (authDraftDirty && (emailDraft.trim() || passwordDraft.trim())) {
           if (!emailDraft.trim() || !passwordDraft.trim()) {
             setStatusMessage(
               "Para activar login por email debes completar email y contrasena.",
@@ -451,12 +473,10 @@ export default function Profile() {
             return;
           }
 
-          await setEmailLogin({
-            email: emailDraft.trim(),
-            passwd: passwordDraft.trim(),
-          });
-          setEmailDraft("");
-          setPasswordDraft("");
+          await setEmailLogin({ email: emailDraft.trim(), passwd: passwordDraft.trim() });
+          setEmailDraft('');
+          setPasswordDraft('');
+          setAuthDraftDirty(false);
         }
 
         setSettings(draftSettings);
@@ -470,6 +490,11 @@ export default function Profile() {
 
   const handleResetLogin = async () => {
     try {
+      if (!authDraftDirty) {
+        setStatusMessage('Edita email y contrasena antes de restablecer.');
+        return;
+      }
+
       if (!emailDraft.trim() || !passwordDraft.trim()) {
         setStatusMessage(
           "Para restablecer login debes completar email y contrasena.",
@@ -477,13 +502,11 @@ export default function Profile() {
         return;
       }
 
-      await setEmailLogin({
-        email: emailDraft.trim(),
-        passwd: passwordDraft.trim(),
-      });
-      setStatusMessage("Login restablecido correctamente.");
-      setEmailDraft("");
-      setPasswordDraft("");
+      await setEmailLogin({ email: emailDraft.trim(), passwd: passwordDraft.trim() });
+      setStatusMessage('Login restablecido correctamente.');
+      setEmailDraft('');
+      setPasswordDraft('');
+      setAuthDraftDirty(false);
       setDraftSettings(initialSettings);
     } catch {
       setStatusMessage("No se pudo restablecer el login.");
@@ -549,6 +572,10 @@ export default function Profile() {
     navigate("/login", { replace: true });
   };
 
+  const requiredXpForNextLevel = (profile.level + 1) * 100;
+  const xpForProgress = Math.max(0, profile.xp);
+  const xpProgressPercent = Math.min(100, (xpForProgress / requiredXpForNextLevel) * 100);
+
   return (
     <main
       style={{ backgroundImage: `url(${bgImage})` }}
@@ -578,10 +605,13 @@ export default function Profile() {
                   </h1>
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-white/75">
                     <span className="rounded-full border border-white/15 bg-black/20 px-3 py-1">
-                      @{profile.username}
+                      @{isProfileLoading ? '...' : profile.username}
+                    </span>
+                    <span className="rounded-full border border-white/15 bg-black/20 px-3 py-1">
+                      UID: {isProfileLoading ? '...' : profile.uid}
                     </span>
                     <span className="rounded-full border border-state-warning/30 bg-state-warning/15 px-3 py-1 text-state-warning">
-                      Nivel {profile.level}
+                      Nivel {isProfileLoading ? '...' : profile.level}
                     </span>
                     <span className="rounded-full border border-accent-mint-300/35 bg-accent-mint-300/10 px-3 py-1 text-accent-mint-300">
                       {visibilityText[settings.visibility]}
@@ -608,22 +638,20 @@ export default function Profile() {
                     </div>
                   </div>
                   <div className="rounded-full border border-white/15 bg-black/25 px-3 py-1 text-sm text-white/80">
-                    Miembro desde {profile.joinDate}
+                    Miembro desde {isProfileLoading ? '...' : profile.joinDate}
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-5">
                   <div className="space-y-3">
                     <p className="text-base leading-7 text-white/85">
-                      {profile.description}
+                      {isProfileLoading ? 'Cargando perfil...' : profile.description}
                     </p>
                     <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4">
                       <div className="mb-2 flex items-center justify-between gap-3 text-sm">
-                        <span className="font-semibold text-white">
-                          Progreso al siguiente nivel
-                        </span>
+                        <span className="font-semibold text-white">Progreso al siguiente nivel</span>
                         <span className="text-white/70">
-                          {profile.xp}/100 XP
+                          {isProfileLoading ? '.../...' : `${xpForProgress}/${requiredXpForNextLevel} XP`}
                         </span>
                       </div>
                       <div className="flex items-center gap-3">
@@ -636,7 +664,7 @@ export default function Profile() {
                             <path d="M12 2l2.9 6.26 6.85.62-5.2 4.55 1.53 6.77L12 16.89 5.92 20.2l1.53-6.77-5.2-4.55 6.85-.62L12 2z" />
                           </svg>
                         </span>
-                        <ProgressBar value={profile.xp} />
+                        <ProgressBar value={isProfileLoading ? 0 : xpProgressPercent} />
                       </div>
                     </div>
                   </div>
@@ -1179,7 +1207,11 @@ export default function Profile() {
               <input
                 type="email"
                 value={emailDraft}
-                onChange={(event) => setEmailDraft(event.target.value)}
+                onChange={(event) => {
+                  setAuthDraftDirty(true);
+                  setEmailDraft(event.target.value);
+                }}
+                autoComplete="off"
                 className="rounded-2xl border border-white/15 bg-black/20 px-4 py-3 text-white outline-none transition-colors duration-200 focus:border-accent-mint-300"
                 placeholder="usuario@mail.com"
               />
@@ -1191,7 +1223,11 @@ export default function Profile() {
               <input
                 type="password"
                 value={passwordDraft}
-                onChange={(event) => setPasswordDraft(event.target.value)}
+                onChange={(event) => {
+                  setAuthDraftDirty(true);
+                  setPasswordDraft(event.target.value);
+                }}
+                autoComplete="new-password"
                 className="rounded-2xl border border-white/15 bg-black/20 px-4 py-3 text-white outline-none transition-colors duration-200 focus:border-accent-mint-300"
                 placeholder="********"
               />
