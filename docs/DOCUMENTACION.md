@@ -21,7 +21,8 @@
 11. [Arquitectura del Sistema](#11-arquitectura-del-sistema)
 12. [Estructura del Proyecto](#12-estructura-del-proyecto)
 13. [Instrucciones de Despliegue e Instalación](#13-instrucciones-de-despliegue-e-instalación)
-14. [Futuras implementaciones](#14-futuras-implementaciones)
+14. [Pruebas](#14-pruebas)
+15. [Futuras implementaciones](#15-futuras-implementaciones)
 
 ---
 
@@ -911,10 +912,14 @@ El JAR resultante se ubicará en `backend/build/libs/`.
 
 ---
 
-## 14. Futuras implementaciones
+## 14. Pruebas
+
+---
+
+## 15. Futuras implementaciones
 
 
-### 14.1. Funcionalidades prioritarias
+### 15.1. Funcionalidades prioritarias
 
 1. **Sistema de amigos:** relaciones bidireccionales entre usuarios, visualización de actividad reciente y comparación de progreso.
 2. **Completar sistema de logros:** implementar la lógica de evaluación automática de condiciones en el backend, desbloqueo progresivo y notificación al usuario.
@@ -926,14 +931,14 @@ El JAR resultante se ubicará en `backend/build/libs/`.
 8. **Integración con calendarios externos:** Google Calendar, Outlook, Apple Calendar.
 9. **Marketplace de skins creadas por usuarios:** sistema de contenido generado por la comunidad.
 
-### 14.2. Mejoras técnicas y escalabilidad
+### 15.2. Mejoras técnicas y escalabilidad
 
 
 10. **Caché distribuida:** introducir Redis para cachear catálogos de tienda, sesiones activas y metadatos de grupos frecuentemente consultados.
 11. **Tests automatizados:** ampliar la cobertura de tests unitarios en backend y tests de UI en Android.
 12. **Internacionalización completa (i18n):** implementar sistema de traducciones dinámicas tanto en backend (respuestas localizadas) como en frontend (web y android).
 
-### 14.3. Despliegue en producción
+### 15.3. Despliegue en producción
 
 13. **Configuración de Nginx como proxy inverso:** terminación SSL, rate limiting y servicio de assets estáticos.
 14. **Despliegue en Proxmox:** migración de los contenedores Docker al entorno de virtualización del centro educativo.

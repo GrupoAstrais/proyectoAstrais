@@ -384,9 +384,11 @@
             width: 100%;
             max-height: 220px;
             aspect-ratio: 16/9;
+            min-width: 50em;
+            min-height: 20em;
             background: var(--astrais-surface);
-            border: 2px dashed var(--astrais-border);
-            border-radius: 12px;
+            /*border: 2px dashed var(--astrais-border);*/
+            /*border-radius: 12px;*/
             display: flex;
             align-items: center;
             justify-content: center;
@@ -652,13 +654,13 @@
             <div class="slide-inner">
                 <h2 class="slide-title-main">Índice</h2>
                 <ul class="plain">
-                    <li>1. Introducción</li>                    
+                    <li>1. Sobre la app</li>                    
                     <li>2. Descripción y justificación</li>
                     <li>3. ERP y reparto de tareas</li>
-                    <li>4. Casos de uso</li>
+                    <li>4. DEMO guiada + Casos de uso</li>
                     <li>5. Stack tecnológico</li>
                     <li>6. Retos y dificultades</li>
-                    <li>7. Ampliaciones</li>
+                    <li>7. Ampliaciones y mejoras</li>
                     <li>8. Conclusiones</li>
                 </ul>
             </div>
@@ -667,8 +669,13 @@
         <!-- SLIDE 3: TEXTO + IMAGEN (2 columnas) -->
         <section class="slide">
             <div class="slide-inner">
-                <h2 class="slide-title-main">Introducción</h2>
-                <div class="flex-row">
+                <h2 class="slide-title-main">Sobre la app</h2>
+                <div class="flex-col">
+                    <div style="flex:1;">
+                        
+                            <img class="img-placeholder"  src="img/banner.svg" alt="Imagen de introducción">
+                    
+                    </div>
                     <div style="flex:1;">
                         <p style="color:rgba(248,250,252,0.8); line-height:1.7;">
                             <h2>Astraïs</h2>
@@ -690,11 +697,7 @@
                             </relevante>
                         </p>
                     </div>
-                    <div style="flex:1;">
-                        
-                            <img class="img-placeholder"  src="img/banner.svg" alt="Imagen de introducción">
                     
-                    </div>
                 </div>
             </div>
         </section>
@@ -1071,3 +1074,58 @@
     </script>
 </body>
 </html>
+
+
+<!--
+
+1 MIN DE INTRO (SAMUEL)
+
+1. (1 MIN) -> (MANUEL)
+Lo que ya tenemos
+
+2. (2/3 MIN) -> (OLGA)
+Lo que ya tenemos
+
+3. (1 MIN) -> (ELÍAS)
+Lo que ya tenemos
++
+Decir cómo se ha repartido el proyecto (android, backend, web)
+
+4. (15 MINS)
+CREAR TAREA EN GRUPO (CREAR GRUPO) + COMPRAR EN LA TIENDA
+
+ALGUIEN PENDIENTE DE WEB + BACKEND + RUTAS (MANUEL)
+ALGUIEN GUIANDO (ELÍAS)
+ALGUIEN CON LA APP MOVIL (SAMUEL)
+ALGUIEN PENDIENTE DEL JURADO (OLGA)
+
+5. (8 MINS)
+
+TABLA CON STACK
+(REACT, VITE, TAILWINDCSS, AXIOS, TS)
+(KTOR, KOTLIN, POSTGRES, EXPOSED, SIMPLE MAIL, JWT, OAUTH)
+(JETPACK COMPOSE, KOTLIN, HILT, ROOM)
+
+ARQUITECTURA IMÁGENES GENERAL + (INFO BACKEND) -> MANUEL
+
+MEDIA PANTALLA IMAGENES PEQUEÑAS
+WEB (SAMUEL + OLGA)
+ANDROID (ELÍAS)
+
+6. (8 MINS)
+RETOS BACKEND (jwt, oauth, smtp, sse), WEB (oauth, axios, carga desde backend), 
+ANDROID (oauth, workmanager, sync)
+
+7. (4/5 MINS)
+TABLA DE AMPLIACIONES DE CARACTERISTICAS (STRIPE) + MEJORAS (DESPLEGAR BACKEND Y WEB EN CLOUD, MEJORAR RESPONSIVE)
+
+GENERAL -> 
+WEB -> 
+BACKEND -> 
+ANDROID -> 
+
+8. SAMUEL
+CONCLUSIÓN + PREGUNTAS
+
+
+-->
