@@ -75,7 +75,6 @@ instance.interceptors.response.use(
             return Promise.reject(error);
         }
 
-        // 👇 Añade esto: si hay params de OAuth en la URL, no interceptes
         if (window.location.search.includes('jwtAccessToken')) {
             return Promise.reject(error);
         }
