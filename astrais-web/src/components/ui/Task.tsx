@@ -39,9 +39,9 @@ export default function Task({ onToggleConfig, data, subtasks = [], onComplete, 
   return (
     <div
       onClick={clickHandle}
-      className={`relative flex w-full flex-row justify-between rounded-md border border-[#F4E9E9]/15 px-2 py-4 font-['Space_Grotesk'] backdrop-blur-sm ${
+      className={`relative flex w-full flex-row justify-between rounded-md border border-white/15 px-2 py-4 font-['Space_Grotesk'] backdrop-blur-sm ${
         taskChecked
-          ? "bg-[#918C84]/65 text-white/50 line-through decoration-primary-900"
+          ? "bg-[color-mix(in_srgb,var(--astrais-text)_28%,var(--astrais-background)_72%)] text-white/50 line-through decoration-primary-900"
           : "bg-accent-beige-300/35"
       }`}
     >

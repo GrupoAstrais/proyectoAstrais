@@ -9,6 +9,15 @@ export interface ThemeConfig {
   error: string
 }
 
+export interface StoreThemeSource {
+  type?: string | null
+  name?: string | null
+  theme?: string | null
+  coleccion?: string | null
+  collection?: string | null
+  price?: number | null
+}
+
 export const DEFAULT_THEME_CONFIG: ThemeConfig = {
   primary: '#8B5CF6',
   secondary: '#38BDF8',
@@ -21,6 +30,7 @@ export const DEFAULT_THEME_CONFIG: ThemeConfig = {
 }
 
 const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/
+const DEFAULT_THEME_NAMES = new Set(['default', 'por defecto'])
 
 function normalizeColor(value: unknown, fallback: string) {
   if (typeof value !== 'string') {
@@ -54,12 +64,44 @@ export function parseThemeConfig(themeColors?: string | null): ThemeConfig {
   }
 }
 
-export function applyThemeColors(themeColors?: string | null) {
+export function stringifyThemeConfig(theme: ThemeConfig) {
+  return JSON.stringify(theme)
+}
+
+function isAppTheme(item: StoreThemeSource) {
+  return item.type === 'APP_THEME'
+}
+
+function normalizeText(value?: string | null) {
+  return value?.trim().toLowerCase() ?? ''
+}
+
+export function getDefaultThemeColorsFromStoreItems(items: StoreThemeSource[] = []) {
+  const appThemes = items.filter((item) => isAppTheme(item) && typeof item.theme === 'string' && item.theme.trim())
+
+  if (!appThemes.length) {
+    return null
+  }
+
+  const defaultTheme =
+    appThemes.find((item) => normalizeText(item.coleccion ?? item.collection) === 'default') ??
+    appThemes.find((item) => DEFAULT_THEME_NAMES.has(normalizeText(item.name))) ??
+    appThemes.find((item) => item.price === 0) ??
+    appThemes[0]
+
+  return defaultTheme.theme ?? null
+}
+
+export function resolveThemeColors(themeColors?: string | null, storeItems?: StoreThemeSource[]) {
+  return themeColors ?? getDefaultThemeColorsFromStoreItems(storeItems) ?? stringifyThemeConfig(DEFAULT_THEME_CONFIG)
+}
+
+export function applyThemeColors(themeColors?: string | null, storeItems?: StoreThemeSource[]) {
   if (typeof document === 'undefined') {
     return
   }
 
-  const theme = parseThemeConfig(themeColors)
+  const theme = parseThemeConfig(resolveThemeColors(themeColors, storeItems))
   const root = document.documentElement
 
   root.style.setProperty('--astrais-primary', theme.primary)

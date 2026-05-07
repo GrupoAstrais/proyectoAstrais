@@ -31,8 +31,8 @@ export const SHOP_ITEMS: ShopItem[] = [
     shortDescription: 'Interfaz celeste con halos reactivos.',
     detail: 'Una piel espacial con azules electricos y brillos suaves para transformar toda la cabina.',
     perk: 'Tema luminoso con contraste limpio para dashboards nocturnos.',
-    accentFrom: '#38bdf8',
-    accentTo: '#8b5cf6',
+    accentFrom: 'var(--astrais-secondary)',
+    accentTo: 'var(--astrais-primary)',
   },
   {
     id: 'theme-solaris',
@@ -45,8 +45,8 @@ export const SHOP_ITEMS: ShopItem[] = [
     shortDescription: 'Calor estelar con grid retro y neones.',
     detail: 'Fusiona naranjas solares y magentas para una interfaz mas arcade y cargada de energia.',
     perk: 'Tema premium para sesiones de foco con presencia fuerte.',
-    accentFrom: '#f97316',
-    accentTo: '#ec4899',
+    accentFrom: 'var(--astrais-warning)',
+    accentTo: 'var(--astrais-rarity-epic)',
   },
   {
     id: 'pet-nova',
@@ -58,8 +58,8 @@ export const SHOP_ITEMS: ShopItem[] = [
     shortDescription: 'Mascota exploradora para acompanarte en tus retos.',
     detail: 'Un companero orbital compacto con animacion sugerida y look amable para el panel principal.',
     perk: 'Companion ligero ideal para empezar tu coleccion.',
-    accentFrom: '#22c55e',
-    accentTo: '#06b6d4',
+    accentFrom: 'var(--astrais-tertiary)',
+    accentTo: 'var(--astrais-secondary)',
   },
   {
     id: 'pet-cosmo',
@@ -72,8 +72,8 @@ export const SHOP_ITEMS: ShopItem[] = [
     shortDescription: 'Felino astral de rango alto.',
     detail: 'Una criatura premium con presencia elegante, ojos intensos y silueta de guardian espacial.',
     perk: 'Companion legendario para vitrinas avanzadas.',
-    accentFrom: '#f59e0b',
-    accentTo: '#ef4444',
+    accentFrom: 'var(--astrais-rarity-legendary)',
+    accentTo: 'var(--astrais-error)',
   },
   {
     id: 'event-comet',
@@ -85,8 +85,8 @@ export const SHOP_ITEMS: ShopItem[] = [
     shortDescription: 'Efecto fugaz con estela para eventos especiales.',
     detail: 'Una cola cometaria para acentuar cabeceras, premios y zonas de accion en fechas de evento.',
     perk: 'Aura dinamica con sensacion de velocidad.',
-    accentFrom: '#a78bfa',
-    accentTo: '#38bdf8',
+    accentFrom: 'var(--astrais-primary)',
+    accentTo: 'var(--astrais-secondary)',
   },
   {
     id: 'event-lantern',
@@ -98,8 +98,8 @@ export const SHOP_ITEMS: ShopItem[] = [
     shortDescription: 'Faroles cosmicos suspendidos en el fondo.',
     detail: 'Decora la experiencia con destellos suaves y pequeñas luces volumetricas flotando sobre el panel.',
     perk: 'Aura celebracion con brillo ambiental refinado.',
-    accentFrom: '#fb7185',
-    accentTo: '#8b5cf6',
+    accentFrom: 'var(--astrais-error)',
+    accentTo: 'var(--astrais-primary)',
   },
   {
     id: 'special-archive',
@@ -111,8 +111,8 @@ export const SHOP_ITEMS: ShopItem[] = [
     shortDescription: 'Marco tactico para vitrinas y perfiles.',
     detail: 'Reforzado con vidrio sintetico y lineas holograficas para escenas de logro y coleccion.',
     perk: 'Aura tecnica con lectura muy clara.',
-    accentFrom: '#14b8a6',
-    accentTo: '#3b82f6',
+    accentFrom: 'var(--astrais-tertiary)',
+    accentTo: 'var(--astrais-secondary)',
   },
   {
     id: 'special-vault',
@@ -125,8 +125,8 @@ export const SHOP_ITEMS: ShopItem[] = [
     shortDescription: 'Firma visual para cuentas premium.',
     detail: 'Una firma de alto rango con brillos metalicos, capas de cristal y contraste muy marcado.',
     perk: 'Aura insignia para perfiles de coleccion maxima.',
-    accentFrom: '#f59e0b',
-    accentTo: '#8b5cf6',
+    accentFrom: 'var(--astrais-rarity-legendary)',
+    accentTo: 'var(--astrais-primary)',
   },
 ]
 
@@ -140,11 +140,11 @@ export function getItemsForCategory(category: ShopCategory) {
 
 export function getRarityClasses(rarity: ShopRarity) {
   if (rarity === 'Legendario') {
-    return 'border-[#f59e0b]/45 bg-[#f59e0b]/10 text-[#f8d089]'
+    return 'border-[color-mix(in_srgb,var(--astrais-rarity-legendary)_45%,transparent)] bg-[color-mix(in_srgb,var(--astrais-rarity-legendary)_10%,transparent)] text-[var(--astrais-rarity-legendary)]'
   }
 
   if (rarity === 'Epico') {
-    return 'border-[#ec4899]/35 bg-[#ec4899]/10 text-[#f4b4d8]'
+    return 'border-[color-mix(in_srgb,var(--astrais-rarity-epic)_35%,transparent)] bg-[color-mix(in_srgb,var(--astrais-rarity-epic)_10%,transparent)] text-[var(--astrais-rarity-epic)]'
   }
 
   if (rarity === 'Raro') {

@@ -31,6 +31,7 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.sessions.*
 import kotlinx.serialization.json.Json
 import java.net.InetAddress
+import java.net.NetworkInterface
 import java.util.Base64
 
 
@@ -45,12 +46,22 @@ fun Application.initOauth(authenticationConfig: AuthenticationConfig){
                 requestMethod = HttpMethod.Post,
                 clientId = environment.config.property("google.clientId").getString(),
                 clientSecret = environment.config.property("google.secretId").getString(),
-                defaultScopes = listOf("https://www.googleapis.com/auth/userinfo.profile"),
+                defaultScopes = listOf("https://www.googleapis.com/auth/userinfo.profile")
             )
         }
         client = HttpClient(Apache)
     }
 }
+
+fun getPrivateIP(): String? {
+    return NetworkInterface.getNetworkInterfaces().asSequence()
+        .filter { it.isUp && !it.isLoopback }
+        .flatMap { it.inetAddresses.asSequence() }
+        .filter { !it.isLoopbackAddress && it.hostAddress.contains(".") }
+        .map { it.hostAddress }
+        .firstOrNull()
+}
+
 
 fun Route.oauthRoutes() {
     authenticate("oauth-google") {
@@ -89,7 +100,7 @@ fun Route.oauthRoutes() {
                     println("OAUTH? En esta economia??")
 
                     //val targetOrigin = call.parameters["frontendOrigin"] ?: "http://localhost:8080"
-                    //val targetOrigin = if (System.getenv("IS_DEV").equals("0")) "8080" else "5684"
+                    val targetOrigin = if (System.getenv("IS_DEV").equals("0")) "8080" else "5684"
 
                     /*call.response.header("Cross-Origin-Opener-Policy", "same-origin-allow-popups")
                     call.respondText(
@@ -98,8 +109,8 @@ fun Route.oauthRoutes() {
                         status = HttpStatusCode.OK
                     )*/
                     //call.respondRedirect("http://${InetAddress.getLocalHost().hostAddress}:$targetOrigin/oauthCallback?accessToken=${loginResponse.jwtAccessToken}&refreshToken=${loginResponse.jwtRefreshToken}&hadToRegister=${loginResponse.hadToRegister}")
-                    val frontendUrl = "http://localhost:5173"
-                        call.respondRedirect("$frontendUrl/oauthCallback?accessToken=${loginResponse.jwtAccessToken}&refreshToken=${loginResponse.jwtRefreshToken}&hadToRegister=${loginResponse.hadToRegister}")
+                    val frontendUrl = "http://${getPrivateIP()}:$targetOrigin"
+                    call.respondRedirect("$frontendUrl/oauthCallback?accessToken=${loginResponse.jwtAccessToken}&refreshToken=${loginResponse.jwtRefreshToken}&hadToRegister=${loginResponse.hadToRegister}")
                 } else {
                     call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "Missing user account"))
                 }

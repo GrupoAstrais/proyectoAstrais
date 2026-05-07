@@ -17,26 +17,26 @@ const pads = [
   {
     label: 'Norte',
     shortLabel: 'N',
-    className: 'border-[#38bdf8]/50 bg-[#38bdf8]/14 text-[#bae6fd]',
-    activeClassName: 'border-[#7dd3fc] bg-[#38bdf8]/45 shadow-[0_0_34px_rgba(56,189,248,0.34)]',
+    className: 'border-[color-mix(in_srgb,var(--astrais-secondary)_50%,transparent)] bg-[color-mix(in_srgb,var(--astrais-secondary)_14%,transparent)] text-[var(--astrais-secondary)]',
+    activeClassName: 'border-[var(--astrais-secondary)] bg-[color-mix(in_srgb,var(--astrais-secondary)_45%,transparent)] shadow-[0_0_34px_color-mix(in_srgb,var(--astrais-secondary)_34%,transparent)]',
   },
   {
     label: 'Este',
     shortLabel: 'E',
     className: 'border-accent-mint-300/50 bg-accent-mint-300/14 text-accent-mint-300',
-    activeClassName: 'border-accent-mint-300 bg-accent-mint-300/42 shadow-[0_0_34px_rgba(159,232,197,0.34)]',
+    activeClassName: 'border-accent-mint-300 bg-accent-mint-300/42 shadow-[0_0_34px_color-mix(in_srgb,var(--astrais-tertiary)_34%,transparent)]',
   },
   {
     label: 'Sur',
     shortLabel: 'S',
-    className: 'border-[#f59e0b]/50 bg-[#f59e0b]/14 text-[#f8d089]',
-    activeClassName: 'border-[#fbbf24] bg-[#f59e0b]/42 shadow-[0_0_34px_rgba(245,158,11,0.34)]',
+    className: 'border-[color-mix(in_srgb,var(--astrais-rarity-legendary)_50%,transparent)] bg-[color-mix(in_srgb,var(--astrais-rarity-legendary)_14%,transparent)] text-[var(--astrais-rarity-legendary)]',
+    activeClassName: 'border-[var(--astrais-rarity-legendary)] bg-[color-mix(in_srgb,var(--astrais-rarity-legendary)_42%,transparent)] shadow-[0_0_34px_color-mix(in_srgb,var(--astrais-rarity-legendary)_34%,transparent)]',
   },
   {
     label: 'Oeste',
     shortLabel: 'O',
-    className: 'border-[#ec4899]/50 bg-[#ec4899]/14 text-[#f5b6dc]',
-    activeClassName: 'border-[#f472b6] bg-[#ec4899]/42 shadow-[0_0_34px_rgba(236,72,153,0.34)]',
+    className: 'border-[color-mix(in_srgb,var(--astrais-rarity-epic)_50%,transparent)] bg-[color-mix(in_srgb,var(--astrais-rarity-epic)_14%,transparent)] text-[var(--astrais-rarity-epic)]',
+    activeClassName: 'border-[var(--astrais-rarity-epic)] bg-[color-mix(in_srgb,var(--astrais-rarity-epic)_42%,transparent)] shadow-[0_0_34px_color-mix(in_srgb,var(--astrais-rarity-epic)_34%,transparent)]',
   },
 ]
 
@@ -162,12 +162,12 @@ export default function AstraMemoryGame({ gameId }: AstraMemoryGameProps) {
   }
 
   return (
-    <main className="relative h-screen min-h-112 overflow-hidden bg-[radial-gradient(circle_at_top_right,rgba(236,72,153,0.2),transparent_34%),linear-gradient(145deg,#0f172a,#312e81_52%,#111827)] p-4 font-['Space_Grotesk'] text-white">
+    <main className="relative h-screen min-h-112 overflow-hidden bg-[radial-gradient(circle_at_top_right,color-mix(in_srgb,var(--astrais-rarity-epic)_20%,transparent),transparent_34%),linear-gradient(145deg,var(--astrais-background),color-mix(in_srgb,var(--astrais-primary)_52%,var(--astrais-background)),var(--astrais-background-alt))] p-4 font-['Space_Grotesk'] text-white">
       <div className="memory-grid pointer-events-none absolute inset-0 opacity-30" />
       <section className="relative z-10 grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-3">
         <header className="grid grid-cols-[minmax(0,1fr)_18rem] gap-3">
           <div>
-            <p className="inline-flex rounded-full border border-[#ec4899]/35 bg-[#ec4899]/12 px-3 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.24em] text-[#f5b6dc]">
+            <p className="inline-flex rounded-full border border-[color-mix(in_srgb,var(--astrais-rarity-epic)_35%,transparent)] bg-[color-mix(in_srgb,var(--astrais-rarity-epic)_12%,transparent)] px-3 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.24em] text-[var(--astrais-rarity-epic)]">
               Secuencia astral
             </p>
             <h1 className="mt-3 font-['Press_Start_2P'] text-[clamp(1rem,2vw,1.35rem)] leading-tight">Astra Memory</h1>
@@ -187,12 +187,12 @@ export default function AstraMemoryGame({ gameId }: AstraMemoryGameProps) {
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/24 p-3">
               <p className="text-[0.55rem] uppercase tracking-[0.18em] text-slate-400">Fallos</p>
-              <p className="mt-2 text-[1rem] font-semibold text-[#f5b6dc]">{mistakes}/{MAX_MISTAKES}</p>
+              <p className="mt-2 text-[1rem] font-semibold text-[var(--astrais-rarity-epic)]">{mistakes}/{MAX_MISTAKES}</p>
             </div>
           </div>
         </header>
 
-        <div className="relative grid min-h-0 place-items-center overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(160deg,rgba(15,23,42,0.78),rgba(49,46,129,0.58))] p-6">
+        <div className="relative grid min-h-0 place-items-center overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(160deg,color-mix(in_srgb,var(--astrais-background)_78%,transparent),color-mix(in_srgb,var(--astrais-primary)_38%,var(--astrais-surface)_62%))] p-6">
           <div className="grid aspect-square h-full max-h-[21rem] grid-cols-2 gap-4">
             {pads.map((pad, padIndex) => (
               <button
@@ -202,7 +202,7 @@ export default function AstraMemoryGame({ gameId }: AstraMemoryGameProps) {
                 disabled={status !== 'input'}
                 className={`rounded-[28px] border p-5 text-center transition duration-150 disabled:cursor-not-allowed ${
                   pad.className
-                } ${activePad === padIndex ? pad.activeClassName : 'shadow-[0_16px_34px_rgba(0,0,0,0.22)]'}`}
+                } ${activePad === padIndex ? pad.activeClassName : 'shadow-[0_16px_34px_color-mix(in_srgb,var(--astrais-background)_32%,transparent)]'}`}
               >
                 <span className="block font-['Press_Start_2P'] text-2xl">{pad.shortLabel}</span>
                 <span className="mt-3 block text-[0.66rem] uppercase tracking-[0.22em]">{pad.label}</span>
@@ -212,7 +212,7 @@ export default function AstraMemoryGame({ gameId }: AstraMemoryGameProps) {
 
           {status === 'idle' || status === 'finished' ? (
             <div className="absolute inset-0 grid place-items-center bg-black/34 backdrop-blur-[1px]">
-              <div className="max-w-md rounded-[26px] border border-white/15 bg-slate-950/84 p-6 text-center shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
+              <div className="max-w-md rounded-[26px] border border-white/15 bg-slate-950/84 p-6 text-center shadow-[0_20px_50px_color-mix(in_srgb,var(--astrais-background)_42%,transparent)]">
                 <p className="text-[0.64rem] uppercase tracking-[0.24em] text-accent-beige-300">
                   {status === 'finished' ? 'Memoria registrada' : 'Nucleo listo'}
                 </p>
@@ -220,7 +220,7 @@ export default function AstraMemoryGame({ gameId }: AstraMemoryGameProps) {
                 <button
                   type="button"
                   onClick={startRound}
-                  className="mt-5 rounded-2xl bg-linear-to-r from-[#38bdf8] via-[#ec4899] to-[#f59e0b] px-5 py-3 text-[0.78rem] font-semibold text-white transition hover:-translate-y-0.5"
+                  className="mt-5 rounded-2xl [background:var(--astrais-cta-bg)] px-5 py-3 text-[0.78rem] font-semibold text-white transition hover:-translate-y-0.5"
                 >
                   {status === 'finished' ? 'Nueva secuencia' : 'Empezar'}
                 </button>
@@ -245,8 +245,8 @@ export default function AstraMemoryGame({ gameId }: AstraMemoryGameProps) {
       <style>{`
         .memory-grid {
           background-image:
-            linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+            linear-gradient(color-mix(in srgb, var(--astrais-text) 6%, transparent) 1px, transparent 1px),
+            linear-gradient(90deg, color-mix(in srgb, var(--astrais-text) 6%, transparent) 1px, transparent 1px);
           background-size: 36px 36px;
           mask-image: radial-gradient(circle, black, transparent 72%);
         }
