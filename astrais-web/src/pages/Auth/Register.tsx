@@ -22,20 +22,20 @@ export default function Register() {
     const params = new URLSearchParams(window.location.search)
     const uid = params.get('uid')
     const hadToRegister = params.get('hadToRegister')
-    const jwtAccessToken = params.get('jwtAccessToken')
-    const jwtRefreshToken = params.get('jwtRefreshToken')
+    const jwtAccessToken = params.get('jwtAccessToken') ?? params.get('accessToken')
+    const jwtRefreshToken = params.get('jwtRefreshToken') ?? params.get('refreshToken')
 
-    if (!uid || !jwtAccessToken || !jwtRefreshToken || hadToRegister === null) {
+    if (!jwtAccessToken || !jwtRefreshToken || hadToRegister === null) {
       return
     }
 
     void handleGoogleCallback(
-      Number(uid),
+      Number(uid ?? 0),
       hadToRegister === 'true',
       jwtAccessToken,
       jwtRefreshToken
     )
-      .then(() => navigate('/home'))
+      .then(() => navigate('/home', { replace: true }))
       .catch(() => setError('No se pudo completar el registro con Google.'))
   }, [navigate])
 
@@ -201,3 +201,4 @@ export default function Register() {
     </section>
   )
 }
+

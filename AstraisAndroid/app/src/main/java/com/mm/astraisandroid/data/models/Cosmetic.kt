@@ -2,13 +2,20 @@ package com.mm.astraisandroid.data.models
 
 /**
  * Enum que define los diferentes tipos de cosméticos disponibles.
+ *
+ * @property PET Mascota o compañero virtual.
+ * @property PET_SKIN Aspecto visual alternativo para una mascota.
+ * @property APP_THEME Tema de colores para la interfaz de la aplicación.
+ * @property PET_BASE Aspecto base de una mascota o la mascota en sí.
+ * @property AVATAR_PART Pieza de avatar personalizable para el perfil del usuario.
+ * @property UNKNOWN Tipo no reconocido o no mapeado.
  */
 enum class CosmeticType {
-    PET,         // Mascota / compañero (compatible con backend)
-    PET_SKIN,    // Aspecto para una mascota
-    APP_THEME,   // Tema de colores para la interfaz de la aplicación
-    PET_BASE,    // Aspecto base de una mascota / La mascota en sí
-    AVATAR_PART, // Avatar de perfil del usuario
+    PET,
+    PET_SKIN,
+    APP_THEME,
+    PET_BASE,
+    AVATAR_PART,
     UNKNOWN
 }
 

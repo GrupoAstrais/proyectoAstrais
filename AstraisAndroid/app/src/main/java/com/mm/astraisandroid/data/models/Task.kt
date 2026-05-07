@@ -2,31 +2,45 @@ package com.mm.astraisandroid.data.models
 
 /**
  * Enum que representa los posibles estados de una tarea.
+ *
+ * @property ACTIVE Tarea activa y pendiente de realizar.
+ * @property COMPLETE Tarea ya finalizada.
+ * @property DUE Tarea cuya fecha límite ha llegado o pasado.
+ * @property UNKNOWN Estado no reconocido o no mapeado.
  */
 enum class TaskState {
-    ACTIVE,   // Tarea activa y pendiente de realizar
-    COMPLETE, // Tarea ya finalizada
+    ACTIVE,
+    COMPLETE,
     DUE,
     UNKNOWN
 }
 
 /**
  * Enum que clasifica los diferentes tipos de tareas.
+ *
+ * @property UNICO Tarea de una sola vez con fecha límite opcional.
+ * @property HABITO Tarea que se repite con cierta frecuencia (diaria, semanal, etc.).
+ * @property OBJETIVO Tarea padre que agrupa otras subtareas.
+ * @property UNKNOWN Tipo no reconocido o no mapeado.
  */
 enum class TaskType {
-    UNICO,    // Tarea de una sola vez
-    HABITO,   // Tarea que se repite con cierta frecuencia
-    OBJETIVO, // Tarea padre que agrupa otras subtareas
+    UNICO,
+    HABITO,
+    OBJETIVO,
     UNKNOWN
 }
 
 /**
  * Enum que define el nivel de prioridad de una tarea.
+ *
+ * @property LOW Prioridad baja (valor numérico 0).
+ * @property MEDIUM Prioridad media (valor numérico 1).
+ * @property HIGH Prioridad alta (valor numérico 2).
  */
 enum class TaskPriority {
-    LOW,    // Prioridad baja (0)
-    MEDIUM, // Prioridad media (1)
-    HIGH    // Prioridad alta (2)
+    LOW,
+    MEDIUM,
+    HIGH
 }
 
 /**

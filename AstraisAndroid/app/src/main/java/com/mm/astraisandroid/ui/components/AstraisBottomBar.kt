@@ -42,8 +42,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 
+/**
+ * Representa un ítem individual en la barra de navegación inferior.
+ *
+ * @property title Texto descriptivo del ítem.
+ * @property icon Vector icónico asociado al ítem.
+ */
 data class NavItem(val title: String, val icon: ImageVector)
 
+/**
+ * Barra de navegación inferior con estilo glassmorphism y animaciones de selección.
+ *
+ * Contiene cinco ítems: Inicio, Tareas, Agregar, Grupos y Tienda.
+ * Los ítems de Grupos y Tienda se deshabilitan para usuarios invitados.
+ *
+ * @param selected Índice del ítem actualmente seleccionado.
+ * @param isGuest Indica si el usuario está en modo invitado (deshabilita Grupos y Tienda).
+ * @param onSelect Callback invocado al seleccionar un ítem con su índice.
+ */
 @Composable
 fun AstraisBottomBar(selected: Int, isGuest: Boolean = false, onSelect: (Int) -> Unit) {
     val items = listOf(
@@ -108,6 +124,18 @@ fun AstraisBottomBar(selected: Int, isGuest: Boolean = false, onSelect: (Int) ->
     }
 }
 
+/**
+ * Ítem individual de la barra de navegación inferior con animación de transición.
+ *
+ * Muestra un icono por defecto y anima al texto del título cuando está seleccionado.
+ * El ítem central tiene un tamaño mayor y fondo primario destacado.
+ *
+ * @param item Datos del ítem (título e icono).
+ * @param isSelected Indica si este ítem es el actualmente seleccionado.
+ * @param isCenter Indica si es el ítem central (botón de agregar).
+ * @param isDisabled Indica si el ítem está deshabilitado (invitados).
+ * @param onClick Acción ejecutada al pulsar el ítem.
+ */
 @Composable
 private fun GlassBottomBarItem(
     item: NavItem,

@@ -13,8 +13,10 @@ import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import io.ktor.client.*
 import io.ktor.client.call.*
+import io.ktor.client.engine.*
 import io.ktor.client.engine.apache.*
 import io.ktor.client.plugins.*
+import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -26,7 +28,10 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.*
 import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.sessions.*
 import kotlinx.serialization.json.Json
+import java.net.InetAddress
+import java.util.Base64
 
 
 fun Application.initOauth(authenticationConfig: AuthenticationConfig){
@@ -40,7 +45,7 @@ fun Application.initOauth(authenticationConfig: AuthenticationConfig){
                 requestMethod = HttpMethod.Post,
                 clientId = environment.config.property("google.clientId").getString(),
                 clientSecret = environment.config.property("google.secretId").getString(),
-                defaultScopes = listOf("https://www.googleapis.com/auth/userinfo.profile")
+                defaultScopes = listOf("https://www.googleapis.com/auth/userinfo.profile"),
             )
         }
         client = HttpClient(Apache)
@@ -49,9 +54,10 @@ fun Application.initOauth(authenticationConfig: AuthenticationConfig){
 
 fun Route.oauthRoutes() {
     authenticate("oauth-google") {
-        get("/auth/google/login"){
-            // Se supone que se redirige a authorizeUrl
+        get("/auth/google/login") {
+            // Nada...
         }
+
         get("/auth/google/callback"){
             val principal: OAuthAccessTokenResponse.OAuth2? = call.principal()
             if (principal?.accessToken == null){
@@ -80,7 +86,20 @@ fun Route.oauthRoutes() {
                     )
                     getDatabaseDaoImpl().setUserLastLogin(dbUser)
 
-                    call.respond(HttpStatusCode.OK, loginResponse)
+                    println("OAUTH? En esta economia??")
+
+                    //val targetOrigin = call.parameters["frontendOrigin"] ?: "http://localhost:8080"
+                    //val targetOrigin = if (System.getenv("IS_DEV").equals("0")) "8080" else "5684"
+
+                    /*call.response.header("Cross-Origin-Opener-Policy", "same-origin-allow-popups")
+                    call.respondText(
+                        text = sendPopup(true,Json.encodeToString(loginResponse), targetOrig = "http://localhost:$targetOrigin"),
+                        contentType = ContentType.Text.Html,
+                        status = HttpStatusCode.OK
+                    )*/
+                    //call.respondRedirect("http://${InetAddress.getLocalHost().hostAddress}:$targetOrigin/oauthCallback?accessToken=${loginResponse.jwtAccessToken}&refreshToken=${loginResponse.jwtRefreshToken}&hadToRegister=${loginResponse.hadToRegister}")
+                    val frontendUrl = "http://localhost:5173"
+                        call.respondRedirect("$frontendUrl/oauthCallback?accessToken=${loginResponse.jwtAccessToken}&refreshToken=${loginResponse.jwtRefreshToken}&hadToRegister=${loginResponse.hadToRegister}")
                 } else {
                     call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "Missing user account"))
                 }
@@ -202,4 +221,25 @@ suspend fun getGoogleInfo(accessToken : String) : GoogleUserInfo{
     //mainlogger.info("Received: ${req.bodyAsText(Charsets.UTF_8)}")
 
     return jsonOauth.decodeFromString(req.bodyAsText(Charsets.UTF_8)) //req.body<GoogleUserInfo>()
+}
+
+suspend fun sendPopup(authDone : Boolean, message : String, targetOrig : String) : String{
+    return """
+        <!DOCTYPE html>
+        <html>
+        <body>
+            <script>
+                // Enviamos los datos a la ventana que nos abrió
+                window.opener.postMessage({
+                    type: "${if (authDone) "AUTH_SUCCESS" else "AUTH_FAIL"}",
+                    payload: $message
+                }, "$targetOrig");
+                
+                console.log("$targetOrig");
+                
+                //window.close();
+            </script>
+        </body>
+        </html>
+    """.trimIndent()
 }

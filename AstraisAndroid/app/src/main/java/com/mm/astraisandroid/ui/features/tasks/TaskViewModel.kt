@@ -279,8 +279,7 @@ class TaskViewModel @Inject constructor(
      *
      * @param tid Identificador de la tarea a completar.
      * @param gid Identificador del grupo (para refrescar si es necesario).
-     * @param onSuccess Callback invocado tras la actualización optimista local, antes de
-     *   la llamada de red.
+     * @param onSuccess Callback invocado tras confirmar la operación en el servidor.
      */
     fun completarTarea(tid: Int, gid: Int, onSuccess: () -> Unit = {}) {
         viewModelScope.launch {
@@ -301,7 +300,6 @@ class TaskViewModel @Inject constructor(
                 }
             }
 
-            onSuccess()
             snackbarManager.showMessage("¡Tarea completada! + ${tareaActual.xp} XP /  ${tareaActual.ludiones} L")
             if (sessionManager.isGuest()) {
                 actionDao.addAction(PendingAction(type = "COMPLETE_TASK", data = "", targetId = tid))
@@ -317,6 +315,7 @@ class TaskViewModel @Inject constructor(
                 if (debeCompletarPadre) {
                     repository.completarTarea(parentId!!)
                 }
+                onSuccess()
             } catch (e: Exception) {
                 Log.e("AstraisTasks", "FALLO en red (Modo Offline) al completar:", e)
                 actionDao.addAction(PendingAction(type = "COMPLETE_TASK", data = "", targetId = tid))
@@ -337,7 +336,7 @@ class TaskViewModel @Inject constructor(
      * @param tid Identificador de la tarea.
      * @param gid Identificador del grupo (para refrescar si es necesario).
      * @param isCurrentlyCompleted `true` si la tarea está actualmente completada.
-     * @param onSuccess Callback invocado tras la actualización optimista local.
+     * @param onSuccess Callback invocado tras confirmar la operación en el servidor.
      */
     fun toggleTaskCompletion(tid: Int, gid: Int, isCurrentlyCompleted: Boolean, onSuccess: () -> Unit = {}) {
         if (isCurrentlyCompleted) {
@@ -357,8 +356,6 @@ class TaskViewModel @Inject constructor(
                     }
                 }
 
-                onSuccess()
-
                 if (sessionManager.isGuest()) {
                     actionDao.addAction(PendingAction(type = "UNCOMPLETE_TASK", data = "", targetId = tid))
                     if (debeDeshacerPadre) {
@@ -373,6 +370,7 @@ class TaskViewModel @Inject constructor(
                     if (debeDeshacerPadre) {
                         repository.uncompleteTarea(parentId!!)
                     }
+                    onSuccess()
                 } catch (e: Exception) {
                     Log.e("AstraisTasks", "FALLO en red (Modo Offline): Guardando UNCOMPLETE_TASK para la tarea $tid en PendingActions.")
                     actionDao.addAction(PendingAction(type = "UNCOMPLETE_TASK", data = "", targetId = tid))

@@ -95,6 +95,121 @@ const normalizeTaskFormData = (data: ITaskFormData, fallbackObjetivoId?: number 
   idObjetivo: normalizeObjectiveId(data.idObjetivo) ?? normalizeObjectiveId(fallbackObjetivoId)
 });
 
+const hasTaskBeenCompletedOnce = (task: ITarea): boolean => {
+  return typeof task.fecha_completado === "string" && task.fecha_completado.trim().length > 0;
+};
+
+const getRewardedTaskStorageKey = (task: ITarea): string => `rewarded-task:${task.gid}:${task.id}`;
+
+const wasTaskRewardedBefore = (task: ITarea): boolean => {
+  if (hasTaskBeenCompletedOnce(task)) return true;
+  return localStorage.getItem(getRewardedTaskStorageKey(task)) === "1";
+};
+
+const markTaskAsRewarded = (task: ITarea): void => {
+  localStorage.setItem(getRewardedTaskStorageKey(task), "1");
+};
+
+const normalizeAuditEvents = (eventsLike: unknown): EventosGrupos[] => {
+  const normalizeEvent = (eventLike: unknown): EventosGrupos | null => {
+    if (!eventLike || typeof eventLike !== "object") {
+      return null;
+    }
+
+    const event = eventLike as Record<string, unknown>;
+    const eventType =
+      typeof event.eventType === "string"
+        ? event.eventType
+        : typeof event.event_type === "string"
+          ? event.event_type
+          : null;
+    const createdAt =
+      typeof event.createdAt === "string"
+        ? event.createdAt
+        : typeof event.created_at === "string"
+          ? event.created_at
+          : null;
+
+    if (!eventType || !createdAt) {
+      return null;
+    }
+
+    const idValue =
+      typeof event.id === "number"
+        ? event.id
+        : typeof event.id === "string"
+          ? Number(event.id)
+          : Date.now() + Math.random();
+    const actorUidValue =
+      typeof event.actorUid === "number"
+        ? event.actorUid
+        : typeof event.actor_uid === "number"
+          ? event.actor_uid
+          : -1;
+
+    return {
+      id: Number.isFinite(idValue) ? idValue : Date.now() + Math.random(),
+      actorUid: Number.isFinite(actorUidValue) ? actorUidValue : -1,
+      eventType,
+      payloadJson:
+        typeof event.payloadJson === "string"
+          ? event.payloadJson
+          : typeof event.payload_json === "string"
+            ? event.payload_json
+            : null,
+      createdAt
+    };
+  };
+
+  if (Array.isArray(eventsLike)) {
+    return eventsLike
+      .map(normalizeEvent)
+      .filter((event): event is EventosGrupos => event !== null);
+  }
+
+  if (eventsLike && typeof eventsLike === "object") {
+    const candidate = eventsLike as {
+      events?: unknown;
+      audit?: unknown;
+      auditList?: unknown;
+      eventList?: unknown;
+      items?: unknown;
+      data?: unknown;
+    };
+
+    const collection =
+      candidate.events ?? candidate.audit ?? candidate.auditList ?? candidate.eventList ?? candidate.items ?? candidate.data;
+
+    if (Array.isArray(collection)) {
+      return collection
+        .map(normalizeEvent)
+        .filter((event): event is EventosGrupos => event !== null);
+    }
+
+    const singleEvent = normalizeEvent(eventsLike);
+    return singleEvent ? [singleEvent] : [];
+  }
+
+  return [];
+};
+
+const getAuditEventLabel = (eventType: string): string => {
+  switch (eventType) {
+    case "invite_created":
+      return "Se ha creado una invitacion.";
+    case "invite_revoked":
+      return "Se ha revocado una invitacion.";
+    case "member_joined_by_invite":
+      return "Un miembro se ha unido con una invitacion.";
+    case "member_left":
+      return "Un miembro ha abandonado el grupo.";
+    case "member_role_changed":
+      return "Se ha cambiado el rol de un miembro.";
+    default:
+      return eventType;
+  }
+};
+
 export default function Groups() {
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
   const [isOpenModal, setIsOpenModal] = React.useState<boolean>(false);
@@ -319,6 +434,10 @@ export default function Groups() {
 
   const sortedGroups = getSortedGroups(groups, activeGroup);
   const activeGroupData = groups.find((group) => group.gid === activeGroup);
+  const activeGroupRole = activeGroupData?.role ?? -1;
+  const canManageGroup = activeGroupRole >= 1;
+  const canManageTasks = activeGroupRole >= 1;
+  const canViewAudit = activeGroupRole >= 0;
   const filteredGroupTasks = sortTasksByCompleted(filterTasksByCompleted((activeGroupData?.tasks ?? []).filter((task) => isTaskVisibleInDefaultList(task)), groupTaskFilters).filter((t) => t.idObjetivo == null));
   const availableObjectives = (activeGroupData?.tasks ?? []).filter((task) => task.tipo === "OBJETIVO");
 
@@ -390,6 +509,11 @@ export default function Groups() {
   };
 
   const handleModalSubmit = async (data: ITaskFormData) => {
+    if (!canManageTasks) {
+      setError("No tienes permisos para crear o editar tareas en este grupo.");
+      return;
+    }
+
     const normalizedData = normalizeTaskFormData(data, initialDataModal?.idObjetivo);
 
     try {
@@ -413,6 +537,11 @@ export default function Groups() {
   };
 
   const handleDeleteTask = async () => {
+    if (!canManageTasks) {
+      setError("No tienes permisos para borrar tareas en este grupo.");
+      return;
+    }
+
     if (!initialDataModal || !activeGroupData) {
       return;
     }
@@ -504,7 +633,7 @@ export default function Groups() {
 
     const subtasks = getTaskSubtasks(groupTasks, taskId);
     const willComplete = !isTaskCompleted(task);
-    const wasCompletedBefore = Boolean(task.fecha_completado);
+    const wasCompletedBefore = wasTaskRewardedBefore(task);
 
     try {
         if (willComplete) {
@@ -526,7 +655,10 @@ export default function Groups() {
         console.error("Error al completar/descompletar tarea del grupo:", err);
     } finally {
         updateActiveGroupTasks((groupTasks) => toggleTaskCompleted(groupTasks, `${taskId}`));
-        if (willComplete && !wasCompletedBefore) showRewardNotification(task.recompensaXp ?? 0, task.recompensaLudion ?? 0);
+        if (willComplete && !wasCompletedBefore) {
+          markTaskAsRewarded(task);
+          showRewardNotification(task.recompensaXp ?? 0, task.recompensaLudion ?? 0);
+        }
     }
   };
 
@@ -534,7 +666,7 @@ export default function Groups() {
     const subtask = activeGroupData?.tasks.find((task) => task.id === subtaskId);
     const parentTask = activeGroupData?.tasks.find((task) => task.id === taskId);
     if (!subtask) return;
-    const wasCompletedBefore = Boolean(subtask.fecha_completado);
+    const wasCompletedBefore = wasTaskRewardedBefore(subtask);
 
     try {
       if (isTaskCompleted(subtask)) {
@@ -555,12 +687,18 @@ export default function Groups() {
     } finally {
       updateActiveGroupTasks((groupTasks) => toggleSubtaskCompleted(groupTasks, `${taskId}`, `${subtaskId}`));
       if (subtask && !isTaskCompleted(subtask) && !wasCompletedBefore) {
+        markTaskAsRewarded(subtask);
         showRewardNotification(subtask.recompensaXp ?? 0, subtask.recompensaLudion ?? 0);
       }
     }
   };
 
   const editTaskHandle = (taskId: number) => {
+    if (!canManageTasks) {
+      setError("No tienes permisos para editar tareas en este grupo.");
+      return;
+    }
+
     if (!activeGroupData) {
       return;
     }
@@ -801,7 +939,7 @@ export default function Groups() {
     try {
       setLoadingAudit(true);
       const events = await eventosGroup(activeGroupData.gid);
-      setAuditEvents(Array.isArray(events) ? events : []);
+      setAuditEvents(normalizeAuditEvents(events));
       setIsAuditModalOpen(true);
     } catch (loadError) {
       console.error("Error al cargar auditoria del grupo:", loadError);
@@ -842,17 +980,19 @@ export default function Groups() {
         </div>
 
         <div className={`${isOpen ? "" : "hidden"} flex w-full flex-col gap-2 md:w-1/2`}>
-          <div className="flex w-full flex-row">
-            <button disabled={!activeGroupData} onClick={() => setIsSettingsModalOpen(true)} className="rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
+          <div className="flex w-full flex-row justify-between">
+            <button disabled={!activeGroupData || !canManageGroup} onClick={() => setIsSettingsModalOpen(true)} className="rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
               <span className="text-2xl font-bold">Configuracion</span>
             </button>
-            <button disabled={!activeGroupData || loadingAudit} onClick={() => { void openAuditModal(); }} className="ml-2 rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
-              <span className="text-2xl font-bold">Historial</span>
-            </button>
-            <button disabled={!activeGroupData} onClick={() => {setInitialDataModal(null); setIsOpenModal(true);}}
-              className="ml-auto rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
-                <span className="text-2xl font-bold">+ Anadir tarea</span>
-            </button>
+            <div className="flex flex-row gap-2">
+              <button disabled={!activeGroupData || loadingAudit || !canViewAudit} onClick={() => { void openAuditModal(); }} className="ml-2 rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
+                <span className="text-2xl font-bold">Historial</span>
+              </button>
+              <button disabled={!activeGroupData || !canManageTasks} onClick={() => {setInitialDataModal(null); setIsOpenModal(true);}}
+                className="ml-auto rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
+                  <span className="text-2xl font-bold">+ Añadir tarea</span>
+              </button>
+            </div>
           </div>
 
           {error && <p className="px-2 text-sm text-red-200">{error}</p>}
@@ -884,7 +1024,7 @@ export default function Groups() {
                     subtasks={getTaskSubtasks(activeGroupData?.tasks ?? [], task.id)}
                     onComplete={handleToggleTaskCompleted}
                     onToggleSubtask={handleToggleSubtaskCompleted}
-                    onToggleConfig={editTaskHandle}
+                    onToggleConfig={canManageTasks ? editTaskHandle : undefined}
                   />
                 ))
               )}
@@ -903,7 +1043,7 @@ export default function Groups() {
         />
       </div>
 
-      {activeGroupData && (
+      {activeGroupData && canManageGroup && (
         <GroupSettingsModal
           isOpen={isSettingsModalOpen}
           onClose={() => setIsSettingsModalOpen(false)}
@@ -941,17 +1081,8 @@ export default function Groups() {
                 <div className="space-y-2">
                   {auditEvents.map((event) => (
                     <div key={event.id} className="rounded-md border border-gray-700 bg-gray-900/45 p-3">
-                      <p className="text-sm text-white">
-                        #{event.id} · Actor UID: {event.actorUid} · {event.eventType}
-                      </p>
-                      <p className="text-xs text-gray-300">
-                        Fecha: {new Date(event.createdAt).toLocaleString()}
-                      </p>
-                      {event.payloadJson ? (
-                        <pre className="mt-2 max-w-full overflow-x-auto rounded bg-black/25 p-2 text-xs text-gray-200">
-                          {event.payloadJson}
-                        </pre>
-                      ) : null}
+                      <p className="text-sm text-white">{getAuditEventLabel(event.eventType)}</p>
+                      <p className="text-xs text-gray-300">{new Date(event.createdAt).toLocaleString()}</p>
                     </div>
                   ))}
                 </div>
@@ -1009,3 +1140,4 @@ export default function Groups() {
     </div>
   );
 }
+

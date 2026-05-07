@@ -7,6 +7,13 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 
+/**
+ * Efecto Compose que oculta la barra de navegación del sistema y configura
+ * el comportamiento de las barras del sistema para mostrarse temporalmente al deslizar.
+ *
+ * Se ejecuta como [SideEffect] para asegurar que la modificación de la ventana
+ * se realice después de que la composición se haya aplicado a la vista.
+ */
 @Composable
 fun HideSystemBarsEffect() {
     val view = LocalView.current

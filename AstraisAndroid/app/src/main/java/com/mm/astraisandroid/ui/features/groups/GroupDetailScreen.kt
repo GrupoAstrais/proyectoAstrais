@@ -80,6 +80,22 @@ private const val ROLE_OWNER = 2
 
 private const val MAX_AVATARS_VISIBLE = 5
 
+/**
+ * Pantalla de detalle de un grupo con gestión de tareas, miembros y acciones administrativas.
+ *
+ * Muestra las tareas del grupo filtradas por estado (pendientes/completadas), un carrusel
+ * de miembros con acceso a la hoja de gestión, y diálogos para crear, editar y eliminar
+ * tareas. Los usuarios con rol Owner o Moderador pueden gestionar tareas y miembros.
+ *
+ * @param gid Identificador del grupo a mostrar.
+ * @param groupName Nombre del grupo mostrado en el encabezado.
+ * @param groupDescription Descripción del grupo.
+ * @param groupRole Rol del usuario actual en este grupo (0=Miembro, 1=Moderador, 2=Owner).
+ * @param onBack Acción ejecutada al pulsar el botón de volver.
+ * @param onOpenSettings Acción ejecutada al pulsar el botón de configuración del grupo.
+ * @param onUserStateChanged Callback ejecutado tras cambiar el estado de una tarea (refresca datos del usuario).
+ * @param viewModel ViewModel de detalle de grupo inyectado por Hilt.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupDetailScreen(
@@ -192,8 +208,7 @@ fun GroupDetailScreen(
                                             expandedTaskId = if (expandedTaskId == task.id) null else task.id
                                         },
                                         onToggleComplete = { t ->
-                                            viewModel.toggleTaskCompletion(gid, t)
-                                            onUserStateChanged()
+                                            viewModel.toggleTaskCompletion(gid, t, onUserStateChanged)
                                         },
                                         onAddSubtask = { if (canManage) { createDialogParentId = task.id; createDialogOpen = true } },
                                         onEditSubtask = { sub -> if (canManage) taskToEdit = sub },

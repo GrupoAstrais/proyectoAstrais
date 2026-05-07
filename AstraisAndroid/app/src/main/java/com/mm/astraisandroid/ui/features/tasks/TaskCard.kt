@@ -35,6 +35,24 @@ import androidx.compose.ui.res.stringResource
 import com.mm.astraisandroid.ui.theme.Gray300
 import com.mm.astraisandroid.ui.theme.Gray700
 
+/**
+ * Tarjeta de tarea individual con soporte para expansión, completado y gestos de eliminación.
+ *
+ * Muestra el tipo de tarea, título, descripción, metadatos (prioridad, XP, Ludiones, frecuencia/fecha)
+ * y, para objetivos, barra de progreso de subtareas y lista expandible de subtareas.
+ * Soporta swipe-to-dismiss para eliminación.
+ *
+ * @param task Modelo de UI de la tarea a renderizar.
+ * @param subtasks Lista de subtareas asociadas (vacía si no es objetivo).
+ * @param isExpanded Indica si la tarjeta está expandida mostrando subtareas y botón de editar.
+ * @param onToggleExpand Acción ejecutada al pulsar la tarjeta para expandir/colapsar.
+ * @param onToggleComplete Acción ejecutada al pulsar el checkbox de completado.
+ * @param onAddSubtask Acción ejecutada al pulsar el botón de agregar subtarea.
+ * @param onEditSubtask Acción ejecutada al pulsar editar en una subtarea.
+ * @param onDeleteSubtask Acción ejecutada al pulsar eliminar en una subtarea.
+ * @param onEdit Acción ejecutada al pulsar el botón de editar la tarea.
+ * @param onDelete Acción ejecutada al deslizar la tarjeta para eliminarla.
+ */
 @Composable
 fun TaskCard(
     task: TaskUIModel,

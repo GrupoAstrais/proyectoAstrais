@@ -55,6 +55,17 @@ import com.mm.astraisandroid.util.AvatarImageRenderer
 import com.mm.astraisandroid.util.LocaleHelper
 import com.mm.astraisandroid.ui.theme.Gray300
 
+/**
+ * Pantalla de perfil de usuario con información personal, barra de XP, preferencias de idioma
+ * y acciones de cuenta (registro, cierre de sesión).
+ *
+ * Soporta modo invitado con funcionalidad limitada y edición inline del nombre de usuario.
+ *
+ * @param user Modelo de usuario actual, o `null` si no hay datos cargados.
+ * @param isGuest Indica si el usuario está en modo invitado.
+ * @param onBack Acción ejecutada al pulsar el botón de volver.
+ * @param onLogout Acción ejecutada al pulsar el botón de cerrar sesión o registrarse.
+ */
 @Composable
 fun PerfilTab(
     user: User?,

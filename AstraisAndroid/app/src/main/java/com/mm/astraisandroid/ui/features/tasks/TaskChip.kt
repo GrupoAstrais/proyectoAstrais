@@ -15,6 +15,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * Chip compacto de metadatos para mostrar información de una tarea (prioridad, XP, etc.).
+ *
+ * @param text Texto descriptivo del metadato.
+ * @param color Color de fondo, borde y texto del chip.
+ * @param icon Icono opcional mostrado a la izquierda del texto.
+ */
 @Composable
 fun TaskChip(
     text: String,

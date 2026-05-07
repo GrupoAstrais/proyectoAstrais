@@ -75,6 +75,15 @@ private const val ROLE_USER = 0
 private const val ROLE_OWNER = 2
 private const val ROLE_MOD = 1
 
+/**
+ * Modelo de UI que representa un grupo en la lista de grupos.
+ *
+ * @property id Identificador único del grupo.
+ * @property name Nombre visible del grupo.
+ * @property subtitle Descripción o información adicional del grupo.
+ * @property role Rol del usuario en este grupo (0=Miembro, 1=Moderador, 2=Owner).
+ * @property hasNewActivity Indica si el grupo tiene actividad nueva sin ver.
+ */
 data class Grupo(
     val id: Int,
     val name: String,
@@ -83,6 +92,17 @@ data class Grupo(
     val hasNewActivity: Boolean = false
 )
 
+/**
+ * Pantalla principal de lista de grupos con búsqueda, creación y gestión.
+ *
+ * Muestra los grupos del usuario en tarjetas con su rol, indicador de actividad nueva
+ * y acciones rápidas (invitar, editar, eliminar). Incluye diálogos para crear grupos,
+ * editar metadatos, generar URLs de invitación y unirse mediante URL.
+ *
+ * @param onBack Acción ejecutada al pulsar el botón de volver.
+ * @param onOpenGroup Callback con el grupo seleccionado al abrir su detalle.
+ * @param viewModel ViewModel de grupos inyectado por Hilt.
+ */
 @Composable
 fun GrupoTab(
     onBack: () -> Unit = {},

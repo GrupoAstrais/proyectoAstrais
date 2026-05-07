@@ -14,9 +14,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 /**
- * Fondo para las pantallas de autenticación.
+ * Fondo animado con efecto de nebulosa para las pantallas de autenticación.
  *
- * @param content Contenido composable que se mostrará encima del fondo.
+ * Renderiza un gradiente vertical base y un resplandor radial animado que se desplaza
+ * suavemente por la pantalla creando un ambiente visual inmersivo.
+ *
+ * @param content Contenido composable que se mostrará encima del fondo animado.
  */
 @Composable
 fun AuthBackground(content: @Composable BoxScope.() -> Unit) {

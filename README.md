@@ -18,7 +18,7 @@
 
 <a href="#"><img src="https://img.shields.io/badge/Descargar-Android-3DDC84?style=flat&logo=android&logoColor=white" alt="Descargar Android"></a>
 <a href="#"><img src="https://img.shields.io/badge/Visitar-Web_App-0078D7?style=flat&logo=googlechrome&logoColor=white" alt="Web App"></a>
-<a href="./docs/API.md"><img src="https://img.shields.io/badge/Leer-Documentación-FFB000?style=flat&logo=readme&logoColor=white" alt="Documentación"></a>
+<a href="./docs/DOCUMENTACION.md"><img src="https://img.shields.io/badge/Leer-Documentación-FFB000?style=flat&logo=readme&logoColor=white" alt="Documentación"></a>
 <a href="https://github.com/GrupoAstrais/proyectoAstrais/issues"><img src="https://img.shields.io/badge/Reportar-Issues-EA4335?style=flat&logo=github&logoColor=white" alt="Reportar Issues"></a>
 
 </div>
@@ -45,7 +45,7 @@ Astraïs resuelve uno de los mayores obstáculos para mantener la productividad 
 ## Capturas de Pantalla
 
 ### Interfaz Principal
-![Dashboard principal](./docs/images/screenshots/app/dashboard.png)
+![Dashboard principal](./docs/images/screenshots/app/dashboard.jpg)
 
 ### Gestión de Tareas
 ![Tareas](./docs/images/screenshots/app/tasks.png)
@@ -132,7 +132,7 @@ proyectoAstrais/
 ├── HojaDeEstilos/        
 ├── docs/                 
 │   ├── README.md
-│   ├── DOCUMENTACIÓN.md
+│   ├── DOCUMENTACION.md
 │   ├── MANUAL_DE_USUARIO_ASTRAIS.md
 │   ├── PLAN_DE_PRUEBAS_ANDROID.md
 │   ├── PRUEBAS_ANDROID_ISSUES.md
@@ -228,11 +228,9 @@ Para ejecutar la aplicación Android:
 
 El proyecto incluye varios documentos de apoyo para entender tanto el desarrollo como el uso de la aplicación. Toda la documentación se encuentra en la carpeta [`docs/`](./docs/):
 
-- [**DOCUMENTACIÓN.md**](./docs/DOCUMENTACIÓN.md): documentación técnica completa del proyecto intermodular.
+- [**DOCUMENTACION.md**](./docs/DOCUMENTACION.md): documentación técnica completa del proyecto intermodular.
 - [**MANUAL_DE_USUARIO_ASTRAIS.md**](./docs/MANUAL_DE_USUARIO_ASTRAIS.md): manual de usuario con explicación de las pantallas y funcionalidades.
 - [**API.md**](./docs/API.md): documentación técnica de los endpoints del backend.
-- [**PLAN_DE_PRUEBAS_ANDROID.md**](./docs/PLAN_DE_PRUEBAS_ANDROID.md): plan de pruebas manuales de la app Android.
-- [**PRUEBAS_ANDROID_ISSUES.md**](./docs/PRUEBAS_ANDROID_ISSUES.md): registro de resultados de pruebas.
 - **Documentacion_Astrais.pdf**: documentación general del proyecto intermodular.
 - **HojaDeEstilos/**: guía visual, prototipo e identidad corporativa del proyecto.
 
@@ -269,9 +267,8 @@ El modelo de datos está basado en PostgreSQL y se define desde el backend media
 - **Inventory**: relaciona usuarios con cosméticos adquiridos.
 - **Awards**: define la base para el sistema de logros.
 
-```markdown
-![Modelo de base de datos](./docs/diagrams/database-er.png)
-```
+![Modelo de base de datos](./docs/diagrams/db_diagrama.drawio.svg)
+
 
 ## Estado del Proyecto
 

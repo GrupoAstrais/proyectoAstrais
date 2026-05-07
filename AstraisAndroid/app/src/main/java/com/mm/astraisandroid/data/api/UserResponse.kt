@@ -6,19 +6,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-/* Así es la estructura del JSON para los colores
-{
-  "primary": "#8B5CF6",
-  "secondary": "#38BDF8 ",
-  "tertiary": "#10B981",
-  "background": "#0D1117",
-  "backgroundAlt": "#11161D",
-  "surface": "#1A1D2D",
-  "text": "#F8FAFC",
-  "error": "#F43F5E"
-}
-* */
-
 /**
  * DTO utilizado para deserializar la configuración de colores del tema.
  * Representa la estructura exacta del objeto JSON que define la paleta visual de la aplicación.

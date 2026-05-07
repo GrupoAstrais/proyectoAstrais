@@ -6,6 +6,9 @@ import { handleGoogleCallback, loginWithGoogle, performLogin } from '../../data/
 
 export default function Login() {
   const navigate = useNavigate()
+  // 👇 AÑADE ESTO - se ejecuta en cada render, no espera al useEffect
+  console.log('LOGIN RENDER - URL completa:', window.location.href)
+  console.log('LOGIN RENDER - Search params:', window.location.search)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
@@ -15,20 +18,22 @@ export default function Login() {
     const params = new URLSearchParams(window.location.search)
     const uid = params.get('uid')
     const hadToRegister = params.get('hadToRegister')
-    const jwtAccessToken = params.get('jwtAccessToken')
-    const jwtRefreshToken = params.get('jwtRefreshToken')
+    const jwtAccessToken = params.get('jwtAccessToken') ?? params.get('accessToken')
+    const jwtRefreshToken = params.get('jwtRefreshToken') ?? params.get('refreshToken')
 
-    if (!uid || !jwtAccessToken || !jwtRefreshToken || hadToRegister === null) {
+    console.log('Params encontrados:', { uid, hadToRegister, jwtAccessToken: !!jwtAccessToken, jwtRefreshToken: !!jwtRefreshToken })
+
+    if (!jwtAccessToken || !jwtRefreshToken || hadToRegister === null) {
+      console.log('GUARD ACTIVADO - falta algún param, saliendo')
       return
     }
-
     void handleGoogleCallback(
-      Number(uid),
+      Number(uid ?? 0),
       hadToRegister === 'true',
       jwtAccessToken,
       jwtRefreshToken
     )
-      .then(() => navigate('/home'))
+      .then(() => navigate('/home', { replace: true }))
       .catch(() => setError('No se pudo completar el login con Google.'))
   }, [navigate])
 
@@ -135,3 +140,4 @@ export default function Login() {
     </section>
   )
 }
+

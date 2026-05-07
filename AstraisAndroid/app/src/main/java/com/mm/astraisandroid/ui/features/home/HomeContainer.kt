@@ -55,6 +55,18 @@ import com.mm.astraisandroid.ui.features.tasks.TaskViewModel
 import com.mm.astraisandroid.ui.features.tasks.TasksTab
 import com.mm.astraisandroid.util.ConnectivityObserver
 
+/**
+ * Contenedor principal de la aplicación que alberga el Scaffold, la barra de navegación
+ * inferior y el NavHost secundario con todas las pantallas de las tabs principales.
+ *
+ * Gestiona la observación de conectividad, sincronización al recuperar conexión,
+ * visualización de banners de estado (offline/invitado) y el diálogo global de creación de tareas.
+ *
+ * @param userViewModel ViewModel para obtener y refrescar datos del usuario.
+ * @param sessionManager Gestor de sesión para verificar estado de autenticación.
+ * @param onNavigateToProfile Callback para navegar fuera del contenedor al perfil.
+ * @param onLogout Callback ejecutado al cerrar sesión.
+ */
 @Composable
 fun HomeContainer(
     userViewModel: com.mm.astraisandroid.ui.features.profile.UserViewModel,
@@ -335,6 +347,14 @@ fun HomeContainer(
     }
 }
 
+/**
+ * Banner de estado con estilo glassmorphism que muestra información contextual
+ * sobre el modo actual de la aplicación (invitado, sin conexión, datos locales).
+ *
+ * @param text Texto descriptivo del estado actual.
+ * @param color Color del texto y borde del banner.
+ * @param modifier Modificador de composición para personalizar posición y estilo.
+ */
 @Composable
 private fun GlassStatusBanner(text: String, color: Color, modifier: Modifier = Modifier) {
     Box(

@@ -270,7 +270,7 @@ export default function GroupSettingsModal({
                         </div>
 
                         <div>
-                            <h3 className="text-lg font-semibold text-white mb-2">Invitar o anadir miembros</h3>
+                            <h3 className="text-lg font-semibold text-white mb-2">Invitar o añadir miembros</h3>
                             <div className="flex gap-2">
                                 <input
                                     type="text"
@@ -321,7 +321,7 @@ export default function GroupSettingsModal({
                                     {latestInviteCode ? (
                                         <input
                                             type="text"
-                                            value={`Codigo: ${latestInviteCode}`}
+                                            value={`${latestInviteCode}`}
                                             readOnly
                                             className="w-full bg-gray-800 border border-gray-700 rounded-md px-4 py-2 text-white"
                                         />
@@ -330,14 +330,6 @@ export default function GroupSettingsModal({
                                         <input
                                             type="text"
                                             value={latestInviteLink}
-                                            readOnly
-                                            className="w-full bg-gray-800 border border-gray-700 rounded-md px-4 py-2 text-white"
-                                        />
-                                    ) : null}
-                                    {latestLegacyRedirectLink ? (
-                                        <input
-                                            type="text"
-                                            value={latestLegacyRedirectLink}
                                             readOnly
                                             className="w-full bg-gray-800 border border-gray-700 rounded-md px-4 py-2 text-white"
                                         />

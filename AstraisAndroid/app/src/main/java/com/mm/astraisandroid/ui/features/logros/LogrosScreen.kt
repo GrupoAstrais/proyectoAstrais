@@ -32,6 +32,18 @@ import com.mm.astraisandroid.ui.theme.Gray300
 import com.mm.astraisandroid.ui.theme.Surface
 import com.mm.astraisandroid.ui.theme.Tertiary
 
+/**
+ * Modelo de UI que representa un logro o achievement del usuario.
+ *
+ * @property id Identificador único del logro.
+ * @property titulo Título descriptivo del logro.
+ * @property descripcion Explicación de cómo obtener el logro.
+ * @property icono Nombre del icono asociado al logro.
+ * @property condicion Texto que describe la condición de desbloqueo.
+ * @property completado Indica si el usuario ya ha desbloqueado este logro.
+ * @property recompensaLudiones Cantidad de Ludiones otorgados al desbloquear.
+ * @property esActivo Indica si el logro está activo en el juego.
+ */
 data class LogroItem(
     val id: Int,
     val titulo: String,
@@ -54,6 +66,14 @@ val dummyAchievements = listOf(
     LogroItem(8, "Leyenda", "Alcanza el nivel 50", "EmojiEvents", "Llegar a nivel 50", false, 1000, false)
 )
 
+/**
+ * Pantalla de logros del usuario con barra de progreso global y lista de achievements.
+ *
+ * Muestra un resumen de logros completados vs totales, barra de progreso porcentual
+ * y tarjetas individuales para cada logro con su estado (completado/pendiente) y recompensa.
+ *
+ * @param onBack Acción ejecutada al pulsar el botón de volver.
+ */
 @Composable
 fun LogrosScreen(
     onBack: () -> Unit = {}
@@ -131,6 +151,14 @@ fun LogrosScreen(
     }
 }
 
+/**
+ * Tarjeta individual de logro con icono, título, descripción y recompensa.
+ *
+ * Los logros completados se muestran con opacidad completa y color tertiary,
+ * mientras que los pendientes aparecen semitransparentes.
+ *
+ * @param logro Modelo de logro a renderizar.
+ */
 @Composable
 fun LogroCard(logro: LogroItem) {
     val alpha = if (logro.completado) 1f else 0.5f

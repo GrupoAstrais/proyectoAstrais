@@ -46,7 +46,7 @@ export default function Modal({
     }
 
     setFormData(buildTaskFormData(initialData));
-    setObjetivo(initialData.idObjetivo);
+    setObjetivo(typeof initialData.idObjetivo === "number" ? initialData.idObjetivo : undefined);
   }, [initialData]);
 
 
@@ -78,8 +78,7 @@ export default function Modal({
       return;
     }
 
-
-    await void onSubmit({
+    await onSubmit({
       ...formData,
       name: formData.name.trim(),
       description: formData.description.trim(),
@@ -205,7 +204,15 @@ export default function Modal({
           <div className="rounded-md bg-accent-beige-300 p-3">
             <h3 className="mb-2 font-bold text-primary-900">Elegir objetivo</h3>
             <div className="mb-3 flex gap-2">
-              <select  className="text-primary-900"  id="objetivos" name="tareasObjetivos" value={objetivo ?? ""} onChange={(e) => setObjetivo(Number(e.target.value))}>
+              <select
+                className="text-primary-900"
+                id="objetivos"
+                name="tareasObjetivos"
+                value={objetivo ?? ""}
+                onChange={(e) =>
+                  setObjetivo(e.target.value === "" ? undefined : Number(e.target.value))
+                }
+              >
                 <option  key={-1} value={""}>Elige tu objetivo</option>
                 {
                   tareasObjetivos && tareasObjetivos.map((obj) => (

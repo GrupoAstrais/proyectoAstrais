@@ -35,6 +35,16 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+/**
+ * Diálogo modal para editar una tarea existente.
+ *
+ * Permite modificar título, descripción, prioridad, fecha límite (para únicas) y
+ * frecuencia (para hábitos). Los campos condicionales se muestran según el tipo de tarea.
+ *
+ * @param task Modelo de UI de la tarea a editar, usado para prellenar los campos.
+ * @param onDismiss Acción ejecutada al cerrar el diálogo sin guardar cambios.
+ * @param onEdit Callback con los datos editados cuando el usuario confirma.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditTaskDialog(
@@ -221,6 +231,16 @@ fun EditTaskDialog(
     }
 }
 
+/**
+ * Sección de formulario con campo de texto glassmorphism y etiqueta.
+ *
+ * @param label Texto de la etiqueta descriptiva sobre el campo.
+ * @param value Valor actual del campo.
+ * @param onValueChange Callback ejecutado al modificar el texto.
+ * @param placeholder Texto mostrado cuando el campo está vacío.
+ * @param singleLine `true` para limitar la entrada a una sola línea.
+ * @param minHeight Altura mínima opcional del campo (para descripciones multilínea).
+ */
 @Composable
 internal fun GlassTextFieldSection(
     label: String,
@@ -254,6 +274,14 @@ internal fun GlassTextFieldSection(
     }
 }
 
+/**
+ * Sección de selección con grupo de botones glassmorphism para elegir entre opciones.
+ *
+ * @param label Texto de la etiqueta descriptiva sobre las opciones.
+ * @param options Lista de textos de las opciones disponibles.
+ * @param selectedIndex Índice de la opción actualmente seleccionada.
+ * @param onSelected Callback con el nuevo índice al pulsar una opción.
+ */
 @Composable
 internal fun GlassToggleSection(
     label: String,
@@ -277,6 +305,14 @@ internal fun GlassToggleSection(
     }
 }
 
+/**
+ * Botón de alternancia con estilo glassmorphism y animaciones de fondo, borde y texto.
+ *
+ * @param text Texto descriptivo del botón.
+ * @param isSelected Indica si este botón es el seleccionado actualmente.
+ * @param modifier Modificador de composición para personalizar layout.
+ * @param onClick Acción ejecutada al pulsar el botón.
+ */
 @Composable
 internal fun GlassToggleButton(text: String, isSelected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val animatedBg by animateColorAsState(

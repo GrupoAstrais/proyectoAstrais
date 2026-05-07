@@ -69,6 +69,18 @@ import com.mm.astraisandroid.ui.theme.Secondary
 import com.mm.astraisandroid.ui.theme.Surface
 import kotlinx.coroutines.flow.collectLatest
 
+/**
+ * Pantalla de registro de nuevos usuarios con verificación por email.
+ *
+ * Presenta un formulario de dos fases: primero recopila email, contraseña y aceptación
+ * de términos; tras el envío, muestra un campo para introducir el código de verificación
+ * recibido por email. Valida formato de email, coincidencia de contraseñas y longitud mínima.
+ *
+ * @param onNavigateToLogin Callback ejecutado al pulsar el enlace de inicio de sesión.
+ * @param onRegisterSuccess Callback ejecutado tras registro y verificación exitosos.
+ * @param onNavigateToOnboarding Callback ejecutado tras verificación exitosa del email.
+ * @param viewModel ViewModel de registro inyectado por Hilt.
+ */
 @Composable
 fun RegisterScreen(
     onNavigateToLogin: () -> Unit,

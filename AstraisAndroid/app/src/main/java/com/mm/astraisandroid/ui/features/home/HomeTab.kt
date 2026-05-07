@@ -44,6 +44,23 @@ import com.mm.astraisandroid.ui.components.AstraisGlassChip
 import com.mm.astraisandroid.ui.components.Glassmorphism
 import com.mm.astraisandroid.ui.theme.Gray300
 
+/**
+ * Pantalla principal (tab Home) con vista resumen del usuario.
+ *
+ * Muestra el saludo personalizado, banner de nivel/mascota, cuadrícula bento con accesos
+ * rápidos a tareas, inventario, tienda, grupos y logros. Adapta su contenido para usuarios
+ * invitados mostrando una tarjeta de bienvenida en lugar del banner.
+ *
+ * @param user Datos del usuario autenticado, o `null` si no están cargados.
+ * @param taskViewModel ViewModel de tareas para obtener las tareas pendientes.
+ * @param isGuest Indica si el usuario está en modo invitado.
+ * @param onNavigateToProfile Callback para navegar al perfil.
+ * @param onNavigateToTasks Callback para navegar al tab de tareas.
+ * @param onNavigateToStore Callback para navegar al tab de tienda.
+ * @param onNavigateToInventory Callback para navegar al tab de inventario.
+ * @param onNavigateToGroups Callback para navegar al tab de grupos.
+ * @param onNavigateToLogros Callback para navegar a la pantalla de logros.
+ */
 @Composable
 fun HomeTab(
     user: User?,
@@ -97,6 +114,13 @@ fun HomeTab(
     }
 }
 
+/**
+ * Encabezado de bienvenida que muestra el saludo y el avatar del usuario.
+ *
+ * @param username Nombre del usuario a mostrar.
+ * @param equippedAvatarRef Referencia al asset del avatar equipado, o `null` para mostrar inicial.
+ * @param onProfileClick Acción al pulsar el avatar (navegar al perfil).
+ */
 @Composable
 fun WelcomeHeader(username: String, equippedAvatarRef: String?, onProfileClick: () -> Unit) {
     Row(
@@ -153,6 +177,11 @@ fun WelcomeHeader(username: String, equippedAvatarRef: String?, onProfileClick: 
     }
 }
 
+/**
+ * Tarjeta banner que muestra el nivel, progreso de XP y mascota equipada del usuario.
+ *
+ * @param user Datos del usuario para extraer nivel, XP y referencia de mascota.
+ */
 @Composable
 fun BannerCard(user: User?) {
     Box(
@@ -228,6 +257,11 @@ fun BannerCard(user: User?) {
     }
 }
 
+/**
+ * Tarjeta de bienvenida para usuarios invitados con invitación a registrarse.
+ *
+ * @param onRegisterClick Acción ejecutada al pulsar la tarjeta (navegar al perfil/registro).
+ */
 @Composable
 fun GuestWelcomeCard(onRegisterClick: () -> Unit) {
     Box(
@@ -299,6 +333,23 @@ fun GuestWelcomeCard(onRegisterClick: () -> Unit) {
     }
 }
 
+/**
+ * Cuadrícula bento con accesos rápidos a las secciones principales de la aplicación.
+ *
+ * Organiza las tarjetas de tareas, inventario, tienda y logros en un layout de dos columnas
+ * con proporciones de peso variables.
+ *
+ * @param user Datos del usuario para mostrar información en las tarjetas.
+ * @param topTasks Lista de las tareas pendientes más relevantes (máximo 3).
+ * @param totalPending Número total de tareas pendientes.
+ * @param modifier Modificador de composición para personalizar layout.
+ * @param onTasksClick Callback para navegar a tareas.
+ * @param onInventoryClick Callback para navegar a inventario.
+ * @param onStoreClick Callback para navegar a tienda.
+ * @param onGroupsClick Callback para navegar a grupos.
+ * @param onLogrosClick Callback para navegar a logros.
+ * @param isGuest Indica si el usuario está en modo invitado (bloquea accesos).
+ */
 @Composable
 fun BentoGrid(
     user: User?,
@@ -493,24 +544,26 @@ private fun GlassBentoInventoryCard(
                 modifier = Modifier.fillMaxWidth().weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                if (user?.equippedPetRef != null) {
-                    LottiePetRenderer(
-                        assetRef = user.equippedPetRef,
-                        modifier = Modifier.size(90.dp)
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Default.Inventory,
-                        contentDescription = null,
-                        tint = Color.White.copy(alpha = 0.12f),
-                        modifier = Modifier.size(60.dp)
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Default.Inventory,
+                    contentDescription = null,
+                    tint = Color.White.copy(alpha = 0.12f),
+                    modifier = Modifier.size(60.dp)
+                )
             }
         }
     }
 }
 
+/**
+ * Celda compacta del grid bento para secciones secundarias (tienda, logros).
+ *
+ * @param modifier Modificador de composición para personalizar layout.
+ * @param backgroundIcon Icono decorativo de fondo grande y semitransparente.
+ * @param onClick Acción al pulsar la celda; si es `null`, no es clicable.
+ * @param isLocked Indica si la celda está bloqueada (modo invitado).
+ * @param text Texto descriptivo de la sección.
+ */
 @Composable
 fun BentoMiniCell(
     modifier: Modifier = Modifier,
@@ -593,6 +646,11 @@ fun BentoMiniCell(
     }
 }
 
+/**
+ * Barra de notificaciones con estilo glassmorphism y flecha de navegación.
+ *
+ * @param count Número de notificaciones pendientes a mostrar.
+ */
 @Composable
 fun NotificationsBar(count: Int) {
     Box(
