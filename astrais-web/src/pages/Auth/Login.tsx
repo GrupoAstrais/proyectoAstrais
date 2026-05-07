@@ -6,7 +6,7 @@ import { handleGoogleCallback, loginWithGoogle, performLogin } from '../../data/
 
 export default function Login() {
   const navigate = useNavigate()
-  // 👇 AÑADE ESTO - se ejecuta en cada render, no espera al useEffect
+  
   console.log('LOGIN RENDER - URL completa:', window.location.href)
   console.log('LOGIN RENDER - Search params:', window.location.search)
   const [email, setEmail] = useState('')
