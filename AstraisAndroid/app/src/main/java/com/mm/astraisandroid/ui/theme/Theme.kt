@@ -29,15 +29,13 @@ private val LightColorScheme = lightColorScheme(
     primary = Primary,
     secondary = Secondary,
     tertiary = Tertiary,
-    background = Color.White,
-    surface = Color(0xFFF1F5F9),
+    background = Background,
+    surface = Surface,
     onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Gray900,
-    onBackground = Gray900,
-    onSurface = Gray900,
-    surfaceVariant = Gray300,
-    onSurfaceVariant = Gray700,
+    onBackground = TextPrimary,
+    onSurface = TextPrimary,
+    surfaceVariant = BackgroundAlt,
+    onSurfaceVariant = Gray300,
     error = ErrorCustom
 )
 
@@ -59,14 +57,14 @@ fun AstraisandroidTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (userTheme != null) {
-        val textColor = parseHexColor(userTheme.text, if (darkTheme) TextPrimary else Gray900)
+        val textColor = parseHexColor(userTheme.text,  TextPrimary)
         val prim = parseHexColor(userTheme.primary, Primary)
         val sec = parseHexColor(userTheme.secondary, Secondary)
         val tert = parseHexColor(userTheme.tertiary, Tertiary)
         val err = parseHexColor(userTheme.error, ErrorCustom)
-        val bg = parseHexColor(userTheme.background, if (darkTheme) Background else Color.White)
-        val bgAlt = parseHexColor(userTheme.backgroundAlt, if (darkTheme) BackgroundAlt else Gray300)
-        val surf = parseHexColor(userTheme.surface, if (darkTheme) Surface else Color.White)
+        val bg = parseHexColor(userTheme.background, Background )
+        val bgAlt = parseHexColor(userTheme.backgroundAlt, BackgroundAlt)
+        val surf = parseHexColor(userTheme.surface, Surface )
 
         if (darkTheme) {
             darkColorScheme(

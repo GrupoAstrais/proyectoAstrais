@@ -30,9 +30,24 @@ android {
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", googleWebClientId)
     }
 
+    signingConfigs {
+        create("release") {
+            val properties = Properties()
+            properties.load(project.rootProject.file("local.properties").inputStream())
+            storeFile = file("../../new_key.jks")
+            storePassword = properties.getProperty("KEYSTORE_PASSWORD") ?: "astrais"
+            keyAlias = "key0"
+            keyPassword = properties.getProperty("KEY_PASSWORD") ?: "astrais"
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("release")
+        }
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -120,7 +135,7 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     // ### Google Credentials ###
-    implementation("androidx.credentials:credentials:1.2.1")
-    implementation("androidx.credentials:credentials-play-services-auth:1.2.1")
-    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
+    implementation("androidx.credentials:credentials:1.5.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 }
