@@ -127,10 +127,19 @@ fun Route.oauthRoutes() {
 
         // verificar el token con la librería de google
         val verifier = GoogleIdTokenVerifier.Builder(NetHttpTransport(), GsonFactory.getDefaultInstance())
-            .setAudience(listOf(environment.config.property("google.clientId").getString()))
-            .build()
+    .setAudience(listOf(environment.config.property("google.clientId").getString()))
+    .setAudience(listOf(
+        environment.config.property("google.clientId").getString(),
+        "395346432593-4b1svhbcc85ntikfij7g7rbgb88qj8ap.apps.googleusercontent.com"
+    ))
+    .build()
 
-        val idToken = verifier.verify(req.idToken)
+        val idToken = try {
+        verifier.verify(req.idToken)
+        } catch (e: Exception) {
+        mainlogger.severe("Google token verification error: ${e.javaClass.simpleName} - ${e.message}")
+        null}
+        mainlogger.info("Google token verify result: ${idToken != null}, audience expected: ${environment.config.property("google.clientId").getString()}")
         if (idToken != null) {
             val payload = idToken.payload
             val userId = payload.subject
