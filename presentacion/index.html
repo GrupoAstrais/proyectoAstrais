@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type='text/css' href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css" />
     <style>
         :root {
             --astrais-primary: #8B5CF6;
@@ -36,6 +37,40 @@
             font-family: 'Space Grotesk', sans-serif;
             background: var(--astrais-background);
             color: var(--astrais-text);
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(ellipse at 20% 80%, rgba(139,92,246,0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(56,189,248,0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(139,92,246,0.05) 0%, transparent 70%);
+            animation: bgPulse 15s ease-in-out infinite alternate;
+        }
+
+        @keyframes bgPulse {
+            0% {
+                transform: scale(1) translate(0, 0);
+                opacity: 0.8;
+            }
+            33% {
+                transform: scale(1.1) translate(-2%, 2%);
+                opacity: 1;
+            }
+            66% {
+                transform: scale(1.05) translate(2%, -1%);
+                opacity: 0.9;
+            }
+            100% {
+                transform: scale(1.15) translate(-1%, -3%);
+                opacity: 0.7;
+            }
         }
 
         /* Estrellas de fondo fijas */
@@ -397,6 +432,25 @@
             object-fit: cover;
         }
 
+        /* Contenedor para SVGs de arquitectura que deben escalarse sin recortar */
+        .svg-container {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: visible;
+            background: #ffffff;
+            padding: 1rem;
+            border-radius: 12px;
+        }
+        .svg-container img {
+            max-width: 100%;
+            max-height: calc(100vh - var(--header-height) - 6rem);
+            width: auto;
+            height: auto;
+            object-fit: contain;
+        }
+
         .img-placeholder.square {
             aspect-ratio: 1/1;
             max-height: 180px;
@@ -562,6 +616,79 @@
         .code-number  { color: #79c0ff; }
         .code-type    { color: #ffa657; }
 
+        /* Separadores de sección */
+        .section-divider {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            height: 100%;
+            position: relative;
+        }
+
+        .section-number {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1rem;
+            color: var(--astrais-primary);
+            margin-bottom: 1.5rem;
+            letter-spacing: 0.1em;
+        }
+
+        .section-title {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 2.2rem;
+            color: var(--astrais-text);
+            line-height: 1.4;
+            text-shadow: 0 0 40px rgba(139, 92, 246, 0.3);
+        }
+
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: var(--astrais-muted);
+            margin-top: 1rem;
+            font-weight: 300;
+        }
+
+        .section-quote {
+            max-width: 600px;
+            margin-top: 3rem;
+            font-style: italic;
+            font-size: 1rem;
+            color: var(--astrais-muted);
+            line-height: 1.5;
+        }
+
+        /* Agenda limpia */
+        .agenda-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: left;
+        }
+
+        .agenda-row {
+            display: flex;
+            align-items: baseline;
+            gap: 1.5rem;
+        }
+
+        .agenda-num {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.7rem;
+            color: var(--astrais-primary);
+            min-width: 40px;
+            text-align: right;
+        }
+
+        .agenda-title {
+            font-size: 1.15rem;
+            font-weight: 500;
+            color: var(--astrais-text);
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .slide {
@@ -625,7 +752,7 @@
 
     <!-- CONTADOR -->
     <div class="slide-counter">
-        <span id="cur">1</span> /         <span id="tot">17</span>
+        <span id="cur">1</span> /         <span id="tot">31</span>
     </div>
 
     <div class="keyboard-hint">
@@ -638,74 +765,111 @@
         <!-- SLIDE 1: PORTADA -->
         <section class="slide">
             <div class="slide-inner centered">
-                <h2 class="slide-title-main">Astraïs</h2>
-                <p class="slide-subtitle">Convierte tu productividad en una aventura</p>
+                <img src="img/logo_new.svg" alt="Astraïs Logo" style="width:120px; height:auto; margin-bottom:1rem; filter: drop-shadow(0 0 30px rgba(139,92,246,0.4));">
+                <h2 class="slide-title-main" style="font-size:3.5rem;">Astraïs</h2>
                 <p class="slide-subtitle">Olga, Manuel, Samuel, Elías</p>
-                <div>
-                    <span class="tag tag-primary">Tag 1</span>
-                    <span class="tag tag-secondary">Tag 2</span>
-                    <span class="tag tag-tertiary">Tag 3</span>
+                <div style="display:flex; gap:0.75rem; justify-content:center; margin-top:1rem; flex-wrap:wrap;">
+                    <span style="display:flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:8px; font-size:0.9rem; font-weight:600; background:rgba(229,91,43,0.15); color:#e55b2b; border:1px solid rgba(229,91,43,0.3);">
+                        <i class="devicon-ktor-plain" style="font-size:1rem;"></i> Ktor
+                    </span>
+                    <span style="display:flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:8px; font-size:0.9rem; font-weight:600; background:rgba(61,220,132,0.12); color:#3ddc84; border:1px solid rgba(61,220,132,0.3);">
+                        <i class="devicon-android-plain" style="font-size:1rem;"></i> Android
+                    </span>
+                    <span style="display:flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:8px; font-size:0.9rem; font-weight:600; background:rgba(97,218,251,0.12); color:#61dafb; border:1px solid rgba(97,218,251,0.3);">
+                        <i class="devicon-react-plain" style="font-size:1rem;"></i> React
+                    </span>
+                    <span style="display:flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:8px; font-size:0.9rem; font-weight:600; background:rgba(51,103,145,0.15); color:#4a90b8; border:1px solid rgba(51,103,145,0.3);">
+                        <i class="devicon-postgresql-plain" style="font-size:1rem;"></i> PostgreSQL
+                    </span>
                 </div>
             </div>
         </section>
 
         <!-- SLIDE 2: ÍNDICE / AGENDA -->
         <section class="slide">
-            <div class="slide-inner">
+            <div class="slide-inner centered">
                 <h2 class="slide-title-main">Índice</h2>
-                <ul class="plain">
-                    <li>1. Sobre la app</li>                    
-                    <li>2. Descripción y justificación</li>
-                    <li>3. ERP y reparto de tareas</li>
-                    <li>4. DEMO guiada + Casos de uso</li>
-                    <li>5. Stack tecnológico</li>
-                    <li>6. Retos y dificultades</li>
-                    <li>7. Ampliaciones y mejoras</li>
-                    <li>8. Conclusiones</li>
-                </ul>
-            </div>
-        </section>
-
-        <!-- SLIDE 3: TEXTO + IMAGEN (2 columnas) -->
-        <section class="slide">
-            <div class="slide-inner">
-                <h2 class="slide-title-main">Sobre la app</h2>
-                <div class="flex-col">
-                    <div style="flex:1;">
-                        
-                            <img class="img-placeholder"  src="img/banner.svg" alt="Imagen de introducción">
-                    
+                <div class="agenda-list">
+                    <div class="agenda-row">
+                        <span class="agenda-num">01</span>
+                        <span class="agenda-title">Sobre la app</span>
                     </div>
-                    <div style="flex:1;">
-                        <p style="color:rgba(248,250,252,0.8); line-height:1.7;">
-                            <h2>Astraïs</h2>
-                            Aplicación de productividad gamificada orientada a mejorar la constancia y motivación del usuario mediante mecánicas inspiradas en videojuegos:
-                        <ul class="plain">
-                            <li>Gestión de tareas y hábitos</li>
-                            <li>Sistema de niveles, XP y recompensas</li>
-                            <li>Personalización y economía virtual</li>
-                            <li>Funciones sociales y colaborativas</li>
-                            <li>Minijuegos y eventos interactivos</li>
-                        </ul>
-
-
- <relevante class="ddd">
-
-
-                                <br><br><br><br><br><br><br><br><br><br><br>
-                                
-                            </relevante>
-                        </p>
+                    <div class="agenda-row">
+                        <span class="agenda-num">02</span>
+                        <span class="agenda-title">Descripción y justificación</span>
                     </div>
-                    
+                    <div class="agenda-row">
+                        <span class="agenda-num">03</span>
+                        <span class="agenda-title">ERP y reparto de tareas</span>
+                    </div>
+                    <div class="agenda-row">
+                        <span class="agenda-num">04</span>
+                        <span class="agenda-title">DEMO y casos de uso</span>
+                    </div>
+                    <div class="agenda-row">
+                        <span class="agenda-num">05</span>
+                        <span class="agenda-title">Stack tecnológico</span>
+                    </div>
+                    <div class="agenda-row">
+                        <span class="agenda-num">06</span>
+                        <span class="agenda-title">Arquitectura</span>
+                    </div>
+                    <div class="agenda-row">
+                        <span class="agenda-num">07</span>
+                        <span class="agenda-title">Retos y dificultades</span>
+                    </div>
+                    <div class="agenda-row">
+                        <span class="agenda-num">08</span>
+                        <span class="agenda-title">Ampliaciones y mejoras</span>
+                    </div>
+                    <div class="agenda-row">
+                        <span class="agenda-num">09</span>
+                        <span class="agenda-title">Conclusiones</span>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- SLIDE 4: LISTA DE VIÑETAS -->
+        <!-- 1. SOBRE LA APP -->
+<section class="slide">
+            <div class="slide-inner section-divider">
+                <div class="section-number">01</div>
+                <div class="section-title">SOBRE LA APP</div>
+                <div class="section-subtitle">Gamificación aplicada a la productividad</div>
+                <div class="section-quote">"Astraïs: porque la procrastinación ya tiene suficientes aplicaciones."</div>
+            </div>
+        </section>
+
         <section class="slide">
             <div class="slide-inner">
-                <h2 class="slide-title-main">Descripción y justificación</h2>
+
+                <div style="max-width: 700px; margin: 0 auto;">
+                    <p style="color:rgba(248,250,252,0.8); line-height:1.7; font-size:1.05rem; margin-bottom:1.5rem;">
+                        Aplicación de productividad gamificada orientada a mejorar la constancia y motivación del usuario mediante mecánicas inspiradas en videojuegos:
+                    </p>
+                    <ul class="plain" style="font-size:1.05rem; line-height:2;">
+                        <li>Gestión de tareas y hábitos</li>
+                        <li>Sistema de niveles, XP y recompensas</li>
+                        <li>Personalización y economía virtual</li>
+                        <li>Funciones sociales y colaborativas</li>
+                        <li>Minijuegos y eventos interactivos</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. DESCRIPCION Y JUSTIFIACION -->
+<section class="slide">
+            <div class="slide-inner section-divider">
+                <div class="section-number">02</div>
+                <div class="section-title">DESCRIPCIÓN Y JUSTIFICACIÓN</div>
+                <div class="section-subtitle">El problema real que resolvemos</div>
+                <div class="section-quote">NO SE ME OCURRE NADA</div>
+            </div>
+        </section>
+
+        <section class="slide">
+            <div class="slide-inner">
                 <ul class="plain">
                     <li>Astraïs nace para resolver un problema <b>real</b>: la dificultad de mantener la constancia en la productividad personal. 
                     Las herramientas tradicionales de organización suelen abandonarse por falta de motivación, monotonía y ausencia de recompensas visibles.</li>
@@ -716,44 +880,531 @@
             </div>
         </section>
 
-        <!-- SLIDE 5: 3 TARJETAS -->
+
+        <!-- 3. Taiga -->
+
         <section class="slide">
-            <div class="slide-inner">
-                <h2 class="slide-title-main">ERP y reparto de tareas</h2>
-                <div class="grid-3">
-                    <div class="card">
-                        <div class="card-title">Taiga</div>
-                        <p>Esta plataforma permite planificar y coordinar el trabajo del equipo durante el desarrollo del proyecto.</p>
+            <div class="slide-inner section-divider">
+                <div class="section-number">03</div>
+                <div class="section-title">ERP Y REPARTO DE TAREAS</div>
+                <div class="section-subtitle">Cómo sobrevivimos al desarrollo en equipo</div>
+                <div class="section-quote">"Taiga nos salvó de la anarquía. Bueno... casi."</div>
+            </div>
+        </section>
+
+        <section class="slide">
+            <div class="slide-inner centered">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4rem; align-items:center; max-width:1100px; width:100%;">
+                    <div style="display:flex; flex-direction:column; gap:3rem; text-align:left;">
+                        <div>
+                            <div style="font-family:'Press Start 2P', cursive; font-size:1.5rem; color:var(--astrais-primary); margin-bottom:0.75rem;">TAIGA</div>
+
+                            <p style="color:var(--astrais-muted); font-size:1.1rem; line-height:1.6;">Esta plataforma nos permitió planificar y coordinar el trabajo del equipo durante el desarrollo del proyecto.</p>
+                        </div>
+                        <div>
+                            <div style="font-family:'Press Start 2P', cursive; font-size:1.5rem; color:var(--astrais-secondary); margin-bottom:0.75rem;">SCRUM</div>
+
+                            <p style="color:var(--astrais-muted); font-size:1.1rem; line-height:1.6;">Una vez definidas las tareas, se llevó a cabo su reparto entre los distintos miembros del equipo. La asignación se realizó de la forma más equitativa posible.</p>
+                        </div>
                     </div>
-                    <div class="card">
-                        <img class="img-placeholder"  src="img/tareas.png" alt="Imagen de introducción">
-                    </div>
-                    <div class="card">
-                        <div class="card-title">Reparto de tareas</div>
-                        <p>Una vez definidas las tareas, se llevó a cabo su reparto entre los distintos miembros del equipo. La asignación se realizó de la forma más equitativa posible.</p>
+                    <div style="text-align:center;">
+                        <img src="img/tareas.png" alt="Reparto de tareas" style="width:100%; max-width:500px; height:auto; border-radius:16px; box-shadow:0 12px 48px rgba(0,0,0,0.5);">
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- SLIDE 6: 2 TARJETAS GRANDES -->
+        <!-- 4. DEMO Y CASOS DE USO -->
         <section class="slide">
-            <div class="slide-inner">
-                <h2 class="slide-title-main">Casos de uso</h2>
-                <div class="grid-2">
-                    <div class="card" >
-                        <ul class="plain">
-                            <li>Video</li>
-                        </ul>
-                    </div>
-                </div>
+            <div class="slide-inner section-divider">
+                <div class="section-number">04</div>
+                <div class="section-title">DEMO Y CASOS DE USO</div>
+                <div class="section-subtitle">Prueba la app en directo</div>
+                <div class="section-quote">"Una imagen vale más que mil palabras, pero un APK descargable vale más que mil imágenes."</div>
             </div>
         </section>
 
-        <!-- SLIDE 7: COMPARATIVA (Problema vs Solución) -->
+        <!-- SLIDE: QR -->
+        <section class="slide">
+            <div class="slide-inner centered">
+                <h2 class="slide-title-main">Descarga la app</h2>
+                <div style="text-align:center; margin-top:2rem;">
+                    <div style="background:#fff; padding:1.5rem; border-radius:16px; display:inline-block; box-shadow:0 0 40px rgba(139,92,246,0.15);">
+                        <img src="img/qr_android.png" alt="QR Android" style="width:280px; height:280px; display:block;">
+                    </div>
+                    <p style="margin-top:1rem; font-size:1rem; color:var(--astrais-muted);">Escanea para descargar el APK</p>
+                </div>
+            </div>
+        </section>
+        
+        
+
+        <!-- ==================== CASO 1: GRUPOS ==================== -->
+
+        <section class="slide">
+            <div class="slide-inner centered">
+                <h2 class="slide-title-main">CASO DE USO 1</h2>
+                <blockquote class="quote" style="max-width:700px; margin:0 auto;">
+                    "La productividad es como el gimnasio: no funciona si vas solo. Por eso invitamos gente, para que nos vean fallar juntos."
+                </blockquote>
+                <p class="quote-author">— Yo en cualquier día de la semana</p>
+            </div>
+        </section>
+
+        <!-- CASO 1 - Paso 1: Login -->
+        <section class="slide">
+            <div class="slide-inner">
+                <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                    <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">1</div>
+                    <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Login con JWT</div>
+                </div>
+
+                <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">POST /auth/login</span>
+                        </div>
+                        <pre><code><span class="code-keyword">post</span>(<span class="code-string">"/auth/login"</span>) {
+    <span class="code-keyword">val</span> req = call.receive&lt;LoginRequest&gt;()
+    <span class="code-keyword">val</span> user = authRepo.login(req)
+
+    <span class="code-keyword">val</span> access = generateAccessToken(user)
+    <span class="code-keyword">val</span> refresh = generateRefreshToken(user)
+
+    call.respond(LoginResponse(access, refresh))
+}</code></pre>
+                    </div>
+
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">Generar tokens</span>
+                        </div>
+                        <pre><code><span class="code-keyword">fun</span> <span class="code-func">generateAccessToken</span>(user): String {
+    <span class="code-keyword">return</span> JWT.create()
+        .withSubject(user.id.toString())
+        .withExpiresAt(Date(System.currentTimeMillis()
+            + <span class="code-number">10</span> * <span class="code-number">60</span> * <span class="code-number">1000</span>))  <span class="code-comment">// 10 min</span>
+        .sign(Algorithm.HMAC256(accessSecret))
+}
+
+<span class="code-keyword">fun</span> <span class="code-func">generateRefreshToken</span>(user): String {
+    <span class="code-keyword">return</span> JWT.create()
+        .withSubject(user.id.toString())
+        .withExpiresAt(Date(System.currentTimeMillis()
+            + <span class="code-number">7</span> * <span class="code-number">24</span> * <span class="code-number">60</span> * <span class="code-number">60</span> * <span class="code-number">1000</span>))  <span class="code-comment">// 7 días</span>
+        .sign(Algorithm.HMAC256(refreshSecret))
+}</code></pre>
+                    </div>
+                </div>
+
+                
+            </div>
+        </section>
+
+        <!-- CASO 1 - Paso 2: Crear grupo -->
+        <section class="slide">
+            <div class="slide-inner">
+                <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                    <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">2</div>
+                    <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Crear grupo y asignar roles</div>
+                </div>
+
+                <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">POST /groups/createGroup</span>
+                        </div>
+                        <pre><code><span class="code-keyword">post</span>(<span class="code-string">"/groups/createGroup"</span>) {
+    <span class="code-keyword">val</span> uid = call.principal&lt;JWTPrincipal&gt;()!!
+                         .subject?.toInt()
+    <span class="code-keyword">val</span> data = call.receive&lt;CreateGroupRequest&gt;()
+
+    <span class="code-keyword">val</span> gid = getGroupRepoImpl()
+        .createGroup(uid, data.name, data.desc)
+
+    call.respond(HttpStatusCode.Created,
+        mapOf(<span class="code-string">"gid"</span> to gid))
+}</code></pre>
+                    </div>
+
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">GroupRepoImpl.kt</span>
+                        </div>
+                        <pre><code><span class="code-keyword">override suspend fun</span> <span class="code-func">createGroup</span>(uid, name, desc): Int {
+    <span class="code-keyword">return</span> getDatabaseDaoImpl().createGroup(
+        name = name,
+        desc = desc,
+        ownerId = uid
+    ).also { gid ->
+        <span class="code-comment">// Creador = Owner automáticamente</span>
+        getDatabaseDaoImpl().addUserToGroup(
+            uid, gid, GroupRoles.OWNER
+        )
+    }
+}</code></pre>
+                    </div>
+                </div>
+
+                <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                    Tres roles: Owner (creador), Moderador (gestiona miembros), Miembro (solo participa).
+                </p>
+            </div>
+        </section>
+
+        <!-- CASO 1 - Paso 3: Generar código -->
+        <section class="slide">
+            <div class="slide-inner">
+                <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                    <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">3</div>
+                    <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Generar invitación</div>
+                </div>
+
+                <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">POST /groups/invites</span>
+                        </div>
+                        <pre><code><span class="code-keyword">post</span>(<span class="code-string">"/groups/invites"</span>) {
+    <span class="code-keyword">val</span> uid = call.principal&lt;JWTPrincipal&gt;()!!
+                         .subject?.toInt()
+    <span class="code-keyword">val</span> data = call.receive&lt;CreateInviteRequest&gt;()
+
+    <span class="code-keyword">val</span> (ret, invite) = getGroupRepoImpl()
+        .createInvite(uid, data.gid,
+            data.expiresInSeconds,
+            data.maxUses)
+
+    <span class="code-keyword">when</span> (ret) {
+        OK -> call.respond(invite!!)
+        NOPERMISSION -> call.respond(Forbidden)
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">Invitación</span>
+                        </div>
+                        <pre><code><span class="code-keyword">private val</span> secureRandom = SecureRandom()
+
+<span class="code-keyword">private fun</span> <span class="code-func">generateInviteCode</span>(): String {
+    <span class="code-keyword">val</span> bytes = ByteArray(24)
+    secureRandom.nextBytes(bytes)
+    <span class="code-keyword">return</span> Base64.getUrlEncoder()
+        .withoutPadding()
+        .encodeToString(bytes)  <span class="code-comment">// 32 chars</span>
+}
+
+<span class="code-comment">// Se guarda el hash SHA-256</span>
+<span class="code-keyword">val</span> hash = MessageDigest
+    .getInstance(<span class="code-string">"SHA-256"</span>)
+    .digest(code.toByteArray())</code></pre>
+                    </div>
+                </div>
+
+                <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                    Código aleatorio de 32 caracteres. En la base de datos se guarda su hash SHA-256, nunca en texto plano.
+                </p>
+            </div>
+        </section>
+
+        <!-- CASO 1 - Paso 4: Unirse por código -->
+        <section class="slide">
+            <div class="slide-inner">
+                <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                    <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">4</div>
+                    <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Unirse por código</div>
+                </div>
+
+                <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">POST /groups/joinByCode</span>
+                        </div>
+                        <pre><code><span class="code-keyword">post</span>(<span class="code-string">"/groups/joinByCode"</span>) {
+    <span class="code-keyword">val</span> uid = call.principal&lt;JWTPrincipal&gt;()!!
+                         .subject?.toInt()
+    <span class="code-keyword">val</span> data = call.receive&lt;JoinByCodeRequest&gt;()
+
+    <span class="code-keyword">val</span> ret = getGroupRepoImpl()
+        .joinByCode(uid, data.code)
+    <span class="code-keyword">when</span> (ret) {
+        OK -> call.respond(HttpStatusCode.OK)
+        INVALID_CODE -> call.respond(BadRequest)
+        EXPIRED -> call.respond(BadRequest)
+        REVOKED -> call.respond(BadRequest)
+        MAX_USES_REACHED -> call.respond(BadRequest)
+        ALREADYJOINED -> call.respond(BadRequest)
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">Validación</span>
+                        </div>
+                        <pre><code><span class="code-keyword">override suspend fun</span> <span class="code-func">joinByCode</span>(requesterId, code) {
+    <span class="code-keyword">val</span> hash = sha256(code)
+    <span class="code-keyword">val</span> invite = getDao().getGroupInviteByHash(hash)
+        ?: <span class="code-keyword">return</span> INVALID_CODE
+
+    <span class="code-keyword">if</span> (invite.revokedAt != <span class="code-keyword">null</span>)
+        <span class="code-keyword">return</span> REVOKED
+    <span class="code-keyword">if</span> (invite.expiresAt <= now)
+        <span class="code-keyword">return</span> EXPIRED
+    <span class="code-keyword">if</span> (invite.usesCount >= invite.maxUses)
+        <span class="code-keyword">return</span> MAX_USES
+
+    getDao().tryConsumeInvite(invite.id, now)
+    getDao().addUserToGroup(requesterId, invite.gid)
+    <span class="code-keyword">return</span> OK
+}</code></pre>
+                    </div>
+                </div>
+
+                <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                    Cuatro validaciones: ¿existe? ¿revocado? ¿expirado? ¿usos agotados? Solo si pasa todo se une al grupo.
+                </p>
+            </div>
+        </section>
+
+        <!-- ==================== CASO 2: TAREAS Y TIENDA ==================== -->
+
+<section class="slide">
+            <div class="slide-inner centered">
+                <h2 class="slide-title-main">CASO DE USO 2</h2>
+                <blockquote class="quote" style="max-width:700px; margin:0 auto;">
+                    "Completa tareas, gana Ludiones, compra cosméticos. Es como estudiar pero con loot boxes legales."
+                </blockquote>
+                <p class="quote-author">— Manuel y Olga (querían meter un sistema gacha)</p>
+            </div>
+        </section>
+
+        <!-- CASO 2 - Paso 1: Crear tarea -->
+        <section class="slide">
+            <div class="slide-inner">
+                <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                    <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-secondary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">1</div>
+                    <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Crear tarea — Recompensas automáticas</div>
+                </div>
+
+                <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">POST /tasks</span>
+                        </div>
+                        <pre><code><span class="code-keyword">post</span>(<span class="code-string">"/tasks"</span>) {
+    <span class="code-keyword">val</span> uid = call.principal&lt;JWTPrincipal&gt;()!!
+                         .subject?.toInt()
+    <span class="code-keyword">val</span> req = call.receive&lt;CreateTareaRequest&gt;()
+
+    <span class="code-keyword">val</span> ret = getTaskRepoImpl()
+        .createTask(uid, req)
+    <span class="code-keyword">when</span> (ret) {
+        RESP_OK -> call.respond(HttpStatusCode.OK)
+        RESP_EXPOSEDERR -> call.respond(
+            HttpStatusCode.InternalServerError)
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">Calcular recompensas</span>
+                        </div>
+                        <pre><code><span class="code-keyword">fun</span> <span class="code-func">calcularXp</span>(tipo, prioridad, frecuencia): Int {
+    <span class="code-keyword">val</span> multPrio = 1.0 + (prioridad * 0.5)
+    <span class="code-keyword">val</span> multFreq = getFrecuencyMultiplier(frecuencia)
+
+    <span class="code-keyword">val</span> xpBase = <span class="code-keyword">when</span> (tipo) {
+        HABITO -> 20
+        UNICO -> 50
+        OBJETIVO -> 400
+    }
+    <span class="code-keyword">return</span> (xpBase * multPrio * multFreq)
+        .toInt()
+}</code></pre>
+                    </div>
+                </div>
+
+                <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                    Al crear una tarea el backend calcula automáticamente XP y Ludiones según tipo, prioridad y frecuencia.
+                </p>
+            </div>
+        </section>
+
+        <!-- CASO 2 - Paso 2: Completar tarea -->
+        <section class="slide">
+            <div class="slide-inner">
+                <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                    <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-secondary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">2</div>
+                    <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Completar tarea — Otorgar recompensas</div>
+                </div>
+
+                <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">PATCH /tasks/{id}/complete</span>
+                        </div>
+                        <pre><code><span class="code-keyword">patch</span>(<span class="code-string">"/tasks/{tid}/complete"</span>) {
+    <span class="code-keyword">val</span> uid = call.principal&lt;JWTPrincipal&gt;()!!
+                         .subject?.toInt()
+    <span class="code-keyword">val</span> tid = call.parameters[<span class="code-string">"tid"</span>]?.toInt()
+        ?: <span class="code-keyword">return</span>@patch call.respond(BadRequest)
+
+    <span class="code-keyword">val</span> ok = getTaskRepoImpl()
+        .completeTask(tid, uid)
+    <span class="code-keyword">if</span> (ok) call.respond(OK)
+    <span class="code-keyword">else</span> call.respond(Forbidden)
+}</code></pre>
+                    </div>
+
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">Sumar al usuario</span>
+                        </div>
+                        <pre><code><span class="code-keyword">override suspend fun</span> <span class="code-func">completeTask</span>(tid, uid): Boolean {
+    <span class="code-keyword">val</span> tarea = getDao().getTaskById(tid)
+    <span class="code-keyword">val</span> usuario = getDao().getUserById(uid)
+
+    <span class="code-comment">// Suma XP y Ludiones</span>
+    usuario.xp_total += tarea.recompensa_xp
+    usuario.xp_actual += tarea.recompensa_xp
+    usuario.ludions += tarea.recompensa_ludion
+
+    <span class="code-comment">// Si es hábito, actualiza racha</span>
+    <span class="code-keyword">if</span> (tarea.tipo == HABITO) {
+        updateStreak(tarea)
+    }
+    <span class="code-keyword">return true</span>
+}</code></pre>
+                    </div>
+                </div>
+
+                <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                    Al completar se suman XP y Ludiones al usuario.
+                </p>
+            </div>
+        </section>
+
+        <!-- CASO 2 - Paso 3: Tienda -->
+        <section class="slide">
+            <div class="slide-inner">
+                <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                    <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-secondary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">3</div>
+                    <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Tienda — Comprar cosmético</div>
+                </div>
+
+                <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">POST /store/buy/{id}</span>
+                        </div>
+                        <pre><code><span class="code-keyword">post</span>(<span class="code-string">"/store/buy/{id}"</span>) {
+    <span class="code-keyword">val</span> uid = call.principal&lt;JWTPrincipal&gt;()!!
+                         .subject?.toInt()
+    <span class="code-keyword">val</span> cid = call.parameters[<span class="code-string">"id"</span>]?.toInt()
+
+    <span class="code-keyword">when</span> (getDatabaseDaoImpl().buyCosmetic(uid, cid)){
+        OKAY -> call.respond(HttpStatusCode.OK)
+        INSUFICIENT_CURRENCY -> call.respond(
+            HttpStatusCode.BadRequest,
+            <span class="code-string">"Fondos insuficientes"</span>
+        )
+        ALREADY_HAS_OBJECT -> call.respond(
+            HttpStatusCode.BadRequest,
+            <span class="code-string">"Ya lo tienes"</span>
+        )
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">Validación de compra</span>
+                        </div>
+                        <pre><code><span class="code-keyword">override fun</span> <span class="code-func">buyCosmetic</span>(uid, cid): BuyCosmeticResponse {
+    <span class="code-keyword">val</span> user = Users.findById(uid)
+        ?: <span class="code-keyword">return</span> USER_NOT_FOUND
+    <span class="code-keyword">val</span> cosmetic = Cosmetic.findById(cid)
+        ?: <span class="code-keyword">return</span> COSMETIC_NOT_FOUND
+
+    <span class="code-keyword">if</span> (user.ludions < cosmetic.price)
+        <span class="code-keyword">return</span> INSUFICIENT_CURRENCY
+    <span class="code-keyword">if</span> (Inventory.exists(uid, cid))
+        <span class="code-keyword">return</span> ALREADY_HAS_OBJECT
+
+    user.ludions -= cosmetic.price
+    Inventory.new(uid, cid)
+    <span class="code-keyword">return</span> OKAY
+}</code></pre>
+                    </div>
+                </div>
+
+                <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                    La tienda valida saldo suficiente y que no tengas el objeto antes de descontar Ludiones.
+                </p>
+            </div>
+        </section>
+
+        <!-- 5. STACK TECNOLÓGICO -->
+        <section class="slide">
+            <div class="slide-inner section-divider">
+                <div class="section-number">06</div>
+                <div class="section-title">Stack tecnológico</div>
+                <div class="section-subtitle">Tecnologías elegidas y por qué</div>
+                <div class="section-quote">"Kotlin, Ktor, React, y muchas noches sin dormir."</div>
+            </div>
+        </section>
+
+        <!-- STACK TECNOLÓGICO TABLA -->
+
                  <section class="slide">
             <div class="slide-inner">
-                <h2 class="slide-title-main">Stack tecnológico</h2>
+                <h2 class="slide-title-main">5.1 Stack tecnológico</h2>
                 <div class="grid-3">
                     <div class="card">
                         <div class="card-title">App</div>
@@ -784,6 +1435,220 @@
                 </div>
             </div>
         </section>
+
+        <!-- 6. ARQUITECTURAS -->
+
+        <section class="slide">
+            <div class="slide-inner section-divider">
+                <div class="section-number">06</div>
+                <div class="section-title">ARQUITECTURA</div>
+                <div class="section-subtitle">Patrones, capas y decisiones</div>
+                <div class="section-quote">"Terminamos los diagramas después de que funcionara, como debe ser."</div>
+            </div>
+        </section>
+
+        <section class="slide">
+            <div class="slide-inner">
+                <h2 class="slide-title-main">Arquitectura general</h2>
+                <div class="svg-container">
+                    <img src="img/arquitectura_general.svg" alt="Arquitectura general de Astrais"/>
+                </div>
+            </div>
+        </section>
+
+        <!-- ARQUITECTURA WEB + ANDROID -->
+
+
+
+        <!-- 7. RETOS  -->
+
+
+        <section class="slide">
+            <div class="slide-inner section-divider">
+                <div class="section-number">07</div>
+                <div class="section-title">Retos y dificultades</div>
+                <div class="section-subtitle">NO SE QUE PONER</div>
+                <div class="section-quote">"Manuel queria implementar una nave customizable, pero lo amenazamos justo después."</div>
+            </div>
+        </section>
+
+        <!-- RETOS BACKEND -->
+
+        <!-- RETOS WEB -->
+
+
+
+        <!-- RETOS ANDROID -->
+        <section class="slide">
+            <div class="slide-inner">
+                <h2 class="slide-title-main">Android</h2>
+
+                <div style="display:flex; flex-direction:column; gap:3rem; align-items:center; margin-top:0.5rem;">
+
+                    <!-- === RETO 1 === -->
+                    <div style="width:100%;">
+                        <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.25rem;">
+                            <div style="width:44px; height:44px; border-radius:50%; background:var(--astrais-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1.1rem; flex-shrink:0;">1</div>
+                            <div style="font-weight:700; font-size:1.3rem; color:#e2e8f0;">Offline-first</div>
+                        </div>
+
+                        <div style="display:flex; align-items:center; justify-content:center; gap:0; padding-left:3.5rem;">
+                            <div style="background:var(--astrais-surface); border:1px solid rgba(139,92,246,0.3); border-radius:12px; padding:1.2rem 1.5rem; text-align:center; min-width:180px;">
+                                <div style="font-weight:600; font-size:1.05rem; color:var(--astrais-primary);">UI</div>
+                                <div style="font-size:0.85rem; color:rgba(248,250,252,0.45); margin-top:0.3rem;">crea una tarea</div>
+                            </div>
+                            <div style="width:48px; height:2px; background:rgba(139,92,246,0.4); position:relative;">
+                                <div style="position:absolute; right:-1px; top:-4px; width:0; height:0; border-top:5px solid transparent; border-bottom:5px solid transparent; border-left:8px solid rgba(139,92,246,0.5);"></div>
+                            </div>
+                            <div style="background:var(--astrais-surface); border:1px solid rgba(56,189,248,0.3); border-radius:12px; padding:1.2rem 1.5rem; text-align:center; min-width:180px;">
+                                <div style="font-weight:600; font-size:1.05rem; color:var(--astrais-secondary);">Room</div>
+                                <div style="font-size:0.85rem; color:rgba(248,250,252,0.45); margin-top:0.3rem;">ID negativo temporal</div>
+                            </div>
+                            <div style="width:48px; height:2px; background:rgba(56,189,248,0.4); position:relative;">
+                                <div style="position:absolute; right:-1px; top:-4px; width:0; height:0; border-top:5px solid transparent; border-bottom:5px solid transparent; border-left:8px solid rgba(56,189,248,0.5);"></div>
+                            </div>
+                            <div style="background:var(--astrais-surface); border:1px solid rgba(16,185,129,0.3); border-radius:12px; padding:1.2rem 1.5rem; text-align:center; min-width:180px;">
+                                <div style="font-weight:600; font-size:1.05rem; color:var(--astrais-tertiary);">SyncWorker</div>
+                                <div style="font-size:0.85rem; color:rgba(248,250,252,0.45); margin-top:0.3rem;">con red · FIFO</div>
+                            </div>
+                            <div style="width:48px; height:2px; background:rgba(16,185,129,0.4); position:relative;">
+                                <div style="position:absolute; right:-1px; top:-4px; width:0; height:0; border-top:5px solid transparent; border-bottom:5px solid transparent; border-left:8px solid rgba(16,185,129,0.5);"></div>
+                            </div>
+                            <div style="background:var(--astrais-surface); border:1px solid rgba(255,217,61,0.3); border-radius:12px; padding:1.2rem 1.5rem; text-align:center; min-width:180px;">
+                                <div style="font-weight:600; font-size:1.05rem; color:var(--astrais-warning);">Servidor</div>
+                                <div style="font-size:0.85rem; color:rgba(248,250,252,0.45); margin-top:0.3rem;">ID real · subtareas</div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; justify-content:center; gap:2.5rem; margin-top:1rem; padding-left:3.5rem;">
+                            <span style="font-size:0.9rem; color:rgba(248,250,252,0.45);"><span style="color:var(--astrais-error); font-weight:600;">4xx</span> descarta</span>
+                            <span style="font-size:0.9rem; color:rgba(248,250,252,0.45);"><span style="color:var(--astrais-warning); font-weight:600;">5xx / sin red</span> reintenta</span>
+                            <span style="font-size:0.9rem; color:rgba(248,250,252,0.45);"><span style="color:var(--astrais-tertiary); font-weight:600;">+3 fallos</span> elimina</span>
+                        </div>
+                    </div>
+
+                    <!-- === RETO 2 === -->
+                    <div style="width:100%;">
+                        <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.25rem;">
+                            <div style="width:44px; height:44px; border-radius:50%; background:var(--astrais-secondary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1.1rem; flex-shrink:0;">2</div>
+                            <div style="font-weight:700; font-size:1.3rem; color:#e2e8f0;">Inyección de dependencias con Hilt</div>
+                        </div>
+
+                        <div style="display:flex; align-items:stretch; justify-content:center; gap:1.5rem; padding-left:3.5rem;">
+                            <div style="flex:1; background:var(--astrais-surface); border:1px solid rgba(56,189,248,0.25); border-radius:12px; padding:1.3rem 1.6rem;">
+                                <div style="font-weight:600; font-size:1.05rem; color:var(--astrais-secondary); margin-bottom:0.5rem;">AppModule</div>
+                                <div style="font-size:0.9rem; color:rgba(248,250,252,0.5); line-height:1.6;">
+                                    Crea e inyecta todo el grafo: HttpClient, APIs, repositorios, Room, DAOs
+                                </div>
+                            </div>
+                            <div style="flex:1; background:var(--astrais-surface); border:1px solid rgba(244,63,94,0.25); border-radius:12px; padding:1.3rem 1.6rem;">
+                                <div style="font-weight:600; font-size:1.05rem; color:var(--astrais-error); margin-bottom:0.5rem;">WorkManager</div>
+                                <div style="font-size:0.9rem; color:rgba(248,250,252,0.5); line-height:1.6;">
+                                    Instancia workers él mismo. Fábrica especial de Hilt para inyectar dependencias
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+
+        <!-- 7. AMPLIACIONES Y MEJORAS -->
+
+        <section class="slide">
+            <div class="slide-inner section-divider">
+                <div class="section-number">08</div>
+                <div class="section-title">AMPLIACIONES Y MEJORAS</div>
+                <div class="section-subtitle">Lo que vendrá después</div>
+                <div class="section-quote">"La versión 2.0 es donde todo funciona como debería haber funcionado la 1.0."</div>
+            </div>
+        </section>
+        
+
+        <!-- 8. CONCLUSIONES -->
+
+        <section class="slide">
+            <div class="slide-inner section-divider">
+                <div class="section-number">09</div>
+                <div class="section-title">CONCLUSIONES</div>
+                <div class="section-subtitle">Cierre y preguntas</div>
+                <div class="section-quote">"Gracias por su atención. Las preguntas difíciles, por favor, para el siguiente grupo."</div>
+            </div>
+        </section>
+
+        <!-- DIAPOSITIVA DE GRACIAS + LINK AL REPO + LINK A GITHUB INDIVIDUAL -->
+
+        
+
+        <!-- SLIDE: CIERRE / EQUIPO / CONTACTO -->
+        <section class="slide">
+            <div class="slide-inner centered">
+                <h2 class="slide-title-main" style="font-size:2.2rem; margin-bottom:0.75rem;">Gracias</h2>
+                <a href="https://github.com/GrupoAstrais/proyectoAstrais.git" target="_blank" style="display:inline-block; font-size:1rem; color:var(--astrais-secondary); text-decoration:underline; text-underline-offset:4px; text-decoration-color:rgba(56,189,248,0.4); transition:all 0.2s;">
+                    github.com/GrupoAstrais/proyectoAstrais
+                </a>
+
+                <div class="grid-4" style="margin-top:2.5rem; max-width:900px; margin-left:auto; margin-right:auto;">
+                    <!-- Olga -->
+                    <div class="card" style="text-align:center; background:transparent; border:none;">
+                        <a href="https://github.com/1DAM-olgaantY89" target="_blank" style="display:inline-block;">
+                            <div style="width:100px; height:100px; border-radius:50%; margin:0 auto 1rem; overflow:hidden; border:2px solid var(--astrais-primary); box-shadow:0 0 20px rgba(139,92,246,0.2); transition:box-shadow 0.2s;">
+                                <img src="img/olga_github.png" alt="Olga" style="width:100%; height:100%; object-fit:cover;">
+                            </div>
+                        </a>
+                        <div style="font-family:'Press Start 2P', cursive; font-size:0.75rem; color:var(--astrais-primary); margin-bottom:0.4rem;">Olga</div>
+                        <a href="https://github.com/1DAM-olgaantY89" target="_blank" style="font-size:0.8rem; color:var(--astrais-secondary); text-decoration:underline; text-underline-offset:3px; text-decoration-color:rgba(56,189,248,0.3); transition:color 0.2s;">1DAM-olgaantY89</a>
+                    </div>
+
+                    <!-- Samuel -->
+                    <div class="card" style="text-align:center; background:transparent; border:none;">
+                        <a href="https://github.com/2DAM-pedrode546" target="_blank" style="display:inline-block;">
+                            <div style="width:100px; height:100px; border-radius:50%; margin:0 auto 1rem; overflow:hidden; border:2px solid var(--astrais-secondary); box-shadow:0 0 20px rgba(56,189,248,0.2); transition:box-shadow 0.2s;">
+                                <img src="img/samuel_github.jpeg" alt="Samuel" style="width:100%; height:100%; object-fit:cover;">
+                            </div>
+                        </a>
+                        <div style="font-family:'Press Start 2P', cursive; font-size:0.75rem; color:var(--astrais-secondary); margin-bottom:0.4rem;">Samuel</div>
+                        <a href="https://github.com/2DAM-pedrode546" target="_blank" style="font-size:0.8rem; color:var(--astrais-secondary); text-decoration:underline; text-underline-offset:3px; text-decoration-color:rgba(56,189,248,0.3); transition:color 0.2s;">2DAM-pedrode546</a>
+                    </div>
+
+                    <!-- Manuel -->
+                    <div class="card" style="text-align:center; background:transparent; border:none;">
+                        <a href="https://github.com/1DAM-ManuelArc296" target="_blank" style="display:inline-block;">
+                            <div style="width:100px; height:100px; border-radius:50%; margin:0 auto 1rem; overflow:hidden; border:2px solid var(--astrais-tertiary); box-shadow:0 0 20px rgba(16,185,129,0.2); transition:box-shadow 0.2s;">
+                                <img src="img/manuel_github.jpeg" alt="Manuel" style="width:100%; height:100%; object-fit:cover;">
+                            </div>
+                        </a>
+                        <div style="font-family:'Press Start 2P', cursive; font-size:0.75rem; color:var(--astrais-tertiary); margin-bottom:0.4rem;">Manuel</div>
+                        <a href="https://github.com/1DAM-ManuelArc296" target="_blank" style="font-size:0.8rem; color:var(--astrais-secondary); text-decoration:underline; text-underline-offset:3px; text-decoration-color:rgba(56,189,248,0.3); transition:color 0.2s;">1DAM-ManuelArc296</a>
+                    </div>
+
+                    <!-- Elías -->
+                    <div class="card" style="text-align:center; background:transparent; border:none;">
+                        <a href="https://github.com/2DAM-egarveg810" target="_blank" style="display:inline-block;">
+                            <div style="width:100px; height:100px; border-radius:50%; margin:0 auto 1rem; overflow:hidden; border:2px solid var(--astrais-warning); box-shadow:0 0 20px rgba(255,217,61,0.2); transition:box-shadow 0.2s;">
+                                <img src="img/elias_github.jpeg" alt="Elías" style="width:100%; height:100%; object-fit:cover;">
+                            </div>
+                        </a>
+                        <div style="font-family:'Press Start 2P', cursive; font-size:0.75rem; color:var(--astrais-warning); margin-bottom:0.4rem;">Elías</div>
+                        <a href="https://github.com/2DAM-egarveg810" target="_blank" style="font-size:0.8rem; color:var(--astrais-secondary); text-decoration:underline; text-underline-offset:3px; text-decoration-color:rgba(56,189,248,0.3); transition:color 0.2s;">2DAM-egarveg810</a>
+                    </div>
+                </div>
+
+                <p style="margin-top:2.5rem; font-size:1rem; color:var(--astrais-muted);">
+                    ¿Preguntas?
+                </p>
+            </div>
+        </section>
+
+
+
+
+
+
+        <!-- plantillas y tal -->
+
 
         <!-- SLIDE 8: PASOS NUMERADOS -->
         <section class="slide">
@@ -994,32 +1859,6 @@
         }
     }
 }</code></pre>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- SLIDE 17: CIERRE / EQUIPO / CONTACTO -->
-        <section class="slide">
-            <div class="slide-inner centered">
-                <h2 class="slide-title-main">Gracias</h2>
-                <p class="slide-subtitle">Preguntas o contacto</p>
-                <div class="grid-4" style="margin-top:2rem;">
-                    <div class="card" style="text-align:center;">
-                        <div style="width:60px; height:60px; border-radius:50%; background:var(--astrais-primary); margin:0 auto 0.75rem; display:flex; align-items:center; justify-content:center; font-family:'Press Start 2P'; font-size:1.2rem;">O</div>
-                        <strong>Olga</strong>
-                    </div>
-                    <div class="card" style="text-align:center;">
-                        <div style="width:60px; height:60px; border-radius:50%; background:var(--astrais-primary); margin:0 auto 0.75rem; display:flex; align-items:center; justify-content:center; font-family:'Press Start 2P'; font-size:1.2rem;">S</div>
-                        <strong>Samuel</strong>
-                    </div>
-                    <div class="card" style="text-align:center;">
-                        <div style="width:60px; height:60px; border-radius:50%; background:var(--astrais-primary); margin:0 auto 0.75rem; display:flex; align-items:center; justify-content:center; font-family:'Press Start 2P'; font-size:1.2rem;">M</div>
-                        <strong>Manuel</strong>
-                    </div>
-                    <div class="card" style="text-align:center;">
-                        <div style="width:60px; height:60px; border-radius:50%; background:var(--astrais-primary); margin:0 auto 0.75rem; display:flex; align-items:center; justify-content:center; font-family:'Press Start 2P'; font-size:1.2rem;">E</div>
-                        <strong>Elías</strong>
                     </div>
                 </div>
             </div>
