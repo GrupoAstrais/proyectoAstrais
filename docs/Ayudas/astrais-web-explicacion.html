@@ -1,0 +1,1158 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Explicacion completa de astrais-web</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./astrais-web-explicacion.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="../astrais-web/src/assets/logo_w.svg" alt="Logo de Astrais" />
+          <div>
+            <strong>astrais-web</strong>
+            <span>Documentacion profunda del cliente web</span>
+          </div>
+        </div>
+        <nav class="toc" aria-label="Indice">
+          <a href="#resumen">Resumen ejecutivo</a>
+          <a href="#arquitectura">Arquitectura</a>
+          <a href="#stack">Stack y dependencias</a>
+          <a href="#estructura">Estructura</a>
+          <a href="#rutas">Rutas</a>
+          <a href="#api">Capa API</a>
+          <a href="#dominio">Modelo de dominio</a>
+          <a href="#autenticacion">Autenticacion</a>
+          <a href="#paginas">Paginas</a>
+          <a href="#tareas">Tareas</a>
+          <a href="#grupos">Grupos</a>
+          <a href="#tienda">Tienda y temas</a>
+          <a href="#minijuegos">Minijuegos</a>
+          <a href="#logros">Logros</a>
+          <a href="#perfil">Perfil</a>
+          <a href="#componentes">Componentes</a>
+          <a href="#estilos">Estilos</a>
+          <a href="#estado-local">Estado local</a>
+          <a href="#build">Build y despliegue</a>
+          <a href="#inventario">Inventario</a>
+          <a href="#riesgos">Estado real y mejoras</a>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <header class="hero">
+          <div class="hero-inner">
+            <div>
+              <p class="eyebrow">Proyecto Astrais / Cliente web</p>
+              <h1>Explicacion completa de astrais-web</h1>
+              <p class="hero-lead">
+                Este documento describe, de forma profunda y ordenada, todo lo que contiene
+                <strong>astrais-web</strong>: arquitectura, rutas, autenticacion, API, modelos, pantallas,
+                componentes, estado local, estilos, minijuegos, logros, tienda, perfil, build, despliegue y
+                puntos pendientes detectados al leer el codigo fuente.
+              </p>
+              <div class="pill-row">
+                <span class="pill primary">React 19</span>
+                <span class="pill secondary">TypeScript</span>
+                <span class="pill success">Vite</span>
+                <span class="pill">Tailwind CSS 4</span>
+                <span class="pill">Axios</span>
+                <span class="pill">React Router</span>
+              </div>
+            </div>
+            <div class="hero-card">
+              <img src="../astrais-web/src/assets/astra.png" alt="Mascota Astra" />
+              <p>
+                La web es una SPA gamificada: tareas, grupos, tienda, perfil, logros y arcade comparten
+                identidad visual y datos del backend.
+              </p>
+            </div>
+          </div>
+        </header>
+
+        <section id="resumen" class="section">
+          <p class="eyebrow">01 / Vision global</p>
+          <h2>Resumen Ejecutivo</h2>
+          <p class="lead">
+            <strong>astrais-web</strong> es el cliente web de Astrais, una aplicacion de productividad
+            gamificada. Su objetivo es convertir tareas, habitos y objetivos en una experiencia visual de
+            progresion: el usuario inicia sesion, gestiona tareas personales, colabora en grupos, recibe XP y
+            ludiones, compra cosmeticos, personaliza temas, juega minijuegos y consulta logros.
+          </p>
+          <div class="grid four">
+            <div class="metric">
+              <span>Entrada</span>
+              <strong>src/main.tsx</strong>
+            </div>
+            <div class="metric">
+              <span>Router</span>
+              <strong>src/App.tsx</strong>
+            </div>
+            <div class="metric">
+              <span>API base</span>
+              <strong>:5684</strong>
+            </div>
+            <div class="metric">
+              <span>Build</span>
+              <strong>tsc -b + vite</strong>
+            </div>
+          </div>
+
+          <div class="callout info">
+            <strong>Idea central:</strong> la web no es una pagina estatica. Es una SPA protegida por JWT que
+            consume el backend Ktor de Astrais, mantiene parte del progreso ludico en <code>localStorage</code>
+            y aplica temas visuales dinamicos recibidos desde la tienda.
+          </div>
+
+          <h3>Que cubre realmente el proyecto</h3>
+          <ul>
+            <li><strong>Autenticacion:</strong> login por email/password, registro con confirmacion, OAuth Google y refresh token automatico.</li>
+            <li><strong>Dashboard:</strong> vista de inicio con acciones rapidas, tareas pendientes, tienda, notificaciones, logros y acceso a minijuegos.</li>
+            <li><strong>Tareas:</strong> tareas unicas, habitos, objetivos compuestos, filtros temporales, calendario, completar/descompletar y recompensa visual.</li>
+            <li><strong>Grupos:</strong> listado, creacion, union por codigo/enlace, miembros, roles, invitaciones, auditoria y tareas grupales.</li>
+            <li><strong>Tienda:</strong> catalogo obtenido del backend, compra, equipamiento y aplicacion de temas.</li>
+            <li><strong>Minijuegos:</strong> visor por iframe, comunicacion por <code>postMessage</code>, estadisticas locales y tres cabinas implementadas.</li>
+            <li><strong>Logros:</strong> catalogo local calculado a partir de estadisticas del arcade, filtros y recompensas reclamables en local.</li>
+            <li><strong>Perfil:</strong> datos reales de usuario combinados con estadisticas mock, edicion de nombre, preferencias, compartir, amigos y cierre de sesion.</li>
+          </ul>
+        </section>
+
+        <section id="arquitectura" class="section">
+          <p class="eyebrow">02 / Arquitectura</p>
+          <h2>Arquitectura De La Aplicacion</h2>
+          <p class="lead">
+            La aplicacion esta organizada como una SPA de React. Vite sirve el HTML base, React monta el arbol
+            de componentes, React Router decide que pantalla se muestra y una capa centralizada de Axios
+            encapsula la comunicacion con el backend.
+          </p>
+
+          <div class="flow">
+            <div class="flow-step">
+              <b>1</b>
+              <p>
+                <code>index.html</code> define <code>#root</code>, carga fuentes de Google y apunta a
+                <code>/src/main.tsx</code>.
+              </p>
+            </div>
+            <div class="flow-step">
+              <b>2</b>
+              <p>
+                <code>main.tsx</code> crea la raiz de React, activa <code>StrictMode</code> y envuelve la app
+                con <code>BrowserRouter</code>.
+              </p>
+            </div>
+            <div class="flow-step">
+              <b>3</b>
+              <p>
+                <code>App.tsx</code> declara rutas, guards de autenticacion, redirecciones y carga el tema
+                actual al cambiar de ruta.
+              </p>
+            </div>
+            <div class="flow-step">
+              <b>4</b>
+              <p>
+                Las paginas consumen funciones de <code>src/data/Api.ts</code>, componentes comunes y tipos
+                de <code>src/types</code>.
+              </p>
+            </div>
+            <div class="flow-step">
+              <b>5</b>
+              <p>
+                El estado persistente se reparte entre backend, tokens JWT y varias claves de
+                <code>localStorage</code> para recompensas, logros y estadisticas del arcade.
+              </p>
+            </div>
+          </div>
+
+          <h3>Capas principales</h3>
+          <div class="grid three">
+            <div class="card">
+              <h3>Presentacion</h3>
+              <p>Paginas y componentes TSX. Usa Tailwind utility classes, assets PNG/JPG/SVG y variables CSS globales.</p>
+            </div>
+            <div class="card">
+              <h3>Aplicacion</h3>
+              <p>Logica de estado con hooks, guards de ruta, filtros, construccion de requests y sincronizacion local.</p>
+            </div>
+            <div class="card">
+              <h3>Integracion</h3>
+              <p><code>Api.ts</code> centraliza Axios, tokens, refresh, endpoints y utilidades de tareas.</p>
+            </div>
+          </div>
+
+          <h3>Decisiones arquitectonicas visibles</h3>
+          <ul>
+            <li>Las rutas protegidas dependen de <code>localStorage.jwtToken</code>, no de un estado global React.</li>
+            <li>El tema visual se aplica escribiendo variables CSS en <code>document.documentElement</code>.</li>
+            <li>Las tareas usan optimismo parcial: tras crear/editar/completar, se actualiza el array local sin recargar toda la pagina.</li>
+            <li>Los minijuegos viven dentro de la propia SPA, pero se cargan en iframe para aislar la cabina del panel de arcade.</li>
+            <li>Logros y estadisticas de minijuegos son locales; no se sincronizan aun con la API de usuario.</li>
+          </ul>
+        </section>
+
+        <section id="stack" class="section">
+          <p class="eyebrow">03 / Tecnologia</p>
+          <h2>Stack Y Dependencias</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Elemento</th>
+                  <th>Uso en astrais-web</th>
+                  <th>Observacion</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>React 19.2.0</code></td>
+                  <td>Construccion de la interfaz mediante componentes funcionales y hooks.</td>
+                  <td>Todo el UI esta escrito en TSX.</td>
+                </tr>
+                <tr>
+                  <td><code>TypeScript 5.9</code></td>
+                  <td>Tipado de props, modelos de dominio y requests/responses.</td>
+                  <td><code>tsconfig.app.json</code> tiene <code>strict</code>, <code>noUnusedLocals</code> y <code>noUnusedParameters</code>.</td>
+                </tr>
+                <tr>
+                  <td><code>Vite 7.3.1</code></td>
+                  <td>Servidor de desarrollo, bundling y preview.</td>
+                  <td><code>vite.config.ts</code> usa plugins de React y Tailwind.</td>
+                </tr>
+                <tr>
+                  <td><code>Tailwind CSS 4</code></td>
+                  <td>Utilidades visuales, tokens con <code>@theme</code> y clases arbitrarias.</td>
+                  <td><code>src/styles/colors.css</code> importa Tailwind y define el tema Astrais.</td>
+                </tr>
+                <tr>
+                  <td><code>react-router / react-router-dom</code></td>
+                  <td>Navegacion por rutas SPA y enlaces activos.</td>
+                  <td>Se importa principalmente desde <code>react-router</code>.</td>
+                </tr>
+                <tr>
+                  <td><code>axios</code></td>
+                  <td>HTTP hacia backend, interceptores y refresh token.</td>
+                  <td>La URL se calcula con <code>window.location.hostname</code> y puerto <code>5684</code>.</td>
+                </tr>
+                <tr>
+                  <td><code>@liquidglass/react</code></td>
+                  <td>Efectos visuales en componentes antiguos de logros/configuracion.</td>
+                  <td>Algunos usos parecen de prototipo y no todos estan integrados.</td>
+                </tr>
+                <tr>
+                  <td><code>draggabilly</code></td>
+                  <td>Dependencia instalada.</td>
+                  <td>No aparece usada en el codigo fuente revisado.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Scripts npm</h3>
+          <pre><code>npm run dev      # inicia Vite
+npm run build    # ejecuta tsc -b y vite build
+npm run lint     # ejecuta ESLint
+npm run preview  # sirve la build de Vite</code></pre>
+        </section>
+
+        <section id="estructura" class="section">
+          <p class="eyebrow">04 / Estructura</p>
+          <h2>Estructura Del Proyecto</h2>
+          <pre><code>astrais-web/
+  public/
+  src/
+    assets/
+    components/
+      layout/
+      modales/
+      ui/
+    data/
+    pages/
+      Achiv/
+      Auth/
+      Dashboard/
+      Games/
+      Groups/
+      Shop/
+      Tasks/
+      User/
+    styles/
+    types/
+  dist/
+  package.json
+  vite.config.ts
+  tsconfig*.json
+  compile.*
+  deploy.*</code></pre>
+
+          <div class="grid two">
+            <div class="card">
+              <h3><code>src/pages</code></h3>
+              <p>Contiene las pantallas completas: autenticacion, inicio, tareas, grupos, tienda, minijuegos, logros y perfil.</p>
+            </div>
+            <div class="card">
+              <h3><code>src/components</code></h3>
+              <p>Contiene piezas reutilizables: navbar, calendario, modales, tarjetas, botones, task item, progress bar y elementos visuales.</p>
+            </div>
+            <div class="card">
+              <h3><code>src/data/Api.ts</code></h3>
+              <p>Es el centro de integracion: axios, tokens, llamadas a endpoints y funciones puras de tareas.</p>
+            </div>
+            <div class="card">
+              <h3><code>src/styles</code></h3>
+              <p>Define colores globales, variables CSS dinamicas, tema por tienda y estilos post-login no siempre usados.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="rutas" class="section">
+          <p class="eyebrow">05 / Navegacion</p>
+          <h2>Rutas Y Guards</h2>
+          <p>
+            <code>App.tsx</code> separa usuarios invitados y autenticados. <code>RequireGuest</code> manda a
+            <code>/home</code> si ya existe token. <code>RequireAuth</code> manda a <code>/login</code> si no
+            existe <code>jwtToken</code>.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Ruta</th>
+                  <th>Componente</th>
+                  <th>Acceso</th>
+                  <th>Funcion</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><code>/</code></td><td><code>Login</code></td><td>Invitado</td><td>Entrada por defecto.</td></tr>
+                <tr><td><code>/login</code></td><td><code>Login</code></td><td>Invitado</td><td>Login local y callback OAuth recibido en query.</td></tr>
+                <tr><td><code>/register</code></td><td><code>Register</code></td><td>Invitado</td><td>Registro por email y codigo de confirmacion.</td></tr>
+                <tr><td><code>/forgot-password</code></td><td><code>Placeholder</code></td><td>Publico</td><td>Pantalla futura.</td></tr>
+                <tr><td><code>/oauthCallback</code></td><td><code>GoogleCallback</code></td><td>Publico</td><td>Procesa tokens de Google y redirige.</td></tr>
+                <tr><td><code>/home</code></td><td><code>Home</code></td><td>Autenticado</td><td>Dashboard principal.</td></tr>
+                <tr><td><code>/tasks</code></td><td><code>Tasks</code></td><td>Autenticado</td><td>Gestion personal de tareas.</td></tr>
+                <tr><td><code>/groups</code></td><td><code>Groups</code></td><td>Autenticado</td><td>Grupos, tareas grupales, invitaciones y auditoria.</td></tr>
+                <tr><td><code>/shop</code></td><td><code>Shop</code></td><td>Autenticado</td><td>Tienda de cosmeticos y temas.</td></tr>
+                <tr><td><code>/games</code></td><td><code>Games</code></td><td>Autenticado</td><td>Catalogo arcade con iframe.</td></tr>
+                <tr><td><code>/games/embed/:gameId</code></td><td><code>GameEmbed</code></td><td>Autenticado</td><td>Render de minijuego concreto.</td></tr>
+                <tr><td><code>/achievements</code></td><td><code>Achivs</code></td><td>Autenticado</td><td>Vitrina de logros.</td></tr>
+                <tr><td><code>/profile</code></td><td><code>Profile</code></td><td>Autenticado</td><td>Perfil, ajustes, compartir y cuenta.</td></tr>
+                <tr><td><code>*</code></td><td><code>Placeholder</code></td><td>Publico</td><td>Pagina no encontrada.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="api" class="section">
+          <p class="eyebrow">06 / Integracion backend</p>
+          <h2>Capa API</h2>
+          <p class="lead">
+            <code>src/data/Api.ts</code> cumple dos papeles: cliente HTTP y libreria de utilidades de negocio.
+            Esta mezcla es importante: ahi conviven endpoints reales, conversiones de formularios, calculos de
+            XP, filtros temporales, normalizacion de fechas y operaciones locales sobre arrays de tareas.
+          </p>
+
+          <h3>Configuracion de Axios</h3>
+          <ul>
+            <li><code>API_BASE_URL = http://${window.location.hostname}:5684</code>.</li>
+            <li><code>instance</code> envia JSON y tiene timeout de 10 segundos.</li>
+            <li>Interceptor de request: a&ntilde;ade <code>Authorization: Bearer jwtToken</code> si hay token.</li>
+            <li>Interceptor de response: ante <code>401</code> intenta <code>/auth/regenAccess</code> usando <code>jwtRefreshToken</code>.</li>
+            <li>Cuando hay varios 401 simultaneos, usa cola <code>failedQueue</code> para esperar el refresh en curso.</li>
+            <li>Si el refresh falla, borra tokens y redirige a <code>/login</code>.</li>
+          </ul>
+
+          <h3>Endpoints usados</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Modulo</th>
+                  <th>Funcion frontend</th>
+                  <th>Endpoint</th>
+                  <th>Proposito</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Auth</td><td><code>performLogin</code></td><td><code>POST /auth/login</code></td><td>Recibe access y refresh token.</td></tr>
+                <tr><td>Auth</td><td><code>createUser</code></td><td><code>POST /auth/register</code></td><td>Registra usuario y envia confirmacion.</td></tr>
+                <tr><td>Auth</td><td><code>confirmRegister</code></td><td><code>POST /auth/verify</code></td><td>Confirma codigo de registro.</td></tr>
+                <tr><td>Auth</td><td><code>loginWithGoogle</code></td><td><code>GET /auth/google/login</code></td><td>Redireccion al flujo OAuth.</td></tr>
+                <tr><td>Auth</td><td><code>setOauth</code></td><td><code>POST /auth/setOauth</code></td><td>Vincula proveedor OAuth.</td></tr>
+                <tr><td>Auth</td><td><code>deleteOauth</code></td><td><code>POST /auth/deleteOauth</code></td><td>Desvincula proveedor OAuth.</td></tr>
+                <tr><td>Auth</td><td><code>editUser</code></td><td><code>PATCH /auth/editUser</code></td><td>Edita datos de usuario.</td></tr>
+                <tr><td>Auth</td><td><code>deleteUser</code></td><td><code>DELETE /auth/deleteUser</code></td><td>Elimina cuenta.</td></tr>
+                <tr><td>Auth</td><td><code>setEmailLogin</code></td><td><code>PATCH /auth/setEmailLogin</code></td><td>Activa/restablece login por email.</td></tr>
+                <tr><td>Auth</td><td><code>getUserData</code></td><td><code>GET /auth/me</code></td><td>Obtiene perfil, nivel, XP, ludiones, tema y grupo personal.</td></tr>
+                <tr><td>Store</td><td><code>getStoreItems</code></td><td><code>GET /store/items</code></td><td>Catalogo con ownership/equipamiento.</td></tr>
+                <tr><td>Store</td><td><code>buyStoreItem</code></td><td><code>POST /store/buy/{id}</code></td><td>Compra cosmetico y devuelve usuario actualizado.</td></tr>
+                <tr><td>Store</td><td><code>equipStoreItem</code></td><td><code>POST /store/equip/{id}</code></td><td>Equipa tema, mascota u otro cosmetico.</td></tr>
+                <tr><td>Groups</td><td><code>getUserGroup</code></td><td><code>GET /group/userGroups</code></td><td>Lista grupos del usuario.</td></tr>
+                <tr><td>Groups</td><td><code>createGroup</code></td><td><code>POST /groups/createGroup</code></td><td>Crea grupo y devuelve <code>groupId</code>.</td></tr>
+                <tr><td>Groups</td><td><code>deleteGroup</code></td><td><code>DELETE /groups/deleteGroup</code></td><td>Borra grupo si el rol local es owner.</td></tr>
+                <tr><td>Groups</td><td><code>editGroup</code></td><td><code>PATCH /groups/editGroup</code></td><td>Edita nombre y descripcion.</td></tr>
+                <tr><td>Groups</td><td><code>addUserToGroup</code></td><td><code>POST /groups/addUser</code></td><td>A&ntilde;ade miembro por UID.</td></tr>
+                <tr><td>Groups</td><td><code>userLeaveGroup</code></td><td><code>POST /groups/leave</code></td><td>Abandona grupo.</td></tr>
+                <tr><td>Groups</td><td><code>removeUserFromGroup</code></td><td><code>POST /groups/removeUser</code></td><td>Expulsa miembro.</td></tr>
+                <tr><td>Groups</td><td><code>membersGroups</code></td><td><code>GET /groups/{gid}/members</code></td><td>Miembros y roles.</td></tr>
+                <tr><td>Groups</td><td><code>setMemberRole</code></td><td><code>PATCH /groups/setMemberRole</code></td><td>Cambia rol de miembro.</td></tr>
+                <tr><td>Groups</td><td><code>eventosGroup</code></td><td><code>GET /groups/{gid}/audit</code></td><td>Historial de auditoria.</td></tr>
+                <tr><td>Groups</td><td><code>groupInvitacion</code></td><td><code>POST /groups/invites</code></td><td>Crea invitacion.</td></tr>
+                <tr><td>Groups</td><td><code>groupInvitacionLista</code></td><td><code>GET /groups/{gid}/invites</code></td><td>Lista invitaciones.</td></tr>
+                <tr><td>Groups</td><td><code>revokeGroupInvit</code></td><td><code>POST /groups/invites/revoke</code></td><td>Revoca invitacion.</td></tr>
+                <tr><td>Groups</td><td><code>groupJoinByCode</code></td><td><code>POST /groups/joinByCode</code></td><td>Union por codigo.</td></tr>
+                <tr><td>Groups</td><td><code>groupJoinByLink</code></td><td><code>POST /groups/joinByUrl</code></td><td>Union por enlace.</td></tr>
+                <tr><td>Tasks</td><td><code>createTask</code></td><td><code>POST /tasks</code></td><td>Crea tarea y devuelve id.</td></tr>
+                <tr><td>Tasks</td><td><code>getTasksFromGroup</code></td><td><code>POST /tasks/{gid}</code></td><td>Obtiene tareas de un grupo.</td></tr>
+                <tr><td>Tasks</td><td><code>editTask</code></td><td><code>PATCH /tasks/{tid}/edit</code></td><td>Edita tarea.</td></tr>
+                <tr><td>Tasks</td><td><code>completeTask</code></td><td><code>PATCH /tasks/{tid}/complete</code></td><td>Completa tarea.</td></tr>
+                <tr><td>Tasks</td><td><code>uncompleteTask</code></td><td><code>PATCH /tasks/{tid}/uncomplete</code></td><td>Descompleta tarea.</td></tr>
+                <tr><td>Tasks</td><td><code>deleteTask</code></td><td><code>DELETE /tasks/{tid}/delete</code></td><td>Borra tarea.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout warning">
+            <strong>Detalle importante:</strong> la funcion <code>getUserGroup</code> llama a
+            <code>/group/userGroups</code> en singular, mientras el resto de endpoints de grupos usan
+            <code>/groups/...</code>. Puede ser correcto si el backend lo expone asi, pero merece estar
+            documentado porque rompe el patron visual.
+          </div>
+        </section>
+
+        <section id="dominio" class="section">
+          <p class="eyebrow">07 / Datos</p>
+          <h2>Modelo De Dominio En El Frontend</h2>
+          <div class="grid two">
+            <div class="card">
+              <h3><code>UserData</code></h3>
+              <p>
+                Contiene <code>id</code>, <code>nombre</code>, <code>nivel</code>, <code>xpActual</code>,
+                <code>xpTotal</code>, <code>ludiones</code>, <code>personalGid</code>, mascota equipada,
+                tema y flag admin. Es la fuente principal para dashboard, tareas, tienda, tema y perfil.
+              </p>
+            </div>
+            <div class="card">
+              <h3><code>ITarea</code></h3>
+              <p>
+                Modelo central de tareas. Incluye <code>id</code>, <code>gid</code>, titulo, descripcion,
+                tipo, prioridad, extras por tipo, estado, recompensas y fechas de creacion/actualizacion/completado.
+              </p>
+            </div>
+            <div class="card">
+              <h3><code>IGroup</code></h3>
+              <p>
+                Representa un grupo renderizable: <code>gid</code>, nombre, descripcion, foto, miembros,
+                tareas y rol del usuario actual.
+              </p>
+            </div>
+            <div class="card">
+              <h3><code>StoreItemResponse</code></h3>
+              <p>
+                Item de tienda proveniente del backend: id, nombre, descripcion, tipo, precio, asset, tema,
+                coleccion, rareza, comprado y equipado.
+              </p>
+            </div>
+          </div>
+
+          <h3>Tipos de tarea</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tipo</th>
+                  <th>Uso</th>
+                  <th>Campos extra</th>
+                  <th>Comportamiento</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>UNICO</code></td>
+                  <td>Tarea puntual o diaria con fecha limite.</td>
+                  <td><code>extraUnico.fechaLimite</code></td>
+                  <td>Disponible desde su fecha de creacion hasta la fecha limite.</td>
+                </tr>
+                <tr>
+                  <td><code>HABITO</code></td>
+                  <td>Rutina repetible.</td>
+                  <td><code>extraHabito.numeroFrecuencia</code> y <code>frequency</code></td>
+                  <td>Puede ser diaria, semanal, mensual, horaria o anual en utilidades, aunque el modal muestra diaria/semanal/mensual.</td>
+                </tr>
+                <tr>
+                  <td><code>OBJETIVO</code></td>
+                  <td>Objetivo padre o tarea compuesta.</td>
+                  <td><code>idObjetivo</code> en tareas hijas</td>
+                  <td>La UI lo trata como agrupador de subtareas.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Prioridad y recompensa</h3>
+          <ul>
+            <li><code>0</code> = Easy = <strong>20 XP</strong>.</li>
+            <li><code>1</code> = Medium = <strong>35 XP</strong>.</li>
+            <li><code>2</code> = Hard = <strong>50 XP</strong>.</li>
+            <li>Los ludiones vienen del backend en la tarea, aunque muchas tareas locales se crean con <code>recompensaLudion: 0</code>.</li>
+          </ul>
+        </section>
+
+        <section id="autenticacion" class="section">
+          <p class="eyebrow">08 / Seguridad de sesion</p>
+          <h2>Autenticacion Y Sesion</h2>
+          <div class="grid two">
+            <div class="card">
+              <h3>Login clasico</h3>
+              <p>
+                <code>Login.tsx</code> recoge email y password, llama a <code>performLogin</code> y guarda
+                <code>jwtToken</code> y <code>jwtRefreshToken</code>. Si funciona, navega a <code>/home</code>.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Registro</h3>
+              <p>
+                <code>Register.tsx</code> exige contrase&ntilde;a de 12 caracteres con mayuscula, minuscula y numero.
+                Primero llama a <code>/auth/register</code>, despues muestra campo de codigo y llama a
+                <code>/auth/verify</code>.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Google OAuth</h3>
+              <p>
+                <code>loginWithGoogle</code> redirige al backend. El callback acepta parametros
+                <code>uid</code>, <code>hadToRegister</code>, <code>jwtAccessToken</code> y
+                <code>jwtRefreshToken</code>.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Refresh automatico</h3>
+              <p>
+                Si una llamada falla con 401, la app intenta regenerar access token con
+                <code>/auth/regenAccess</code>. Si falla, borra tokens y vuelve al login.
+              </p>
+            </div>
+          </div>
+
+          <div class="callout danger">
+            <strong>Nota real del codigo:</strong> hay varios <code>console.log</code> que imprimen tokens o
+            informacion sensible durante login/OAuth. Para produccion conviene retirarlos.
+          </div>
+        </section>
+
+        <section id="paginas" class="section">
+          <p class="eyebrow">09 / Pantallas</p>
+          <h2>Paginas Principales</h2>
+          <div class="image-strip">
+            <figure>
+              <img src="./images/screenshots/app/dashboard.jpg" alt="Dashboard Astrais" />
+              <figcaption>Referencia visual del dashboard en la documentacion del proyecto.</figcaption>
+            </figure>
+            <figure>
+              <img src="../astrais-web/src/assets/shop.png" alt="Imagen de tienda" />
+              <figcaption>Asset usado para la tienda y estetica de cosmeticos.</figcaption>
+            </figure>
+            <figure>
+              <img src="./images/screenshots/web/minijuego.png" alt="Minijuego web" />
+              <figcaption>Captura del entorno web de minijuegos.</figcaption>
+            </figure>
+          </div>
+
+          <div class="grid two">
+            <div class="card">
+              <h3>Auth</h3>
+              <p>
+                Login y registro comparten fondo <code>login-bg.jpg</code>, tarjeta central, validaciones
+                basicas, Google OAuth y mensajes de error. <code>GoogleCallback.ts</code> existe como ruta
+                dedicada aunque login/register tambien procesan query params.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Home</h3>
+              <p>
+                Dashboard autenticado. Carga <code>getUserData</code>, obtiene tareas del grupo personal,
+                muestra acciones rapidas, tareas pendientes, resumen de logros y acceso a tienda/minijuegos.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Tasks</h3>
+              <p>
+                Pantalla personal con columnas de diarias y habitos, calendario, filtros Today/Tomorrow/All,
+                filtros Completadas/Pendientes y modal de crear/editar/borrar.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Groups</h3>
+              <p>
+                Gestion colaborativa: lista de grupos, panel de tareas del grupo activo, creacion, union,
+                configuracion, roles, invitaciones y auditoria.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Shop</h3>
+              <p>
+                Catalogo conectado al backend. Permite filtrar por categorias, paginar, seleccionar item,
+                comprar, equipar y aplicar temas de app.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Games</h3>
+              <p>
+                Catalogo arcade con iframe. Escucha mensajes de ronda completada, actualiza estadisticas
+                locales y calcula ludiones.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Achievements</h3>
+              <p>
+                Vitrina local de logros con filtros, progreso, rareza, recompensas y persistencia de logros
+                reclamados.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Profile</h3>
+              <p>
+                Perfil de usuario con datos reales basicos, estadisticas mock, ajustes, amigos mock,
+                compartir, logout, borrar cuenta y reset de email/password.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section id="tareas" class="section">
+          <p class="eyebrow">10 / Productividad</p>
+          <h2>Sistema De Tareas</h2>
+          <p class="lead">
+            Las tareas son el nucleo funcional. La misma base se reutiliza en dashboard, pagina personal y
+            grupos. La diferencia esta en el <code>gid</code>: en tareas personales se usa
+            <code>userData.personalGid</code>; en grupos se usa el grupo activo.
+          </p>
+
+          <h3>Flujo de carga</h3>
+          <ol>
+            <li>La pantalla llama a <code>getUserData()</code>.</li>
+            <li>Extrae <code>personalGid</code> si es vista personal, o usa <code>activeGroup</code> si es grupal.</li>
+            <li>Llama a <code>getTasksFromGroup(gid)</code>.</li>
+            <li>Guarda las tareas en estado React.</li>
+            <li>Calcula listas derivadas con <code>getDailyTasks</code>, <code>getHabitTasks</code>, <code>filterTasksByTime</code> y <code>filterTasksByCompleted</code>.</li>
+          </ol>
+
+          <h3>Crear y editar</h3>
+          <p>
+            El modal trabaja con <code>ITaskFormData</code>. Al crear, <code>buildCreateTaskRequest</code>
+            transforma la forma UI al contrato del backend. Tras recibir el id, <code>createLocalTask</code>
+            inserta una version local para que la UI responda inmediatamente.
+          </p>
+
+          <h3>Completar y recompensar</h3>
+          <ul>
+            <li>Al completar una tarea simple se llama a <code>completeTask(tid)</code> y se actualiza el array local.</li>
+            <li>Al descompletar se llama a <code>uncompleteTask(tid)</code>.</li>
+            <li>En una tarea con subtareas, completar el padre completa primero las hijas y luego el padre.</li>
+            <li>Completar una subtask puede completar el padre si todas las hermanas quedan completas.</li>
+            <li>La notificacion de recompensa se muestra solo si la tarea no habia sido recompensada antes.</li>
+          </ul>
+
+          <h3>Persistencia de recompensa local</h3>
+          <p>
+            La clave <code>rewarded-task:{gid}:{id}</code> evita mostrar dos veces una recompensa para la misma tarea.
+            Tambien se considera recompensada si trae <code>fecha_completado</code> desde backend.
+          </p>
+
+          <div class="callout info">
+            <strong>Logica de fechas:</strong> las tareas unicas vencidas se ocultan en listas por defecto.
+            Los habitos se filtran por frecuencia semanal/mensual/diaria usando diferencia de dias y fecha base.
+          </div>
+        </section>
+
+        <section id="grupos" class="section">
+          <p class="eyebrow">11 / Colaboracion</p>
+          <h2>Sistema De Grupos</h2>
+          <p class="lead">
+            La pagina <code>Groups.tsx</code> es una de las mas complejas: une carga de grupos, miembros,
+            tareas, permisos, invitaciones, union, salida, borrado, transferencia de ownership y auditoria.
+          </p>
+
+          <h3>Roles</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Rol numerico</th><th>Etiqueta UI</th><th>Permisos usados</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>0</code></td><td>Miembro</td><td>Puede ver grupo y tareas. No gestiona tareas ni configuracion.</td></tr>
+                <tr><td><code>1</code></td><td>Moderador</td><td>Puede gestionar grupo, miembros, invitaciones y tareas.</td></tr>
+                <tr><td><code>2</code></td><td>Owner</td><td>Puede cambiar roles, ceder ownership y borrar grupo.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Flujos principales</h3>
+          <ul>
+            <li><strong>Cargar grupos:</strong> <code>getUserGroup()</code> + <code>getUserData()</code>, excluyendo el grupo personal.</li>
+            <li><strong>Precargar miembros:</strong> para cada grupo llama a <code>membersGroups(gid)</code> y normaliza miembros.</li>
+            <li><strong>Seleccionar grupo:</strong> activa panel y, si no esta cargado, llama a <code>getTasksFromGroup(activeGroup)</code>.</li>
+            <li><strong>Crear grupo:</strong> <code>CreateGroupModal</code> produce nombre/descripcion, luego <code>createGroup</code>.</li>
+            <li><strong>Unirse:</strong> detecta si el input parece URL o codigo y usa <code>groupJoinByLink</code> o <code>groupJoinByCode</code>.</li>
+            <li><strong>Invitaciones:</strong> crea, lista, muestra estado, genera URL legacy y permite revocar.</li>
+            <li><strong>Auditoria:</strong> carga eventos con <code>eventosGroup</code> y los traduce a textos legibles.</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Comportamiento notable:</strong> al unirse a un grupo desde el modal se llama a
+            <code>window.location.reload()</code>. Funciona, pero rompe la continuidad SPA y podria sustituirse
+            por recarga de estado.
+          </div>
+        </section>
+
+        <section id="tienda" class="section">
+          <p class="eyebrow">12 / Gamificacion economica</p>
+          <h2>Tienda, Cosmeticos Y Temas</h2>
+          <p class="lead">
+            <code>Shop.tsx</code> se alimenta del backend, no del catalogo local antiguo. Transforma cada
+            <code>StoreItemResponse</code> en <code>ShopDisplayItem</code> para poder categorizar, mostrar
+            rarezas, calcular colores de acento y explicar el perk visual.
+          </p>
+
+          <h3>Categorias derivadas</h3>
+          <ul>
+            <li><code>APP_THEME</code> se muestra como <strong>Temas</strong>.</li>
+            <li><code>PET</code> se muestra como <strong>Mascotas</strong>.</li>
+            <li>Si <code>coleccion</code> contiene <code>event</code>, se muestra como <strong>Eventos</strong>.</li>
+            <li>El resto cae en <strong>Especiales</strong>.</li>
+          </ul>
+
+          <h3>Tema dinamico</h3>
+          <p>
+            <code>src/styles/theme.ts</code> parsea un JSON con colores <code>primary</code>, <code>secondary</code>,
+            <code>tertiary</code>, <code>background</code>, <code>backgroundAlt</code>, <code>surface</code>,
+            <code>text</code> y <code>error</code>. Solo acepta colores hex validos <code>#RRGGBB</code>. Despues
+            escribe variables CSS <code>--astrais-*</code> en el root.
+          </p>
+
+          <h3>Flujo de compra/equipamiento</h3>
+          <ol>
+            <li>Carga en paralelo <code>getUserData()</code> y <code>getStoreItems()</code>.</li>
+            <li>Aplica el tema del usuario o el tema default de tienda.</li>
+            <li>Selecciona automaticamente el primer item visible de la pagina actual.</li>
+            <li>Al comprar llama a <code>buyStoreItem(id)</code>, refresca usuario y catalogo.</li>
+            <li>Al equipar llama a <code>equipStoreItem(id)</code>. Si el item es <code>APP_THEME</code>, aplica tema inmediatamente.</li>
+          </ol>
+
+          <div class="callout info">
+            <strong>Catalogo local residual:</strong> <code>shopCatalog.ts</code> y <code>shopStorage.ts</code>
+            definen una tienda local anterior con balance base 260, pero <code>Shop.tsx</code> ya trabaja con
+            backend. Deben entenderse como soporte historico/prototipo salvo que se vuelvan a conectar.
+          </div>
+        </section>
+
+        <section id="minijuegos" class="section">
+          <p class="eyebrow">13 / Arcade</p>
+          <h2>Minijuegos</h2>
+          <p class="lead">
+            Los minijuegos estan implementados dentro del frontend y se integran con el catalogo mediante iframe.
+            Cada cabina, al terminar una ronda, envia un mensaje al padre con <code>type</code>,
+            <code>gameId</code>, <code>score</code> y <code>durationSeconds</code>.
+          </p>
+
+          <h3>Comunicacion iframe</h3>
+          <pre><code>{
+  type: "astrais:game-round-completed",
+  gameId: "atrapa-ludiones",
+  score: 24,
+  durationSeconds: 10
+}</code></pre>
+
+          <p>
+            <code>Games.tsx</code> valida que <code>event.origin === window.location.origin</code> y que el
+            mensaje cumpla <code>isGameRoundCompletedMessage</code>. Despues actualiza estadisticas con
+            <code>buildArcadeStatsAfterRound</code> y guarda en <code>astrais.games.arcade.stats</code>.
+          </p>
+
+          <h3>Cabinas</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Juego</th><th>ID</th><th>Estado en catalogo</th><th>Mecanica</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Atrapa Ludiones</td>
+                  <td><code>atrapa-ludiones</code></td>
+                  <td><span class="badge done">Jugable</span></td>
+                  <td>Clicker de 10 segundos. Cada click suma 1. Premio: <code>12 + score * 4</code>.</td>
+                </tr>
+                <tr>
+                  <td>Nebula Dash</td>
+                  <td><code>nebula-dash</code></td>
+                  <td><span class="badge partial">Oculto/no disponible</span></td>
+                  <td>Carrera de 5 carriles durante 30s. Flechas/A-D, escudos, fragmentos y meteoros.</td>
+                </tr>
+                <tr>
+                  <td>Astra Memory</td>
+                  <td><code>astra-memory</code></td>
+                  <td><span class="badge done">Jugable</span></td>
+                  <td>Memoria de secuencias con 4 pads, secuencia inicial de 3 y maximo 3 fallos.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Estadisticas locales</h3>
+          <ul>
+            <li><code>bestScore</code>: mejor puntuacion global o por juego.</li>
+            <li><code>lastScore</code>: ultima puntuacion.</li>
+            <li><code>gamesPlayed</code>: partidas jugadas.</li>
+            <li><code>totalScore</code>: suma historica.</li>
+            <li><code>totalLudionsEarned</code>: ludiones ganados por minijuegos.</li>
+            <li>Hay migracion desde clave legacy <code>astrais.games.clicker.stats</code>.</li>
+          </ul>
+        </section>
+
+        <section id="logros" class="section">
+          <p class="eyebrow">14 / Progreso</p>
+          <h2>Logros</h2>
+          <p class="lead">
+            El sistema de logros actual es local y calculado desde las estadisticas del arcade. No consulta aun
+            una API de logros. Su catalogo esta en <code>src/pages/Achiv/achievementCatalog.ts</code>.
+          </p>
+
+          <h3>Categorias, rarezas y filtros</h3>
+          <div class="grid three">
+            <div class="card">
+              <h3>Categorias</h3>
+              <p><code>Minijuegos</code>, <code>Exploracion</code>, <code>Constancia</code> y <code>Coleccion</code>.</p>
+            </div>
+            <div class="card">
+              <h3>Rarezas</h3>
+              <p><code>Comun</code>, <code>Raro</code>, <code>Epico</code> y <code>Legendario</code>.</p>
+            </div>
+            <div class="card">
+              <h3>Filtros</h3>
+              <p><code>Todos</code>, <code>Desbloqueados</code>, <code>En progreso</code> y <code>Bloqueados</code>.</p>
+            </div>
+          </div>
+
+          <h3>Catalogo de logros</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>ID</th><th>Titulo</th><th>Meta</th><th>Premio</th><th>Fuente de progreso</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>bienvenida-orbital</code></td><td>Bienvenida orbital</td><td>1</td><td>25</td><td>Desbloqueado por defecto.</td></tr>
+                <tr><td><code>primer-impulso</code></td><td>Primer impulso</td><td>1</td><td>40</td><td>Partidas de Atrapa Ludiones.</td></tr>
+                <tr><td><code>cazador-de-ludiones</code></td><td>Cazador de ludiones</td><td>18</td><td>70</td><td>Mejor score de Atrapa Ludiones.</td></tr>
+                <tr><td><code>reactor-estable</code></td><td>Reactor estable</td><td>75</td><td>90</td><td>Puntuacion total global.</td></tr>
+                <tr><td><code>coleccionista-curioso</code></td><td>Coleccionista curioso</td><td>5</td><td>120</td><td>Progreso fijo local de 2.</td></tr>
+                <tr><td><code>leyenda-del-arcade</code></td><td>Leyenda del arcade</td><td>160</td><td>200</td><td>Ludiones totales ganados.</td></tr>
+                <tr><td><code>selector-de-cabinas</code></td><td>Selector de cabinas</td><td>1</td><td>20</td><td>Desbloqueado por defecto.</td></tr>
+                <tr><td><code>maraton-breve</code></td><td>Maraton breve</td><td>5</td><td>80</td><td>Partidas globales.</td></tr>
+                <tr><td><code>pulso-constante</code></td><td>Pulso constante</td><td>220</td><td>140</td><td>Puntuacion total global.</td></tr>
+                <tr><td><code>reserva-prometida</code></td><td>Reserva prometida</td><td>300</td><td>220</td><td>Ludiones totales ganados.</td></tr>
+                <tr><td><code>primer-dash-nebular</code></td><td>Primer dash nebular</td><td>1</td><td>45</td><td>Partidas de Nebula Dash.</td></tr>
+                <tr><td><code>piloto-de-meteoros</code></td><td>Piloto de meteoros</td><td>90</td><td>135</td><td>Mejor score de Nebula Dash.</td></tr>
+                <tr><td><code>primer-patron-astra</code></td><td>Primer patron astra</td><td>1</td><td>45</td><td>Partidas de Astra Memory.</td></tr>
+                <tr><td><code>memoria-de-cristal</code></td><td>Memoria de cristal</td><td>80</td><td>135</td><td>Mejor score de Astra Memory.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>
+            Los logros reclamados se guardan en <code>astrais.achievements.claimed</code> y el logro
+            seleccionado en <code>astrais.achievements.selected</code>.
+          </p>
+        </section>
+
+        <section id="perfil" class="section">
+          <p class="eyebrow">15 / Usuario</p>
+          <h2>Perfil</h2>
+          <p class="lead">
+            <code>Profile.tsx</code> combina datos reales del backend con datos de demostracion. Del backend
+            usa id, nombre, nivel y XP. En local mantiene descripcion, logros, amigos, racha, focus hours y
+            ajustes visuales.
+          </p>
+
+          <h3>Funciones del perfil</h3>
+          <ul>
+            <li><strong>Carga inicial:</strong> <code>getUserData()</code> normaliza nombre, username, nivel y XP.</li>
+            <li><strong>Editar perfil:</strong> valida nombre y username, llama a <code>editUser</code> con <code>uid</code>, <code>nombreusu</code>, <code>lang: null</code> y UTC offset.</li>
+            <li><strong>Ajustes:</strong> cambia visibilidad, recordatorios, resumen, solicitudes, mostrar logros y compartir estadisticas en estado local.</li>
+            <li><strong>Cuenta OAuth:</strong> permite definir email/password con <code>setEmailLogin</code>.</li>
+            <li><strong>Borrar cuenta:</strong> llama a <code>deleteUser()</code>, borra tokens y vuelve a login.</li>
+            <li><strong>Salir:</strong> borra <code>jwtToken</code> y <code>jwtRefreshToken</code>.</li>
+            <li><strong>Compartir:</strong> usa Clipboard API o Web Share API.</li>
+            <li><strong>Amigos:</strong> muestra una lista mock de cuatro amigos.</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Estado mixto:</strong> el perfil no representa todavia todos los datos reales del backend.
+            Varias metricas son fijas: amigos, tareas completadas, horas de foco, logros raros y grupos activos.
+          </div>
+        </section>
+
+        <section id="componentes" class="section">
+          <p class="eyebrow">16 / UI reusable</p>
+          <h2>Componentes</h2>
+          <div class="file-grid">
+            <div class="file-card"><code>layout/Navbar.tsx</code><p>Menu principal post-login con logo, enlaces activos y acceso al perfil.</p></div>
+            <div class="file-card"><code>layout/Calendar.tsx</code><p>Calendario mensual con navegacion y seleccion de dia para filtrar tareas.</p></div>
+            <div class="file-card"><code>layout/PostLoginShell.tsx</code><p>Shell generico con navbar y tono visual. Existe, pero no aparece usado por las paginas actuales.</p></div>
+            <div class="file-card"><code>modales/TaskModal.tsx</code><p>Formulario de tarea: nombre, descripcion, fecha, dificultad, tipo, objetivo y frecuencia.</p></div>
+            <div class="file-card"><code>modales/CreateGroupModal.tsx</code><p>Formulario de creacion de grupos.</p></div>
+            <div class="file-card"><code>modales/GroupSettingsModal.tsx</code><p>Configuracion de grupo, miembros, roles, invitaciones, revocacion y ownership.</p></div>
+            <div class="file-card"><code>modales/NotificationModal.tsx</code><p>Toast de recompensa por completar tarea.</p></div>
+            <div class="file-card"><code>ui/Task.tsx</code><p>Tarjeta de tarea simple o compuesta, checkbox, subtareas, dificultad y XP.</p></div>
+            <div class="file-card"><code>ui/GroupCard.tsx</code><p>Tarjeta de grupo con foto/inicial, descripcion y contador de miembros.</p></div>
+            <div class="file-card"><code>ui/Difficulty*.tsx</code><p>Chips de dificultad en tarjeta y modal.</p></div>
+            <div class="file-card"><code>ui/ButtonFilter.tsx</code><p>Boton de filtro temporal para Today/Tomorrow/All.</p></div>
+            <div class="file-card"><code>ui/ButtonComplete.tsx</code><p>Boton de filtro Completadas/Pendientes.</p></div>
+            <div class="file-card"><code>ui/Reward.tsx</code><p>Barra de progreso usada como XP bar en perfil.</p></div>
+            <div class="file-card"><code>ui/Achiv.tsx</code><p>Icono circular simple de logro.</p></div>
+            <div class="file-card"><code>ui/Pet.tsx</code><p>Render de mascota con imagen.</p></div>
+            <div class="file-card"><code>ui/Options.tsx</code><p>Cuadro de opcion bloqueada/desbloqueada para personalizacion prototipo.</p></div>
+          </div>
+
+          <h3>Componentes prototipo o sin uso claro</h3>
+          <ul>
+            <li><code>AchivCard.tsx</code>, <code>ConfigModal.tsx</code>, <code>CustomPerfilModal.tsx</code>, <code>FriendsModal.tsx</code>, <code>GroupModal.tsx</code>, <code>TaskType.tsx</code> y <code>CompactDeviceNotice.tsx</code> existen, pero no aparecen importados en rutas actuales segun busqueda de codigo.</li>
+            <li><code>LevelUp.tsx</code> y <code>ProgressBar.tsx</code> estan vacios.</li>
+          </ul>
+        </section>
+
+        <section id="estilos" class="section">
+          <p class="eyebrow">17 / Visual</p>
+          <h2>Sistema De Estilos</h2>
+          <p class="lead">
+            El estilo mezcla Tailwind CSS 4, variables CSS propias y assets de Astrais. La identidad visual es
+            espacial/arcade: fondos galacticos, paneles transluctos, neones, rarezas y tipografia pixel para
+            titulos.
+          </p>
+
+          <h3>Archivos de estilo</h3>
+          <div class="grid three">
+            <div class="card">
+              <h3><code>index.css</code></h3>
+              <p>Importa Tailwind y <code>colors.css</code>. Es el CSS global cargado desde <code>main.tsx</code>.</p>
+            </div>
+            <div class="card">
+              <h3><code>colors.css</code></h3>
+              <p>Define variables <code>--astrais-*</code>, colores semanticos y mapeo <code>@theme</code> de Tailwind.</p>
+            </div>
+            <div class="card">
+              <h3><code>post-login.css</code></h3>
+              <p>Contiene un sistema de shell post-login, paneles, nav, cards y tonos por pagina. No esta importado en <code>App.tsx</code> actualmente.</p>
+            </div>
+          </div>
+
+          <h3>Tokens principales</h3>
+          <ul>
+            <li><code>--astrais-primary</code>: morado principal.</li>
+            <li><code>--astrais-secondary</code>: azul/cian secundario.</li>
+            <li><code>--astrais-tertiary</code>: verde de exito/acento.</li>
+            <li><code>--astrais-background</code>, <code>--astrais-background-alt</code>, <code>--astrais-surface</code>: superficies oscuras.</li>
+            <li><code>--astrais-rarity-*</code>: colores de rarezas comun/raro/epico/legendario.</li>
+            <li><code>--astrais-cta-bg</code>: gradiente de llamadas a la accion.</li>
+            <li><code>--astrais-panel-bg</code>: gradiente base de paneles.</li>
+          </ul>
+        </section>
+
+        <section id="estado-local" class="section">
+          <p class="eyebrow">18 / Persistencia local</p>
+          <h2>Estado Local Y Persistencia</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Clave</th><th>Modulo</th><th>Uso</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>jwtToken</code></td><td>Auth/API</td><td>Access token usado en Authorization.</td></tr>
+                <tr><td><code>jwtRefreshToken</code></td><td>Auth/API</td><td>Refresh token para regenerar access token.</td></tr>
+                <tr><td><code>rewarded-task:{gid}:{id}</code></td><td>Tareas</td><td>Evita repetir notificacion de recompensa local.</td></tr>
+                <tr><td><code>astrais.games.arcade.stats</code></td><td>Minijuegos</td><td>Estadisticas globales y por juego del arcade.</td></tr>
+                <tr><td><code>astrais.games.clicker.stats</code></td><td>Minijuegos legacy</td><td>Clave antigua migrada hacia el formato arcade.</td></tr>
+                <tr><td><code>astrais.achievements.claimed</code></td><td>Logros</td><td>IDs de logros reclamados.</td></tr>
+                <tr><td><code>astrais.achievements.selected</code></td><td>Logros</td><td>ID del logro seleccionado.</td></tr>
+                <tr><td><code>astrais.shop.state</code></td><td>Tienda legacy</td><td>Estado local de tienda antigua. No lo usa la tienda conectada a backend.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="build" class="section">
+          <p class="eyebrow">19 / Operacion</p>
+          <h2>Build, Compilacion Y Despliegue</h2>
+          <div class="grid two">
+            <div class="card">
+              <h3>Desarrollo</h3>
+              <pre><code>cd astrais-web
+npm install
+npm run dev</code></pre>
+              <p>Vite levanta la SPA y usa HMR.</p>
+            </div>
+            <div class="card">
+              <h3>Build</h3>
+              <pre><code>npm run build</code></pre>
+              <p>Ejecuta TypeScript project build y despues <code>vite build</code>, generando <code>dist/</code>.</p>
+            </div>
+          </div>
+
+          <h3>Scripts propios</h3>
+          <ul>
+            <li><code>compile.sh</code> y <code>compile.bat</code>: instalan dependencias, compilan y copian <code>dist</code> a <code>../docker/compiledPage</code>.</li>
+            <li><code>deploy.sh</code> y <code>deploy.bat</code>: construyen imagen con <code>../docker/dockerfile.nginx</code>, paran/eliminan contenedor <code>my-web</code> y levantan Nginx en puerto <code>8080</code>.</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Atencion:</strong> los scripts de deploy llaman a <code>docker stop my-web</code> y
+            <code>docker rm my-web</code> sin comprobar si existe. Puede mostrar errores si el contenedor no
+            estaba creado, aunque el flujo siga dependiendo del shell.
+          </div>
+        </section>
+
+        <section id="inventario" class="section">
+          <p class="eyebrow">20 / Inventario tecnico</p>
+          <h2>Inventario De Ficheros Fuente</h2>
+          <p class="lead">
+            Este inventario enumera los ficheros relevantes de <code>src</code> y su responsabilidad principal.
+          </p>
+
+          <h3>Raiz de app</h3>
+          <div class="file-grid">
+            <div class="file-card"><code>src/main.tsx</code><p>Monta React en <code>#root</code> y configura router.</p></div>
+            <div class="file-card"><code>src/App.tsx</code><p>Declara rutas, guards y aplicacion de tema por ruta.</p></div>
+            <div class="file-card"><code>src/index.css</code><p>Entrada CSS global.</p></div>
+            <div class="file-card"><code>src/data/Api.ts</code><p>Cliente API, tokens, endpoints y utilidades de tareas/grupos.</p></div>
+          </div>
+
+          <h3>Paginas</h3>
+          <div class="file-grid">
+            <div class="file-card"><code>Auth/Login.tsx</code><p>Login local, Google OAuth y errores.</p></div>
+            <div class="file-card"><code>Auth/Register.tsx</code><p>Registro, validacion de password y codigo de confirmacion.</p></div>
+            <div class="file-card"><code>Auth/GoogleCallback.ts</code><p>Callback dedicado de OAuth.</p></div>
+            <div class="file-card"><code>Dashboard/Home.tsx</code><p>Dashboard con acciones rapidas y tareas pendientes.</p></div>
+            <div class="file-card"><code>Tasks/Tasks.tsx</code><p>Gestion personal de tareas y calendario.</p></div>
+            <div class="file-card"><code>Groups/Groups.tsx</code><p>Gestion de grupos, tareas, permisos, invitaciones y auditoria.</p></div>
+            <div class="file-card"><code>Shop/Shop.tsx</code><p>Tienda conectada a backend y tema dinamico.</p></div>
+            <div class="file-card"><code>Shop/shopCatalog.ts</code><p>Catalogo local antiguo/prototipo.</p></div>
+            <div class="file-card"><code>Shop/shopStorage.ts</code><p>Persistencia local antigua de tienda.</p></div>
+            <div class="file-card"><code>Games/Games.tsx</code><p>Catalogo arcade con iframe y estadisticas.</p></div>
+            <div class="file-card"><code>Games/GameEmbed.tsx</code><p>Selector de componente de minijuego por id.</p></div>
+            <div class="file-card"><code>Games/LudionClickerGame.tsx</code><p>Clicker de 10 segundos.</p></div>
+            <div class="file-card"><code>Games/NebulaDashGame.tsx</code><p>Carrera de carriles con meteoros.</p></div>
+            <div class="file-card"><code>Games/AstraMemoryGame.tsx</code><p>Juego de memoria de secuencias.</p></div>
+            <div class="file-card"><code>Games/gameCatalog.ts</code><p>Catalogo de cabinas.</p></div>
+            <div class="file-card"><code>Games/gameMessages.ts</code><p>Contrato de mensajes postMessage.</p></div>
+            <div class="file-card"><code>Games/gameStorage.ts</code><p>Estadisticas, recompensas y ranking del arcade.</p></div>
+            <div class="file-card"><code>Achiv/Achivs.tsx</code><p>Pantalla de logros.</p></div>
+            <div class="file-card"><code>Achiv/achievementCatalog.ts</code><p>Definicion y calculo de logros.</p></div>
+            <div class="file-card"><code>User/Profile.tsx</code><p>Perfil, ajustes, compartir, cuenta y amigos mock.</p></div>
+          </div>
+
+          <h3>Tipos y estilos</h3>
+          <div class="file-grid">
+            <div class="file-card"><code>types/Interfaces.ts</code><p>Modelos <code>ITarea</code> e <code>IGroup</code>.</p></div>
+            <div class="file-card"><code>types/LoginRequest.ts</code><p>Requests/responses de auth, usuario, grupos, tareas e invitaciones.</p></div>
+            <div class="file-card"><code>styles/colors.css</code><p>Variables Astrais y tema Tailwind.</p></div>
+            <div class="file-card"><code>styles/theme.ts</code><p>Parseo, resolucion y aplicacion de temas.</p></div>
+            <div class="file-card"><code>styles/post-login.css</code><p>Sistema CSS de shell post-login no importado actualmente.</p></div>
+          </div>
+        </section>
+
+        <section id="riesgos" class="section">
+          <p class="eyebrow">21 / Estado real</p>
+          <h2>Estado Real, Riesgos Y Mejoras Detectadas</h2>
+          <p class="lead">
+            Esta seccion no describe una version idealizada: recoge detalles concretos visibles en el codigo.
+          </p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Area</th><th>Estado</th><th>Detalle</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>README web</td>
+                  <td><span class="badge partial">Pendiente</span></td>
+                  <td><code>astrais-web/README.md</code> sigue siendo el README template de Vite.</td>
+                </tr>
+                <tr>
+                  <td>Logs sensibles</td>
+                  <td><span class="badge risk">Riesgo</span></td>
+                  <td>Login/API imprimen tokens y datos de debug en consola.</td>
+                </tr>
+                <tr>
+                  <td>Tipos duplicados</td>
+                  <td><span class="badge partial">Corregible</span></td>
+                  <td><code>RevokeGroupInvit</code> aparece declarado dos veces en <code>LoginRequest.ts</code>.</td>
+                </tr>
+                <tr>
+                  <td>Componentes vacios</td>
+                  <td><span class="badge partial">Pendiente</span></td>
+                  <td><code>LevelUp.tsx</code> y <code>ProgressBar.tsx</code> tienen longitud 0.</td>
+                </tr>
+                <tr>
+                  <td>Componentes no usados</td>
+                  <td><span class="badge local">Prototipo</span></td>
+                  <td>Hay modales y UI antiguos que no aparecen integrados en rutas actuales.</td>
+                </tr>
+                <tr>
+                  <td>Shop local</td>
+                  <td><span class="badge local">Legacy</span></td>
+                  <td><code>shopCatalog.ts</code> y <code>shopStorage.ts</code> existen pero la tienda actual usa backend.</td>
+                </tr>
+                <tr>
+                  <td>Logros</td>
+                  <td><span class="badge partial">Parcial</span></td>
+                  <td>El progreso y reclamacion son locales; no actualizan ludiones reales del backend.</td>
+                </tr>
+                <tr>
+                  <td>Perfil</td>
+                  <td><span class="badge partial">Mixto</span></td>
+                  <td>Parte de los datos viene del backend y parte es mock fija.</td>
+                </tr>
+                <tr>
+                  <td>Responsive</td>
+                  <td><span class="badge partial">Limitado</span></td>
+                  <td>Tienda, minijuegos y logros muestran aviso de vista de escritorio en pantallas peque&ntilde;as.</td>
+                </tr>
+                <tr>
+                  <td>Texto/encoding</td>
+                  <td><span class="badge partial">Corregible</span></td>
+                  <td>Hay comentarios y textos con mojibake en varios ficheros.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Mejoras recomendadas</h3>
+          <ol>
+            <li>Eliminar logs de tokens y datos sensibles.</li>
+            <li>Separar <code>Api.ts</code> en cliente HTTP, servicios por dominio y utilidades puras.</li>
+            <li>Conectar logros y recompensas al backend para que los ludiones reclamados sean reales.</li>
+            <li>Persistir ajustes de perfil y datos sociales en API real.</li>
+            <li>Revisar componentes no usados y borrar o integrar los que sean necesarios.</li>
+            <li>Importar o retirar <code>post-login.css</code> segun el sistema visual definitivo.</li>
+            <li>Corregir encoding de textos y comentarios.</li>
+            <li>Ampliar responsive real de tienda, logros y minijuegos en vez de mostrar solo aviso.</li>
+            <li>A&ntilde;adir tests de utilidades de tareas: fechas, filtros, completar padre/subtareas y recompensas.</li>
+            <li>Documentar oficialmente el contrato exacto de endpoints usados por la web.</li>
+          </ol>
+        </section>
+
+        <footer class="footer">
+          Documento generado para el proyecto <strong>astrais-web</strong>. Archivos fuente analizados en
+          <code>proyectoAstrais/astrais-web</code>.
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

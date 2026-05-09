@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import astra from '../../assets/astra.png'
 
 interface CalendarProps {
@@ -7,8 +7,12 @@ interface CalendarProps {
   onSelectDate?: (date: Date) => void
 }
 
+function getMonthStart(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1)
+}
+
 export default function Calendar({ className = '', selectedDate, onSelectDate }: CalendarProps) {
-  const [currentDate, setCurrentDate] = useState<Date>(new Date())
+  const [currentDate, setCurrentDate] = useState<Date>(() => getMonthStart(selectedDate ?? new Date()))
   const [localSelectedDate, setLocalSelectedDate] = useState<Date | null>(null)
   const activeSelectedDate = selectedDate ?? localSelectedDate
 
@@ -58,12 +62,6 @@ export default function Calendar({ className = '', selectedDate, onSelectDate }:
     setLocalSelectedDate(newSelectedDate)
   }
 
-  useEffect(() => {
-    if (!selectedDate) return
-
-    setCurrentDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1))
-  }, [selectedDate])
-
   return (
     <div>
       <div className="relative flex flex-row p-5">
@@ -102,11 +100,11 @@ export default function Calendar({ className = '', selectedDate, onSelectDate }:
                   rounded-lg text-sm font-medium transition-all
                   ${day === null
                     ? 'invisible'
-                    : 'cursor-pointer bg-black/20 text-white hover:bg-purple-900/50'}
+                    : 'cursor-pointer bg-black/20 text-white hover:bg-primary-900/50'}
                   ${activeSelectedDate?.getDate() === day &&
                   activeSelectedDate?.getMonth() === month &&
                   activeSelectedDate?.getFullYear() === year
-                    ? 'bg-secondary-600 ring-2 ring-purple-400'
+                    ? 'bg-secondary-600 ring-2 ring-primary-500'
                     : ''}
                 `}
               >

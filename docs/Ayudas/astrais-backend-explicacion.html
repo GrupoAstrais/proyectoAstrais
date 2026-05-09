@@ -1,0 +1,1660 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Explicacion completa del backend de Astrais</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./astrais-backend-explicacion.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">API</div>
+          <div>
+            <strong>Astrais backend</strong>
+            <span>Documentacion profunda del servidor</span>
+          </div>
+        </div>
+        <nav class="toc" aria-label="Indice">
+          <a href="#resumen">Resumen ejecutivo</a>
+          <a href="#arquitectura">Arquitectura</a>
+          <a href="#stack">Stack y dependencias</a>
+          <a href="#estructura">Estructura</a>
+          <a href="#arranque">Arranque y configuracion</a>
+          <a href="#datos">Base de datos</a>
+          <a href="#auth">Autenticacion</a>
+          <a href="#grupos">Grupos</a>
+          <a href="#tareas">Tareas</a>
+          <a href="#tienda">Tienda y cosmeticos</a>
+          <a href="#avatar">Avatar</a>
+          <a href="#admin">Administracion</a>
+          <a href="#sse">SSE y tiempo real</a>
+          <a href="#estaticos">Recursos estaticos</a>
+          <a href="#errores">Errores y contratos</a>
+          <a href="#pruebas">Pruebas y herramientas</a>
+          <a href="#riesgos">Estado real y riesgos</a>
+          <a href="#inventario">Inventario de archivos</a>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <header class="hero">
+          <div class="hero-inner">
+            <div>
+              <p class="eyebrow">Proyecto Astrais / Backend Ktor</p>
+              <h1>Explicacion completa del backend</h1>
+              <p class="hero-lead">
+                Este documento describe toda la parte de servidor de Astrais: arquitectura, arranque,
+                configuracion, base de datos, autenticacion, OAuth, grupos, invitaciones, tareas,
+                recompensas, tienda, cosmeticos, avatar, administracion, SSE, recursos estaticos,
+                herramientas de prueba y riesgos tecnicos detectados al leer el codigo fuente.
+              </p>
+              <div class="pill-row">
+                <span class="pill primary">Ktor 3.1.3</span>
+                <span class="pill primary">Kotlin 2.1.0</span>
+                <span class="pill success">PostgreSQL</span>
+                <span class="pill">Exposed 1.0.0</span>
+                <span class="pill warning">JWT + OAuth Google</span>
+                <span class="pill">SSE</span>
+              </div>
+            </div>
+            <div class="hero-panel">
+              <strong>Revision local</strong>
+              <p>
+                Analisis realizado sobre <code>backend</code>. La comprobacion
+                <code>gradlew.bat compileKotlin</code> se ejecuto correctamente en Windows el
+                2026-05-09.
+              </p>
+            </div>
+          </div>
+        </header>
+
+        <section class="section" id="resumen">
+          <div class="section-inner">
+            <h2>Resumen ejecutivo</h2>
+            <p class="section-intro">
+              El backend es una API HTTP construida con Ktor sobre Netty. Su funcion es servir la logica
+              principal de Astrais: usuarios, login, verificacion de correo, OAuth de Google, grupos,
+              invitaciones, tareas gamificadas, experiencia, ludiones, tienda, inventario, cosmeticos,
+              avatar, panel de administracion, recursos estaticos y eventos SSE.
+            </p>
+
+            <div class="grid cols-4">
+              <div class="metric">
+                <span>Lenguaje</span>
+                <strong>Kotlin</strong>
+              </div>
+              <div class="metric">
+                <span>Runtime</span>
+                <strong>JVM 21</strong>
+              </div>
+              <div class="metric">
+                <span>Framework</span>
+                <strong>Ktor</strong>
+              </div>
+              <div class="metric">
+                <span>Persistencia</span>
+                <strong>Postgres</strong>
+              </div>
+            </div>
+
+            <div class="grid cols-3" style="margin-top: 1rem">
+              <article class="card">
+                <h3>API funcional</h3>
+                <p>
+                  La API esta organizada en rutas de autenticacion, grupos, tareas, tienda, avatar,
+                  administracion y SSE. La mayoria de rutas de negocio requieren el esquema
+                  <code>access-jwt</code>.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Dominio gamificado</h3>
+                <p>
+                  El modelo de usuario incluye nivel, XP, ludiones, rachas, idioma, zona horaria,
+                  inventario, mascota equipada, tema equipado y avatar equipado.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Estado real</h3>
+                <p>
+                  La compilacion Kotlin pasa, pero hay detalles de seguridad y consistencia que conviene
+                  corregir antes de usarlo como backend de produccion.
+                </p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="arquitectura">
+          <div class="section-inner">
+            <h2>Arquitectura</h2>
+            <p class="section-intro">
+              La arquitectura es sencilla y directa: Ktor recibe las peticiones, valida el token si la
+              ruta esta protegida, delega en repositorios o DAO, y finalmente Exposed ejecuta operaciones
+              contra PostgreSQL. Tambien existe una capa de recursos estaticos y dos buses SSE en memoria.
+            </p>
+
+            <div class="flow">
+              <div class="flow-step">
+                <b>1</b>
+                <div>
+                  <h3>Cliente HTTP</h3>
+                  <p>
+                    La web, Android o el panel admin llaman a endpoints JSON. La autenticacion se envia
+                    con <code>Authorization: Bearer &lt;token&gt;</code>.
+                  </p>
+                </div>
+              </div>
+              <div class="flow-step">
+                <b>2</b>
+                <div>
+                  <h3>Ktor</h3>
+                  <p>
+                    <code>Application.module()</code> instala JSON, CORS, StatusPages, JWT/OAuth, SSE y
+                    registra todas las rutas de negocio.
+                  </p>
+                </div>
+              </div>
+              <div class="flow-step">
+                <b>3</b>
+                <div>
+                  <h3>Repositorios</h3>
+                  <p>
+                    <code>AuthRepoImpl</code>, <code>GroupRepoImpl</code>, <code>TaskRepoImpl</code> y
+                    <code>AdminDaoImpl</code> concentran validaciones de dominio, permisos y conversiones.
+                  </p>
+                </div>
+              </div>
+              <div class="flow-step">
+                <b>4</b>
+                <div>
+                  <h3>DAO y base de datos</h3>
+                  <p>
+                    <code>DatabaseDAOImpl</code> usa Exposed DAO/DSL y transacciones suspendidas para
+                    leer y modificar tablas PostgreSQL.
+                  </p>
+                </div>
+              </div>
+              <div class="flow-step">
+                <b>5</b>
+                <div>
+                  <h3>Respuesta</h3>
+                  <p>
+                    Las respuestas son JSON serializadas con kotlinx.serialization, errores normalizados
+                    con <code>Errors</code>, o eventos SSE para cambios asincronos.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="callout" style="margin-top: 1rem">
+              <strong>Capas reales del proyecto.</strong> No hay un framework de inyeccion de dependencias.
+              Las implementaciones se obtienen con funciones de fabrica como <code>getDatabaseDaoImpl()</code>,
+              <code>getAuthRepoImpl()</code>, <code>getGroupRepoImpl()</code> y <code>getTaskDaoImpl()</code>.
+              En tests, grupos si tiene un proveedor reemplazable.
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="stack">
+          <div class="section-inner">
+            <h2>Stack y dependencias</h2>
+            <p class="section-intro">
+              El build esta definido con Gradle Kotlin DSL. El servidor usa Ktor, Exposed, PostgreSQL,
+              JWT, OAuth de Google, bcrypt, cliente HTTP Apache, correo SMTP y serializacion JSON.
+            </p>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Area</th>
+                    <th>Tecnologia</th>
+                    <th>Uso en el backend</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Lenguaje</td>
+                    <td><code>Kotlin 2.1.0</code></td>
+                    <td>Codigo principal del servidor y DTOs serializables.</td>
+                  </tr>
+                  <tr>
+                    <td>Runtime</td>
+                    <td><code>JVM toolchain 21</code></td>
+                    <td>Version de JVM configurada en Gradle.</td>
+                  </tr>
+                  <tr>
+                    <td>Servidor</td>
+                    <td><code>Ktor 3.1.3</code> + Netty</td>
+                    <td>Routing, autenticacion, CORS, JSON, status pages, SSE y contenido estatico.</td>
+                  </tr>
+                  <tr>
+                    <td>Base de datos</td>
+                    <td>PostgreSQL + <code>org.postgresql:postgresql:42.7.7</code></td>
+                    <td>Persistencia relacional. El host usado por el codigo es <code>database:5432</code>.</td>
+                  </tr>
+                  <tr>
+                    <td>ORM/SQL</td>
+                    <td>Exposed <code>1.0.0</code></td>
+                    <td>Declaracion de tablas, entidades DAO y transacciones.</td>
+                  </tr>
+                  <tr>
+                    <td>Seguridad</td>
+                    <td>Ktor JWT, Auth0 JWT, bcrypt</td>
+                    <td>Access/refresh tokens y hashing de contrasenas con bcrypt cost 8.</td>
+                  </tr>
+                  <tr>
+                    <td>OAuth</td>
+                    <td>Google OAuth + Google ID Token verifier</td>
+                    <td>Login web por redirect y login Android mediante <code>idToken</code>.</td>
+                  </tr>
+                  <tr>
+                    <td>Email</td>
+                    <td>Apache Commons Email</td>
+                    <td>Envio de codigo de verificacion con SMTP de Gmail.</td>
+                  </tr>
+                  <tr>
+                    <td>Tiempo real</td>
+                    <td>Ktor SSE + MutableSharedFlow</td>
+                    <td>Eventos globales y eventos dirigidos a usuarios concretos.</td>
+                  </tr>
+                  <tr>
+                    <td>Pruebas</td>
+                    <td>Ktor server test host + Kotlin test JUnit</td>
+                    <td>Tests unitarios de rutas de grupos con repositorio simulado.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="estructura">
+          <div class="section-inner">
+            <h2>Estructura</h2>
+            <p class="section-intro">
+              El backend esta dentro de <code>backend</code>. La carpeta <code>src/main/kotlin</code>
+              contiene la logica del servidor y <code>src/main/resources</code> contiene configuracion,
+              estaticos, plantillas HTML y cosmeticos iniciales.
+            </p>
+
+            <pre><code>backend/
+  build.gradle.kts
+  settings.gradle.kts
+  gradle/libs.versions.toml
+  src/main/kotlin/
+    Application.kt
+    Constants.kt
+    Errors.kt
+    SSE.kt
+    StoreRoutes.kt
+    auth/
+    db/
+    groups/
+    tasks/
+    avatar/
+    admin/
+    old/
+  src/main/resources/
+    application.yaml
+    logback.xml
+    admin/
+    static/
+    templates/
+    initial/
+  src/test/kotlin/ApplicationTest.kt
+  test_routes.py</code></pre>
+
+            <div class="grid cols-2">
+              <article class="card">
+                <h3>Paquetes principales</h3>
+                <ul>
+                  <li><code>com.astrais</code>: arranque, errores y constantes.</li>
+                  <li><code>com.astrais.auth</code>: login, JWT, OAuth y correo.</li>
+                  <li><code>com.astrais.db</code>: tablas, entidades, DAO y conexion.</li>
+                  <li><code>com.astrais.groups</code>: grupos, roles, invitaciones y auditoria.</li>
+                  <li><code>tasks</code>: tareas, recompensas y permisos de tareas.</li>
+                  <li><code>avatar</code>: avatar equipado y carga de cosmeticos iniciales.</li>
+                  <li><code>admin</code>: panel admin, cosmeticos, usuarios y grupos.</li>
+                </ul>
+              </article>
+              <article class="card">
+                <h3>Particularidades</h3>
+                <ul>
+                  <li><code>SSE.kt</code> y <code>StoreRoutes.kt</code> estan en paquete por defecto.</li>
+                  <li><code>old/AdminRoutes_old.kt</code> existe, pero no se registra desde <code>Application.kt</code>.</li>
+                  <li><code>README.md</code> es el README generico generado por Ktor.</li>
+                  <li><code>test_routes.py</code> es una herramienta externa de prueba manual/GUI.</li>
+                </ul>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="arranque">
+          <div class="section-inner">
+            <h2>Arranque y configuracion</h2>
+            <p class="section-intro">
+              El punto central es <code>Application.module()</code>. La aplicacion inicializa base de
+              datos, autenticacion, serializacion, CORS, StatusPages, SSE, cosmeticos iniciales si la
+              instalacion es fresca y finalmente registra rutas.
+            </p>
+
+            <div class="grid cols-2">
+              <article class="card">
+                <h3>Secuencia de modulo</h3>
+                <ol>
+                  <li><code>initDatabase()</code> lee configuracion y conecta a PostgreSQL.</li>
+                  <li><code>installAuth()</code> instala OAuth Google y JWT access/refresh.</li>
+                  <li><code>ContentNegotiation</code> instala JSON lenient con unknown keys ignoradas.</li>
+                  <li><code>CORS</code> permite cualquier host, credenciales, Authorization y cualquier metodo.</li>
+                  <li><code>StatusPages</code> traduce errores JWT, token expirado, bad request y formato numerico.</li>
+                  <li><code>installSSE()</code> activa soporte Server-Sent Events.</li>
+                  <li>Si la base es nueva, <code>loadInitialCosmetics()</code> carga recursos iniciales.</li>
+                  <li><code>routing</code> registra auth, admin, avatar, OAuth, grupos, tareas, tienda, SSE y estaticos.</li>
+                </ol>
+              </article>
+              <article class="card">
+                <h3>Variables de entorno/config</h3>
+                <ul>
+                  <li><code>KTOR_PORT</code>: puerto en <code>application.yaml</code>.</li>
+                  <li><code>JWT_ISSUER</code>, <code>JWT_AUDIENCE</code>, <code>JWT_SECRET_ACCESS</code>, <code>JWT_SECRET_REFRESH</code>.</li>
+                  <li><code>DB_USER</code>, <code>DB_PASSWORD</code>, <code>DB_NAME</code>.</li>
+                  <li><code>GOOGLE_CLIENT_ID</code>, <code>GOOGLE_SECRET_ID</code>.</li>
+                  <li><code>SMTP_EMAIL</code>, <code>SMTP_PASSWORD</code> y segundo par opcional.</li>
+                  <li><code>UPLOAD_DIR</code>: carpeta externa servida por <code>/assets</code>.</li>
+                  <li><code>INVITE_BASE_URL</code>: base publica para invitaciones seguras.</li>
+                </ul>
+              </article>
+            </div>
+
+            <pre><code>ktor:
+  application:
+    modules:
+      - com.astrais.ApplicationKt.module
+  deployment:
+    port: $KTOR_PORT
+
+jwt:
+  issuer: $JWT_ISSUER
+  audience: $JWT_AUDIENCE
+  accessSecret: $JWT_SECRET_ACCESS
+  refreshSecret: $JWT_SECRET_REFRESH</code></pre>
+
+            <div class="callout warning">
+              <strong>Detalle importante.</strong> <code>application.yaml</code> usa <code>KTOR_PORT</code>,
+              pero el <code>main()</code> personalizado llama a
+              <code>System.getenv("ktor.deployment.port")</code>. Si se arranca por ese camino, el nombre
+              de variable no coincide con la configuracion YAML.
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="datos">
+          <div class="section-inner">
+            <h2>Base de datos</h2>
+            <p class="section-intro">
+              La persistencia se define con Exposed. En arranque se ejecuta
+              <code>SchemaUtils.create(...)</code> para crear las tablas si no existen. La conexion apunta
+              a <code>jdbc:postgresql://database:5432/&lt;dbname&gt;</code>.
+            </p>
+
+            <div class="grid cols-3">
+              <article class="card">
+                <h3>Usuarios</h3>
+                <p>
+                  <code>Users</code> almacena nombre, email, hash de contrasena, confirmacion, idioma,
+                  zona horaria, rol global, nivel, XP, ludiones, rachas, ultima conexion y cosmeticos
+                  equipados.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Autenticacion</h3>
+                <p>
+                  <code>UserConfirm</code> guarda codigos de verificacion. <code>AuthCredentials</code>
+                  enlaza usuarios con proveedores OAuth como <code>GOOGLE</code>.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Grupos</h3>
+                <p>
+                  <code>Group</code> tiene owner y flag personal. <code>RelGroupUser</code> guarda miembros
+                  normales/mods. Tambien hay invitaciones y auditoria.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Tareas</h3>
+                <p>
+                  <code>Task</code> es la tabla base. <code>TaskUnique</code>, <code>TaskHabit</code> y
+                  <code>TaskObjective</code> guardan datos especificos por tipo.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Cosmeticos</h3>
+                <p>
+                  <code>Cosmetic</code> guarda nombre traducido como JSON, descripcion, tipo, precio,
+                  asset, tema, coleccion y rareza.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Inventario</h3>
+                <p>
+                  <code>Inventory</code> enlaza usuario y cosmetico comprado con fecha de compra y un
+                  indice unico usuario-cosmetico.
+                </p>
+              </article>
+            </div>
+
+            <h3 style="margin-top: 1.6rem">Tablas y entidades</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Tabla</th>
+                    <th>Entidad/objeto</th>
+                    <th>Contenido principal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>Users</code></td>
+                    <td><code>TablaUsuario</code>, <code>EntidadUsuario</code></td>
+                    <td>Perfil, credenciales email/pass, progreso, moneda, rachas y cosmeticos equipados.</td>
+                  </tr>
+                  <tr>
+                    <td><code>UserConfirm</code></td>
+                    <td><code>TablaConfirmacionUsuario</code></td>
+                    <td>Codigo numerico de confirmacion de correo por usuario.</td>
+                  </tr>
+                  <tr>
+                    <td><code>AuthCredentials</code></td>
+                    <td><code>TablaCredencialesAuth</code></td>
+                    <td>Proveedor OAuth y UID del proveedor con clave compuesta.</td>
+                  </tr>
+                  <tr>
+                    <td><code>Group</code></td>
+                    <td><code>TablaGrupo</code>, <code>EntidadGrupo</code></td>
+                    <td>Nombre, descripcion, owner y si es grupo personal.</td>
+                  </tr>
+                  <tr>
+                    <td><code>RelGroupUser</code></td>
+                    <td><code>TablaGrupoUsuario</code></td>
+                    <td>Relacion grupo-usuario, rol <code>MOD</code>/<code>USER</code> y fecha de union.</td>
+                  </tr>
+                  <tr>
+                    <td><code>GroupInvite</code></td>
+                    <td><code>TablaGrupoInvites</code></td>
+                    <td>Codigo, hash SHA-256 unico, creador, expiracion, revocacion y usos.</td>
+                  </tr>
+                  <tr>
+                    <td><code>GroupAuditLog</code></td>
+                    <td><code>TablaGrupoAuditLog</code></td>
+                    <td>Eventos de invitacion, union, salida y cambio de rol.</td>
+                  </tr>
+                  <tr>
+                    <td><code>Task</code></td>
+                    <td><code>TablaTarea</code>, <code>EntidadTarea</code></td>
+                    <td>Datos comunes de tarea, estado, prioridad, recompensas y objetivo padre.</td>
+                  </tr>
+                  <tr>
+                    <td><code>TaskUnique</code></td>
+                    <td><code>TablaTareaUnica</code></td>
+                    <td>Fecha de vencimiento de tareas unicas.</td>
+                  </tr>
+                  <tr>
+                    <td><code>TaskHabit</code></td>
+                    <td><code>TablaTareaHabito</code></td>
+                    <td>Racha actual, mejor racha, ultima completada, frecuencia y variacion.</td>
+                  </tr>
+                  <tr>
+                    <td><code>TaskObjective</code></td>
+                    <td><code>TablaTareaObjetivo</code></td>
+                    <td>Marca tareas que funcionan como objetivo padre.</td>
+                  </tr>
+                  <tr>
+                    <td><code>Cosmetic</code></td>
+                    <td><code>TablaCosmetico</code>, <code>EntidadCosmetico</code></td>
+                    <td>Pets, temas y partes de avatar.</td>
+                  </tr>
+                  <tr>
+                    <td><code>Inventory</code></td>
+                    <td><code>TablaInventario</code>, <code>EntidadInventario</code></td>
+                    <td>Cosmeticos comprados por usuario.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="callout" style="margin-top: 1rem">
+              <strong>Seed inicial.</strong> Si la tabla <code>Users</code> esta vacia, se crea un admin
+              local con nombre <code>Admin</code>, email <code>admin@astrais.com</code>, password
+              <code>1234</code> hasheada, idioma <code>ENG</code> y grupo personal.
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="auth">
+          <div class="section-inner">
+            <h2>Autenticacion</h2>
+            <p class="section-intro">
+              La autenticacion combina email/contrasena con verificacion por correo, JWT de acceso y
+              refresh, OAuth Google web, OAuth Google Android y gestion de metodos de login. El token usa
+              el <code>subject</code> como UID y un claim <code>tokenType</code>.
+            </p>
+
+            <div class="grid cols-2">
+              <article class="card">
+                <h3>Tokens JWT</h3>
+                <ul>
+                  <li><code>ACCESS</code>: expira en <code>10 * 60 * 1000</code> ms, es decir 10 minutos.</li>
+                  <li><code>REFRESH</code>: expira en 7 dias.</li>
+                  <li>Cada tipo usa un secreto distinto: <code>jwt.accessSecret</code> y <code>jwt.refreshSecret</code>.</li>
+                  <li>Los verificadores validan issuer, audience, firma y <code>tokenType</code>.</li>
+                </ul>
+              </article>
+              <article class="card">
+                <h3>Login basico</h3>
+                <ul>
+                  <li>Registro valida campos, idioma de 3 letras y lista <code>ENG/ESP/RUS</code>.</li>
+                  <li>La contrasena se hashea con bcrypt cost 8.</li>
+                  <li>Se envia un codigo de 6 digitos por correo usando plantilla HTML.</li>
+                  <li>El login no devuelve tokens si el correo no esta confirmado.</li>
+                </ul>
+              </article>
+            </div>
+
+            <h3 style="margin-top: 1.6rem">Rutas de autenticacion</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Metodo</th>
+                    <th>Ruta</th>
+                    <th>Proteccion</th>
+                    <th>Contrato</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/auth/login</td>
+                    <td>Publica</td>
+                    <td>Recibe <code>LoginRequest</code> y responde access/refresh si email, password y confirmacion son validos.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/auth/register</td>
+                    <td>Publica</td>
+                    <td>Crea usuario, grupo personal, codigo de verificacion y envia correo. Si existe sin confirmar, reenvia codigo.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/auth/verify</td>
+                    <td>Publica</td>
+                    <td>Verifica codigo por email, marca <code>esta_confirmado=1</code> y borra la confirmacion.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/auth/regenAccess</td>
+                    <td><code>refresh-jwt</code></td>
+                    <td>Genera un nuevo access token para el UID del refresh token.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method get">GET</span></td>
+                    <td class="route-path">/auth/me</td>
+                    <td><code>access-jwt</code></td>
+                    <td>Devuelve perfil gamificado, grupo personal, assets equipados y flag admin.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method patch">PATCH</span></td>
+                    <td class="route-path">/auth/editUser</td>
+                    <td><code>access-jwt</code></td>
+                    <td>Edita nombre, idioma y zona horaria. Valida idioma soportado.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method patch">PATCH</span></td>
+                    <td class="route-path">/auth/setEmailLogin</td>
+                    <td><code>access-jwt</code></td>
+                    <td>Cambia email/password, resetea confirmacion, envia codigo y publica evento SSE <code>SIGN.OFF</code>.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method delete">DELETE</span></td>
+                    <td class="route-path">/auth/deleteUser</td>
+                    <td><code>access-jwt</code></td>
+                    <td>Elimina usuario y limpia relaciones dependientes desde el DAO.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3 style="margin-top: 1.6rem">OAuth Google</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Metodo</th>
+                    <th>Ruta</th>
+                    <th>Uso</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="method get">GET</span></td>
+                    <td class="route-path">/auth/google/login</td>
+                    <td>Inicia el flujo OAuth de Google con Ktor.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method get">GET</span></td>
+                    <td class="route-path">/auth/google/callback</td>
+                    <td>Recibe access token, llama a Google userinfo, crea o loguea usuario y redirige a <code>http://localhost:5173/oauthCallback</code>.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/auth/google/androidlogin</td>
+                    <td>Verifica un <code>idToken</code> Android con Google y devuelve JWT de Astrais.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/auth/setOauth</td>
+                    <td>Vincula un proveedor OAuth al usuario autenticado.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/auth/deleteOauth</td>
+                    <td>Desvincula proveedor OAuth, evitando dejar la cuenta sin ningun metodo de login.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method get">GET</span></td>
+                    <td class="route-path">/auth/testHTML</td>
+                    <td>Pagina HTML minima para probar OAuth desde navegador.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="grupos">
+          <div class="section-inner">
+            <h2>Grupos</h2>
+            <p class="section-intro">
+              El modulo de grupos gestiona grupos personales y compartidos, permisos de owner/mod/usuario,
+              invitaciones directas, invitaciones seguras por codigo, miembros, salida voluntaria,
+              transferencia de propiedad y auditoria.
+            </p>
+
+            <div class="grid cols-3">
+              <article class="card">
+                <h3>Roles</h3>
+                <p>
+                  Los roles expuestos como enteros son <code>0</code> usuario normal,
+                  <code>1</code> moderador y <code>2</code> owner. El owner vive en
+                  <code>Group.owner</code>; no siempre aparece en <code>RelGroupUser</code>.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Permisos</h3>
+                <p>
+                  Owner y mods pueden invitar, anadir y quitar usuarios. Solo owner transfiere propiedad,
+                  cambia roles y borra grupos en el flujo normal.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Auditoria</h3>
+                <p>
+                  Se registran eventos como <code>invite_created</code>, <code>invite_revoked</code>,
+                  <code>member_joined_by_invite</code>, <code>member_left</code> y
+                  <code>member_role_changed</code>.
+                </p>
+              </article>
+            </div>
+
+            <h3 style="margin-top: 1.6rem">Invitaciones seguras</h3>
+            <div class="flow">
+              <div class="flow-step">
+                <b>1</b>
+                <div>
+                  <h3>Creacion</h3>
+                  <p>
+                    <code>randomCode()</code> genera 24 bytes aleatorios y los codifica en Base64 URL-safe
+                    sin padding.
+                  </p>
+                </div>
+              </div>
+              <div class="flow-step">
+                <b>2</b>
+                <div>
+                  <h3>Persistencia</h3>
+                  <p>
+                    El servidor guarda el codigo y tambien <code>SHA-256</code> hexadecimal. La busqueda
+                    y revocacion usan el hash.
+                  </p>
+                </div>
+              </div>
+              <div class="flow-step">
+                <b>3</b>
+                <div>
+                  <h3>Consumo</h3>
+                  <p>
+                    Al unirse por codigo se comprueba grupo, grupo no personal, pertenencia, revocacion,
+                    expiracion, maximos usos y luego se incrementa <code>uses_count</code> de forma atomica.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <h3 style="margin-top: 1.6rem">Rutas de grupos</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Metodo</th>
+                    <th>Ruta</th>
+                    <th>Uso</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="method get">GET</span></td>
+                    <td class="route-path">/groups/redirectInvite</td>
+                    <td>Redireccion auxiliar para invitaciones, publica.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method get">GET</span></td>
+                    <td class="route-path">/group/userGroups</td>
+                    <td>Lista grupos del usuario autenticado.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/groups/createGroup</td>
+                    <td>Crea grupo no personal con el usuario como owner.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/groups/addUser</td>
+                    <td>Anade usuario directamente si el solicitante tiene permisos.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/groups/removeUser</td>
+                    <td>Expulsa miembro, sin permitir expulsar al owner.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/groups/inviteUrl</td>
+                    <td>Genera invitacion basica <code>astrais://groups/join?gid=...</code>.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/groups/joinByUrl</td>
+                    <td>Une a un usuario mediante URL antigua/basica.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/groups/joinByCode</td>
+                    <td>Consume una invitacion segura por codigo.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/groups/invites</td>
+                    <td>Crea invitacion segura con expiracion y maximos usos opcionales.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method get">GET</span></td>
+                    <td class="route-path">/groups/{gid}/invites</td>
+                    <td>Lista invitaciones activas, revocadas y expiradas.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/groups/invites/revoke</td>
+                    <td>Revoca invitacion por codigo.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method get">GET</span></td>
+                    <td class="route-path">/groups/{gid}/members</td>
+                    <td>Lista owner y miembros con rol y fecha de union.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/groups/leave</td>
+                    <td>Permite salir del grupo si el usuario no es owner.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method patch">PATCH</span></td>
+                    <td class="route-path">/groups/setMemberRole</td>
+                    <td>Owner cambia miembro entre usuario normal y mod.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method get">GET</span></td>
+                    <td class="route-path">/groups/{gid}/audit</td>
+                    <td>Lista eventos de auditoria con <code>limit</code> y <code>offset</code>.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method patch">PATCH</span></td>
+                    <td class="route-path">/groups/editGroup</td>
+                    <td>Edita nombre/descripcion.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method patch">PATCH</span></td>
+                    <td class="route-path">/groups/passOwnership</td>
+                    <td>Transfiere propiedad a otro miembro.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method delete">DELETE</span></td>
+                    <td class="route-path">/groups/deleteGroup</td>
+                    <td>Borra grupo si el solicitante tiene permisos.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="tareas">
+          <div class="section-inner">
+            <h2>Tareas</h2>
+            <p class="section-intro">
+              Las tareas son el nucleo gamificado. Hay tres tipos: tareas unicas con fecha limite,
+              habitos con frecuencia y racha, y objetivos que pueden tener subtareas. Completar tareas
+              otorga XP y ludiones; descompletar devuelve recompensas.
+            </p>
+
+            <div class="grid cols-3">
+              <article class="card">
+                <h3>UNICO</h3>
+                <p>
+                  Requiere <code>extraUnico.fechaLimite</code> parseado como <code>Instant</code>. Tiene
+                  recompensa base de 50 XP y 80 ludiones antes de multiplicadores.
+                </p>
+              </article>
+              <article class="card">
+                <h3>HABITO</h3>
+                <p>
+                  Requiere <code>extraHabito</code> con frecuencia. Puede completarse una vez al dia en
+                  la logica actual y actualiza racha actual/mejor.
+                </p>
+              </article>
+              <article class="card">
+                <h3>OBJETIVO</h3>
+                <p>
+                  No requiere extra. Puede recibir subtareas. Si todas las subtareas estan completadas,
+                  el objetivo padre se completa y otorga recompensa.
+                </p>
+              </article>
+            </div>
+
+            <h3 style="margin-top: 1.6rem">Calculo de recompensas</h3>
+            <pre><code>multiplicadorPrioridad = 1.0 + (prioridad * 0.5)
+frecuencia:
+  HOURLY  = 0.2
+  DAILY   = 1.0
+  WEEKLY  = 5.0
+  MONTHLY = 20.0
+  YEARLY  = 100.0
+
+XP base:
+  HABITO = 20
+  UNICO = 50
+  OBJETIVO = 400
+
+Ludiones base:
+  HABITO = 25
+  UNICO = 80
+  OBJETIVO = 800</code></pre>
+
+            <div class="callout">
+              <strong>Economia diaria.</strong> La recompensa de ludiones tiene un limite diario de 500
+              para tareas normales. Los objetivos pueden saltarse ese limite. El valor realmente otorgado
+              se guarda en <code>ludiones_otorgados</code> para poder revertirlo.
+            </div>
+
+            <h3 style="margin-top: 1.6rem">Rutas de tareas</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Metodo</th>
+                    <th>Ruta</th>
+                    <th>Uso</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/tasks</td>
+                    <td>Crea tarea en un grupo. Requiere owner o mod.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/tasks/{gid}</td>
+                    <td>Lista tareas de un grupo. Cualquier miembro puede consultar.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method patch">PATCH</span></td>
+                    <td class="route-path">/tasks/{tid}/complete</td>
+                    <td>Completa tarea, otorga recompensas y actualiza rachas/objetivos.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method patch">PATCH</span></td>
+                    <td class="route-path">/tasks/{tid}/edit</td>
+                    <td>Edita campos parciales y recalcula recompensa cuando procede.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method delete">DELETE</span></td>
+                    <td class="route-path">/tasks/{tid}/delete</td>
+                    <td>Elimina tarea si el usuario tiene permisos.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method patch">PATCH</span></td>
+                    <td class="route-path">/tasks/{tid}/uncomplete</td>
+                    <td>Revierte completado y descuenta XP/ludiones.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="grid cols-2" style="margin-top: 1rem">
+              <article class="card">
+                <h3>Estado dinamico de habitos</h3>
+                <p>
+                  Al listar tareas, un habito puede responder como <code>COMPLETE</code> aunque la tarea
+                  base no este marcada asi en BD: se calcula comparando <code>ultima_vez_completada</code>
+                  con la fecha actual.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Permisos de tareas</h3>
+                <p>
+                  Crear, editar y borrar exige owner o moderador del grupo. Completar y listar exige
+                  pertenecer al grupo o ser owner.
+                </p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="tienda">
+          <div class="section-inner">
+            <h2>Tienda y cosmeticos</h2>
+            <p class="section-intro">
+              La tienda expone cosmeticos comprables con ludiones. Hay tres tipos: mascota, tema de app
+              y parte de avatar. El inventario registra propiedad, y el usuario guarda que pet, tema o
+              avatar tiene equipado.
+            </p>
+
+            <div class="grid cols-3">
+              <article class="card">
+                <h3>PET</h3>
+                <p>
+                  Usa archivo de asset, normalmente JSON/Lottie. Precio base 1000 multiplicado por rareza
+                  si no se envia precio explicito.
+                </p>
+              </article>
+              <article class="card">
+                <h3>APP_THEME</h3>
+                <p>
+                  No necesita archivo. Guarda JSON de colores en <code>theme</code>. Precio base 500 por
+                  rareza.
+                </p>
+              </article>
+              <article class="card">
+                <h3>AVATAR_PART</h3>
+                <p>
+                  Usa imagen de avatar. Precio base 100 por rareza. El avatar equipado se consulta desde
+                  la ruta de avatar.
+                </p>
+              </article>
+            </div>
+
+            <h3 style="margin-top: 1.6rem">Rutas de tienda</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Metodo</th>
+                    <th>Ruta</th>
+                    <th>Uso</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="method get">GET</span></td>
+                    <td class="route-path">/store/items</td>
+                    <td>Lista cosmeticos traducidos al idioma del usuario con <code>owned</code> y <code>equipped</code>.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method get">GET</span></td>
+                    <td class="route-path">/store/items/admin</td>
+                    <td>Lista cosmeticos para admin sin traduccion final de usuario.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/store/buy/{id}</td>
+                    <td>Compra cosmetico si existe, no esta comprado y hay ludiones suficientes.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/store/equip/{id}</td>
+                    <td>Equipa pet, tema o avatar si pertenece al inventario del usuario.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3 style="margin-top: 1.6rem">Carga inicial</h3>
+            <p class="section-intro">
+              En instalaciones frescas se ejecuta <code>loadInitialCosmetics()</code>. Busca recursos que
+              terminan en <code>.cosmetic.json</code> dentro de <code>resources/initial</code>, parsea su
+              tipo y crea cosmeticos mediante el DAO de admin. Los assets se copian a <code>UPLOAD_DIR</code>.
+            </p>
+            <div class="tag-list">
+              <span class="tag">initial/avatars/*.cosmetic.json</span>
+              <span class="tag">initial/avatars/*.png</span>
+              <span class="tag">initial/pet/*.cosmetic.json</span>
+              <span class="tag">initial/pet/cuteCatLottie.json</span>
+              <span class="tag">initial/themes/*.cosmetic.json</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="avatar">
+          <div class="section-inner">
+            <h2>Avatar</h2>
+            <p class="section-intro">
+              El modulo de avatar es pequeno: solo expone el avatar equipado del usuario. La respuesta
+              incluye ID de cosmetico, nombre, referencia de imagen y rareza.
+            </p>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Metodo</th>
+                    <th>Ruta</th>
+                    <th>Respuesta</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/avatar/</td>
+                    <td>
+                      <code>{"avatar": null}</code> si no hay avatar equipado, o
+                      <code>AvatarLayerDTO</code> con <code>cosmeticId</code>, <code>name</code>,
+                      <code>imageRef</code> y <code>rareza</code>.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="admin">
+          <div class="section-inner">
+            <h2>Administracion</h2>
+            <p class="section-intro">
+              Las rutas de administracion cuelgan de <code>/admin</code>, requieren
+              <code>access-jwt</code> y comprueban que el usuario tenga rol global
+              <code>ADMIN_USER</code>. Tambien se sirve una UI estatica de administracion desde
+              <code>src/main/resources/admin</code>.
+            </p>
+
+            <div class="grid cols-2">
+              <article class="card">
+                <h3>Cosmeticos</h3>
+                <p>
+                  Subida y edicion usan multipart. Se reciben nombres en ingles, espanol y ruso,
+                  descripcion, tipo, precio, tema, coleccion, rareza y archivo opcional segun tipo.
+                </p>
+              </article>
+              <article class="card">
+                <h3>Usuarios y grupos</h3>
+                <p>
+                  El admin puede listar usuarios, consultar usuario, crear/borrar usuarios, listar grupos,
+                  crear grupos, editar grupos, borrar grupos y ver mas datos de un grupo.
+                </p>
+              </article>
+            </div>
+
+            <h3 style="margin-top: 1.6rem">Rutas admin</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Metodo</th>
+                    <th>Ruta</th>
+                    <th>Uso</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/admin/cosmetic/upload</td>
+                    <td>Crea cosmetico desde multipart.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/admin/cosmetic/upload/{cid}</td>
+                    <td>Actualiza cosmetico existente.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method delete">DELETE</span></td>
+                    <td class="route-path">/admin/cosmetic/delete/{cid}</td>
+                    <td>Borra cosmetico.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/admin/users</td>
+                    <td>Lista resumen de usuarios.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method get">GET</span></td>
+                    <td class="route-path">/admin/users/{uid}</td>
+                    <td>Consulta datos simples de usuario.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/admin/groups</td>
+                    <td>Lista grupos para administracion.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/admin/groups/add</td>
+                    <td>Crea un grupo desde admin para un owner indicado.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/admin/groups/edit/{gid}</td>
+                    <td>Edita nombre/descripcion de grupo.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method delete">DELETE</span></td>
+                    <td class="route-path">/admin/groups/delete/{gid}</td>
+                    <td>Borra grupo.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/admin/groups/moredata/{gid}</td>
+                    <td>Devuelve invitaciones, miembros y ultimos eventos de auditoria.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/admin/user/create</td>
+                    <td>Crea usuario normal o admin.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="method post">POST</span></td>
+                    <td class="route-path">/admin/user/delete/{cid}</td>
+                    <td>Borra usuario por ID.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="callout warning" style="margin-top: 1rem">
+              <strong>Precios por rareza.</strong> <code>RarityType</code> define multiplicadores:
+              comun 1.0, raro 2.5, epico 5.0 y legendario 10.0. Si el precio recibido es menor o igual a
+              cero, se calcula automaticamente segun tipo y rareza.
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="sse">
+          <div class="section-inner">
+            <h2>SSE y tiempo real</h2>
+            <p class="section-intro">
+              El servidor instala Ktor SSE y mantiene dos buses en memoria con <code>MutableSharedFlow</code>:
+              uno global y otro por usuario. Esto sirve para avisos ligeros sin abrir WebSockets.
+            </p>
+
+            <div class="grid cols-2">
+              <article class="card">
+                <h3>GlobalBusSSE</h3>
+                <p>
+                  Publica eventos globales con capacidad extra de 10. Actualmente tiene shortcut
+                  <code>publishStoreReload()</code> para <code>RELOAD.STORE</code>.
+                </p>
+              </article>
+              <article class="card">
+                <h3>UserBusSSE</h3>
+                <p>
+                  Publica eventos dirigidos a un UID. Tiene shortcuts para <code>ADDED.TASK</code> y
+                  <code>SIGN.OFF</code>.
+                </p>
+              </article>
+            </div>
+
+            <h3 style="margin-top: 1.6rem">Rutas y eventos</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Ruta/evento</th>
+                    <th>Tipo</th>
+                    <th>Uso</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="route-path">/events/global</td>
+                    <td>SSE publico</td>
+                    <td>Escucha eventos emitidos en el bus global.</td>
+                  </tr>
+                  <tr>
+                    <td class="route-path">/events/user</td>
+                    <td>SSE protegido</td>
+                    <td>Escucha eventos cuyo UID destino coincide con el subject del access token.</td>
+                  </tr>
+                  <tr>
+                    <td><code>RELOAD.STORE</code></td>
+                    <td>Global</td>
+                    <td>Indica que clientes deben recargar la tienda.</td>
+                  </tr>
+                  <tr>
+                    <td><code>ADDED.TASK</code></td>
+                    <td>Usuario</td>
+                    <td>Payload <code>{gid, tid}</code>, pensado para notificar tareas nuevas.</td>
+                  </tr>
+                  <tr>
+                    <td><code>SIGN.OFF</code></td>
+                    <td>Usuario</td>
+                    <td>Ordena cerrar sesion, por ejemplo tras cambiar email/login.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="estaticos">
+          <div class="section-inner">
+            <h2>Recursos estaticos</h2>
+            <p class="section-intro">
+              Ademas de la API, el backend sirve archivos estaticos. Esto cubre panel de administracion,
+              recursos auxiliares, minijuegos, assets subidos y Android App Links.
+            </p>
+
+            <div class="grid cols-2">
+              <article class="card">
+                <h3>Rutas estaticas</h3>
+                <ul>
+                  <li><code>/.well-known/assetlinks.json</code>: JSON para enlaces de Android.</li>
+                  <li><code>/static</code>: archivos de <code>resources/static</code>.</li>
+                  <li><code>/admin</code>: archivos de <code>resources/admin</code> con <code>index.html</code> por defecto.</li>
+                  <li><code>/assets</code>: archivos externos desde <code>UPLOAD_DIR</code> o <code>uploads</code>.</li>
+                </ul>
+              </article>
+              <article class="card">
+                <h3>Archivos destacados</h3>
+                <ul>
+                  <li><code>resources/admin/index.html</code>: UI admin principal.</li>
+                  <li><code>resources/admin/login.html</code>: pantalla de login admin.</li>
+                  <li><code>resources/admin/constant.js</code>: constantes del admin estatico.</li>
+                  <li><code>resources/static/minigames/clicker.html</code>: minijuego clicker.</li>
+                  <li><code>resources/templates/verification.html</code>: plantilla de correo.</li>
+                </ul>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="errores">
+          <div class="section-inner">
+            <h2>Errores y contratos</h2>
+            <p class="section-intro">
+              La respuesta de error comun es <code>Errors(errorCode, errorText)</code>, donde
+              <code>errorCode</code> es el ordinal del enum <code>ErrorCodes</code>. Las respuestas OK sin
+              cuerpo de dominio suelen usar <code>{"aknowledged": true}</code>.
+            </p>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Codigo</th>
+                    <th>Significado</th>
+                    <th>Uso habitual</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>ERR_INVALIDTOKEN</code></td>
+                    <td>Token invalido o expirado.</td>
+                    <td>JWT challenge, token mal firmado, subject invalido.</td>
+                  </tr>
+                  <tr>
+                    <td><code>ERR_MALFORMEDMESSAGE</code></td>
+                    <td>JSON o parametros mal formados.</td>
+                    <td><code>BadRequestException</code>, tipos invalidos, parseos.</td>
+                  </tr>
+                  <tr>
+                    <td><code>ERR_RESOURCEMISSING</code></td>
+                    <td>Recurso no encontrado.</td>
+                    <td>Usuario, grupo, tarea, codigo o cosmetico inexistente.</td>
+                  </tr>
+                  <tr>
+                    <td><code>ERR_RESOURCEALREADYEXISTS</code></td>
+                    <td>Recurso duplicado.</td>
+                    <td>Usuario ya existe, usuario ya esta unido, cosmetico ya comprado.</td>
+                  </tr>
+                  <tr>
+                    <td><code>ERR_BLANKVALUE</code></td>
+                    <td>Campo requerido vacio.</td>
+                    <td>Registro, login o verificacion con strings vacios.</td>
+                  </tr>
+                  <tr>
+                    <td><code>ERR_BADVALUE</code></td>
+                    <td>Valor no aceptado.</td>
+                    <td>Idioma no soportado, rol invalido, codigo incorrecto.</td>
+                  </tr>
+                  <tr>
+                    <td><code>ERR_FORBIDDEN</code></td>
+                    <td>Permiso insuficiente.</td>
+                    <td>Rutas protegidas, admin, grupo o tarea sin rol necesario.</td>
+                  </tr>
+                  <tr>
+                    <td><code>ERR_INTERNALERROR</code></td>
+                    <td>Error interno.</td>
+                    <td>Excepciones SQL, OAuth externo, errores desconocidos.</td>
+                  </tr>
+                  <tr>
+                    <td><code>ERR_RESOURCENOTMODIFIED</code></td>
+                    <td>No se pudo modificar.</td>
+                    <td>Ediciones fallidas o borrados no aplicados.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="callout warning" style="margin-top: 1rem">
+              <strong>Contrato con typo.</strong> El mapa de exito se llama <code>OK_MESSAGE_RESPONSE</code>
+              y devuelve <code>aknowledged</code>, con la palabra escrita sin la <code>c</code> de
+              <code>acknowledged</code>. El frontend debe respetar el contrato actual si ya depende de el.
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="pruebas">
+          <div class="section-inner">
+            <h2>Pruebas y herramientas</h2>
+            <p class="section-intro">
+              El proyecto incluye pruebas unitarias de rutas de grupos y una herramienta Python para
+              probar endpoints contra un servidor real. Tambien se valido la compilacion Kotlin durante
+              la generacion de esta documentacion.
+            </p>
+
+            <div class="grid cols-3">
+              <article class="card">
+                <h3>Gradle</h3>
+                <p>
+                  Tareas utiles: <code>test</code>, <code>build</code>, <code>buildFatJar</code>,
+                  <code>run</code>, <code>buildImage</code> y <code>runDocker</code>.
+                </p>
+              </article>
+              <article class="card">
+                <h3>ApplicationTest</h3>
+                <p>
+                  Simula <code>GroupRepo</code> mediante <code>groupRepoProvider</code> y valida respuestas
+                  de invitaciones sin levantar base de datos real.
+                </p>
+              </article>
+              <article class="card">
+                <h3>test_routes.py</h3>
+                <p>
+                  Permite probar fases de rutas publicas, auth, OAuth, avatar, grupos, tareas, tienda,
+                  admin y estaticos. Tiene modo CLI y modo GUI local.
+                </p>
+              </article>
+            </div>
+
+            <pre><code># Comprobacion ejecutada localmente
+cd backend
+.\gradlew.bat compileKotlin
+
+# Resultado observado
+BUILD/compilacion Kotlin: correcta</code></pre>
+          </div>
+        </section>
+
+        <section class="section" id="riesgos">
+          <div class="section-inner">
+            <h2>Estado real y riesgos</h2>
+            <p class="section-intro">
+              Estos puntos no son teoria: salen de leer el codigo actual. No impiden necesariamente
+              desarrollar, pero conviene tratarlos antes de una entrega final o despliegue real.
+            </p>
+
+            <div class="risk-list">
+              <div class="risk high">
+                <strong>CORS permite cualquier host con credenciales</strong>
+                <p>
+                  <code>anyHost()</code> junto con <code>allowCredentials = true</code> abre demasiado la
+                  superficie. En produccion deberia limitarse a dominios concretos.
+                </p>
+              </div>
+              <div class="risk high">
+                <strong>Admin inicial con password conocida</strong>
+                <p>
+                  En base vacia se crea <code>admin@astrais.com</code> con password <code>1234</code>.
+                  Debe cambiarse por secreto de entorno, bootstrap manual o deshabilitarse fuera de dev.
+                </p>
+              </div>
+              <div class="risk high">
+                <strong>Creacion admin de usuarios guarda password sin hash</strong>
+                <p>
+                  <code>/admin/user/create</code> llama a <code>createUser</code> con la password recibida.
+                  Ese DAO almacena el string directamente; deberia aplicar <code>hashPassword()</code>.
+                </p>
+              </div>
+              <div class="risk">
+                <strong>Validacion JWT no comprueba que el usuario exista</strong>
+                <p>
+                  <code>validateAccessToken</code> y <code>validateRefreshToken</code> validan UID numerico
+                  positivo, pero la comprobacion contra BD esta comentada.
+                </p>
+              </div>
+              <div class="risk">
+                <strong>Puerto de arranque inconsistente</strong>
+                <p>
+                  YAML usa <code>KTOR_PORT</code>, mientras <code>initSampleServer()</code> lee
+                  <code>ktor.deployment.port</code> como variable de entorno.
+                </p>
+              </div>
+              <div class="risk">
+                <strong>OAuth web hardcodeado a localhost</strong>
+                <p>
+                  El callback redirige a <code>http://localhost:5173/oauthCallback</code>, lo que no sirve
+                  directamente para produccion sin parametrizar frontend URL.
+                </p>
+              </div>
+              <div class="risk">
+                <strong>Vinculacion OAuth comprueba proveedor globalmente</strong>
+                <p>
+                  <code>addOauthToAccount</code> consulta si existe el proveedor <code>GOOGLE</code> sin
+                  filtrar por usuario, por lo que una cuenta podria bloquear a todas.
+                </p>
+              </div>
+              <div class="risk">
+                <strong>Avatar equipado no filtra por UID</strong>
+                <p>
+                  <code>getUserEquippedAvatar(uid)</code> selecciona <code>id_avatar_equipado</code> sin
+                  <code>where uid</code>. Puede devolver el avatar de otro usuario.
+                </p>
+              </div>
+              <div class="risk">
+                <strong>Gestion de archivos cosmeticos tiene inconsistencias</strong>
+                <p>
+                  <code>getCosmeticPath(uploadDir, filename)</code> ignora <code>filename</code> y devuelve
+                  carpeta. En borrados/rollback puede intentar borrar el directorio en vez del archivo.
+                </p>
+              </div>
+              <div class="risk">
+                <strong>Validacion de extension de avatar es fragil</strong>
+                <p>
+                  Algunas condiciones usan <code>!endsWith(".png") || !endsWith(".jpg")</code>, expresion
+                  que no puede ser falsa para una extension unica. Debe ser <code>&amp;&amp;</code> o una
+                  lista de extensiones permitidas.
+                </p>
+              </div>
+              <div class="risk">
+                <strong>Logs exponen datos sensibles</strong>
+                <p>
+                  La inicializacion de base de datos imprime nombre de base, usuario y password en consola.
+                  Debe eliminarse o sanearse.
+                </p>
+              </div>
+              <div class="risk">
+                <strong>StatusPages generico incompleto</strong>
+                <p>
+                  Hay handlers especificos, pero los handlers genericos de excepcion estan comentados. Un
+                  error no cubierto puede devolver una respuesta menos controlada.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="inventario">
+          <div class="section-inner">
+            <h2>Inventario de archivos</h2>
+            <p class="section-intro">
+              Este inventario resume los archivos de backend mas relevantes y su responsabilidad.
+            </p>
+
+            <div class="file-grid">
+              <div class="file-row">
+                <code>Application.kt</code>
+                <span>Arranque, instalacion de plugins Ktor, rutas principales, estaticos y assetlinks.</span>
+              </div>
+              <div class="file-row">
+                <code>Constants.kt</code>
+                <span>Idiomas, roles, tipos de tarea y respuesta OK comun.</span>
+              </div>
+              <div class="file-row">
+                <code>Errors.kt</code>
+                <span>Enum de codigos de error y DTO de error serializable.</span>
+              </div>
+              <div class="file-row">
+                <code>SSE.kt</code>
+                <span>Eventos SSE, buses global/usuario y rutas <code>/events/global</code>, <code>/events/user</code>.</span>
+              </div>
+              <div class="file-row">
+                <code>StoreRoutes.kt</code>
+                <span>DTO de cosmetico y rutas de tienda para listar, comprar y equipar.</span>
+              </div>
+              <div class="file-row">
+                <code>auth/AuthTypes.kt</code>
+                <span>DTOs de login, registro, verificacion, OAuth, edicion de usuario y email login.</span>
+              </div>
+              <div class="file-row">
+                <code>auth/Authenticator.kt</code>
+                <span>Rutas de autenticacion basica, perfil, edicion, borrado y hashing bcrypt.</span>
+              </div>
+              <div class="file-row">
+                <code>auth/Jwt.kt</code>
+                <span>Generacion, verificacion y configuracion de access/refresh JWT.</span>
+              </div>
+              <div class="file-row">
+                <code>auth/OAuth.kt</code>
+                <span>OAuth Google web, login Android, vinculacion y desvinculacion OAuth.</span>
+              </div>
+              <div class="file-row">
+                <code>auth/AuthRepoImpl.kt</code>
+                <span>Login, registro, correo de verificacion, regeneracion de tokens y cambio de email.</span>
+              </div>
+              <div class="file-row">
+                <code>db/Database.kt</code>
+                <span>Conexion PostgreSQL, creacion de esquema y seed de admin inicial.</span>
+              </div>
+              <div class="file-row">
+                <code>db/DatabaseTables.kt</code>
+                <span>Declaracion de tablas, entidades, enums y relaciones Exposed.</span>
+              </div>
+              <div class="file-row">
+                <code>db/DatabaseDAO.kt</code>
+                <span>Contrato DAO central y DTOs internos de tareas, grupos, invites y miembros.</span>
+              </div>
+              <div class="file-row">
+                <code>db/DatabaseDAOImpl.kt</code>
+                <span>Implementacion de persistencia para usuarios, OAuth, grupos, tareas, tienda, admin e invites.</span>
+              </div>
+              <div class="file-row">
+                <code>groups/GroupTypes.kt</code>
+                <span>DTOs publicos de grupos, invitaciones, miembros, roles, auditoria y requests.</span>
+              </div>
+              <div class="file-row">
+                <code>groups/GroupRepo.kt</code>
+                <span>Contrato y enums de resultado de operaciones de grupos.</span>
+              </div>
+              <div class="file-row">
+                <code>groups/GroupRepoImpl.kt</code>
+                <span>Permisos, invitaciones seguras, union por codigo, auditoria, miembros y ownership.</span>
+              </div>
+              <div class="file-row">
+                <code>groups/Groups.kt</code>
+                <span>Endpoints HTTP de grupos.</span>
+              </div>
+              <div class="file-row">
+                <code>tasks/Tasks.kt</code>
+                <span>DTOs y rutas HTTP de tareas.</span>
+              </div>
+              <div class="file-row">
+                <code>tasks/TaskRepo.kt</code>
+                <span>Contrato de repositorio de tareas y codigos de resultado.</span>
+              </div>
+              <div class="file-row">
+                <code>tasks/TaskRepoImpl.kt</code>
+                <span>Permisos de tareas, calculo de recompensas, listar, editar, completar, descompletar y borrar.</span>
+              </div>
+              <div class="file-row">
+                <code>avatar/Avatar.kt</code>
+                <span>Ruta para consultar avatar equipado.</span>
+              </div>
+              <div class="file-row">
+                <code>avatar/CosmeticUtils.kt</code>
+                <span>DTOs de recursos iniciales y carga de cosmeticos empaquetados.</span>
+              </div>
+              <div class="file-row">
+                <code>admin/AdminRoutes.kt</code>
+                <span>Rutas admin, DTOs admin, rarezas, multipart y gestion de usuarios/grupos/cosmeticos.</span>
+              </div>
+              <div class="file-row">
+                <code>admin/AdminDaoImpl.kt</code>
+                <span>Persistencia admin y guardado de archivos cosmeticos.</span>
+              </div>
+              <div class="file-row">
+                <code>resources/application.yaml</code>
+                <span>Configuracion Ktor, JWT, DB y Google mediante variables de entorno.</span>
+              </div>
+              <div class="file-row">
+                <code>resources/logback.xml</code>
+                <span>Configuracion de logging a consola.</span>
+              </div>
+              <div class="file-row">
+                <code>src/test/kotlin/ApplicationTest.kt</code>
+                <span>Tests de rutas de invitacion con repo simulado.</span>
+              </div>
+              <div class="file-row">
+                <code>test_routes.py</code>
+                <span>Probador manual/GUI de endpoints contra un backend en ejecucion.</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <footer class="footer">
+          Documento generado para explicar la parte backend de Astrais de forma estatica en HTML y CSS.
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

@@ -7,6 +7,7 @@ export interface ArcadeGameDefinition {
   title: string
   description: string
   availability: GameAvailability
+  visibleInCatalog?: boolean
   statusLabel: string
   difficulty: string
   rewardNote: string
@@ -28,8 +29,9 @@ export const gameCatalog: ArcadeGameDefinition[] = [
     id: NEBULA_DASH_GAME_ID,
     title: 'Nebula Dash',
     description: 'Carrera de carriles entre meteoros: esquiva, recoge fragmentos y protege tus escudos.',
-    availability: 'available',
-    statusLabel: 'Jugable',
+    availability: 'upcoming',
+    visibleInCatalog: false,
+    statusLabel: 'No disponible',
     difficulty: 'Velocidad',
     rewardNote: '30s de carrera',
     embedPath: `/games/embed/${NEBULA_DASH_GAME_ID}`,
@@ -45,6 +47,8 @@ export const gameCatalog: ArcadeGameDefinition[] = [
     embedPath: `/games/embed/${ASTRA_MEMORY_GAME_ID}`,
   },
 ]
+
+export const visibleGameCatalog = gameCatalog.filter((game) => game.visibleInCatalog !== false)
 
 export function getGameById(gameId: string) {
   return gameCatalog.find((game) => game.id === gameId)

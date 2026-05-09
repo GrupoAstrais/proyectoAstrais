@@ -9,6 +9,41 @@
   --astrais-surface: #1A1D2D;
   --astrais-text: #F8FAFC;
   --astrais-error: #F43F5E;
+  --astrais-text-soft: color-mix(in srgb, var(--astrais-text) 78%, var(--astrais-background) 22%);
+  --astrais-text-muted: color-mix(in srgb, var(--astrais-text) 58%, var(--astrais-background) 42%);
+  --astrais-text-faint: color-mix(in srgb, var(--astrais-text) 36%, var(--astrais-background) 64%);
+  --astrais-border: color-mix(in srgb, var(--astrais-text) 15%, transparent);
+  --astrais-border-strong: color-mix(in srgb, var(--astrais-text) 28%, transparent);
+  --astrais-overlay: color-mix(in srgb, var(--astrais-background) 72%, transparent);
+  --astrais-overlay-soft: color-mix(in srgb, var(--astrais-text) 9%, transparent);
+  --astrais-warning: color-mix(in srgb, var(--astrais-secondary) 58%, var(--astrais-error) 42%);
+  --astrais-reward: color-mix(in srgb, var(--astrais-secondary) 48%, var(--astrais-text) 52%);
+  --astrais-success: var(--astrais-tertiary);
+  --astrais-info: var(--astrais-secondary);
+  --astrais-rarity-common: var(--astrais-text-soft);
+  --astrais-rarity-rare: var(--astrais-tertiary);
+  --astrais-rarity-epic: color-mix(in srgb, var(--astrais-primary) 52%, var(--astrais-error) 48%);
+  --astrais-rarity-legendary: color-mix(in srgb, var(--astrais-warning) 68%, var(--astrais-text) 32%);
+  --astrais-tab-text: color-mix(in srgb, var(--astrais-text) 88%, var(--astrais-secondary) 12%);
+  --astrais-tab-hover: color-mix(in srgb, var(--astrais-secondary) 16%, transparent);
+  --astrais-tab-active-border: color-mix(in srgb, var(--astrais-text) 28%, transparent);
+  --astrais-tab-active-bg: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--astrais-primary) 48%, transparent),
+    color-mix(in srgb, var(--astrais-secondary) 36%, transparent)
+  );
+  --astrais-cta-bg: linear-gradient(
+    90deg,
+    var(--astrais-primary),
+    color-mix(in srgb, var(--astrais-primary) 42%, var(--astrais-error) 58%),
+    var(--astrais-secondary)
+  );
+  --astrais-panel-bg: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--astrais-background) 88%, transparent),
+    color-mix(in srgb, var(--astrais-primary) 30%, var(--astrais-surface) 70%),
+    color-mix(in srgb, var(--astrais-background-alt) 78%, var(--astrais-secondary) 22%)
+  );
 }
 body {
   background: var(--astrais-background);
@@ -16,36 +51,88 @@ body {
 }
 
  @theme {
+  --color-white: var(--astrais-text);
+  --color-black: var(--astrais-background);
+
   --color-primary-500: var(--astrais-primary);
-  --color-primary-600: color-mix(in srgb, var(--astrais-primary) 86%, #000 14%);
-  --color-primary-700: color-mix(in srgb, var(--astrais-primary) 72%, #000 28%);
+  --color-primary-600: color-mix(in srgb, var(--astrais-primary) 86%, var(--astrais-background) 14%);
+  --color-primary-700: color-mix(in srgb, var(--astrais-primary) 72%, var(--astrais-background) 28%);
   --color-primary-900: var(--astrais-background-alt);
 
   --color-accent-mint-300: var(--astrais-tertiary);
-  --color-accent-mint-400: color-mix(in srgb, var(--astrais-tertiary) 86%, #000 14%);
-  --color-accent-mint-500: color-mix(in srgb, var(--astrais-tertiary) 72%, #000 28%);
-  --color-accent-first-beige-300: #E8DCC4;
+  --color-accent-mint-400: color-mix(in srgb, var(--astrais-tertiary) 86%, var(--astrais-background) 14%);
+  --color-accent-mint-500: color-mix(in srgb, var(--astrais-tertiary) 72%, var(--astrais-background) 28%);
+  --color-accent-first-beige-300: var(--astrais-reward);
   --color-accent-beige-300: var(--astrais-text);
 
   --color-secondary-500: var(--astrais-secondary);
-  --color-secondary-600: color-mix(in srgb, var(--astrais-secondary) 86%, #000 14%);
-  --color-secondary-700: color-mix(in srgb, var(--astrais-secondary) 72%, #000 28%);
+  --color-secondary-600: color-mix(in srgb, var(--astrais-secondary) 86%, var(--astrais-background) 14%);
+  --color-secondary-700: color-mix(in srgb, var(--astrais-secondary) 72%, var(--astrais-background) 28%);
   --color-secondary-900: var(--astrais-secondary);
 
   --color-state-success: var(--astrais-tertiary);
-  --color-state-warning: #FFD93D;
+  --color-state-warning: var(--astrais-warning);
   --color-state-error: var(--astrais-error);
   --color-state-info: var(--astrais-secondary);
 
-  --color-background-light: #F8F9FA;
+  --color-background-light: color-mix(in srgb, var(--astrais-text) 92%, var(--astrais-background) 8%);
   --color-background-dark: var(--astrais-background);
-  --color-surface-light: #FFFFFF;
+  --color-surface-light: var(--astrais-text);
   --color-surface-dark: var(--astrais-surface);
 
-  --color-gray-50: #F9FAFB;
-  --color-gray-100: #F3F4F6;
-  --color-gray-300: #D1D5DB;
-  --color-gray-500: #6B7280;
-  --color-gray-700: #374151;
-  --color-gray-900: #111827;
+  --color-slate-50: color-mix(in srgb, var(--astrais-text) 96%, var(--astrais-background) 4%);
+  --color-slate-100: color-mix(in srgb, var(--astrais-text) 90%, var(--astrais-background) 10%);
+  --color-slate-200: var(--astrais-text-soft);
+  --color-slate-300: color-mix(in srgb, var(--astrais-text) 70%, var(--astrais-background) 30%);
+  --color-slate-400: var(--astrais-text-muted);
+  --color-slate-500: var(--astrais-text-faint);
+  --color-slate-600: color-mix(in srgb, var(--astrais-surface) 72%, var(--astrais-text) 28%);
+  --color-slate-700: color-mix(in srgb, var(--astrais-background-alt) 78%, var(--astrais-text) 22%);
+  --color-slate-800: color-mix(in srgb, var(--astrais-surface) 82%, var(--astrais-background) 18%);
+  --color-slate-900: var(--astrais-background-alt);
+  --color-slate-950: var(--astrais-background);
+
+  --color-gray-50: var(--color-slate-50);
+  --color-gray-100: var(--color-slate-100);
+  --color-gray-200: var(--color-slate-200);
+  --color-gray-300: var(--color-slate-300);
+  --color-gray-400: var(--color-slate-400);
+  --color-gray-500: var(--color-slate-500);
+  --color-gray-600: var(--color-slate-600);
+  --color-gray-700: var(--color-slate-700);
+  --color-gray-800: var(--color-slate-800);
+  --color-gray-900: var(--color-slate-900);
+
+  --color-purple-200: color-mix(in srgb, var(--astrais-primary) 42%, var(--astrais-text) 58%);
+  --color-purple-300: color-mix(in srgb, var(--astrais-primary) 58%, var(--astrais-text) 42%);
+  --color-purple-400: color-mix(in srgb, var(--astrais-primary) 76%, var(--astrais-text) 24%);
+  --color-purple-500: var(--astrais-primary);
+  --color-purple-900: color-mix(in srgb, var(--astrais-primary) 34%, var(--astrais-background) 66%);
+
+  --color-pink-200: color-mix(in srgb, var(--astrais-rarity-epic) 38%, var(--astrais-text) 62%);
+  --color-pink-300: color-mix(in srgb, var(--astrais-rarity-epic) 58%, var(--astrais-text) 42%);
+  --color-pink-400: color-mix(in srgb, var(--astrais-rarity-epic) 76%, var(--astrais-text) 24%);
+  --color-pink-500: var(--astrais-rarity-epic);
+
+  --color-blue-300: color-mix(in srgb, var(--astrais-secondary) 58%, var(--astrais-text) 42%);
+  --color-blue-400: color-mix(in srgb, var(--astrais-secondary) 76%, var(--astrais-text) 24%);
+  --color-blue-500: var(--astrais-secondary);
+  --color-blue-600: color-mix(in srgb, var(--astrais-secondary) 82%, var(--astrais-background) 18%);
+  --color-blue-700: color-mix(in srgb, var(--astrais-secondary) 68%, var(--astrais-background) 32%);
+
+  --color-green-300: color-mix(in srgb, var(--astrais-tertiary) 58%, var(--astrais-text) 42%);
+  --color-green-400: color-mix(in srgb, var(--astrais-tertiary) 76%, var(--astrais-text) 24%);
+  --color-green-500: var(--astrais-tertiary);
+  --color-green-600: color-mix(in srgb, var(--astrais-tertiary) 82%, var(--astrais-background) 18%);
+
+  --color-red-200: color-mix(in srgb, var(--astrais-error) 32%, var(--astrais-text) 68%);
+  --color-red-300: color-mix(in srgb, var(--astrais-error) 52%, var(--astrais-text) 48%);
+  --color-red-400: color-mix(in srgb, var(--astrais-error) 76%, var(--astrais-text) 24%);
+  --color-red-500: var(--astrais-error);
+
+  --color-amber-200: color-mix(in srgb, var(--astrais-warning) 32%, var(--astrais-text) 68%);
+  --color-amber-300: color-mix(in srgb, var(--astrais-warning) 52%, var(--astrais-text) 48%);
+  --color-yellow-300: color-mix(in srgb, var(--astrais-warning) 58%, var(--astrais-text) 42%);
+  --color-yellow-400: var(--astrais-warning);
+  --color-orange-500: var(--astrais-warning);
 }

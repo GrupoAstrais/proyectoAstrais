@@ -1,0 +1,1389 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Explicacion completa de la aplicacion Android de Astrais</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./astrais-android-explicacion.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">APK</div>
+          <div>
+            <strong>Astrais Android</strong>
+            <span>Documentacion profunda de la app movil</span>
+          </div>
+        </div>
+        <nav class="toc" aria-label="Indice">
+          <a href="#resumen">Resumen ejecutivo</a>
+          <a href="#stack">Stack y Gradle</a>
+          <a href="#estructura">Estructura</a>
+          <a href="#arranque">Arranque Android</a>
+          <a href="#arquitectura">Arquitectura</a>
+          <a href="#navegacion">Navegacion</a>
+          <a href="#api">API y backend</a>
+          <a href="#sesion">Sesion y seguridad</a>
+          <a href="#offline">Room y offline</a>
+          <a href="#sync">Sincronizacion</a>
+          <a href="#features">Funcionalidades</a>
+          <a href="#ui">UI y tema</a>
+          <a href="#recursos">Recursos</a>
+          <a href="#pruebas">Build y pruebas</a>
+          <a href="#riesgos">Estado real y riesgos</a>
+          <a href="#inventario">Inventario de archivos</a>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <header class="hero">
+          <div class="hero-inner">
+            <div>
+              <p class="eyebrow">Proyecto Astrais / Android nativo</p>
+              <h1>Explicacion completa de la aplicacion Android</h1>
+              <p class="hero-lead">
+                Este documento describe la app movil de Astrais de extremo a extremo:
+                configuracion Gradle, manifest, ciclo de arranque, inyeccion con Hilt,
+                navegacion Compose, llamadas Ktor al backend, persistencia local con Room,
+                sesiones cifradas, modo invitado, trabajo offline, WorkManager, pantallas,
+                tema visual, recursos, pruebas y riesgos tecnicos reales detectados al leer
+                el codigo fuente.
+              </p>
+              <div class="pill-row">
+                <span class="pill primary">Kotlin 2.0.21</span>
+                <span class="pill primary">Jetpack Compose</span>
+                <span class="pill success">Room + WorkManager</span>
+                <span class="pill">Ktor Client 3.1.3</span>
+                <span class="pill">Hilt 2.51.1</span>
+                <span class="pill warning">Offline-first parcial</span>
+              </div>
+            </div>
+            <div class="hero-panel">
+              <strong>Revision local</strong>
+              <p>
+                Analisis realizado sobre <code>AstraisAndroid</code>. La comprobacion
+                <code>gradlew.bat :app:compileDebugKotlin</code> se intento el 2026-05-09 y
+                quedo bloqueada porque falta <code>AstraisAndroid/local.properties</code>.
+              </p>
+            </div>
+          </div>
+        </header>
+
+        <section class="section" id="resumen">
+          <div class="section-inner">
+            <h2>Resumen ejecutivo</h2>
+            <p class="section-lead">
+              La aplicacion Android es el cliente movil principal de Astrais. Es una app
+              nativa en Kotlin con Compose, arquitectura por capas, autenticacion JWT,
+              inicio con Google, perfil, tareas gamificadas, grupos, invitaciones,
+              tienda, inventario, logros locales, widget y soporte offline para tareas.
+              No es solo una interfaz: contiene reglas de sincronizacion, migracion de
+              tareas de invitado a usuario real, cache local y control de sesion reactivo.
+            </p>
+
+            <div class="grid four">
+              <div class="metric">
+                <strong>1</strong>
+                <span>Modulo Gradle Android: <code>:app</code>.</span>
+              </div>
+              <div class="metric">
+                <strong>26</strong>
+                <span>API minima. La app compila contra SDK 35.</span>
+              </div>
+              <div class="metric">
+                <strong>3</strong>
+                <span>Entidades Room: tareas, grupos y acciones pendientes.</span>
+              </div>
+              <div class="metric">
+                <strong>5</strong>
+                <span>Tabs principales en la barra inferior: inicio, tareas, crear, grupos, tienda.</span>
+              </div>
+            </div>
+
+            <div class="callout">
+              <strong>Idea central.</strong>
+              La app esta disenada como cliente reactivo: la UI observa <code>StateFlow</code>
+              y <code>Flow</code>, los ViewModels coordinan acciones, los repositorios aplican
+              reglas de negocio, Ktor habla con el backend y Room mantiene una fuente local
+              para que tareas y grupos sobrevivan a cambios de pantalla y cortes de conexion.
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="stack">
+          <div class="section-inner">
+            <h2>Stack y Gradle</h2>
+            <p class="section-lead">
+              El proyecto usa Gradle Kotlin DSL, catalogo de versiones y un unico modulo
+              Android. La configuracion vive en <code>AstraisAndroid/settings.gradle.kts</code>,
+              <code>build.gradle.kts</code>, <code>gradle/libs.versions.toml</code> y
+              <code>app/build.gradle.kts</code>.
+            </p>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Area</th>
+                    <th>Configuracion real</th>
+                    <th>Funcion en el proyecto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Identidad Android</td>
+                    <td><code>namespace</code> y <code>applicationId</code>: <code>com.mm.astraisandroid</code></td>
+                    <td>Paquete final de la app, usado por Hilt, manifest, tests y recursos.</td>
+                  </tr>
+                  <tr>
+                    <td>SDK</td>
+                    <td><code>compileSdk 35</code>, <code>targetSdk 35</code>, <code>minSdk 26</code></td>
+                    <td>Permite usar APIs modernas manteniendo compatibilidad desde Android 8.</td>
+                  </tr>
+                  <tr>
+                    <td>Kotlin y Java</td>
+                    <td>Kotlin <code>2.0.21</code>, Java target/source <code>11</code></td>
+                    <td>Base del codigo, corrutinas, Compose y serializacion.</td>
+                  </tr>
+                  <tr>
+                    <td>Android Gradle Plugin</td>
+                    <td><code>8.13.0</code></td>
+                    <td>Compilacion, empaquetado, BuildConfig, manifest merge y recursos.</td>
+                  </tr>
+                  <tr>
+                    <td>Compose</td>
+                    <td>Compose plugin Kotlin y BOM <code>2026.02.00</code></td>
+                    <td>Construccion declarativa de toda la interfaz principal.</td>
+                  </tr>
+                  <tr>
+                    <td>Hilt</td>
+                    <td><code>com.google.dagger:hilt-android:2.51.1</code> + KSP</td>
+                    <td>Inyeccion de APIs, repositorios, DAOs, SessionManager, logger y workers.</td>
+                  </tr>
+                  <tr>
+                    <td>Red</td>
+                    <td>Ktor Client Android, Auth, Logging, ContentNegotiation, JSON</td>
+                    <td>Cliente HTTP compartido con bearer tokens y renovacion automatica.</td>
+                  </tr>
+                  <tr>
+                    <td>Persistencia</td>
+                    <td>Room <code>2.6.1</code>, Security Crypto <code>1.1.0</code></td>
+                    <td>Cache local, cola offline y tokens cifrados.</td>
+                  </tr>
+                  <tr>
+                    <td>Background</td>
+                    <td>WorkManager <code>2.9.0</code> + Hilt Worker</td>
+                    <td>Sincroniza acciones pendientes cuando vuelve la conectividad.</td>
+                  </tr>
+                  <tr>
+                    <td>Media y assets remotos</td>
+                    <td>Coil Compose y Lottie Compose</td>
+                    <td>Carga avatars remotos y mascotas Lottie desde el backend.</td>
+                  </tr>
+                  <tr>
+                    <td>Login Google</td>
+                    <td>Credentials API, Play Services Auth y Google ID</td>
+                    <td>Obtiene un ID token que se valida en <code>/auth/google/androidlogin</code>.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="callout warning">
+              <strong>Variable sensible de build.</strong>
+              <code>app/build.gradle.kts</code> lee <code>GOOGLE_WEB_CLIENT_ID</code> desde
+              <code>AstraisAndroid/local.properties</code> y lo inyecta en <code>BuildConfig</code>.
+              Si el archivo no existe, Gradle falla antes de compilar.
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="estructura">
+          <div class="section-inner">
+            <h2>Estructura del proyecto</h2>
+            <p class="section-lead">
+              La estructura esta organizada por capas tecnicas y por features de UI. La
+              raiz Android contiene el wrapper de Gradle, catalogo de dependencias y el
+              modulo <code>app</code>.
+            </p>
+
+            <pre class="file-tree"><code>AstraisAndroid/
+  build.gradle.kts
+  settings.gradle.kts
+  gradle.properties
+  gradlew / gradlew.bat
+  gradle/libs.versions.toml
+  app/
+    build.gradle.kts
+    proguard-rules.pro
+    src/main/
+      AndroidManifest.xml
+      java/com/mm/astraisandroid/
+        AstraisApp.kt
+        MainActivity.kt
+        AstraisWidget.kt
+        data/
+          api/
+          local/
+          models/
+          preferences/
+          repository/
+        di/
+        navigation/
+        sync/
+        ui/
+          components/
+          core/
+          features/
+          theme/
+        util/
+      res/
+        drawable/
+        layout/
+        mipmap-*/
+        values/
+        values-en/
+        values-night/
+        xml/
+    src/test/
+    src/androidTest/</code></pre>
+
+            <div class="grid">
+              <div class="card">
+                <h3><code>data/api</code></h3>
+                <p>
+                  Define DTOs serializables y servicios Ktor para autenticacion, usuario,
+                  grupos, tareas y tienda. Tambien contiene <code>KtorClient.kt</code> con
+                  la URL base y la configuracion global de red.
+                </p>
+              </div>
+              <div class="card">
+                <h3><code>data/local</code></h3>
+                <p>
+                  Agrupa Room: base de datos, DAOs y entidades. Mantiene tareas, grupos
+                  y la cola de acciones pendientes para sincronizar mas tarde.
+                </p>
+              </div>
+              <div class="card">
+                <h3><code>data/repository</code></h3>
+                <p>
+                  Capa de reglas de negocio: login, logout, migracion de invitado,
+                  sincronizacion de tareas, grupos, tienda y perfil.
+                </p>
+              </div>
+              <div class="card">
+                <h3><code>ui/features</code></h3>
+                <p>
+                  Pantallas Compose separadas por dominio: auth, home, tasks, groups,
+                  store, profile, logros y minigames.
+                </p>
+              </div>
+              <div class="card">
+                <h3><code>sync</code></h3>
+                <p>
+                  Programacion y ejecucion de WorkManager para enviar al backend las
+                  acciones offline guardadas en Room.
+                </p>
+              </div>
+              <div class="card">
+                <h3><code>util</code></h3>
+                <p>
+                  Idioma, conectividad, render de avatar, cache de mascotas Lottie y
+                  logging estructurado con Timber.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="arranque">
+          <div class="section-inner">
+            <h2>Arranque Android</h2>
+            <p class="section-lead">
+              El manifest define permisos de red, la clase <code>Application</code>, la
+              actividad principal, deep links, App Links, widget y la integracion de
+              WorkManager con Hilt.
+            </p>
+
+            <div class="timeline">
+              <div class="timeline-item">
+                <strong>1. Manifest</strong>
+                <p>
+                  Solicita <code>INTERNET</code> y <code>ACCESS_NETWORK_STATE</code>.
+                  La app usa <code>android:name=".AstraisApp"</code>, permite backup,
+                  soporta RTL y tiene <code>usesCleartextTraffic="true"</code>.
+                </p>
+              </div>
+              <div class="timeline-item">
+                <strong>2. AstraisApp</strong>
+                <p>
+                  Es <code>@HiltAndroidApp</code>, planta <code>Timber.DebugTree</code>
+                  en debug, inyecta un <code>HttpClient</code> compartido y expone
+                  <code>Configuration.Provider</code> para que WorkManager use
+                  <code>HiltWorkerFactory</code>.
+                </p>
+              </div>
+              <div class="timeline-item">
+                <strong>3. MainActivity</strong>
+                <p>
+                  Es <code>@AndroidEntryPoint</code>. Aplica idioma con
+                  <code>LocaleHelper</code>, activa edge-to-edge, recoge deep links del
+                  intent, crea los ViewModels principales y renderiza la UI Compose.
+                </p>
+              </div>
+              <div class="timeline-item">
+                <strong>4. Tema</strong>
+                <p>
+                  <code>AstraisandroidTheme</code> recibe el tema equipado por el usuario
+                  si esta disponible. Si no, usa el esquema oscuro o claro por defecto.
+                </p>
+              </div>
+              <div class="timeline-item">
+                <strong>5. Navegacion</strong>
+                <p>
+                  La ruta inicial es <code>Home</code> si <code>SessionManager.hasAnySession()</code>
+                  devuelve true; si no, empieza en <code>Login</code>.
+                </p>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Elemento manifest</th>
+                    <th>Detalle</th>
+                    <th>Impacto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>MainActivity</code></td>
+                    <td><code>exported=true</code>, <code>portrait</code>, <code>singleTask</code></td>
+                    <td>Es el punto de entrada, bloquea orientacion vertical y recibe nuevos intents con <code>onNewIntent</code>.</td>
+                  </tr>
+                  <tr>
+                    <td>Deep link custom</td>
+                    <td><code>astrais://groups/join</code></td>
+                    <td>Permite abrir invitaciones internas a grupos desde enlaces custom.</td>
+                  </tr>
+                  <tr>
+                    <td>App Link HTTPS</td>
+                    <td><code>https://astrais.app/groups/join</code> con <code>autoVerify=true</code></td>
+                    <td>Permite invitaciones compartibles por URL web si el dominio esta verificado.</td>
+                  </tr>
+                  <tr>
+                    <td>Widget</td>
+                    <td><code>.AstraisWidget</code> + <code>@xml/widget_info</code></td>
+                    <td>Publica un widget de inicio con contador de tareas pendientes.</td>
+                  </tr>
+                  <tr>
+                    <td>WorkManager initializer</td>
+                    <td>Se elimina el inicializador por defecto de AndroidX Startup</td>
+                    <td>Evita que WorkManager arranque sin la fabrica Hilt inyectada.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="arquitectura">
+          <div class="section-inner">
+            <h2>Arquitectura general</h2>
+            <p class="section-lead">
+              La app sigue un patron MVVM pragmatico. Compose observa estado, los
+              ViewModels hacen de coordinadores de caso de uso, los repositorios deciden
+              entre red/local/offline, y las fuentes de datos son Ktor, Room y preferencias
+              cifradas.
+            </p>
+
+            <div class="diagram" aria-label="Diagrama de arquitectura">
+              <div class="diagram-row">
+                <div class="diagram-node"><strong>Compose Screens</strong><span>UI declarativa</span></div>
+                <div class="diagram-node"><strong>ViewModels</strong><span>StateFlow + eventos</span></div>
+                <div class="diagram-node"><strong>Repositories</strong><span>reglas de dominio</span></div>
+                <div class="diagram-node"><strong>Data sources</strong><span>Ktor / Room / prefs</span></div>
+                <div class="diagram-node"><strong>Backend</strong><span>API Ktor Astrais</span></div>
+              </div>
+              <div class="arrow">Compose observa estado <- ViewModel emite estado <- Repository resuelve datos <- fuentes locales y remotas</div>
+            </div>
+
+            <div class="grid two">
+              <div class="card">
+                <h3>Flujo de lectura</h3>
+                <ul>
+                  <li>La UI se suscribe con <code>collectAsStateWithLifecycle</code> o <code>collectAsState</code>.</li>
+                  <li>Los ViewModels exponen <code>StateFlow</code> con datos, carga, errores y flags de dialogos.</li>
+                  <li>Las listas persistidas, como tareas y grupos, salen de Room como <code>Flow</code>.</li>
+                  <li>El repositorio refresca desde red y actualiza Room para que la UI reciba el cambio automaticamente.</li>
+                </ul>
+              </div>
+              <div class="card">
+                <h3>Flujo de escritura</h3>
+                <ul>
+                  <li>Si hay conexion, el ViewModel llama al repositorio y este al API remoto.</li>
+                  <li>Si falla una tarea, se actualiza Room de forma optimista y se encola una <code>PendingAction</code>.</li>
+                  <li><code>WorkManager</code> reintenta mas tarde y traduce IDs temporales negativos a IDs reales.</li>
+                  <li>En logout se limpian datos locales para evitar fugas entre usuarios.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Capa</th>
+                    <th>Archivos clave</th>
+                    <th>Responsabilidad</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Aplicacion</td>
+                    <td><code>AstraisApp.kt</code>, <code>MainActivity.kt</code></td>
+                    <td>Ciclo de vida, Hilt, tema, inicio de navegacion, deep links y system bars.</td>
+                  </tr>
+                  <tr>
+                    <td>DI</td>
+                    <td><code>di/AppModule.kt</code></td>
+                    <td>Provee Json, HttpClient, APIs, repositorios, DAOs, Room, SessionManager, SnackbarManager y logger.</td>
+                  </tr>
+                  <tr>
+                    <td>UI</td>
+                    <td><code>ui/features/*</code>, <code>ui/components/*</code></td>
+                    <td>Pantallas, dialogos, tarjetas, bottom bar, formularios y feedback visual.</td>
+                  </tr>
+                  <tr>
+                    <td>Estado</td>
+                    <td><code>*ViewModel.kt</code></td>
+                    <td>Estado observable, acciones de usuario, carga remota, errores y navegacion indirecta.</td>
+                  </tr>
+                  <tr>
+                    <td>Dominio cliente</td>
+                    <td><code>data/repository/*</code>, <code>data/models/*</code></td>
+                    <td>Reglas de negocio: sesiones, tareas, grupos, tienda, perfil y migracion.</td>
+                  </tr>
+                  <tr>
+                    <td>Datos remotos</td>
+                    <td><code>data/api/services/*</code>, <code>KtorClient.kt</code></td>
+                    <td>Contratos HTTP con el backend y renovacion de tokens.</td>
+                  </tr>
+                  <tr>
+                    <td>Datos locales</td>
+                    <td><code>data/local/*</code>, <code>data/preferences/*</code></td>
+                    <td>Room, cola offline, cache de grupos/tareas y preferencias cifradas.</td>
+                  </tr>
+                  <tr>
+                    <td>Segundo plano</td>
+                    <td><code>sync/ScheduleSync.kt</code>, <code>sync/SyncWorker.kt</code></td>
+                    <td>Procesa acciones pendientes cuando hay red y sesion autenticada.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="navegacion">
+          <div class="section-inner">
+            <h2>Navegacion</h2>
+            <p class="section-lead">
+              La navegacion usa Navigation Compose con rutas tipadas serializables. Hay
+              un grafo superior para autenticacion y home, y un grafo interno dentro de
+              <code>HomeContainer</code> para las tabs y pantallas secundarias.
+            </p>
+
+            <div class="grid two">
+              <div class="card">
+                <h3>Grafo principal</h3>
+                <ul>
+                  <li><code>Route.Login</code>: pantalla de acceso.</li>
+                  <li><code>Route.Register</code>: registro y verificacion.</li>
+                  <li><code>Route.Onboarding</code>: configuracion inicial de perfil.</li>
+                  <li><code>Route.Home</code>: contenedor principal con bottom bar.</li>
+                  <li><code>Route.Profile</code>: perfil fuera del NavHost interno.</li>
+                </ul>
+              </div>
+              <div class="card">
+                <h3>Grafo interno de Home</h3>
+                <ul>
+                  <li><code>Home</code>, <code>TasksTab</code>, <code>GroupTab</code>, <code>StoreTab</code>.</li>
+                  <li><code>GroupDetail(gid, role, name, description)</code>.</li>
+                  <li><code>GroupSettings(gid, role, name, description)</code>.</li>
+                  <li><code>Inventory</code> y <code>Logros</code>.</li>
+                  <li>El boton central de la bottom bar abre el dialogo global de crear tarea.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="callout">
+              <strong>Control de acceso.</strong>
+              El modo invitado puede entrar a Home y Tareas locales, pero la app bloquea
+              Grupos y Tienda con snackbar. Si una sesion deja de estar activa, el grafo
+              principal navega a Login y limpia la pila.
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Evento</th>
+                    <th>Quien lo detecta</th>
+                    <th>Resultado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>App abierta sin sesion</td>
+                    <td><code>MainActivity</code> + <code>SessionManager</code></td>
+                    <td>Destino inicial <code>Login</code>.</td>
+                  </tr>
+                  <tr>
+                    <td>App abierta con token o invitado</td>
+                    <td><code>SessionManager.hasAnySession()</code></td>
+                    <td>Destino inicial <code>Home</code>.</td>
+                  </tr>
+                  <tr>
+                    <td>Usuario necesita onboarding</td>
+                    <td><code>MainViewModel.checkOnboarding()</code></td>
+                    <td>Navega a <code>Onboarding</code> y consume la flag.</td>
+                  </tr>
+                  <tr>
+                    <td>Deep link de invitacion</td>
+                    <td><code>MainActivity</code> + <code>MainViewModel</code></td>
+                    <td>Une al grupo si hay sesion real; si no, guarda el enlace para despues.</td>
+                  </tr>
+                  <tr>
+                    <td>Logout</td>
+                    <td><code>PerfilTab</code> / callback de <code>HomeContainer</code></td>
+                    <td>Limpia sesion y datos locales, reinicia el NavController.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="api">
+          <div class="section-inner">
+            <h2>API y conexion con backend</h2>
+            <p class="section-lead">
+              La app habla con el backend de Astrais usando Ktor Client. La URL base esta
+              hardcodeada en <code>data/api/KtorClient.kt</code> como
+              <code>http://172.22.238.162:5684</code>. El cliente instala JSON, logging,
+              timeout y autenticacion bearer.
+            </p>
+
+            <div class="grid two">
+              <div class="card">
+                <h3>Configuracion Ktor</h3>
+                <ul>
+                  <li><code>ContentNegotiation</code> con kotlinx.serialization.</li>
+                  <li><code>Logging</code> en nivel <code>BODY</code>, enviando mensajes al <code>AppLogger</code>.</li>
+                  <li><code>HttpTimeout</code> con 15 segundos de timeout.</li>
+                  <li><code>Auth bearer</code> cargando tokens desde <code>SessionManager</code>.</li>
+                  <li>Renovacion automatica con <code>POST /auth/regenAccess</code>.</li>
+                </ul>
+              </div>
+              <div class="card">
+                <h3>Serializacion</h3>
+                <ul>
+                  <li>Hilt provee <code>Json { ignoreUnknownKeys = true; isLenient = true }</code>.</li>
+                  <li>Los DTOs usan <code>@Serializable</code> y, cuando hace falta, <code>@SerialName</code>.</li>
+                  <li>Las respuestas de error se normalizan con <code>ServerErrorResponse</code>.</li>
+                  <li>Los modelos de dominio convierten DTOs y entidades Room a tipos usados por la UI.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Servicio Android</th>
+                    <th>Endpoints usados</th>
+                    <th>Uso en app</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>AuthApi</code></td>
+                    <td>
+                      <code>POST /auth/login</code>,
+                      <code>POST /auth/register</code>,
+                      <code>POST /auth/verify</code>,
+                      <code>POST /auth/google/androidlogin</code>
+                    </td>
+                    <td>Login con email, registro, verificacion de correo y login Google.</td>
+                  </tr>
+                  <tr>
+                    <td><code>UserApi</code></td>
+                    <td><code>GET /auth/me</code>, <code>PATCH /auth/editUser</code></td>
+                    <td>Perfil, ludiones, XP, GID personal, idioma, nombre y tema equipado.</td>
+                  </tr>
+                  <tr>
+                    <td><code>TaskApi</code></td>
+                    <td>
+                      <code>POST /tasks/{gid}</code>,
+                      <code>POST /tasks</code>,
+                      <code>PATCH /tasks/{tid}/complete</code>,
+                      <code>PATCH /tasks/{tid}/uncomplete</code>,
+                      <code>PATCH /tasks/{tid}/edit</code>,
+                      <code>DELETE /tasks/{tid}/delete</code>
+                    </td>
+                    <td>Listado, creacion, completado, deshacer, edicion y borrado de tareas.</td>
+                  </tr>
+                  <tr>
+                    <td><code>GroupApi</code></td>
+                    <td>
+                      <code>GET /group/userGroups</code>,
+                      <code>POST /groups/createGroup</code>,
+                      <code>PATCH /groups/editGroup</code>,
+                      <code>DELETE /groups/deleteGroup</code>,
+                      <code>POST /groups/addUser</code>,
+                      <code>POST /groups/removeUser</code>,
+                      <code>PATCH /groups/passOwnership</code>,
+                      <code>POST /groups/inviteUrl</code>,
+                      <code>POST /groups/joinByUrl</code>,
+                      <code>POST /groups/joinByCode</code>,
+                      <code>POST /groups/invites</code>,
+                      <code>GET /groups/{gid}/invites</code>,
+                      <code>POST /groups/invites/revoke</code>,
+                      <code>GET /groups/{gid}/members</code>,
+                      <code>POST /groups/leave</code>,
+                      <code>PATCH /groups/setMemberRole</code>,
+                      <code>GET /groups/{gid}/audit</code>
+                    </td>
+                    <td>Grupos, miembros, roles, propiedad, invitaciones y auditoria.</td>
+                  </tr>
+                  <tr>
+                    <td><code>StoreApi</code></td>
+                    <td><code>GET /store/items</code>, <code>POST /store/buy/{id}</code>, <code>POST /store/equip/{id}</code></td>
+                    <td>Tienda, compra y equipamiento de cosmeticos.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="callout danger">
+              <strong>Acoplamiento de entorno.</strong>
+              La URL base apunta a una IP privada por HTTP. Esto sirve para desarrollo
+              en red local, pero en produccion deberia externalizarse por flavor/build
+              config y usar HTTPS sin <code>usesCleartextTraffic</code>.
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="sesion">
+          <div class="section-inner">
+            <h2>Sesion, autenticacion y seguridad</h2>
+            <p class="section-lead">
+              La sesion se gestiona en <code>SessionManagerImpl</code>, que usa
+              <code>EncryptedSharedPreferences</code> con <code>MasterKey</code>. La UI
+              observa <code>StateFlow</code> para saber si hay sesion activa y si es modo
+              invitado.
+            </p>
+
+            <div class="grid">
+              <div class="card">
+                <h3>Datos guardados</h3>
+                <ul>
+                  <li><code>access_token</code> y <code>refresh_token</code>.</li>
+                  <li><code>personal_gid</code> del grupo personal.</li>
+                  <li><code>is_guest</code> para modo invitado.</li>
+                  <li><code>pending_deep_link</code> para invitaciones recibidas antes de login.</li>
+                </ul>
+              </div>
+              <div class="card">
+                <h3>Modo invitado</h3>
+                <ul>
+                  <li>No usa tokens de backend.</li>
+                  <li>Activa <code>isSessionActive</code> para permitir entrar a Home.</li>
+                  <li>Usa <code>SessionManager.GUEST_GID = -1</code>.</li>
+                  <li>Permite tareas locales y bloquea grupos/tienda.</li>
+                </ul>
+              </div>
+              <div class="card">
+                <h3>Promocion a usuario</h3>
+                <ul>
+                  <li>Despues de login/registro, guarda tokens reales.</li>
+                  <li>Obtiene <code>/auth/me</code> para recuperar datos de perfil.</li>
+                  <li>Guarda <code>personalGid</code>.</li>
+                  <li>Migra tareas de invitado al backend si era necesario.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Componente</th>
+                    <th>Comportamiento</th>
+                    <th>Observacion tecnica</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>Ktor Auth</code></td>
+                    <td>Incluye access token en rutas salvo login, register y regenAccess.</td>
+                    <td>Si falla la renovacion, limpia la sesion completa.</td>
+                  </tr>
+                  <tr>
+                    <td><code>AuthRepository</code></td>
+                    <td>Guarda tokens, consulta perfil y decide si hace falta onboarding.</td>
+                    <td>Considera onboarding si el nombre contiene <code>@</code>, es <code>Viajero</code> o <code>NUEVO_USUARIO</code>.</td>
+                  </tr>
+                  <tr>
+                    <td><code>SessionOrchestrator</code></td>
+                    <td>Coordina logout y post-login.</td>
+                    <td>En logout borra sesion, tareas locales y grupos locales.</td>
+                  </tr>
+                  <tr>
+                    <td><code>MainViewModel</code></td>
+                    <td>Observa sesion, procesa deep links y comprueba onboarding.</td>
+                    <td>Tambien usa snackbar global para errores o acciones de invitacion.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="offline">
+          <div class="section-inner">
+            <h2>Room y estrategia offline</h2>
+            <p class="section-lead">
+              La app no depende solo de la red. Usa Room como cache y como registro de
+              cambios pendientes. El soporte offline se centra especialmente en tareas;
+              grupos se cachean para listado, pero sus escrituras dependen del servidor.
+            </p>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Entidad</th>
+                    <th>Tabla</th>
+                    <th>Campos importantes</th>
+                    <th>Funcion</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>TareaEntity</code></td>
+                    <td><code>tareas</code></td>
+                    <td>ID, titulo, descripcion, tipo, estado, prioridad, recompensas, padre, datos extra, <code>isPendingSync</code></td>
+                    <td>Representa tareas locales y remotas; IDs negativos indican creaciones temporales.</td>
+                  </tr>
+                  <tr>
+                    <td><code>GrupoEntity</code></td>
+                    <td><code>grupos</code></td>
+                    <td>ID, nombre, descripcion, rol</td>
+                    <td>Cache reactiva de los grupos del usuario.</td>
+                  </tr>
+                  <tr>
+                    <td><code>PendingAction</code></td>
+                    <td><code>pending_actions</code></td>
+                    <td>Tipo, JSON, targetId, createdAt, retryCount, lastError</td>
+                    <td>Cola de operaciones que deben enviarse al backend cuando vuelva la red.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="grid">
+              <div class="card">
+                <h3><code>TareaDao</code></h3>
+                <p>
+                  Expone tareas como Flow, inserta y reemplaza listas, marca completado o
+                  activo, edita detalles, borra, consulta subtareas y realiza transacciones
+                  que actualizan la tarea y encolan acciones al mismo tiempo.
+                </p>
+              </div>
+              <div class="card">
+                <h3><code>GrupoDao</code></h3>
+                <p>
+                  Guarda el listado local de grupos, borra uno, limpia todos y reemplaza
+                  la lista completa cuando se refresca desde el servidor.
+                </p>
+              </div>
+              <div class="card">
+                <h3><code>ActionDao</code></h3>
+                <p>
+                  Gestiona la cola FIFO de acciones pendientes, incrementa reintentos,
+                  guarda errores, actualiza IDs temporales y elimina acciones agotadas.
+                </p>
+              </div>
+            </div>
+
+            <div class="callout warning">
+              <strong>Migraciones.</strong>
+              La base <code>astrais.db</code> esta en version 2 y usa
+              <code>fallbackToDestructiveMigration()</code>. Si cambia el esquema sin
+              migracion formal, Room puede destruir los datos locales del usuario.
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="sync">
+          <div class="section-inner">
+            <h2>Sincronizacion offline</h2>
+            <p class="section-lead">
+              La sincronizacion combina actualizaciones optimistas, cola local y
+              WorkManager. El usuario ve cambios inmediatos en tareas; si el backend no
+              esta disponible, la accion queda pendiente y se reintenta despues.
+            </p>
+
+            <div class="timeline">
+              <div class="timeline-item">
+                <strong>Accion UI</strong>
+                <p>El usuario crea, completa, descompleta, edita o borra una tarea.</p>
+              </div>
+              <div class="timeline-item">
+                <strong>ViewModel</strong>
+                <p><code>TaskViewModel</code> intenta la operacion directa o llama al metodo optimista si es invitado, offline o hay fallo.</p>
+              </div>
+              <div class="timeline-item">
+                <strong>Room</strong>
+                <p>La tarea se actualiza localmente y se guarda una <code>PendingAction</code> con el tipo de operacion.</p>
+              </div>
+              <div class="timeline-item">
+                <strong>WorkManager</strong>
+                <p><code>scheduleSync(context)</code> programa <code>SyncWorker</code> con red requerida y backoff exponencial.</p>
+              </div>
+              <div class="timeline-item">
+                <strong>SyncWorker</strong>
+                <p>Procesa acciones por orden, traduce IDs temporales, llama al backend y borra acciones exitosas.</p>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Tipo de accion</th>
+                    <th>Operacion remota</th>
+                    <th>Detalle de consistencia</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>CREATE_TASK</code></td>
+                    <td><code>POST /tasks</code></td>
+                    <td>Usa ID local negativo, luego actualiza el ID real y referencias de subtareas.</td>
+                  </tr>
+                  <tr>
+                    <td><code>COMPLETE_TASK</code></td>
+                    <td><code>PATCH /tasks/{tid}/complete</code></td>
+                    <td>Puede completar automaticamente el objetivo padre si todas sus subtareas quedan completas.</td>
+                  </tr>
+                  <tr>
+                    <td><code>UNCOMPLETE_TASK</code></td>
+                    <td><code>PATCH /tasks/{tid}/uncomplete</code></td>
+                    <td>Si una subtarea se reactiva, tambien puede reactivar el objetivo padre.</td>
+                  </tr>
+                  <tr>
+                    <td><code>EDIT_TASK</code></td>
+                    <td><code>PATCH /tasks/{tid}/edit</code></td>
+                    <td>Guarda un JSON con <code>EditTareaRequest</code>.</td>
+                  </tr>
+                  <tr>
+                    <td><code>DELETE_TASK</code></td>
+                    <td><code>DELETE /tasks/{tid}/delete</code></td>
+                    <td>Un 404 se trata como exito porque el recurso ya no existe.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="grid two">
+              <div class="card">
+                <h3>Clasificacion de errores</h3>
+                <p>
+                  <code>SyncWorker</code> considera permanentes los codigos 400, 401, 403,
+                  404 y 409. Considera reintentables 429, 5xx o errores sin codigo. El
+                  maximo de reintentos es 3.
+                </p>
+              </div>
+              <div class="card">
+                <h3>Migracion de invitado</h3>
+                <p>
+                  Al iniciar sesion desde modo invitado, <code>TaskRepository.migrateGuestTasksToServer</code>
+                  reempaqueta acciones con GID <code>-1</code>, usa el GID personal real
+                  y encola tareas huerfanas, priorizando objetivos antes que subtareas.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="features">
+          <div class="section-inner">
+            <h2>Funcionalidades por pantalla</h2>
+            <p class="section-lead">
+              Las pantallas estan agrupadas por dominio. Cada feature tiene una capa UI
+              Compose y, cuando lo necesita, un ViewModel propio.
+            </p>
+
+            <div class="grid two">
+              <div class="card">
+                <h3>Autenticacion</h3>
+                <ul>
+                  <li><code>LoginScreen</code>: email/password, Google CredentialManager y entrada como invitado.</li>
+                  <li><code>RegisterScreen</code>: registro y estado de codigo enviado.</li>
+                  <li><code>OnboardingScreen</code>: nombre, idioma y finalizacion del perfil.</li>
+                  <li><code>AuthBackground</code> y <code>AuthTextField</code>: base visual reutilizable.</li>
+                </ul>
+              </div>
+              <div class="card">
+                <h3>Home</h3>
+                <ul>
+                  <li><code>HomeContainer</code>: Scaffold, snackbar global, bottom bar, red y dialogo global de tarea.</li>
+                  <li><code>HomeTab</code>: cabecera, tarjetas de resumen, accesos a tareas, inventario, tienda, grupos y logros.</li>
+                  <li>Banners superiores para invitado, offline o datos locales.</li>
+                </ul>
+              </div>
+              <div class="card">
+                <h3>Tareas</h3>
+                <ul>
+                  <li><code>TasksTab</code>: listado, filtros, tabs de pendientes/completadas y categorias.</li>
+                  <li><code>TaskViewModel</code>: carga, filtros, creacion, edicion, completado, borrado y sync.</li>
+                  <li><code>CreateTareaDialog</code> y <code>EditTaskDialog</code>: formularios de tareas.</li>
+                  <li><code>TaskCard</code>: acciones y render de subtareas/objetivos.</li>
+                </ul>
+              </div>
+              <div class="card">
+                <h3>Grupos</h3>
+                <ul>
+                  <li><code>GrupoTab</code>: lista de grupos, crear, editar, borrar, unir y compartir.</li>
+                  <li><code>GroupDetailScreen</code>: tareas, miembros, invitaciones y auditoria.</li>
+                  <li><code>GroupSettingsScreen</code>: administracion, roles, historial y zona peligrosa.</li>
+                  <li><code>GroupDetailViewModel</code> y <code>GroupViewModel</code>: orquestan datos y permisos.</li>
+                </ul>
+              </div>
+              <div class="card">
+                <h3>Tienda e inventario</h3>
+                <ul>
+                  <li><code>TiendaTab</code>: listado por categorias, detalle, compra y equipamiento.</li>
+                  <li><code>InventarioTab</code>: cosmeticos poseidos, mascotas, avatares y temas.</li>
+                  <li><code>StoreViewModel</code>: carga, compra y equipamiento con refresco del usuario.</li>
+                  <li><code>InventoryRepository.kt</code> existe pero esta vacio.</li>
+                </ul>
+              </div>
+              <div class="card">
+                <h3>Perfil, logros y extras</h3>
+                <ul>
+                  <li><code>PerfilTab</code>: datos del usuario, idioma, avatar/mascota, compartir perfil y logout.</li>
+                  <li><code>UserViewModel</code>: fetch, updateUsername y updateProfile.</li>
+                  <li><code>LogrosScreen</code>: logros locales/static de la app.</li>
+                  <li><code>MinigamesScreen</code>: WebView con bridge <code>Android.sendResult(score)</code>, pero no aparece en <code>Routes.kt</code>.</li>
+                  <li><code>AstraisWidget</code>: widget simple con contador de tareas pendiente hardcodeado a 3.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="ui">
+          <div class="section-inner">
+            <h2>UI, tema y componentes</h2>
+            <p class="section-lead">
+              La interfaz se construye con Compose y Material 3. El estilo base es oscuro,
+              con superficies tipo glass, tarjetas compactas, chips, bottom bar y formularios
+              propios. El usuario puede equipar temas que llegan desde backend.
+            </p>
+
+            <div class="grid">
+              <div class="card">
+                <h3>Tema dinamico</h3>
+                <p>
+                  <code>AstraisandroidTheme</code> acepta un <code>Theme</code> de dominio
+                  con colores hex: primary, secondary, tertiary, background, backgroundAlt,
+                  surface, text y error. Calcula contraste para colores de primer plano.
+                </p>
+              </div>
+              <div class="card">
+                <h3>Componentes base</h3>
+                <p>
+                  <code>AstraisComponents.kt</code> centraliza botones, cards, text fields,
+                  vistas de estado, dialogos, headers, chips y superficies con glassmorphism.
+                </p>
+              </div>
+              <div class="card">
+                <h3>Bottom bar</h3>
+                <p>
+                  <code>AstraisBottomBar</code> usa cinco posiciones: Home, Tasks, Add,
+                  Groups y Store. El centro abre el dialogo global y no navega a una ruta.
+                </p>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Utilidad visual</th>
+                    <th>Archivo</th>
+                    <th>Funcion</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Avatar remoto</td>
+                    <td><code>AvatarImageRenderer.kt</code></td>
+                    <td>Carga <code>$BASE_URL/assets/avatar/$assetRef</code> con Coil y usa fallback con inicial.</td>
+                  </tr>
+                  <tr>
+                    <td>Mascotas Lottie</td>
+                    <td><code>PetAvatar.kt</code></td>
+                    <td>Descarga <code>$BASE_URL/assets/pets/$assetRef</code>, cachea en <code>filesDir/pets_cache</code> y renderiza Lottie.</td>
+                  </tr>
+                  <tr>
+                    <td>Conectividad</td>
+                    <td><code>ConnectivityObserver.kt</code></td>
+                    <td>Expone estado de red con callback de <code>ConnectivityManager</code>.</td>
+                  </tr>
+                  <tr>
+                    <td>Idioma</td>
+                    <td><code>LocaleHelper.kt</code></td>
+                    <td>Guarda <code>ESP</code>/<code>ENG</code> y aplica locale <code>es</code>/<code>en</code>.</td>
+                  </tr>
+                  <tr>
+                    <td>Logging</td>
+                    <td><code>util/logging/*</code></td>
+                    <td>Define <code>AppLogger</code>, features de log y adaptador Timber.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="recursos">
+          <div class="section-inner">
+            <h2>Recursos Android</h2>
+            <p class="section-lead">
+              La app tiene recursos XML, imagenes raster, iconos de launcher, strings en
+              dos idiomas y configuracion de backup/widget.
+            </p>
+
+            <div class="grid">
+              <div class="card">
+                <h3>Drawables</h3>
+                <p>
+                  Incluye <code>coin.png</code>, imagenes <code>gato1.jpg</code> a
+                  <code>gato4.jpg</code>, <code>ic_google.xml</code>,
+                  <code>logo.xml</code> y <code>logo_new.xml</code>.
+                </p>
+              </div>
+              <div class="card">
+                <h3>Launcher</h3>
+                <p>
+                  Iconos <code>ic_launcher</code>, fondo, foreground y round en densidades
+                  mdpi, hdpi, xhdpi, xxhdpi y xxxhdpi.
+                </p>
+              </div>
+              <div class="card">
+                <h3>Strings e idioma</h3>
+                <p>
+                  Hay <code>res/values/strings.xml</code> y
+                  <code>res/values-en/strings.xml</code>. <code>LocaleHelper</code> decide
+                  entre espanol e ingles segun preferencia local.
+                </p>
+              </div>
+              <div class="card">
+                <h3>Widget y XML</h3>
+                <p>
+                  <code>layout/widget_layout.xml</code>, <code>xml/widget_info.xml</code>,
+                  <code>backup_rules.xml</code> y <code>data_extraction_rules.xml</code>.
+                </p>
+              </div>
+              <div class="card">
+                <h3>Themes XML</h3>
+                <p>
+                  <code>values/themes.xml</code> y <code>values-night/themes.xml</code>
+                  definen el tema base que envuelve la actividad Compose.
+                </p>
+              </div>
+              <div class="card">
+                <h3>ProGuard</h3>
+                <p>
+                  Existe <code>proguard-rules.pro</code>, pero en release
+                  <code>isMinifyEnabled=false</code>, asi que no se minifica el APK.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="pruebas">
+          <div class="section-inner">
+            <h2>Build y pruebas</h2>
+            <p class="section-lead">
+              El proyecto trae dependencias de test unitario e instrumentado, pero los
+              tests actuales son los ejemplos generados por plantilla. La compilacion no
+              llego a Kotlin porque Gradle fallo al cargar <code>local.properties</code>.
+            </p>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Comprobacion</th>
+                    <th>Resultado local</th>
+                    <th>Detalle</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>gradlew.bat :app:compileDebugKotlin</code></td>
+                    <td>Fallo antes de compilar</td>
+                    <td>Falta <code>AstraisAndroid/local.properties</code>; <code>app/build.gradle.kts</code> lo abre en la linea donde carga propiedades.</td>
+                  </tr>
+                  <tr>
+                    <td>Tests unitarios</td>
+                    <td>Solo plantilla</td>
+                    <td><code>ExampleUnitTest.kt</code> valida <code>2 + 2 = 4</code>.</td>
+                  </tr>
+                  <tr>
+                    <td>Tests instrumentados</td>
+                    <td>Solo plantilla</td>
+                    <td><code>ExampleInstrumentedTest.kt</code> valida el package name.</td>
+                  </tr>
+                  <tr>
+                    <td>Dokka</td>
+                    <td>Plugin declarado</td>
+                    <td>Puede generar documentacion Kotlin, pero no se ejecuto porque el build falla antes.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="callout warning">
+              <strong>Para compilar.</strong>
+              Crear <code>AstraisAndroid/local.properties</code> con la propiedad esperada
+              por Gradle. Por como se usa <code>buildConfigField("String", ...)</code>, el
+              valor debe llegar como literal String valido para Kotlin/Java, por ejemplo
+              con comillas incluidas.
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="riesgos">
+          <div class="section-inner">
+            <h2>Estado real y riesgos tecnicos</h2>
+            <p class="section-lead">
+              Estos puntos no son teoricos: salen de la lectura del codigo actual. Algunos
+              son normales en desarrollo, pero conviene resolverlos antes de entregar una
+              version estable o publicar la app.
+            </p>
+
+            <div class="grid two">
+              <div class="risk-card">
+                <h3>Build bloqueado por configuracion local</h3>
+                <p>
+                  <code>app/build.gradle.kts</code> abre <code>local.properties</code> sin
+                  comprobar si existe. En este entorno el archivo falta y la compilacion falla.
+                </p>
+              </div>
+              <div class="risk-card">
+                <h3>Backend hardcodeado por HTTP</h3>
+                <p>
+                  <code>BASE_URL</code> apunta a una IP privada con HTTP, y el manifest
+                  permite cleartext traffic. Esto es util en LAN, pero debil para produccion.
+                </p>
+              </div>
+              <div class="risk-card">
+                <h3>Logging de cuerpos HTTP</h3>
+                <p>
+                  Ktor usa <code>LogLevel.BODY</code>. En debug puede exponer tokens,
+                  payloads, datos de usuario o respuestas sensibles en logs.
+                </p>
+              </div>
+              <div class="risk-card">
+                <h3>Migraciones destructivas</h3>
+                <p>
+                  Room usa <code>fallbackToDestructiveMigration()</code>. Si cambia el
+                  esquema, la base local puede borrarse en vez de migrarse.
+                </p>
+              </div>
+              <div class="risk-card">
+                <h3>Deep link pendiente incompleto</h3>
+                <p>
+                  <code>MainViewModel</code> tiene <code>consumePendingDeepLink()</code>,
+                  pero en el grafo visible no aparece una llamada clara despues del login.
+                  La invitacion guardada podria no procesarse automaticamente.
+                </p>
+              </div>
+              <div class="risk-card">
+                <h3>Widget no conectado a datos reales</h3>
+                <p>
+                  <code>AstraisWidget</code> muestra <code>widget_pending_tasks</code> con
+                  valor fijo <code>3</code>. No consulta Room ni el backend.
+                </p>
+              </div>
+              <div class="risk-card">
+                <h3>Repositorio de inventario vacio</h3>
+                <p>
+                  <code>InventoryRepository.kt</code> solo contiene el package. La pantalla
+                  de inventario depende de otros flujos, no de un repositorio dedicado.
+                </p>
+              </div>
+              <div class="risk-card">
+                <h3>Cobertura de tests minima</h3>
+                <p>
+                  Los tests actuales son los ejemplos de Android Studio. No cubren login,
+                  sync offline, migracion de invitado, deep links, Room ni ViewModels.
+                </p>
+              </div>
+              <div class="risk-card">
+                <h3>Minigames sin ruta visible</h3>
+                <p>
+                  Existe <code>MinigamesScreen.kt</code> con WebView y bridge JS, pero
+                  <code>Routes.kt</code> no define una ruta para minijuegos en el grafo actual.
+                </p>
+              </div>
+              <div class="risk-card">
+                <h3>Release sin minificacion</h3>
+                <p>
+                  <code>isMinifyEnabled=false</code> en release. Puede aumentar tamano y
+                  deja menos proteccion basica frente a inspeccion del APK.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="inventario">
+          <div class="section-inner">
+            <h2>Inventario de archivos principales</h2>
+            <p class="section-lead">
+              Este inventario resume los archivos Kotlin y recursos mas relevantes para
+              entender o mantener la aplicacion.
+            </p>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Ruta</th>
+                    <th>Contenido</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>AstraisApp.kt</code></td>
+                    <td>Application, Hilt, Timber y configuracion WorkManager.</td>
+                  </tr>
+                  <tr>
+                    <td><code>MainActivity.kt</code></td>
+                    <td>Entrada Compose, idioma, tema, deep links y grafo raiz.</td>
+                  </tr>
+                  <tr>
+                    <td><code>AstraisWidget.kt</code></td>
+                    <td>Proveedor del widget Android.</td>
+                  </tr>
+                  <tr>
+                    <td><code>data/api/KtorClient.kt</code></td>
+                    <td>URL base, Ktor, JSON, timeout, logging y auth bearer.</td>
+                  </tr>
+                  <tr>
+                    <td><code>data/api/services/*.kt</code></td>
+                    <td>Clientes HTTP de auth, usuario, tareas, grupos y tienda.</td>
+                  </tr>
+                  <tr>
+                    <td><code>data/api/*Response.kt</code>, <code>Auth.kt</code></td>
+                    <td>DTOs serializables y mapeos a dominio/entidades.</td>
+                  </tr>
+                  <tr>
+                    <td><code>data/local/AstraisDb.kt</code></td>
+                    <td>Room database version 2 con tareas, grupos y pending actions.</td>
+                  </tr>
+                  <tr>
+                    <td><code>data/local/dao/*.kt</code></td>
+                    <td>Consultas y transacciones de tareas, grupos y cola offline.</td>
+                  </tr>
+                  <tr>
+                    <td><code>data/preferences/SessionManager*.kt</code></td>
+                    <td>Contrato e implementacion cifrada de sesion.</td>
+                  </tr>
+                  <tr>
+                    <td><code>data/repository/*.kt</code></td>
+                    <td>Reglas de negocio de auth, sesion, tareas, grupos, tienda y usuario.</td>
+                  </tr>
+                  <tr>
+                    <td><code>di/AppModule.kt</code></td>
+                    <td>Grafo de dependencias Hilt de la app.</td>
+                  </tr>
+                  <tr>
+                    <td><code>navigation/*.kt</code></td>
+                    <td>Rutas serializables y NavHost principal.</td>
+                  </tr>
+                  <tr>
+                    <td><code>sync/*.kt</code></td>
+                    <td>Programacion y ejecucion de sincronizacion offline.</td>
+                  </tr>
+                  <tr>
+                    <td><code>ui/core/MainViewModel.kt</code></td>
+                    <td>Sesion global, onboarding y deep links.</td>
+                  </tr>
+                  <tr>
+                    <td><code>ui/features/auth/*</code></td>
+                    <td>Login, registro, onboarding y sus ViewModels.</td>
+                  </tr>
+                  <tr>
+                    <td><code>ui/features/home/*</code></td>
+                    <td>Contenedor principal y dashboard.</td>
+                  </tr>
+                  <tr>
+                    <td><code>ui/features/tasks/*</code></td>
+                    <td>Tab de tareas, tarjetas, dialogos y TaskViewModel.</td>
+                  </tr>
+                  <tr>
+                    <td><code>ui/features/groups/*</code></td>
+                    <td>Listado, detalle, settings, miembros, invitaciones y auditoria.</td>
+                  </tr>
+                  <tr>
+                    <td><code>ui/features/store/*</code></td>
+                    <td>Tienda, inventario y StoreViewModel.</td>
+                  </tr>
+                  <tr>
+                    <td><code>ui/features/profile/*</code></td>
+                    <td>Perfil y UserViewModel.</td>
+                  </tr>
+                  <tr>
+                    <td><code>ui/theme/*</code></td>
+                    <td>Colores, tipografia, formas, espaciado y tema Compose.</td>
+                  </tr>
+                  <tr>
+                    <td><code>util/*</code></td>
+                    <td>Idioma, conectividad, avatar, mascotas Lottie y logging.</td>
+                  </tr>
+                  <tr>
+                    <td><code>res/*</code></td>
+                    <td>Drawables, iconos, strings, themes XML, layout de widget y reglas de backup.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p class="footer-note">
+              Documento generado a partir del codigo local de <code>AstraisAndroid</code>
+              en el workspace <code>proyectoAstrais</code>.
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
