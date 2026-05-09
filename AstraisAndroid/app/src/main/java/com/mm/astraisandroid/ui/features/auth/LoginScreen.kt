@@ -121,6 +121,9 @@ fun LoginScreen(
     val handleGoogleSignIn: () -> Unit = {
         coroutineScope.launch {
             try {
+                val activity = context as? android.app.Activity
+                    ?: (context as? android.content.ContextWrapper)?.baseContext as? android.app.Activity
+                    ?: throw Exception("Context is not an Activity")
                 val credentialManager = CredentialManager.create(context)
                 val googleIdOption = GetGoogleIdOption.Builder()
                     .setFilterByAuthorizedAccounts(false)
@@ -130,7 +133,7 @@ fun LoginScreen(
                 val request = GetCredentialRequest.Builder()
                     .addCredentialOption(googleIdOption)
                     .build()
-                val result = credentialManager.getCredential(request = request, context = context)
+                val result = credentialManager.getCredential(request = request, context = activity)
                 val credential = result.credential
                 if (credential is CustomCredential && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                     val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
