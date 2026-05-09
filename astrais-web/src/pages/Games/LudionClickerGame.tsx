@@ -97,7 +97,7 @@ export default function LudionClickerGame({ gameId }: LudionClickerGameProps) {
   }, [gameId, score, status, timeLeft])
 
   return (
-    <main className="relative h-screen min-h-128 overflow-hidden bg-[radial-gradient(circle_at_top_left,color-mix(in_srgb,var(--astrais-primary)_38%,transparent),transparent_34%),linear-gradient(140deg,var(--astrais-background),color-mix(in_srgb,var(--astrais-primary)_44%,var(--astrais-background))_52%,color-mix(in_srgb,var(--astrais-secondary)_32%,var(--astrais-background)))] p-4 font-['Space_Grotesk'] text-white">
+    <main className="relative h-screen min-h-128 overflow-hidden bg-transparent p-4 font-['Space_Grotesk'] text-white">
       <div className="retro-grid pointer-events-none absolute inset-0 opacity-30" />
       <div className="scanlines pointer-events-none absolute inset-0 opacity-20" />
       <img

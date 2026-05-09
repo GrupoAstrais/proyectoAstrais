@@ -162,7 +162,7 @@ export default function AstraMemoryGame({ gameId }: AstraMemoryGameProps) {
   }
 
   return (
-    <main className="relative h-screen min-h-112 overflow-hidden bg-[radial-gradient(circle_at_top_right,color-mix(in_srgb,var(--astrais-rarity-epic)_20%,transparent),transparent_34%),linear-gradient(145deg,var(--astrais-background),color-mix(in_srgb,var(--astrais-primary)_52%,var(--astrais-background)),var(--astrais-background-alt))] p-4 font-['Space_Grotesk'] text-white">
+    <main className="relative h-screen min-h-112 overflow-hidden bg-transparent p-4 font-['Space_Grotesk'] text-white">
       <div className="memory-grid pointer-events-none absolute inset-0 opacity-30" />
       <section className="relative z-10 grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-3">
         <header className="grid grid-cols-[minmax(0,1fr)_18rem] gap-3">

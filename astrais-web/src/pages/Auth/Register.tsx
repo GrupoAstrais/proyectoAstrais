@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
-import loginBg from '../../assets/login-bg.jpg'
 import { confirmRegister, createUser, handleGoogleCallback, loginWithGoogle } from '../../data/Api'
 
 const PASSWORD_SECURITY_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{12,}$/
@@ -80,17 +79,16 @@ export default function Register() {
 
   return (
     <section
-      style={{ backgroundImage: `url(${loginBg})` }}
-      className="relative grid min-h-screen place-items-center overflow-hidden bg-cover bg-no-repeat px-6 bg-position-[0_-20cm] max-[480px]:px-4"
+      className="relative grid min-h-screen place-items-center overflow-hidden px-6 max-[480px]:px-4"
     >
       <div className="pointer-events-none absolute inset-0" />
 
       <article
         aria-labelledby="login-title"
-        className="relative z-10 w-full max-w-105 -translate-y-[3vh] rounded-[22px] border border-white/15 bg-[color-mix(in_srgb,var(--astrais-surface)_72%,transparent)] p-8 text-[var(--astrais-text)] shadow-[0_30px_60px_color-mix(in_srgb,var(--astrais-background)_74%,transparent)] backdrop-blur-sm max-[480px]:-translate-y-[1.5vh] max-[480px]:p-5.5"
+        className="relative z-10 w-full max-w-105 -translate-y-[3vh] rounded-[22px] border border-white/15 bg-purple-950/20 px-8 py-10 text-(--astrais-text) shadow-[0_30px_60px_color-mix(in_srgb,var(--astrais-background)_74%,transparent)] backdrop-blur-sm max-[480px]:-translate-y-[1.5vh] max-[480px]:p-5.5"
       >
         <header className="mb-5.5">
-          <p className="m-0 text-xs tracking-[0.2em] text-[var(--astrais-rarity-epic)] uppercase">Astrais</p>
+          <p className="m-0 text-xs tracking-[0.2em] text-(--astrais-rarity-epic) uppercase">Astrais</p>
           <h1 id="login-title" className="my-2 text-[clamp(1.9rem,4vw,2.35rem)] leading-[1.1]">Sign Up</h1>
           <p className="m-0 text-[color-mix(in_srgb,var(--astrais-text)_90%,transparent)]">Welcome! Let's start your adventure.</p>
         </header>
@@ -106,7 +104,7 @@ export default function Register() {
               onChange={(event) => setName(event.target.value)}
               autoComplete="username"
               required
-              className="rounded-xl border border-white/25 bg-black/25 px-3.5 py-3 text-base text-white placeholder:text-white/65 focus-visible:outline-2 focus-visible:outline-[var(--astrais-rarity-epic)] focus-visible:outline-offset-1"
+              className="rounded-xl border border-white/25 bg-black/25 px-3.5 py-3 text-base text-white placeholder:text-white/65 focus-visible:outline-2 focus-visible:outline-(--astrais-rarity-epic) focus-visible:outline-offset-1"
             />
           </div>
 
@@ -120,7 +118,7 @@ export default function Register() {
               onChange={(event) => setEmail(event.target.value)}
               autoComplete="username"
               required
-              className="rounded-xl border border-white/25 bg-black/25 px-3.5 py-3 text-base text-white placeholder:text-white/65 focus-visible:outline-2 focus-visible:outline-[var(--astrais-rarity-epic)] focus-visible:outline-offset-1"
+              className="rounded-xl border border-white/25 bg-black/25 px-3.5 py-3 text-base text-white placeholder:text-white/65 focus-visible:outline-2 focus-visible:outline-(--astrais-rarity-epic) focus-visible:outline-offset-1"
             />
           </div>
 
@@ -137,7 +135,7 @@ export default function Register() {
               pattern={`${PASSWORD_SECURITY_PATTERN}`}
               title="Minimum 12 characters, with uppercase, lowercase and a number."
               required
-              className="rounded-xl border border-white/25 bg-black/25 px-3.5 py-3 text-base text-white placeholder:text-white/65 focus-visible:outline-2 focus-visible:outline-[var(--astrais-rarity-epic)] focus-visible:outline-offset-1"
+              className="rounded-xl border border-white/25 bg-black/25 px-3.5 py-3 text-base text-white placeholder:text-white/65 focus-visible:outline-2 focus-visible:outline-(--astrais-rarity-epic) focus-visible:outline-offset-1"
             />
           </div>
 
@@ -154,7 +152,7 @@ export default function Register() {
               pattern={`${PASSWORD_SECURITY_PATTERN}`}
               title="Minimum 1 characters, with uppercase, lowercase and a number."
               required
-              className="rounded-xl border border-white/25 bg-black/25 px-3.5 py-3 text-base text-white placeholder:text-white/65 focus-visible:outline-2 focus-visible:outline-[var(--astrais-rarity-epic)] focus-visible:outline-offset-1"
+              className="rounded-xl border border-white/25 bg-black/25 px-3.5 py-3 text-base text-white placeholder:text-white/65 focus-visible:outline-2 focus-visible:outline-(--astrais-rarity-epic) focus-visible:outline-offset-1"
             />
           </div>
 
@@ -168,7 +166,7 @@ export default function Register() {
               onChange={(event) => setConfirmation(event.target.value)}
               autoComplete="current-password"
               required
-              className="rounded-xl border border-white/25 bg-black/25 px-3.5 py-3 text-base text-white placeholder:text-white/65 focus-visible:outline-2 focus-visible:outline-[var(--astrais-rarity-epic)] focus-visible:outline-offset-1"
+              className="rounded-xl border border-white/25 bg-black/25 px-3.5 py-3 text-base text-white placeholder:text-white/65 focus-visible:outline-2 focus-visible:outline-(--astrais-rarity-epic) focus-visible:outline-offset-1"
             />
           </div>
 
@@ -179,7 +177,7 @@ export default function Register() {
           ) : null}
 
           <button
-            className="cursor-pointer rounded-xl border border-transparent [background:var(--astrais-cta-bg)] p-3 text-base font-semibold text-white shadow-[0_10px_30px_color-mix(in_srgb,var(--astrais-primary)_45%,transparent)] transition duration-150 ease-in hover:-translate-y-px"
+            className="cursor-pointer rounded-xl border-0 bg-linear-to-r from-purple-800/80 via-pink-500/80 to-purple-600/80 p-3 text-base font-semibold text-white shadow-[0_10px_30px_color-mix(in_srgb,var(--astrais-primary)_45%,transparent)] transition duration-150 ease-in hover:-translate-y-px"
             type="submit"
           >
             Sign Up

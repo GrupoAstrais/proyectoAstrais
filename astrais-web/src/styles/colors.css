@@ -33,10 +33,11 @@
     color-mix(in srgb, var(--astrais-secondary) 36%, transparent)
   );
   --astrais-cta-bg: linear-gradient(
-    90deg,
+    40deg,
     var(--astrais-primary),
-    color-mix(in srgb, var(--astrais-primary) 42%, var(--astrais-error) 58%),
-    var(--astrais-secondary)
+    color-mix(in srgb, var(--astrais-primary) 62%, var(--astrais-background) 28%),
+    var(--astrais-primary)
+  
   );
   --astrais-panel-bg: linear-gradient(
     160deg,
@@ -48,6 +49,26 @@
 body {
   background: var(--astrais-background);
   color: var(--astrais-text);
+}
+
+.astrais-primary-panel-bg {
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--astrais-background) 88%, var(--astrais-background-alt) 12%),
+      color-mix(in srgb, var(--astrais-primary) 30%, transparent),
+      color-mix(in srgb, var(--astrais-background-alt) 86%, var(--astrais-secondary) 14%)
+    );
+}
+
+.astrais-secondary-panel-bg {
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--astrais-background) 88%, var(--astrais-background-alt) 12%),
+      color-mix(in srgb, var(--astrais-secondary) 32%, transparent),
+      color-mix(in srgb, var(--astrais-background-alt) 88%, var(--astrais-primary) 12%)
+    );
 }
 
  @theme {

@@ -19,7 +19,7 @@ export default function GroupCard({ onClick, id, activeId, data }: GroupCardProp
     };
 
     return (
-    <div onClick={changeState} className={` ${active ? 'bg-[linear-gradient(150deg,color-mix(in_srgb,var(--astrais-primary)_74%,transparent),color-mix(in_srgb,var(--astrais-secondary)_56%,transparent))]  text-white ' : ' bg-[var(--astrais-panel-bg)] backdrop-blur-sm p-3.5 shadow-[0_20px_58px_color-mix(in_srgb,var(--astrais-background)_52%,transparent)] text-white/70'} rounded-lg border border-white/15 px-5 py-10`}>
+    <div onClick={changeState} className={` ${active ? 'bg-[linear-gradient(150deg,color-mix(in_srgb,var(--astrais-primary)_74%,transparent),color-mix(in_srgb,var(--astrais-secondary)_56%,transparent))]  text-white ' : 'astrais-primary-panel-bg backdrop-blur-sm p-3.5 shadow-[0_20px_58px_color-mix(in_srgb,var(--astrais-background)_52%,transparent)] text-white/70'} rounded-lg border border-white/15 px-5 py-10`}>
             <div className="flex flex-row gap-2">
                 {data.photoUrl ? (
                     <img

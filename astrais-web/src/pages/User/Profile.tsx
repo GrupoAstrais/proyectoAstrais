@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { useNavigate } from "react-router";
-import bgImage from "../../assets/homeScreenBack.jpg";
 import Navbar from "../../components/layout/Navbar";
 import Achiv from "../../components/ui/Achiv";
 import ProgressBar from "../../components/ui/Reward";
@@ -578,8 +577,7 @@ export default function Profile() {
 
   return (
     <main
-      style={{ backgroundImage: `url(${bgImage})` }}
-      className="relative h-screen w-screen overflow-hidden bg-cover bg-center font-['Space_Grotesk'] text-white"
+      className="relative h-screen w-screen overflow-hidden font-['Space_Grotesk'] text-white"
     >
       <Navbar />
 

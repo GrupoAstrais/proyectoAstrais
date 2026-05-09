@@ -7,7 +7,7 @@ import { ASTRA_MEMORY_GAME_ID, NEBULA_DASH_GAME_ID, PRIMARY_CLICKER_GAME_ID } fr
 
 function ComingSoonGame({ title, description }: { title: string; description: string }) {
   return (
-    <main className="grid h-screen min-h-112 place-items-center overflow-hidden bg-[radial-gradient(circle_at_top,color-mix(in_srgb,var(--astrais-primary)_28%,transparent),transparent_36%),linear-gradient(145deg,var(--astrais-background),color-mix(in_srgb,var(--astrais-secondary)_36%,var(--astrais-background)))] p-6 font-['Space_Grotesk'] text-white">
+    <main className="grid h-screen min-h-112 place-items-center overflow-hidden bg-transparent p-6 font-['Space_Grotesk'] text-white">
       <section className="max-w-xl rounded-[28px] border border-white/15 bg-white/8 p-8 text-center shadow-[0_24px_60px_color-mix(in_srgb,var(--astrais-background)_48%,transparent)]">
         <p className="text-[0.68rem] uppercase tracking-[0.28em] text-accent-beige-300">Cabina en montaje</p>
         <h1 className="mt-4 font-['Press_Start_2P'] text-lg leading-8">{title}</h1>

@@ -9,15 +9,7 @@
   height: 100dvh;
   min-height: 100vh;
   overflow: hidden;
-  background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--page-accent-1) 18%, transparent) 0, transparent 35%),
-    radial-gradient(circle at bottom right, color-mix(in srgb, var(--page-accent-2) 18%, transparent) 0, transparent 38%),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--astrais-background) 82%, var(--page-accent-1) 18%) 0%,
-      color-mix(in srgb, var(--astrais-background-alt) 88%, black 12%) 44%,
-      color-mix(in srgb, var(--astrais-background) 76%, var(--page-accent-3) 24%) 100%
-    );
+  background: transparent;
 }
 
 .post-login-shell::before,

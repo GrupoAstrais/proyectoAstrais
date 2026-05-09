@@ -2,7 +2,6 @@ import React from 'react'
 import { NavLink } from 'react-router'
 import Navbar from '../../components/layout/Navbar'
 import astra from '../../assets/astra2.png'
-import bgImage from '../../assets/homeScreenBack.jpg'
 import iconLogro from '../../assets/iconLogro.png'
 import {
   buildAchievements,
@@ -159,11 +158,10 @@ export default function Achivs() {
 
   return (
     <div
-      style={{ backgroundImage: `url(${bgImage})` }}
-      className="relative h-screen bg-cover bg-center font-['Space_Grotesk'] text-white"
+      className="relative h-screen overflow-hidden font-['Space_Grotesk'] text-white"
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,color-mix(in_srgb,var(--astrais-rarity-epic)_20%,transparent),transparent_34%),radial-gradient(circle_at_bottom_left,color-mix(in_srgb,var(--astrais-tertiary)_16%,transparent),transparent_34%),radial-gradient(circle_at_center,color-mix(in_srgb,var(--astrais-primary)_22%,transparent),transparent_46%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-black/62" />
+      <div className="pointer-events-none absolute inset-0 bg-black/38" />
       <div className="scanlines pointer-events-none absolute inset-0 opacity-25" />
 
       <div className="relative z-10 flex h-full min-h-0 flex-col">

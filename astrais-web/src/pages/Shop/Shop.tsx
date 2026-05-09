@@ -1,7 +1,6 @@
 import React from 'react'
 import { NavLink } from 'react-router'
 import Navbar from '../../components/layout/Navbar'
-import bgImage from '../../assets/homeScreenBack.jpg'
 import logo from '../../assets/logo_w.svg'
 import {
   buyStoreItem,
@@ -260,13 +259,12 @@ export default function Shop() {
 
   return (
     <div
-      style={{ backgroundImage: `url(${bgImage})` }}
-      className="relative h-screen overflow-hidden bg-cover bg-center font-['Space_Grotesk'] text-(--astrais-text)"
+      className="relative h-screen overflow-hidden font-['Space_Grotesk'] text-(--astrais-text)"
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--astrais-primary),transparent_34%),radial-gradient(circle_at_bottom_right,var(--astrais-secondary),transparent_38%),radial-gradient(circle_at_center,var(--astrais-tertiary),transparent_45%)] opacity-20" />
       <div
-        className="pointer-events-none absolute inset-0 opacity-80"
-        style={{ backgroundColor: 'color-mix(in srgb, var(--astrais-background) 74%, black 26%)' }}
+        className="pointer-events-none absolute inset-0 opacity-55"
+        style={{ backgroundColor: 'color-mix(in srgb, var(--astrais-background) 58%, black 42%)' }}
       />
       <div className="scanlines pointer-events-none absolute inset-0 opacity-25" />
 

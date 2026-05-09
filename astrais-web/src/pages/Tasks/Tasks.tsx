@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import Navbar from "../../components/layout/Navbar";
 import Task from "../../components/ui/Task";
-import bgImage from "../../assets/homeScreenBack.jpg";
 import type { ITarea } from "../../types/Interfaces";
 import Calendar from "../../components/layout/Calendar";
 import Modal from "../../components/modales/TaskModal";
@@ -322,8 +321,7 @@ export default function Tasks() {
 
   return (
     <div
-      style={{ backgroundImage: `url(${bgImage})` }}
-      className="relative flex overflow-hidden h-screen w-screen flex-col gap-4 bg-cover bg-center font-['Space_Grotesk'] text-white"
+      className="relative flex overflow-hidden h-screen w-screen flex-col gap-4 font-['Space_Grotesk'] text-white"
     >
       <div className={`${isOpen ? "" : "hidden"} fixed inset-0 z-50 flex items-center justify-center`}>
         <Modal
@@ -355,7 +353,7 @@ export default function Tasks() {
         <div className="grid grid-cols-1 gap-4 px-10 pt-5 sm:grid-cols-2 md:flex md:flex-row">
 
           {/* Diarias */}
-          <div className="pb-2 md:w-1/3">
+          <div className="astrais-primary-panel-bg rounded-2xl border border-white/15 p-4 pb-2 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)] md:w-1/3">
             <h1 className="pb-5 text-3xl">Diarias</h1>
             <div className="flex flex-col justify-center gap-2">
               <div className="flex flex-col gap-2.5">
@@ -388,7 +386,7 @@ export default function Tasks() {
           </div>
 
           {/* Habitos */}
-          <div className="pb-2 md:w-1/3">
+          <div className="astrais-primary-panel-bg rounded-2xl border border-white/15 p-4 pb-2 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)] md:w-1/3">
             <h1 className="pb-5 text-3xl">Habitos</h1>
             <div className="flex flex-col justify-center gap-2">
               <div className="flex flex-col gap-2.5">
@@ -423,7 +421,7 @@ export default function Tasks() {
 
           {/* Calendar */}
           <div className="flex flex-col md:w-1/3 2xl:my-auto">
-            <Calendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+            <Calendar className="shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]" selectedDate={selectedDate} onSelectDate={setSelectedDate} />
           </div>
 
         </div>
