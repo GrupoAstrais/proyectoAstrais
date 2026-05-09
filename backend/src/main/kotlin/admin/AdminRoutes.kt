@@ -589,7 +589,7 @@ fun Route.adminRoutes() {
                 )
                 when (dest) {
                     UploadCosmeticResponse.OK -> call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
-                    UploadCosmeticResponse.MISSING_FILE -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "Couldn't edit user"))
+                    UploadCosmeticResponse.NO_COSMETIC -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "Couldn't edit user"))
                     else -> call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Internal error"))
                 }
             }

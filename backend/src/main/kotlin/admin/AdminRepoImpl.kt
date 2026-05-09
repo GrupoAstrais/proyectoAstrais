@@ -1,6 +1,7 @@
 package admin
 
 import com.astrais.db.*
+import com.astrais.mainlogger
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import kotlin.math.floor
@@ -198,6 +199,8 @@ class AdminRepoImpl : AdminRepo {
         try {
             val lv = calculateLvFromXp(xpTotal)
             val xpActual = calculateXpFromLv(lv+1) - xpTotal
+
+            mainlogger.info("Usuario ${uid} tendra $ludiones ludiones y $xpTotal XP (LV $lv) ($xpActual)")
 
             if (getDatabaseDaoImpl().setUserResources(
                     uid = uid,

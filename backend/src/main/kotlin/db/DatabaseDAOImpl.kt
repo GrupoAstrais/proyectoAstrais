@@ -221,12 +221,12 @@ class DatabaseDAOImpl : DatabaseDAO {
         return suspendTransaction {
             val ent = EntidadUsuario.findById(uid) ?: return@suspendTransaction false
 
-            if (xpTotal <= -1 && xpActual <= -1 && level <= -1){
+            if (xpTotal > -1 && xpActual > -1 && level > -1){
                 ent.xp_total = xpTotal
                 ent.xp_actual = xpActual
                 ent.nivel = level
             }
-            if (ludiones <= -1){
+            if (ludiones > -1){
                 ent.ludiones = ludiones
             }
 
