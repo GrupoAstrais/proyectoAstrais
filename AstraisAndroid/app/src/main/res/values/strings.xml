@@ -1,71 +1,71 @@
 <resources>
     <string name="app_name">Astraïs</string>
-    <string name="title_activity_auth">AuthActivity</string>
-    <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_auth">Actividad de autenticacion</string>
+    <string name="title_activity_main">Actividad principal</string>
 
     <!-- General -->
     <string name="general_unknown_error">Error desconocido</string>
     <string name="general_connection_error">Error de conexión</string>
-    <string name="general_nav_home">Home</string>
-    <string name="general_nav_tasks">Tasks</string>
-    <string name="general_nav_add">Add</string>
-    <string name="general_nav_groups">Groups</string>
-    <string name="general_nav_store">Store</string>
+    <string name="general_nav_home">Inicio</string>
+    <string name="general_nav_tasks">Tarea</string>
+    <string name="general_nav_add">Añadir</string>
+    <string name="general_nav_groups">Grupos</string>
+    <string name="general_nav_store">Tienda</string>
     <string name="general_separator_bullet"> · </string>
 
     <!-- Auth / Onboarding -->
     <string name="auth_login_to_use_invitation">Inicia sesión para usar la invitación</string>
 
     <!-- Login -->
-    <string name="login_welcome_back">Welcome Back</string>
-    <string name="login_subtitle">Log into your account</string>
-    <string name="login_email_placeholder">Email</string>
-    <string name="login_password_placeholder">Password</string>
-    <string name="login_forgot_password">Forgot password?</string>
-    <string name="login_button">Log In</string>
-    <string name="login_or_continue_with">or continue with</string>
+    <string name="login_welcome_back">Bienvenido!</string>
+    <string name="login_subtitle">Inicie sesion en su cuenta</string>
+    <string name="login_email_placeholder">Correo</string>
+    <string name="login_password_placeholder">Contraseña</string>
+    <string name="login_forgot_password">¿Olvidaste tu contraseña?</string>
+    <string name="login_button">Inicia sesion</string>
+    <string name="login_or_continue_with">O continua con</string>
     <string name="login_google_button">Google</string>
-    <string name="login_guest_button">Guest</string>
-    <string name="login_no_account">Don\'t have an account? </string>
-    <string name="login_sign_up">Sign Up</string>
+    <string name="login_guest_button">Invitado</string>
+    <string name="login_no_account">No tienes una cuenta creada</string>
+    <string name="login_sign_up">Cree una cuenta</string>
     <string name="login_google_token_error">No se pudo obtener tokens de Google</string>
 
     <!-- Register -->
-    <string name="register_verify_email_title">Verify Your Email</string>
-    <string name="register_create_account_title">Create Account</string>
-    <string name="register_verify_subtitle">Enter the code sent to your email</string>
-    <string name="register_subtitle">Sign up to get started</string>
-    <string name="register_verification_code_placeholder">Verification Code</string>
-    <string name="register_verify_button">Verify Account</string>
-    <string name="register_email_placeholder">Email</string>
-    <string name="register_password_placeholder">Password</string>
-    <string name="register_confirm_password_placeholder">Confirm Password</string>
-    <string name="register_password_mismatch">Passwords do not match</string>
-    <string name="register_terms_prefix">I agree to the </string>
-    <string name="register_terms_conditions">Terms &amp; Conditions</string>
-    <string name="register_create_account_button">Create Account</string>
-    <string name="register_already_have_account">Already have an account? </string>
-    <string name="register_log_in">Log In</string>
+    <string name="register_verify_email_title">Verifica tu correo</string>
+    <string name="register_create_account_title">Crear cuenta</string>
+    <string name="register_verify_subtitle">Meta el codigo enviado a su correo</string>
+    <string name="register_subtitle">Inicia sesion para continuar</string>
+    <string name="register_verification_code_placeholder">Codigo de verificacion</string>
+    <string name="register_verify_button">Verifique su cuenta</string>
+    <string name="register_email_placeholder">Correo</string>
+    <string name="register_password_placeholder">Contraseña</string>
+    <string name="register_confirm_password_placeholder">Confirme su contraseña</string>
+    <string name="register_password_mismatch">Las contraseñas no coinciden</string>
+    <string name="register_terms_prefix">Acepto los</string>
+    <string name="register_terms_conditions">Terminos y Condiciones</string>
+    <string name="register_create_account_button">Crear cuenta</string>
+    <string name="register_already_have_account">Ya tienes cuenta? </string>
+    <string name="register_log_in">Inicie sesion</string>
     <string name="register_verification_error">Error de verificación</string>
 
     <!-- Onboarding -->
-    <string name="onboarding_title">Configure Your Profile</string>
-    <string name="onboarding_subtitle">Choose how others will see you and your preferred language</string>
-    <string name="onboarding_username_placeholder">Username</string>
-    <string name="onboarding_username_min_chars">Minimum 3 characters</string>
-    <string name="onboarding_language_label">Language</string>
-    <string name="onboarding_profile_preview">Profile Preview</string>
-    <string name="onboarding_username_preview_placeholder">Your username</string>
-    <string name="onboarding_start_button">Start Adventure</string>
+    <string name="onboarding_title">Configura tu perfil</string>
+    <string name="onboarding_subtitle">Elije tu nombre de usuario e idioma</string>
+    <string name="onboarding_username_placeholder">Nombre de usuario</string>
+    <string name="onboarding_username_min_chars">Mínimo 3 carateres</string>
+    <string name="onboarding_language_label">Idioma</string>
+    <string name="onboarding_profile_preview">Previsualizacion de cuenta</string>
+    <string name="onboarding_username_preview_placeholder">Tu nombre de usuario</string>
+    <string name="onboarding_start_button">Empieza tu aventura</string>
 
     <!-- Languages -->
     <string name="language_spanish">Español</string>
-    <string name="language_english">English</string>
+    <string name="language_english">Ingles</string>
 
     <!-- Home -->
-    <string name="home_welcome_hi">Hi,</string>
+    <string name="home_welcome_hi">Hola,</string>
     <string name="home_level">Nivel %1$d</string>
-    <string name="home_xp_progress">%1$d / %2$d XP</string>
+    <string name="home_xp_progress">%1$d / %2$d EXP</string>
     <string name="home_no_pet">SIN MASCOTA</string>
     <string name="home_all_caught_up">¡Todo al dia!</string>
     <string name="home_pending_tasks_count">%1$d pendientes</string>
@@ -87,7 +87,7 @@
     <string name="profile_guest_name">Invitado</string>
     <string name="profile_guest_mode_hint">Modo invitado - registra para sincronizar</string>
     <string name="profile_level_label">NIVEL %1$d</string>
-    <string name="profile_xp_progress">%1$d / %2$d XP</string>
+    <string name="profile_xp_progress">%1$d / %2$d EXP</string>
     <string name="profile_language_title">Idioma</string>
     <string name="profile_save_preferences">Guardar preferencias</string>
     <string name="profile_equipped_pet_title">Mascota equipada</string>
@@ -98,7 +98,7 @@
     <string name="profile_share_title">¡Mira mi progreso en Astrais!</string>
     <string name="profile_share_username">Usuario: @%1$s</string>
     <string name="profile_share_level">Nivel: %1$d</string>
-    <string name="profile_share_xp">XP Total: %1$d</string>
+    <string name="profile_share_xp">EXP Total: %1$d</string>
     <string name="profile_share_ludiones">Ludiones: %1$d</string>
     <string name="profile_share_join">¡Únete en astrais.app!</string>
     <string name="profile_register_login">REGISTRARSE / INICIAR SESION</string>
@@ -109,17 +109,17 @@
     <string name="group_settings_title">Ajustes</string>
     <string name="group_members_header">MIEMBROS · %1$d</string>
     <string name="group_members_sheet_title">MIEMBROS</string>
-    <string name="group_role_owner">Owner</string>
+    <string name="group_role_owner">Dueño del grupo</string>
     <string name="group_role_mod">Moderador</string>
     <string name="group_role_member">Miembro</string>
-    <string name="group_role_chip_owner">Owner</string>
+    <string name="group_role_chip_owner">Dueño</string>
     <string name="group_role_chip_mod">Mod</string>
     <string name="group_role_chip_member">Miembro</string>
-    <string name="group_role_badge_owner">OWNER</string>
+    <string name="group_role_badge_owner">DUEÑO</string>
     <string name="group_role_badge_mod">MOD</string>
     <string name="group_role_badge_member">MIEMBRO</string>
-    <string name="group_promote_mod">Hacer mod</string>
-    <string name="group_demote_mod">Quitar mod</string>
+    <string name="group_promote_mod">Promover a moderador</string>
+    <string name="group_demote_mod">Quitar moderador</string>
     <string name="group_section_info">Informacion del grupo</string>
     <string name="group_section_invites">Invitaciones</string>
     <string name="group_section_history">Historial</string>
@@ -132,7 +132,7 @@
     <string name="group_no_invites">No hay invitaciones.</string>
     <string name="group_no_audit_events">Sin eventos registrados.</string>
     <string name="group_admin_only_edit">Solo administradores pueden editar.</string>
-    <string name="group_owner_leave_warning">Para salir siendo owner, transfiere la propiedad primero.</string>
+    <string name="group_owner_leave_warning">Para salir siendo dueño del grupo, transfiere la propiedad del grupo primero.</string>
     <string name="group_invite_uses">Usos: %1$d</string>
     <string name="group_invite_max_uses_suffix">/%1$d</string>
     <string name="group_invite_expires"> · Expira: %1$s</string>
@@ -174,7 +174,7 @@
     <string name="task_keep_unchanged">Dejar sin cambios...</string>
     <string name="task_create_button">Crear</string>
     <string name="task_save_button">Guardar</string>
-    <string name="task_xp_reward">%1$d XP</string>
+    <string name="task_xp_reward">%1$d EXP</string>
     <string name="task_edit_button">Editar</string>
     <string name="task_tab_pending">Pendientes</string>
     <string name="task_tab_completed">Completadas</string>
@@ -195,7 +195,7 @@
     <string name="task_subtasks_header">SUBTAREAS</string>
     <string name="task_subtasks_progress">Subtareas: %1$d/%2$d</string>
     <string name="task_progress_percent">%1$d%%</string>
-    <string name="task_completed_snackbar">¡Tarea completada! + %1$d XP / %2$d L</string>
+    <string name="task_completed_snackbar">¡Tarea completada! + %1$d EXP / %2$d L</string>
     <string name="task_no_completed_yet">No hay tareas completadas todavia.</string>
     <string name="task_no_pending">No hay tareas pendientes.</string>
 
@@ -210,7 +210,7 @@
     <string name="dialog_revoke_confirm">Revocar</string>
     <string name="dialog_join_by_url_confirm">Unirme</string>
     <string name="dialog_delete_task_title">Eliminar tarea</string>
-    <string name="dialog_delete_task_body">Seguro que quieres eliminar "%1$s"?</string>
+    <string name="dialog_delete_task_body">Seguro que quieres eliminar a "%1$s"?</string>
     <string name="dialog_kick_member_title">Expulsar miembro</string>
     <string name="dialog_kick_member_body">Confirmas expulsar a este miembro del grupo?</string>
     <string name="dialog_leave_group_title">Salir del grupo</string>
