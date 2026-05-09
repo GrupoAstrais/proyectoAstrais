@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router";
 import Navbar from "../../components/layout/Navbar";
-import bgImage from "../../assets/homeScreenBack.jpg";
 import astra from "../../assets/astra.png";
 import game from "../../assets/game.png";
 import type { ITarea } from "../../types/Interfaces";
@@ -283,8 +282,7 @@ export default function Home() {
 
   return (
     <main
-      style={{ backgroundImage: `url(${bgImage})` }}
-      className="overflow-hidden h-screen w-screen bg-cover bg-center font-['Space_Grotesk'] text-white"
+      className="relative overflow-hidden h-screen w-screen font-['Space_Grotesk'] text-white"
     >
       <div className={`${isOpen ? "" : "hidden"} fixed inset-0 z-50 flex items-center justify-center`}>
         <Modal
@@ -305,10 +303,10 @@ export default function Home() {
 
       
       <section className="mx-auto overflow-hidden flex-1 flex max-w-7xl flex-col items-center justify-center gap-4 px-4">
-        <article className="relative flex w-full max-w-2xl mt-5 flex-col gap-6 rounded-2xl border border-white/15 bg-(--astrais-panel-bg) p-6 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
+        <article className="astrais-primary-panel-bg relative flex w-full max-w-2xl mt-5 flex-col gap-6 rounded-2xl border border-white/15 p-6 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
           <header>
-            <p className="pb-2 text-[0.78rem] uppercase tracking-[0.08em] text-(--astrais-rarity-epic)">Bienvenido de vuelta</p>
-            <h1 className="font-['Press_Start_2P'] text-xl sm:text-2xl">Hi, Astrais</h1>
+            <p className="pb-2 text-[0.78rem] uppercase tracking-[0.08em] text-indigo-200 font-bold">Bienvenido de vuelta</p>
+            <h1 className="font-['Press_Start_2P'] text-xl sm:text-2xl">Hey, Astrais</h1>
             <p className="mt-1">Que te queda por hacer?</p>
           </header>
           <div className="grid w-2/3 grid-cols-1 z-20 gap-2.5 sm:grid-cols-2">
@@ -336,7 +334,7 @@ export default function Home() {
 
         <div className="grid w-full home-scroll min-h-0 max-[1537px]:max-h-80 overflow-y-auto grid-cols-1 gap-4 lg:grid-cols-3"> 
           {/*Tareas Pendientes*/}
-          <article className="flex h-80 lg:h-full min-h-0 flex-col rounded-2xl border border-white/15 bg-(--astrais-panel-bg) p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
+          <article className="astrais-primary-panel-bg flex h-80 lg:h-full min-h-0 flex-col rounded-2xl border border-white/15 p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
             <header className="mb-3">
               <NavLink to="/tasks">
                 <h2 className="font-['Press_Start_2P'] text-lg">Tareas Pendientes</h2>
@@ -369,7 +367,7 @@ export default function Home() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/*Tienda*/}
               <NavLink to="/shop">
-                <article className="h-80 rounded-2xl border border-white/15 bg-(--astrais-panel-bg)x p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
+                <article className="astrais-primary-panel-bg h-80 rounded-2xl border border-white/15 p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
                   <header className="mb-3">
                     <h2 className="font-['Press_Start_2P'] text-lg">Tienda</h2>
                   </header>
@@ -380,7 +378,7 @@ export default function Home() {
               </NavLink>
 
               <div className="flex flex-col gap-4">
-                <article className="rounded-2xl h-20 border border-white/15 bg-(--astrais-panel-bg) p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
+                <article className="astrais-primary-panel-bg rounded-2xl h-20 border border-white/15 p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
                   <header className="mb-3">
                     <button className="flex items-center gap-2">
                       <h2 className="font-['Press_Start_2P'] text-lg">Notificaciones</h2>
@@ -391,7 +389,7 @@ export default function Home() {
 
                 {/*Logros*/}
                 <NavLink to="/achievements">
-                  <article className="flex h-56 flex-col gap-4 rounded-2xl border border-white/15 bg-(--astrais-panel-bg) p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
+                  <article className="astrais-primary-panel-bg flex h-56 flex-col gap-4 rounded-2xl border border-white/15 p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
                     <header className="mb-3">
                       <h2 className="font-['Press_Start_2P'] text-lg">Logros</h2>
                     </header>
@@ -425,7 +423,7 @@ export default function Home() {
               </div>
             </div>
 
-            <article className="rounded-2xl border border-white/15 bg-(--astrais-panel-bg) p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
+            <article className="astrais-primary-panel-bg rounded-2xl border border-white/15 p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
               <header className="mb-3">
                 <h2 className="font-['Press_Start_2P'] text-lg">Minijuegos</h2>
               </header>

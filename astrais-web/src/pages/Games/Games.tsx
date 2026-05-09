@@ -1,7 +1,6 @@
 import React from 'react'
 import { NavLink } from 'react-router'
 import Navbar from '../../components/layout/Navbar'
-import bgImage from '../../assets/homeScreenBack.jpg'
 import gamePreview from '../../assets/game.png'
 import { getGameById, visibleGameCatalog } from './gameCatalog'
 import { isGameRoundCompletedMessage } from './gameMessages'
@@ -66,11 +65,10 @@ export default function Games() {
 
   return (
     <div
-      style={{ backgroundImage: `url(${bgImage})` }}
-      className="relative h-screen w-screen overflow-hidden bg-cover bg-center font-['Space_Grotesk'] text-white"
+      className="relative h-screen w-screen overflow-hidden font-['Space_Grotesk'] text-white"
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,color-mix(in_srgb,var(--astrais-primary)_28%,transparent),transparent_36%),radial-gradient(circle_at_bottom_right,color-mix(in_srgb,var(--astrais-tertiary)_16%,transparent),transparent_38%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-black/62" />
+      <div className="pointer-events-none absolute inset-0 bg-black/38" />
       <div className="scanlines pointer-events-none absolute inset-0 opacity-25" />
 
       <div className="relative z-10 flex h-full w-full min-h-0 flex-col">

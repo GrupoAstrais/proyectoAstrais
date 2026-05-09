@@ -203,7 +203,7 @@ export default function NebulaDashGame({ gameId }: NebulaDashGameProps) {
   }, [finishRound, lane, status])
 
   return (
-    <main className="relative h-screen min-h-112 overflow-hidden bg-[radial-gradient(circle_at_top_left,color-mix(in_srgb,var(--astrais-tertiary)_18%,transparent),transparent_34%),linear-gradient(140deg,var(--astrais-background),color-mix(in_srgb,var(--astrais-secondary)_42%,var(--astrais-background))_50%,color-mix(in_srgb,var(--astrais-tertiary)_32%,var(--astrais-background)))] p-4 font-['Space_Grotesk'] text-white">
+    <main className="relative h-screen min-h-112 overflow-hidden bg-transparent p-4 font-['Space_Grotesk'] text-white">
       <div className="dash-stars pointer-events-none absolute inset-0 opacity-40" />
       <section className="relative z-10 grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-3">
         <header className="grid grid-cols-[minmax(0,1fr)_18rem] gap-3">

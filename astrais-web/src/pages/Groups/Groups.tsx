@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
-import bgImage from "../../assets/homeScreenBack.jpg";
 import Navbar from "../../components/layout/Navbar";
 import GroupCard from "../../components/ui/GroupCard";
 import ButtonComplete from "../../components/ui/ButtonComplete";
@@ -1071,8 +1070,7 @@ export default function Groups() {
 
   return (
     <div
-      style={{ backgroundImage: `url(${bgImage})` }}
-      className="relative flex h-screen w-screen overflow-hidden flex-col gap-4 bg-cover bg-center font-['Space_Grotesk'] text-white"
+      className="relative flex h-screen w-screen overflow-hidden flex-col gap-4 font-['Space_Grotesk'] text-white"
     >
       <Navbar />
       {rewardNotification ? (

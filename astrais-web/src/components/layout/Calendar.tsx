@@ -69,7 +69,7 @@ export default function Calendar({ className = '', selectedDate, onSelectDate }:
       </div>
 
       <div className={`relative overflow-hidden rounded-xl border border-white/15 font-['Space_Grotesk'] ${className}`}>
-        <div className="absolute inset-0 bg-linear-to-br from-primary-500/80 to-primary-700/85" />
+        <div className="astrais-secondary-panel-bg absolute inset-0" />
 
         <div className="relative z-10 p-4">
           <div className="mb-4 flex items-center justify-between">
@@ -100,11 +100,11 @@ export default function Calendar({ className = '', selectedDate, onSelectDate }:
                   rounded-lg text-sm font-medium transition-all
                   ${day === null
                     ? 'invisible'
-                    : 'cursor-pointer bg-black/20 text-white hover:bg-primary-900/50'}
+                    : 'cursor-pointer bg-black/20 text-white hover:bg-secondary-700/50'}
                   ${activeSelectedDate?.getDate() === day &&
                   activeSelectedDate?.getMonth() === month &&
                   activeSelectedDate?.getFullYear() === year
-                    ? 'bg-secondary-600 ring-2 ring-primary-500'
+                    ? 'bg-secondary-600 ring-2 ring-secondary-300'
                     : ''}
                 `}
               >
