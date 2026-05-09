@@ -198,7 +198,7 @@ class AdminRepoImpl : AdminRepo {
     override suspend fun editUserResources(uid: Int, xpTotal: Int, ludiones: Int) : UploadCosmeticResponse{
         try {
             val lv = calculateLvFromXp(xpTotal)
-            val xpActual = calculateXpFromLv(lv+1) - xpTotal
+            val xpActual = calculateActualXpFromLv(lv)-(calculateTotalXpFromLv(lv) - xpTotal)
 
             mainlogger.info("Usuario ${uid} tendra $ludiones ludiones y $xpTotal XP (LV $lv) ($xpActual)")
 
@@ -235,7 +235,7 @@ fun calculateLvFromXp(xp: Int): Int {
         (-1 + sqrt(1.0 + (4.0 * xp) / 50.0)) / 2.0
     ).toInt()
 }
-fun calculateXpFromLv(nv: Int): Int {
+fun calculateTotalXpFromLv(nv: Int): Int {
     var mxnv = 0
 
     for (i in 0..nv) {
@@ -243,4 +243,7 @@ fun calculateXpFromLv(nv: Int): Int {
     }
 
     return mxnv
+}
+fun calculateActualXpFromLv(nv: Int): Int {
+    return (nv + 1) * 100
 }
