@@ -13,6 +13,24 @@ if (window.location.port == "5500"){
 const LOGIN_URL = url_login;
 const INDEX_URL = url_index;
 
+function calcularNV(lf){
+    return lf / 100;
+}
+function calcularXPFromNV(nv){
+    let mxnv = 0;
+    for (let i = 0; i < nv; i++) {
+        mxnv += (i+1) * 100;
+    }
+    return mxnv;
+}
+// Simplificacion de la formula del XP de forma inversa
+// AF(x) = sum(0, X)((i+1)*100)
+// BF(x) = (-1 + sqrt(1 + XP + 12.5)) / 2
+function calcularNVFromXP(xp) {
+    return Math.floor(
+        (-1 + Math.sqrt(1 + xp / 12.5)) / 2
+    );
+}
 
 function checkIfNeedsRefresh(num, jsondata) {
     return num == 401 && jsondata.errorCode == 0 && jsondata.errorText == "Invalid/expired token";
