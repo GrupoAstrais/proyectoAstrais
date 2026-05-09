@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.isActive
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import java.util.concurrent.ConcurrentHashMap
 
 
 enum class SSEEventType(val value : String) {
@@ -27,9 +26,14 @@ enum class SSEEventType(val value : String) {
     }
 }
 
+/**
+ * Evento SSE de añadir tarea
+ */
 @Serializable
 data class SSEEventAddTaskData(
+    /** GID del grupo afectado */
     val gid : Int,
+    /** ID de la tarea afectada */
     val tid : Int
 )
 

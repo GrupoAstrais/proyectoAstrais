@@ -21,6 +21,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 class DatabaseDAOImpl : DatabaseDAO {
     // https://www.jetbrains.com/help/exposed/dsl-querying-data.html
 
+    /** Tiempo actual en UTC */
     private fun nowUtc(): LocalDateTime =
         Clock.System.now().toLocalDateTime(TimeZone.UTC)
 
@@ -213,6 +214,23 @@ class DatabaseDAOImpl : DatabaseDAO {
             } else {
                 Pair(notExistUser[TablaCredencialesAuth.uid].value, false)
             }
+        }
+    }
+
+    override suspend fun setUserResources(uid: Int, xpTotal: Int, xpActual: Int, level: Int, ludiones: Int): Boolean {
+        return suspendTransaction {
+            val ent = EntidadUsuario.findById(uid) ?: return@suspendTransaction false
+
+            if (xpTotal <= -1 && xpActual <= -1 && level <= -1){
+                ent.xp_total = xpTotal
+                ent.xp_actual = xpActual
+                ent.nivel = level
+            }
+            if (ludiones <= -1){
+                ent.ludiones = ludiones
+            }
+
+            return@suspendTransaction true
         }
     }
 
@@ -873,7 +891,9 @@ class DatabaseDAOImpl : DatabaseDAO {
                     nombre = it.get(TablaUsuario.nombre),
                     rol = rolFinal,
                     nivel = it.get(TablaUsuario.nivel),
-                    confirmed = it.get(TablaUsuario.esta_confirmado) == 1
+                    confirmed = it.get(TablaUsuario.esta_confirmado) == 1,
+                    xp = it.get(TablaUsuario.xp_total),
+                    ludiones = it.get(TablaUsuario.ludiones)
                 )
             }
         }
@@ -899,19 +919,19 @@ class DatabaseDAOImpl : DatabaseDAO {
         code: String,
         codeHash: String,
         createdByUid: Int,
-        createdAt: kotlinx.datetime.LocalDateTime,
-        expiresAt: kotlinx.datetime.LocalDateTime?,
+        createdAt: LocalDateTime,
+        expiresAt: LocalDateTime?,
         maxUses: Int?,
     ): Int {
         return suspendTransaction {
             TablaGrupoInvites.insertAndGetId {
                 it[TablaGrupoInvites.gid] = EntityID(gid, TablaGrupo)
                 it[TablaGrupoInvites.code] = code
-                it[TablaGrupoInvites.code_hash] = codeHash
-                it[TablaGrupoInvites.created_by_uid] = EntityID(createdByUid, TablaUsuario)
-                it[TablaGrupoInvites.created_at] = createdAt
-                it[TablaGrupoInvites.expires_at] = expiresAt
-                it[TablaGrupoInvites.max_uses] = maxUses
+                it[code_hash] = codeHash
+                it[created_by_uid] = EntityID(createdByUid, TablaUsuario)
+                it[created_at] = createdAt
+                it[expires_at] = expiresAt
+                it[max_uses] = maxUses
             }.value
         }
     }

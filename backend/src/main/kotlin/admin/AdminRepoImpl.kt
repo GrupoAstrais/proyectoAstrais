@@ -1,13 +1,12 @@
 package admin
 
-import com.astrais.db.CosmeticType
-import com.astrais.db.DatosSimpleUsuarios
-import com.astrais.db.UserRoles
-import com.astrais.db.getDatabaseDaoImpl
+import com.astrais.db.*
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
+import kotlin.math.floor
+import kotlin.math.sqrt
 
-class AdminDaoImpl : AdminDao {
+class AdminRepoImpl : AdminRepo {
     override suspend fun uploadCosmetic(formData: FormClientData): Pair<UploadCosmeticResponse, String> {
 
         if (formData.type == CosmeticType.PET && (formData.fileBytes == null || formData.fileName.isBlank() || !formData.fileName.endsWith(".json"))) {
@@ -179,7 +178,9 @@ class AdminDaoImpl : AdminDao {
                     nombre = data.nombre,
                     rol = if (data.rol == UserRoles.ADMIN_USER) {"Admin"} else {"User"},
                     nivel = data.nivel,
-                    confirmed = data.esta_confirmado == 1
+                    confirmed = data.esta_confirmado == 1,
+                    xp = data.xp_total,
+                    ludiones = data.ludiones
                 )
             }else{
                 return null
@@ -192,4 +193,51 @@ class AdminDaoImpl : AdminDao {
             return null
         }
     }
+
+    override suspend fun editUserResources(uid: Int, xpTotal: Int, ludiones: Int) : UploadCosmeticResponse{
+        try {
+            val lv = calculateLvFromXp(xpTotal)
+            val xpActual = calculateXpFromLv(lv+1) - xpTotal
+
+            if (getDatabaseDaoImpl().setUserResources(
+                    uid = uid,
+                    xpTotal = xpTotal,
+                    xpActual = xpActual,
+                    level = lv,
+                    ludiones = ludiones
+            )){
+                return UploadCosmeticResponse.OK
+            }else {
+                return UploadCosmeticResponse.NO_COSMETIC
+            }
+
+        } catch (e : ExposedSQLException) {
+            val msg = "SqlException: ${e.message}"
+            println(msg)
+
+            return UploadCosmeticResponse.DB_ERROR
+        }
+        catch (e: Exception) {
+            val msg = "Exception! Tipo: ${e.javaClass.name}. Message ${e.message}"
+            println(msg)
+            e.printStackTrace()
+
+            return UploadCosmeticResponse.EXCEPTION
+        }
+    }
+}
+
+fun calculateLvFromXp(xp: Int): Int {
+    return floor(
+        (-1 + sqrt(1.0 + (4.0 * xp) / 50.0)) / 2.0
+    ).toInt()
+}
+fun calculateXpFromLv(nv: Int): Int {
+    var mxnv = 0
+
+    for (i in 0..nv) {
+        mxnv += (i + 1) * 100
+    }
+
+    return mxnv
 }

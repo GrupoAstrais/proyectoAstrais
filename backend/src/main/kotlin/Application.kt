@@ -77,7 +77,7 @@ fun Application.module() {
         anyMethod()
     }
 
-
+    // Instala control de excepciones
     install(StatusPages) {
         exception<com.auth0.jwt.exceptions.JWTVerificationException> { call, cause ->
             println("JWT FAILED: ${cause.javaClass.simpleName}")
@@ -121,6 +121,7 @@ fun Application.module() {
 
     installSSE()
 
+    // Si es nueva la db, carga cosmeticos iniciales
     runBlocking {
         if (DatabaseController.isFresh()){
             loadInitialCosmetics()

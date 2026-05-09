@@ -27,15 +27,15 @@ fun Route.avatarRoute(){
             )
 
             val layer = getDatabaseDaoImpl().getUserEquippedAvatar(uid)
-            if (layer == null){
-                call.respond(HttpStatusCode.OK, mapOf("avatar" to null))
-            } else {
+            if (layer != null){
                 call.respond(HttpStatusCode.OK, mapOf("avatar" to AvatarLayerDTO(
                     cosmeticId = layer.id.value,
                     name = layer.nombre,
                     imageRef = layer.assetRef,
                     rareza = layer.rareza.name
                 )))
+            } else {
+                call.respond(HttpStatusCode.OK, mapOf("avatar" to null))
             }
         }
     }

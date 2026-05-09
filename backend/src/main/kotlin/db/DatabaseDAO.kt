@@ -35,6 +35,8 @@ data class DatosSimpleUsuarios(
     val nombre: String,
     val rol: String,
     val nivel: Int,
+    val xp : Int,
+    val ludiones : Int,
     val confirmed : Boolean
 )
 
@@ -150,6 +152,14 @@ interface DatabaseDAO {
         provider_uid : String,
         auth : AuthProvider
         ) : Pair<Int, Boolean>
+
+    suspend fun setUserResources(
+        uid: Int,
+        xpTotal: Int = -1,
+        xpActual: Int = -1,
+        level : Int = -1,
+        ludiones: Int = -1
+    ) : Boolean
 
     /**
      * Añade oauth a una cuenta ya existente
