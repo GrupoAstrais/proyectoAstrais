@@ -92,7 +92,7 @@ object UserBusSSE {
     )
 
     /**
-     * Shortcut para el evento de agregar tareas
+     * Shortcut para el evento de desconexion de usuarios
      */
     public suspend fun publishSignOff(uid : Int) = publish(
         uid = uid,
