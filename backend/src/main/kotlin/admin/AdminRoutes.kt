@@ -4,7 +4,6 @@ import OK_MESSAGE_RESPONSE
 import com.astrais.ErrorCodes
 import com.astrais.Errors
 import com.astrais.db.CosmeticType
-import com.astrais.db.DatosSimpleUsuarios
 import com.astrais.db.UserRoles
 import com.astrais.db.getDatabaseDaoImpl
 import groups.types.AuditEventOut
@@ -18,9 +17,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import java.io.File
-import kotlin.reflect.jvm.internal.impl.types.error.ErrorEntity
 
 @Serializable
 data class CreateCosmeticRequest(
@@ -71,6 +68,14 @@ data class FullGroupAdmin(
     val events: List<AuditEventOut>
 )
 
+@Serializable
+data class EditResourceUserAdmin(
+    val uid : Int,
+    val ludions : Int? = -1,
+    val xp : Int? = -1,
+)
+
+
 enum class RarityType(val multiplier: Double) {
     COMUN(1.0),
     RARO(2.5),
@@ -118,7 +123,7 @@ fun Route.adminRoutes() {
 
                 val multipart = call.receiveMultipart()
                 val data = receiveFormDataFromClient(multipart)
-                val res = getAdminDao().uploadCosmetic(data)
+                val res = getAdminRepoImpl().uploadCosmetic(data)
 
                 when (res.first) {
                     UploadCosmeticResponse.OK -> call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
@@ -159,7 +164,7 @@ fun Route.adminRoutes() {
 
                 val multipart = call.receiveMultipart()
                 val data = receiveFormDataFromClient(multipart)
-                val res = getAdminDao().updateCosmetic(cid, data)
+                val res = getAdminRepoImpl().updateCosmetic(cid, data)
 
                 when (res.first) {
                     UploadCosmeticResponse.OK -> call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
@@ -198,7 +203,7 @@ fun Route.adminRoutes() {
                 }
 
 
-                if (getAdminDao().deleteCosmetic(cid)){
+                if (getAdminRepoImpl().deleteCosmetic(cid)){
                     call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
                 }else {
                     call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCENOTMODIFIED.ordinal, "Couldn't delete the cosmetic"))
@@ -231,7 +236,7 @@ fun Route.adminRoutes() {
                     return@post
                 }
 
-                val data = getAdminDao().listUsers()
+                val data = getAdminRepoImpl().listUsers()
                 if (data.first){
                     call.respond(HttpStatusCode.OK, data.second)
                 } else {
@@ -266,7 +271,7 @@ fun Route.adminRoutes() {
 
                 val uid = call.parameters["uid"]?.toInt() ?: return@get call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "No GID"))
 
-                val data = getAdminDao().getUserData(uid)
+                val data = getAdminRepoImpl().getUserData(uid)
                 if (data != null){
                     call.respond(HttpStatusCode.OK, data)
                 }else{
@@ -550,26 +555,81 @@ fun Route.adminRoutes() {
                     call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_RESOURCENOTCREATED.ordinal, "Couldn't create user"))
                 }
             }
+            post("/user/editUserResources"){
+                val token = call.principal<JWTPrincipal>()?.subject?.toInt()
+                if (token == null) {
+                    // No deberia ser null, pero se hace la comprobacion por si acaso
+                    call.respond(
+                        HttpStatusCode.Unauthorized,
+                        Errors(
+                            ErrorCodes.ERR_INVALIDTOKEN.ordinal,
+                            "Invalid/Missing refresh token"
+                        )
+                    )
+                    return@post
+                }
+
+                if (!getDatabaseDaoImpl().checkIfUserIsServerAdmin(token)){
+                    call.respond(
+                        HttpStatusCode.Forbidden,
+                        Errors(
+                            ErrorCodes.ERR_FORBIDDEN.ordinal,
+                            "Forbidden, you are not admin"
+                        )
+                    )
+                    return@post
+                }
+
+                val data = call.receive<EditResourceUserAdmin>()
+                
+                val dest = getAdminRepoImpl().editUserResources(
+                    uid = data.uid,
+                    xpTotal = data.xp ?: -1,
+                    ludiones = data.ludions ?: -1
+                )
+                when (dest) {
+                    UploadCosmeticResponse.OK -> call.respond(HttpStatusCode.OK, OK_MESSAGE_RESPONSE)
+                    UploadCosmeticResponse.NO_COSMETIC -> call.respond(HttpStatusCode.BadRequest, Errors(ErrorCodes.ERR_MALFORMEDMESSAGE.ordinal, "Couldn't edit user"))
+                    else -> call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_INTERNALERROR.ordinal, "Internal error"))
+                }
+            }
         }
     }
 }
 
+/**
+ * Los datos del formulario para agregar cosmeticos pasado desde el frontend
+ */
 data class FormClientData(
+    /** Rareza del cosmetico */
     var rarity : RarityType,
+    /** Nombre en ingles */
     var engName : String,
+    /** Nombre en espaniol */
     var espName : String,
+    /** Nombre en ruso */
     var rusName : String,
+    /** Descripcion del cosmetico */
     var desc : String,
+    /** Tipo del cosmetico */
     var type : CosmeticType,
+    /** Precio en ludiones del cosmetico */
     var price : Int,
+    /** Si es un [CosmeticType.APP_THEME], el JSON de tema */
     var theme : String?,
+    /** Nombre del archivo pasado por formulario, se pone si [CosmeticType.PET] o [CosmeticType.AVATAR_PART] esta puesto. */
     var fileName : String,
+    /** Los bytes del fichero que se paso por fomulario, se pone si [CosmeticType.PET] o [CosmeticType.AVATAR_PART] esta puesto. Por defecto NULL*/
     var fileBytes: ByteArray?,
+    /** Nombre de la coleccion a la que pertenece */
     var collection : String,
 )
 
+/**
+ * Recibe los datos del form de agregar cosmetico y pasa los datos a una estructura [FormClientData]
+ */
 suspend fun receiveFormDataFromClient(multipart : MultiPartData) : FormClientData {
-    var rarityStr : String = "COMUN"
+    var rarity : RarityType = RarityType.COMUN
     var engName : String = ""
     var espName : String = ""
     var rusName : String = ""
@@ -593,12 +653,12 @@ suspend fun receiveFormDataFromClient(multipart : MultiPartData) : FormClientDat
                     "price" -> price = part.value.toIntOrNull() ?: 0
                     "theme" -> theme = part.value
                     "collection" -> collection = part.value
-                    "rarity" -> rarityStr = when (part.value) {
-                        "COMMON" -> "COMUN"
-                        "RARE" -> "RARO"
-                        "EPIC" -> "EPICO"
-                        "LEGENDARY" -> "LEGENDARIO"
-                        else -> part.value
+                    "rarity" -> rarity = when (part.value) {
+                        "COMMON" -> RarityType.COMUN
+                        "RARE" -> RarityType.RARO
+                        "EPIC" -> RarityType.EPICO
+                        "LEGENDARY" -> RarityType.LEGENDARIO
+                        else -> RarityType.COMUN
                     }
                 }
             }
@@ -616,7 +676,7 @@ suspend fun receiveFormDataFromClient(multipart : MultiPartData) : FormClientDat
     }
 
     return FormClientData(
-        rarity = runCatching { RarityType.valueOf(rarityStr) }.getOrElse { RarityType.COMUN },
+        rarity = rarity,
         engName = engName,
         espName = espName,
         rusName = rusName,

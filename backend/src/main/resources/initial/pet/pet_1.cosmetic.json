@@ -6,7 +6,7 @@
         "rus" : "кот"
     },
     "desc" : "",
-    "collection" : "FLUFFY",
+    "collection" : "Fluffy",
     "price" : 180,
     "rarity" : "COMUN",
     "imageRef":"pet/cuteCatLottie.json"

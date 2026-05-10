@@ -145,7 +145,6 @@ public fun Application.initJWT(authenticationConfig: AuthenticationConfig) {
         challenge { defaultScheme, realm ->
             mainlogger.severe("Err! $defaultScheme! $realm")
 
-
             call.respond(
                     HttpStatusCode.Unauthorized,
                     Errors(ErrorCodes.ERR_INVALIDTOKEN.ordinal, "Invalid/expired token")

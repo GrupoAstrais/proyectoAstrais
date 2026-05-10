@@ -11,15 +11,17 @@ enum class UploadCosmeticResponse{
     NOT_ADMIN
 }
 
-interface AdminDao {
+interface AdminRepo {
     suspend fun uploadCosmetic(formData : FormClientData) : Pair<UploadCosmeticResponse, String>
     suspend fun updateCosmetic(cid : Int, formData : FormClientData) : Pair<UploadCosmeticResponse, String>
     suspend fun deleteCosmetic(cid : Int) : Boolean
 
     suspend fun listUsers() : Pair<Boolean, List<DatosSimpleUsuarios>>
     suspend fun getUserData(uid : Int) : DatosSimpleUsuarios?
+
+    suspend fun editUserResources(uid: Int, xpTotal : Int, ludiones : Int) : UploadCosmeticResponse
 }
 
-fun getAdminDao() : AdminDao{
-    return AdminDaoImpl()
+fun getAdminRepoImpl() : AdminRepo{
+    return AdminRepoImpl()
 }

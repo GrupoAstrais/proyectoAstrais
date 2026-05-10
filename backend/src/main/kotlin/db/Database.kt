@@ -19,6 +19,9 @@ object DatabaseController {
     private var database : Database? = null
     private var isFreshlyInstalled : Boolean = false
 
+    /**
+     * Incia la base de datos en el caso de no estar conectado
+     */
     public fun init(){
         if (!isConnected()){
             initConnection()
@@ -30,6 +33,9 @@ object DatabaseController {
         database = null
     }
 
+    /**
+     * Hace una comprobacion para ver si hay conexion con la base de datos
+     */
     public fun isConnected():Boolean{
         if (database == null){
             return false
@@ -46,6 +52,9 @@ object DatabaseController {
         }
     }
 
+    /**
+     * Se inicia la conexion con el JDBC y se cargan todos los datos
+     */
     private fun initConnection(){
         val url = "jdbc:postgresql://database:$POSTGRES_PORT/$dbname"
         println(" Connecting to PostgreSQL: $url") // DEBUG LOG
@@ -103,6 +112,10 @@ object DatabaseController {
             }
         }
     }
+
+    /**
+     * Dice si la base de datos contenia ya datos o no.
+     */
     public fun isFresh() : Boolean{
         return isFreshlyInstalled
     }
@@ -113,7 +126,7 @@ fun Application.initDatabase(){
     dbuser = environment.config.propertyOrNull("db.user")?.getString() ?: "root"
     dbpassword = environment.config.propertyOrNull("db.password")?.getString() ?: "root"
 	
-	print(dbname + " " + dbuser + " " + dbpassword)
+	//print(dbname + " " + dbuser + " " + dbpassword)
 	
     DatabaseController.init()
 }
