@@ -162,7 +162,7 @@ Antes de ejecutar el proyecto, es necesario tener instalado:
 - **Docker**
 - **Docker Compose**
 - **Node.js**
-- **npm**
+- **npm v20+**
 - **JDK 21**
 - **Android Studio** para ejecutar la aplicación Android
 
@@ -190,6 +190,11 @@ JWT_SECRET_ACCESS=
 JWT_SECRET_REFRESH=
 GOOGLE_CLIENT_ID=
 GOOGLE_SECRET_ID=
+SMTP_EMAIL=
+SMTP_PASSWORD=
+SMTP_EMAIL_2=
+SMTP_PASSWORD_2=
+IS_DEV=1
 ```
 
 ### Ejecutar backend y base de datos con Docker
@@ -215,6 +220,16 @@ npm run dev
 
 La aplicación web se ejecutará en el puerto indicado por Vite.
 
+### Despliegue aplicacion web
+
+```bash
+cd astrais-web
+bash compile.sh # RUN compile.bat en windows
+bash deploy.sh # RUN deploy.bat en windows
+```
+
+Se desplegara un contenedor nginx con la página web
+
 ### Ejecutar la aplicación Android
 
 Para ejecutar la aplicación Android:
@@ -228,7 +243,7 @@ Para ejecutar la aplicación Android:
 
 El proyecto incluye varios documentos de apoyo para entender tanto el desarrollo como el uso de la aplicación. Toda la documentación se encuentra en la carpeta [`docs/`](./docs/):
 
-- [**DOCUMENTACION.md**](./docs/DOCUMENTACION.md): documentación técnica completa del proyecto intermodular.
+- [**DOCUMENTACION.md**](./docs/DOCUMENTACION.md): Documentación técnica completa del proyecto intermodular.
 - [**MANUAL_DE_USUARIO_ASTRAIS.md**](./docs/MANUAL_DE_USUARIO_ASTRAIS.md): manual de usuario con explicación de las pantallas y funcionalidades.
 - [**API.md**](./docs/API.md): documentación técnica de los endpoints del backend.
 - **Documentacion_Astrais.pdf**: documentación general del proyecto intermodular.

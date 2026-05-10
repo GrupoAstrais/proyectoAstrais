@@ -82,7 +82,7 @@ Astraïs convierte la productividad en un **"progreso de personaje"**. Más all�
 
 **Contras:** interfaz visual sobrecargada con curva de aprendizaje pronunciada para nuevos usuarios; estética retro (puede ser poco atractiva para personas no acostumbradas); personalización estática sin evolución (cosméticos planos, sin mascotas interactivas ni sistema de colección con rareza); más enfocada en gamificación que en utilidad pura.
 
-**Oportunidad para Astraïs:** experiencia visual limpia y moderna (Jetpack Compose / Tailwind CSS), minijuegos que no comprometen la productividad, mascotas y cosméticos coleccionables con niveles de rareza, y una interfaz declarativa reactiva que reduce la curva de aprendizaje.
+**Oportunidad para Astraïs:** experiencia visual limpia y moderna (Jetpack Compose / Tailwind CSS), s que no comprometen la productividad, mascotas y cosméticos coleccionables con niveles de rareza, y una interfaz declarativa reactiva que reduce la curva de aprendizaje.
 
 ### 2.2. Skillion / Motion / Eterya (apps de motivación gamificada)
 
@@ -90,7 +90,7 @@ Astraïs convierte la productividad en un **"progreso de personaje"**. Más all�
 
 **Contras:** economía virtual superficial, interacción social limitada a compartir logros sin colaboración real, experiencia repetitiva tras las primeras semanas, más enfocadas en gamificación que en utilidad real de gestión.
 
-**Oportunidad para Astraïs:** ser un híbrido entre productividad funcional y juego social. Se conserva la elegancia visual de estas apps, pero se añade profundidad mediante economía interna (Ludiones + tienda + transacciones), colaboración en equipos con roles definidos, minijuegos breves y un backend propio que garantiza control total sobre la evolución del sistema.
+**Oportunidad para Astraïs:** ser un híbrido entre productividad funcional y juego social. Se conserva la elegancia visual de estas apps, pero se añade profundidad mediante economía interna (Ludiones + tienda + transacciones), colaboración en equipos con roles definidos, s breves y un backend propio que garantiza control total sobre la evolución del sistema.
 
 
 ---
@@ -173,7 +173,7 @@ Desarrollar una solución multiplataforma (app móvil Android + web) que mejore 
 3. Implementar niveles, logros y tienda con cosméticos coleccionables (avatar, mascota, temas).
 4. Implementar perfiles con avatar y mascota equipables.
 5. Gestionar grupos (hasta 10 miembros), enviar invitaciones y asignar tareas compartidas con notificaciones.
-6. Implementar minijuegos conectados a progresión.
+6. Implementar s conectados a progresión.
 7. Garantizar autenticación segura con roles diferenciados (admin / usuario / invitado).
 8. Proveer un backend desplegable con Docker.
 
@@ -228,21 +228,21 @@ Desarrollar una solución multiplataforma (app móvil Android + web) que mejore 
 | RF-40 | Envío, aceptación y rechazo de solicitudes de amistad con notificaciones | Pendiente | No implementado |
 | RF-41 | Creación de grupos, invitación de miembros y gestión de roles internos | Cumplido | Roles: Owner, Moderador, Miembro. Invitaciones seguras con SHA-256, expiración y límite de usos |
 | RF-42 | Chat en grupo | Pendiente | Excluido del alcance inicial |
-| RF-43 | Invitación a minijuegos mediante sistema de eventos o solicitudes directas | Pendiente | No implementado |
+| RF-43 | Invitación a s mediante sistema de eventos o solicitudes directas | Pendiente | No implementado |
 
-#### Minijuegos
+#### s
 
 | ID | Requisito | Estado | Observaciones técnicas |
 |---|---|---|---|
-| RF-50 | Acceso a lista de minijuegos | Cumplido | Catálogo básico en web |
-| RF-51 | Sesión de minijuego vinculada a recompensa | Parcial | Base inicial implementada; falta integración completa con recompensas |
+| RF-50 | Acceso a lista de s | Cumplido | Catálogo básico en web |
+| RF-51 | Sesión de  vinculada a recompensa | Parcial | Base inicial implementada; falta integración completa con recompensas |
 | RF-52 | Registro de resultados y estadísticas básicas | Pendiente | No implementado |
 
 #### Administración
 
 | ID | Requisito | Estado | Observaciones técnicas |
 |---|---|---|---|
-| RF-60 | Panel admin para gestionar catálogo de tienda, moderar usuarios y configurar parámetros de recompensas | Parcial | Panel web estático en `/admin/` para gestión de cosméticos y usuarios; métricas y configuración de recompensas no implementadas |
+| RF-60 | Panel admin para gestionar catálogo de tienda, moderar usuarios y grupos, y configurar parámetros de recompensas | Parcial | Panel web estático en `/admin/` para gestión de cosméticos, usuarios y grupos; métricas y configuración de recompensas no implementadas |
 
 ### 5.2. Requisitos No Funcionales (RNF)
 
@@ -295,6 +295,7 @@ Desarrollar una solución multiplataforma (app móvil Android + web) que mejore 
 - **A3: Acceso como invitado.** Usuario elige "Continuar sin cuenta". Sistema crea perfil temporal con funcionalidades limitadas y persistencia local (Room).
 
 ![Diagrama de secuencia UML - Flujo de autenticación](diagrams/flujo_auth.png)
+![Inicio de sesión Web](images/screenshots/web/login.jpg)
 
 ### UC-02: Creación y gestión de tareas
 
@@ -318,6 +319,9 @@ Desarrollar una solución multiplataforma (app móvil Android + web) que mejore 
 
 **Flujos alternativos:**
 - **A1: Sin conexión (Android).** La tarea se guarda en Room (`TareaEntity`) y se encola en `PendingAction`. El `SyncWorker` la sincroniza cuando recupera conectividad.
+
+- ![Creación de tarea web](images/screenshots/web/crearTarea.jpg)
+- ![Creación de tarea web](images/screenshots/web/crearTarea2.jpg)
 
 ### UC-03: Completar tarea y obtener recompensas
 
@@ -343,6 +347,7 @@ Desarrollar una solución multiplataforma (app móvil Android + web) que mejore 
 - **A2: Completar tarea grupal.** Cualquier miembro del grupo puede completarla. La recompensa es individual (por ahora).
 
 ![Diálogo de creación de tarea Hábito](images/screenshots/app/task.jpeg)
+![Completado de tarea](images/screenshots/web/completarTarea.jpg)
 
 ### UC-04: Comprar cosmético en tienda virtual
 
@@ -364,7 +369,7 @@ Desarrollar una solución multiplataforma (app móvil Android + web) que mejore 
 **Flujos alternativos:**
 - **A1: Artículos con descuento temporal / eventos.** Previsto para fases futuras; el esquema de `Cosmetic` y el panel admin permiten su implementación.
 
-![Tienda web - Catálogo de cosméticos](images/screenshots/web/store.png)
+![Tienda web - Catálogo de cosméticos](images/screenshots/web/tienda.jpg)
 
 ### UC-05: Crear grupo e invitar miembros
 
@@ -390,6 +395,7 @@ Desarrollar una solución multiplataforma (app móvil Android + web) que mejore 
 - **A2: Gestión de roles.** El Owner puede ascender miembros a Moderador (`setMemberRole`) o revocar dicho rol. Los Moderadores pueden crear/editar/eliminar tareas e invitar miembros, pero no transferir la propiedad.
 
 ![Detalle de grupo en Android](images/screenshots/app/group.jpeg)
+![Creación de tarea web](images/screenshots/web/grupos.jpg)
 
 ### UC-06: Jugar minijuego y obtener recompensas
 
@@ -418,12 +424,19 @@ Desarrollar una solución multiplataforma (app móvil Android + web) que mejore 
 **Postcondiciones:** Catálogo actualizado en BD; clientes conectados reciben notificación mediante SSE.
 
 **Flujo principal:**
-1. Admin accede a Panel Admin (`/admin/`) -> "Gestión de Tienda".
-2. Visualiza catálogo con filtros implícitos: categoría, rareza, estado (visible/oculto).
-3. Para crear nuevo artículo: completa formulario multipart con: nombre (multidioma: ENG, ESP, RUS), descripción, tipo (`PET`, `APP_THEME`, `AVATAR_PART`), precio (o cálculo automático según rareza), rareza (`COMUN`, `RARO`, `EPICO`, `LEGENDARIO`), colección y assets (archivo Lottie `.json`).
-   - **Precio automático:** `AVATAR_PART` base 100, `APP_THEME` base 500, `PET` base 1000; multiplicadores: `COMUN` ×1, `RARO` ×2.5, `EPICO` ×5, `LEGENDARIO` ×10.
-4. Sistema valida: nombre único, precio > 0, assets válidos, rareza dentro de valores permitidos.
-5. Backend guarda artículo en `Cosmetic` y escribe el asset en el volumen de uploads (`/uploads`).
+1. Admin accede a Panel Admin (`/admin/`) desde su navegador.
+2. De ahi, se va al apartado 'Cosmeticos', desde donde se pueden visualizar todos los cosmeticos.
+3. Para crear nuevo artículo, se clicara en 'Nuevo cosmetico' y se completa un formulario con:
+   - **Nombre** (multidioma: ENG, ESP, RUS)
+   - **Descripción** del cosmetico,
+   - **Tipo** (`PET`, `APP_THEME`, `AVATAR_PART`)
+   - **Precio** (o cálculo automático según rareza si es 0)
+   - **Rareza** (`COMUN`, `RARO`, `EPICO`, `LEGENDARIO`)
+   - **Colección**
+   - **Assets** (archivo Lottie `.json` para mascotas, imagen JPG en avatar, codigos de colores en Tema).
+      - **Calculo precio automático:** `AVATAR_PART` base 100, `APP_THEME` base 500, `PET` base 1000; multiplicadores: `COMUN` ×1, `RARO` ×2.5, `EPICO` ×5, `LEGENDARIO` ×10.
+4. El sistema valida lo siguiente: precio > 0, assets válidos, rareza dentro de valores permitidos.
+5. Backend guarda artículo en `Cosmetic` y escribe el asset en el volumen de `uploads-data` (`/uploads`).
 6. Artículo aparece inmediatamente en tienda de usuarios (si no está oculto).
 7. SSE notifica a clientes conectados para recargar el catálogo.
 
@@ -644,7 +657,7 @@ La lógica de recompensas se ejecuta de forma transaccional al completar una tar
 4. **Aplicación atómica:** dentro de una transacción de Exposed, se actualiza:
    - `Users.current_xp`, `Users.total_xp`, `Users.ludions`.
    - `Task.state = COMPLETE`, `Task.done_date`, `Task.granted_ludion`.
-   - Si el XP acumulado supera el umbral `(nivel + 1) × 100`, se incrementa `Users.level` y se ajusta `current_xp`.
+   - Si el XP acumulado actual supera el umbral `(nivel + 1) × 100`, se incrementa `Users.level` y se ajusta `current_xp`.
 5. **Descompletar:** al revertir una tarea, se restan los XP y Ludiones efectivamente otorgados (usando `granted_ludion` para no violar el límite diario retrospectivamente). En hábitos, se decrementa la racha si `last_completion == hoy`.
 
 ### 8.2. Transacciones de tienda
@@ -652,15 +665,15 @@ La lógica de recompensas se ejecuta de forma transaccional al completar una tar
 El flujo de compra sigue el siguiente protocolo:
 
 1. El cliente solicita `POST /store/buy/{id}`.
-2. El backend verifica que el usuario existe y que el cosmético existe y no está oculto.
-3. Se comprueba que el usuario no posea ya el artículo (tabla `Inventory`).
-4. Se valida que `Users.ludions >= Cosmetic.price_ludions`.
+2. El backend verifica que el usuario existe y que el cosmético existe.
+3. Se comprueba que el usuario no posea ya el artículo (Que no tenga entrada en la tabla `Inventory`).
+4. Se valida que el usuario tiene suficientes ludiones para comprarse el cosmetico.
 5. Dentro de una transacción:
    - Descuenta el precio de `Users.ludions`.
-   - Inserta una fila en `Inventory`.
-6. El frontend recibe confirmación y puede refrescar el catálogo.
+   - Inserta una fila en `Inventory` con el cosmetico.
+6. El frontend recibe confirmación del estado de la operacion y puede refrescar el catálogo.
 
-El endpoint `POST /store/equip/{id}` actualiza las columnas `equipped_pet_id`, `equipped_avatar_id` o `theme_colors` en `Users` según el tipo de cosmético, previa verificación de posesión en `Inventory`.
+El endpoint `POST /store/equip/{id}` verifica la posesion del cosmetico en la tabla `Inventory`, y si lo tiene, y actualiza las columnas `equipped_pet_id`, `equipped_avatar_id` o `theme_colors` en `Users` según el tipo de cosmético.
 
 ### 8.3. Evaluación de logros
 
@@ -674,7 +687,7 @@ La autorización en grupos se basa en tres niveles jerárquicos:
 - **Moderador (`GroupRoles.MOD`):** puede crear/editar/eliminar tareas, invitar miembros, expulsar miembros (excepto al Owner) y editar metadatos del grupo.
 - **Miembro (`GroupRoles.USER`):** puede ver tareas, completarlas y abandonar el grupo voluntariamente.
 
-Todas las rutas críticas validan:
+Todas las rutas críticas de grupos validan:
 1. Que el solicitante pertenezca al grupo (`RelGroupUser`).
 2. Que su rol sea suficiente para la operación.
 3. Que no se violen restricciones de negocio (ej. un Owner no puede abandonar sin transferir).
@@ -704,7 +717,7 @@ Una vez definidas las tareas, se llevó a cabo su reparto entre los distintos mi
 
 ---
 
-## 10. Diseño y prototipado (Olga por favor no se si aqui poner solo imagenes o que :( )
+## 10. Diseño y prototipado
 
 ### 10.1. Prototipo de la aplicación
 
@@ -744,18 +757,19 @@ Los iconos siguen una línea consistente de trazo fino y estilo outlined, manten
 
 Se documentaron los componentes usando el estilo Glassmorphism.
 
-![Libro de estilos - Paleta y componentes](images/screenshots/style-guide.png)
+![Libro de estilos - Paleta y componentes](images/screenshots/web/paletaDeColores.jpg)
 
 ### 10.3. Diseño del prototipado de la interfaz con Figma
 
 
-![Prototipo Figma - Pantallas Android](images/screenshots/app/figma-screens.png)
+![Prototipo Figma - Pantallas Android](images/screenshots/app/prototipadoMovil.jpg)
 
-![Prototipo Figma - Pantallas Web](images/screenshots/web/figma-screens.png)
+![Prototipo Figma - Pantallas Web](images/screenshots/web/prototipadoWeb.jpg)
 
 ### 10.4. Mapa de navegación 
 
-![Mapa de navegación - App Android](diagrams/navigation-map.html)
+![Mapa de navegación - App Web](images/screenshots/web/mapaNavegacionWeb.jpg)
+![Mapa de navegación - App Android](images/screenshots/app/mapaNavegacionAndroid.jpg)
 
 ---
 
@@ -777,10 +791,10 @@ Toda la comunicación entre clientes y backend se realiza mediante **JSON sobre 
 
 #### 11.2.2. Server-Sent Events (SSE)
 
-El backend expone dos buses de eventos:
+El backend expone dos buses de eventos SSE (SSE => Canal unidireccional de eventos de servidor a cliente):
 
 - `GET /events/global`: canal público para eventos globales (ej. `RELOAD.STORE` cuando un admin modifica la tienda).
-- `GET /events/user`: canal privado por usuario (requiere `AccessToken`). Emite eventos como `ADDED.TASK` cuando se crea una tarea en un grupo al que pertenece el usuario, y `SIGN.OFF` al desconectarse.
+- `GET /events/user`: canal privado por usuario, por lo cual requiere `AccessToken`. Emite eventos como `ADDED.TASK` cuando se crea una tarea en un grupo al que pertenece el usuario o `SIGN.OFF` cuando el backend pide la desconexion de un cliente.
 
 #### 11.2.3. Sincronización offline (Android)
 
@@ -815,7 +829,7 @@ La app Android implementa un patrón **offline-first** mediante:
 - **Git**
 - **Docker** y **Docker Compose**
 - **Node.js** (v20 o superior) y **npm**
-- **JDK 21** (para compilación local del backend)
+- **JDK (Eclipse Temurin) 21** (si se desea compilar sin docker el backend)
 - **Android Studio** (para ejecutar la app Android)
 - **Gradle 8.13+** (incluido en el wrapper del proyecto)
 
@@ -828,52 +842,74 @@ cd proyectoAstrais
 
 ### 13.3. Configurar variables de entorno
 
-Crear un archivo `.env` en la raíz del proyecto con al menos los siguientes valores:
+Crear un archivo `.env` en la raíz del proyecto con los siguientes valores:
 
 ```env
 DB_USER=astrais_user
 DB_PASSWORD=astrais_pass
 DB_NAME=astrais_db
+
 KTOR_PORT=5684
+
 JWT_ISSUER=astrais-backend
 JWT_AUDIENCE=astrais-users
 JWT_SECRET_ACCESS=un_secreto_largo_para_access
 JWT_SECRET_REFRESH=otro_secreto_largo_para_refresh
+
 GOOGLE_CLIENT_ID=tu_google_client_id.apps.googleusercontent.com
 GOOGLE_SECRET_ID=tu_google_secret
+
+SMTP_EMAIL="mail@gmail.com"
+SMTP_PASSWORD="KEY_1"
+
+SMTP_EMAIL_2="mail2@gmail.com"
+SMTP_PASSWORD_2="KEY_2"
+
+IS_DEV=1
 ```
 
-> **Nota:** Para desarrollo local, `JWT_SECRET_ACCESS` y `JWT_SECRET_REFRESH` deben ser cadenas aleatorias de al menos 32 caracteres. `GOOGLE_CLIENT_ID` y `GOOGLE_SECRET_ID` son necesarios solo si se desea probar el login con Google.
+Notas varias de importancia:
+
+> `JWT_SECRET_ACCESS` y `JWT_SECRET_REFRESH` deberan ser cadenas aleatorias seguras ya que se usaran como llaves para los JWT enviados. `JWT_ISSUER` y `JWT_AUDIENCE` es para indicar quien es el que emite el JWT y la audiencia que lo consumira, puede ser cualquier cosa.
+
+> `GOOGLE_CLIENT_ID` y `GOOGLE_SECRET_ID` son las claves para el Oauth, necesarios solo si se desea probar el login con Google.
+
+> `IS_DEV` indica si se esta en modo desarrollo si es 1, si es produccion debera ser 0.
 
 ### 13.4. Levantar backend y base de datos
 
-Desde la raíz del proyecto:
+Desde la raíz del proyecto ejecutaremos el siguiente comando:
 
 ```bash
 docker compose up --build
 ```
 
-Esto construirá y levantará:
+Este comando compilara y levantará dos maquinas:
 
-- **PostgreSQL 17** en el puerto `5432` con volumen persistente `db-data`.
-- **Backend Ktor** en el puerto configurado en `KTOR_PORT` (por defecto `5684`).
-- **Healthcheck:** el backend esperará a que PostgreSQL responda correctamente antes de iniciar.
+- **PostgreSQL 17** en el puerto `5432` de docker con volumen persistente `db-data`.
+- **Backend Ktor** en el puerto configurado en `KTOR_PORT` (por defecto y preferentemente `5684`) con un volumen persistente `upload-data` para la subida de cosmeticos. 
 
-El backend expone los endpoints REST en `http://localhost:5684` y el panel admin en `http://localhost:5684/admin`.
+El docker se encargara de compilar el backend desde 0 si se le indica que recompile las maquinas, con lo que hay que tenerlo en cuenta por los tiempos de espera (2-8 min aprox. en Windows)
 
-Para detener los servicios:
+El backend esperará a que PostgreSQL se haya levantado antes de iniciarse, esto se hace ejecutando el siguiente healthcheck: `pg_isready -U DB_USER -d DB_NAME` [Link documentacion pg_isready](https://www.postgresql.org/docs/current/app-pg-isready.html).
+
+El backend expone la API REST en `http://localhost:5684` y el panel admin esta ubicado en `http://localhost:5684/admin`.
+
+Para detener los servicios se ejecutará:
 
 ```bash
 docker compose down
 ```
 
-Para eliminar volúmenes (borrar datos):
+Para detener los servicios y eliminar volúmenes de datos se ejecutará:
 
 ```bash
 docker compose down -v
 ```
 
-### 13.5. Ejecutar la aplicación web
+### 13.5. Ejecutar la aplicación web en modo debug
+
+Para ello ejecutaremos los siguientes comandos, se requiere npm y node v20+:
 
 ```bash
 cd astrais-web
@@ -881,9 +917,30 @@ npm install
 npm run dev
 ```
 
-La aplicación web se ejecutará en el puerto indicado por Vite (típicamente `http://localhost:5173`).
+Estos comandos van a la carpeta de la web, instalan las dependencias e inician un servidor local en modo debug.
 
-### 13.6. Ejecutar la aplicación Android
+La aplicación web se ejecutará en el puerto indicado por Vite (normalmente la URL es `http://localhost:5173` o similar).
+
+### 13.6. Despliegue de la aplicacion web
+
+Para el despliegue de la aplicacion web hemos preparado varios scripts .bash y .bat.
+
+Primeramente, se deberá compilar la aplicacion a **HTML, CSS y JS**. El script `compile.sh`/`compile.bat` se encarga de instalar todas las dependencias, compilar la página y copiar los datos a una carpeta para su uso (`$RAIZ_PROYECTO/docker/compiledPage`).
+
+```bash
+cd astrais-web
+bash compile.sh # RUN compile.bat en windows
+```
+
+Luego, para el despliegue se usara `deploy.bat`/`deploy.sh`, ubicado en astrais-web, este compilara una imagen docker con un servidor **nginx** que servira la página, despues parará instancias anteriores del contenedor y creará uno nuevo a partir de la imagen compilada.
+
+```bash
+cd astrais-web
+bash deploy.sh # RUN deploy.bat en windows
+```
+
+
+### 13.7. Ejecutar la aplicación Android
 
 1. Abrir Android Studio y seleccionar la carpeta `AstraisAndroid/`.
 2. Sincronizar el proyecto con Gradle (`Sync Project with Gradle Files`).
@@ -898,7 +955,7 @@ GOOGLE_WEB_CLIENT_ID="tu_google_web_client_id"
 
 > **Nota:** La URL base del backend en el cliente Android está definida en `KtorClient.kt` (`BASE_URL`). Para pruebas locales, asegúrate de que el dispositivo/emulador pueda alcanzar la IP de tu máquina de desarrollo (no usar `localhost` desde el emulador; usar la IP de red local, ej. `http://192.168.1.133:5684`).
 
-### 13.7. Compilación de producción del backend
+### 13.8. Compilación de producción del backend
 
 Si se desea generar el fat JAR sin Docker:
 

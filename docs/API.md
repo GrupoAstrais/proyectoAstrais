@@ -59,7 +59,7 @@ Los errores se devuelven con un código HTTP distinto de `200` y un JSON con:
 | 7 | `ERR_RESOURCENOTCREATED` | No se pudo crear el recurso |
 | 8 | `ERR_FORBIDDEN` | Sin permisos para la operación |
 | 9 | `ERR_INTERNALERROR` | Error interno del servidor |
-
+| 10 | `ERR_RESOURCENOTMODIFIED` | No se pudo modificar el recurso |
 ---
 
 ## Auth
@@ -1412,12 +1412,12 @@ Bus global de eventos SSE. Cualquier cliente conectado recibe estos eventos. No 
 
 ### `GET /events/user`
 
-Bus SSE por usuario. Protegido con `AccessToken`. Al desconectarse, el servidor emite internamente `SIGN.OFF` para ese usuario.
+Bus SSE por usuario. Protegido con `AccessToken`. Al apagar el servidor, este emite internamente `SIGN.OFF` los usuarios conectados.
 
 | Evento | Cuerpo | Descripción |
 |---|---|---|
-| `ADDED.TASK` | `{ "gid": 1, "tid": 5 }` | Se ha creado una nueva tarea en el grupo `gid` con ID `tid` |
-| `SIGN.OFF` | *(vacío)* | El usuario ha sido desconectado |
+| `ADDED.TASK` | `{ "gid": 1, "tid": 5 }` | Avisa de la creacion de una nueva tarea en el grupo `gid` con ID `tid` |
+| `SIGN.OFF` | *(vacío)* | El usuario debe de desconectarse |
 
 ---
 
@@ -1537,13 +1537,25 @@ Devuelve datos básicos de todos los usuarios del servidor.
 | `401 Unauthorized` | Token inválido |
 | `403 Forbidden` | El usuario no es admin |
 
+**Códigos de error del servidor:**
+
+| Código | Cuándo |
+|---|---|
+| `ERR_INVALIDTOKEN (0)` | Token inválido |
+| `ERR_MALFORMEDMESSAGE (1)` | UID no numérico |
+| `ERR_RESOURCEMISSING (3)` | Usuario no existe |
+| `ERR_FORBIDDEN (8)` | El usuario no es admin |
+
 **Objeto usuario:**
 ```json
 {
   "id": 1,
   "nombre": "string",
   "rol": "Admin | User",
-  "nivel": 5
+  "nivel": 5,
+  "xp": 500,
+  "ludiones": 748,
+  "confirmed" : true
 }
 ```
 
@@ -1560,7 +1572,7 @@ Devuelve datos básicos de un usuario específico. El `uid` va en la URL.
 
 | HTTP | Descripción |
 |---|---|
-| `200 OK` | Objeto usuario simplificado (ver arriba) |
+| `200 OK` | Objeto usuario simplificado [(ver arriba)](#post-adminusers) |
 | `401 Unauthorized` | Token inválido |
 | `403 Forbidden` | El usuario no es admin |
 | `404 Not Found` | Usuario no encontrado |
@@ -1578,7 +1590,7 @@ Devuelve datos básicos de un usuario específico. El `uid` va en la URL.
 
 ### `POST /admin/groups`
 
-Devuelve todos los grupos del servidor.
+Devuelve todos los datos relevantes sobre los grupos del servidor.
 
 **Autenticación:** `AccessToken` (admin).  
 **Entrada:** ninguna.
@@ -1590,6 +1602,17 @@ Devuelve todos los grupos del servidor.
 | `200 OK` | Array de objetos de grupo |
 | `401 Unauthorized` | Token inválido |
 | `403 Forbidden` | El usuario no es admin |
+
+**Objeto grupo**
+```json
+{
+  "id": 1,
+  "nombre": "Grupo procariota",
+  "descripcion": "Grupo de exposicion de la celula procariota",
+  "ownerId": 1,
+  "ownerNombre": "Admin"
+}
+```
 
 ---
 
@@ -1627,6 +1650,40 @@ Crea un grupo asignándolo a un usuario específico como dueño.
 
 ---
 
+### `POST /admin/groups/edit/{gid}`
+
+Edita un los datos de un grupo.  El `gid` va en la URL.
+
+**Autenticación:** `AccessToken` (admin).
+
+**Entrada:**
+```json
+{
+  "name": "string",
+  "desc": "string"
+}
+```
+
+**Respuestas HTTP:**
+
+| HTTP | Descripción |
+|---|---|
+| `200 OK` | `{ "acknowledged": true }` |
+| `400 Bad Request` | No se pudo editar el grupo |
+| `401 Unauthorized` | Token inválido |
+| `403 Forbidden` | El usuario no es admin |
+
+**Códigos de error del servidor:**
+
+| Código | Cuándo |
+|---|---|
+| `ERR_INVALIDTOKEN (0)` | Token inválido |
+| `ERR_FORBIDDEN (8)` | El usuario no es admin |
+| `ERR_RESOURCENOTCREATED (7)` | No se pudo editar el grupo |
+
+---
+
+
 ### `DELETE /admin/groups/delete/{gid}`
 
 Elimina un grupo del servidor. El `gid` va en la URL.
@@ -1652,6 +1709,71 @@ Elimina un grupo del servidor. El `gid` va en la URL.
 | `ERR_MALFORMEDMESSAGE (1)` | GID no numérico |
 | `ERR_FORBIDDEN (8)` | El usuario no es admin |
 | `ERR_RESOURCENOTMODIFIED` | No se pudo eliminar el grupo |
+
+---
+
+### `DELETE /admin/groups/moredata/{gid}`
+
+Da informacion extensiva sobre un grupo en especifico. El `gid` va en la URL.
+
+**Autenticación:** `AccessToken` (admin).  
+**Entrada:** ninguna.
+
+**Respuestas HTTP:**
+
+| HTTP | Descripción |
+|---|---|
+| `200 OK` | Devuelve un objeto de grupo detallado |
+| `304 Not Modified` | No se pudo eliminar |
+| `400 Bad Request` | GID inválido |
+| `401 Unauthorized` | Token inválido |
+| `403 Forbidden` | El usuario no es admin |
+
+**Códigos de error del servidor:**
+
+| Código | Cuándo |
+|---|---|
+| `ERR_INVALIDTOKEN (0)` | Token inválido |
+| `ERR_MALFORMEDMESSAGE (1)` | GID no numérico |
+| `ERR_FORBIDDEN (8)` | El usuario no es admin |
+| `ERR_RESOURCENOTMODIFIED` | No se pudo eliminar el grupo |
+
+**Objeto grupo extensivo**
+- En activeInvites, tanto expiresAt, maxUses o revokedAt son opcionales.
+- En members, joinedAt es opcional.
+- En events, tanto actorUid y payloadJson son opcionales.
+```json
+{
+  "activeInvites": [
+    {
+      "code" : "UjkdspflImKO84",
+      "inviteUrl" : "UjkdspflImKO84",
+      "expiresAt" : "String con fecha si hay expiracion",
+      "maxUses" : 5,
+      "usesCount" : 1,
+      "revokedAt" : "String con fecha si se revoco ya",
+    }
+  ],
+  "members" : [
+    {
+      "uid": 4,
+      "name": "Vickytoti",
+      "role": 1,
+      "joinedAt": "Fecha en la que se unio"
+    }
+  ],
+  "events" : [
+    {
+      "id" : 1,
+      "actorUid": 1,
+      "eventType": "COMPLETED_TASK",
+      "payloadJson": null,
+      "createdAt": "Fecha de creacion"
+    }
+  ]
+}
+```
+
 
 ---
 
@@ -1717,4 +1839,41 @@ Elimina un usuario del servidor. El `cid` (ID del usuario) va en la URL.
 | `ERR_FORBIDDEN (8)` | El usuario no es admin |
 | `ERR_RESOURCENOTCREATED (7)` | No se pudo eliminar el usuario |
 
+
+---
+
+### `POST /admin/user/editUserResources`
+
+Cambia recursos de usuario como el EXP o los ludiones.
+
+**Autenticación:** `AccessToken` (admin).  
+**Entrada:** 
+Tanto ludions como XP son opcionales
+```json
+{
+  "uid": 4,
+  "ludions": 999,
+  "xp": 250105
+}
+```
+
+**Respuestas HTTP:**
+
+| HTTP | Descripción |
+|---|---|
+| `200 OK` | `{ "acknowledged": true }` |
+| `400 Bad Request` | UID inválido o no se pudo editar |
+| `401 Unauthorized` | Token inválido |
+| `403 Forbidden` | El usuario no es admin |
+| `500 Internal Server Error` | Error en la base de datos o desconocido |
+
+**Códigos de error del servidor:**
+
+| Código | Cuándo |
+|---|---|
+| `ERR_INVALIDTOKEN (0)` | Token inválido |
+| `ERR_MALFORMEDMESSAGE (1)` | CID no numérico |
+| `ERR_RESOURCENOTCREATED (7)` | No se pudo editar el usuario |
+| `ERR_FORBIDDEN (8)` | El usuario no es admin |
+| `ERR_INTERNALERROR (9)` | Error en la base de datos o desconocido |
 

@@ -99,17 +99,9 @@ fun Route.oauthRoutes() {
 
                     println("OAUTH? En esta economia??")
 
-                    //val targetOrigin = call.parameters["frontendOrigin"] ?: "http://localhost:8080"
                     val targetOrigin = if (System.getenv("IS_DEV").equals("0")) "8080" else "5684"
-
-                    /*call.response.header("Cross-Origin-Opener-Policy", "same-origin-allow-popups")
-                    call.respondText(
-                        text = sendPopup(true,Json.encodeToString(loginResponse), targetOrig = "http://localhost:$targetOrigin"),
-                        contentType = ContentType.Text.Html,
-                        status = HttpStatusCode.OK
-                    )*/
-                    //call.respondRedirect("http://${InetAddress.getLocalHost().hostAddress}:$targetOrigin/oauthCallback?accessToken=${loginResponse.jwtAccessToken}&refreshToken=${loginResponse.jwtRefreshToken}&hadToRegister=${loginResponse.hadToRegister}")
                     val frontendUrl = "http://${getPrivateIP()}:$targetOrigin"
+
                     call.respondRedirect("$frontendUrl/oauthCallback?accessToken=${loginResponse.jwtAccessToken}&refreshToken=${loginResponse.jwtRefreshToken}&hadToRegister=${loginResponse.hadToRegister}")
                 } else {
                     call.respond(HttpStatusCode.InternalServerError, Errors(ErrorCodes.ERR_RESOURCEMISSING.ordinal, "Missing user account"))
@@ -230,6 +222,9 @@ fun Route.oauthRoutes() {
 
 val jsonOauth = Json { ignoreUnknownKeys = true }
 
+/**
+ * Consigue y devuelve informacion relevante de usuario de google
+ */
 suspend fun getGoogleInfo(accessToken : String) : GoogleUserInfo{
     val client = HttpClient(Apache)
     val req = client.get("https://openidconnect.googleapis.com/v1/userinfo") {
@@ -241,25 +236,4 @@ suspend fun getGoogleInfo(accessToken : String) : GoogleUserInfo{
     //mainlogger.info("Received: ${req.bodyAsText(Charsets.UTF_8)}")
 
     return jsonOauth.decodeFromString(req.bodyAsText(Charsets.UTF_8)) //req.body<GoogleUserInfo>()
-}
-
-suspend fun sendPopup(authDone : Boolean, message : String, targetOrig : String) : String{
-    return """
-        <!DOCTYPE html>
-        <html>
-        <body>
-            <script>
-                // Enviamos los datos a la ventana que nos abrió
-                window.opener.postMessage({
-                    type: "${if (authDone) "AUTH_SUCCESS" else "AUTH_FAIL"}",
-                    payload: $message
-                }, "$targetOrig");
-                
-                console.log("$targetOrig");
-                
-                //window.close();
-            </script>
-        </body>
-        </html>
-    """.trimIndent()
 }

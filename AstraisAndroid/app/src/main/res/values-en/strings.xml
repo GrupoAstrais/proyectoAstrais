@@ -50,7 +50,7 @@
 
     <!-- Onboarding -->
     <string name="onboarding_title">Configure Your Profile</string>
-    <string name="onboarding_subtitle">Choose how others will see you and your preferred language</string>
+    <string name="onboarding_subtitle">Choose your username and preferred language</string>
     <string name="onboarding_username_placeholder">Username</string>
     <string name="onboarding_username_min_chars">Minimum 3 characters</string>
     <string name="onboarding_language_label">Language</string>

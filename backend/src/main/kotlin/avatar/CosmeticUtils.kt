@@ -3,7 +3,7 @@ package avatar
 import admin.FormClientData
 import admin.RarityType
 import admin.calculateCosmeticPrice
-import admin.getAdminDao
+import admin.getAdminRepoImpl
 import com.astrais.db.CosmeticType
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -56,7 +56,7 @@ data class ThemeResource(
 
 /**
  * Mira dentro del jar y busca todos los ficheros que terminen por .cosmetic.json (esa es la extension de los cosmeticos)
- * @return Lista con los ficheros cosmetico
+ * @return Lista de paths en el JAR con los ficheros cosmetico
  */
 fun getInitialCosmeticsPaths() : List<String>{
     val path = "initial"
@@ -84,7 +84,6 @@ suspend fun loadInitialCosmetics() {
     val classLoader = Thread.currentThread().contextClassLoader
     val externalUploadsDir = System.getenv("UPLOAD_DIR") ?: "uploads"
 
-
     val cosmeticPaths = getInitialCosmeticsPaths()
     println("Cosmetics to load: ${cosmeticPaths}")
 
@@ -102,7 +101,7 @@ suspend fun loadInitialCosmetics() {
                 val p = Json.decodeFromString<PetAvatarResource>(data)
                 val outImgPath = "$externalUploadsDir/${p.imageRef.substringAfterLast('/')}"
                 moveResourceTo("initial/${p.imageRef}", outImgPath)
-                getAdminDao().uploadCosmetic(FormClientData(
+                getAdminRepoImpl().uploadCosmetic(FormClientData(
                     rarity = p.rarity,
                     engName = p.names.eng,
                     espName = p.names.esp,
@@ -118,7 +117,7 @@ suspend fun loadInitialCosmetics() {
             }
             "theme"-> {
                 val p = Json.decodeFromString<ThemeResource>(data)
-                val out = getAdminDao().uploadCosmetic(
+                val out = getAdminRepoImpl().uploadCosmetic(
                     FormClientData(
                         rarity = p.rarity,
                         engName = p.names.eng,
@@ -133,25 +132,34 @@ suspend fun loadInitialCosmetics() {
                         collection = p.collection
                     )
                 )
-                println("Object ${p.names.eng} saved with ${out.first.name}, msg: ${out.second}")
+                //println("Object ${p.names.eng} saved with ${out.first.name}, msg: ${out.second}")
             }
         }
     }
 }
 
+/**
+ * Copia los contenidos del recurso [resourcePath] dentro del fichero externo [outPath]
+ * @param resourcePath Ruta dentro del JAR a un recurso con datos
+ * @param outPath Ruta de salida dentro de la maquina donde se copiaran los datos
+ */
 fun moveResourceTo(resourcePath : String, outPath : String) : File?{
-    val classLoader = Thread.currentThread().contextClassLoader
-    val input = classLoader.getResourceAsStream(resourcePath) ?: return null
+    return runCatching<File?> {
+        val classLoader = Thread.currentThread().contextClassLoader
+        val input = classLoader.getResourceAsStream(resourcePath) ?: return null
 
-    val file = File(outPath)
-    file.parentFile?.mkdirs()
+        val file = File(outPath)
+        file.parentFile?.mkdirs()
 
-    file.outputStream().use { output ->
-        input.use { inputStream ->
-            inputStream.copyTo(output)
+        file.outputStream().use { output ->
+            input.use { inputStream ->
+                inputStream.copyTo(output)
+            }
+            output.flush()
         }
-        output.flush()
-    }
 
-    return file
+        return file
+    }.getOrElse {
+        return null
+    }
 }

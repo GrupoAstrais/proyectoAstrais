@@ -2,9 +2,12 @@ import axios from 'axios';
 import type { AddUserToGroup, CreateGroup, CreateTask, DeleteOauthRequest, EditGroup, EditTask, EditUser, EventosGrupos, GroupInvitacion, GroupInvitacionRespuesta, LoginRequest, MembersResponse, PassOwnershipGroup, RegisterRequest, RevokeGroupInvit, SetEmailLogin, SetMemberRole, SetOauthRequest, UserData, UserGroups, UserGroupsResponse, UserTasksResponse, VerifyRequest } from '../types/LoginRequest';
 import type { IGroup, ITarea } from '../types/Interfaces';
 
+
 //export const API_BASE_URL = 'http://192.168.3.148:5684' //url desde las practicas
 // export const API_BASE_URL = 'http://192.168.56.1:5684' //url desde casa
+
 export const API_BASE_URL = `http://${window.location.hostname}:5684`; //'http://127.0.0.1:5684' //variable de entorno para la url, con fallback a localhost
+
 
 
 // TOKENS
@@ -22,6 +25,7 @@ const instance = axios.create({
 const refreshInstance = axios.create({
     baseURL: API_BASE_URL,
     timeout: 10_000,
+    
     headers: { 'Content-Type': 'application/json' }
 });
 

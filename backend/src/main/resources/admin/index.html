@@ -6,6 +6,9 @@
     <title>Astrais Admin Panel</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <style>
+        /**
+            Colores de la aplicacion
+        */
         :root {
             --primary: #6366f1;
             --success: #10b981;
@@ -52,13 +55,16 @@
             border-radius: 8px;
             cursor: pointer;
             color: #94a3b8;
-            transition: 0.2s;
+            transition: 0.5s;
+        }
+        nav li:hover {
+            background: rgba(255, 255, 255, 0.03);
         }
 
         nav li.active {
             background: rgba(255, 255, 255, 0.1);
             color: white;
-            border-left: 4px solid var(--primary);
+            cursor: default;
         }
 
         main {
@@ -87,7 +93,7 @@
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.5rem;
+            gap: 0.5rem;
         }
 
         .btn {
@@ -128,11 +134,13 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(15, 23, 42, 0.7);
-            backdrop-filter: blur(4px);
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(8px);
             z-index: 1000;
             align-items: center;
             justify-content: center;
+
+            animation: blurIn 0.3s ease;
         }
 
         .modal-content {
@@ -140,6 +148,8 @@
             width: 450px;
             border-radius: 20px;
             padding: 2rem;
+
+            animation: fadeIn 0.3s ease;
         }
 
         .invite-card {
@@ -162,15 +172,27 @@
             font-size: 0.9rem;
         }
 
+        /**
+            Ahora me estoy dando cuenta del poder de las animaciones dios mio...
+        */
         @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(10px);
             }
 
             to {
                 opacity: 1;
-                transform: translateY(0);
+            }
+        }
+        @keyframes blurIn {
+            from {
+                backdrop-filter: blur(0px);
+                background: rgba(15, 23, 42, 0);
+            }
+
+            to {
+                background: rgba(15, 23, 42, 0.5);
+                backdrop-filter: blur(8px);
             }
         }
     </style>
@@ -201,16 +223,64 @@
                 <table style="width:100%; border-collapse:collapse">
                     <thead style="background:#f1f5f9">
                         <tr>
+                            <th style="padding:1rem; text-align:left">UID</th>
                             <th style="padding:1rem; text-align:left">Usuario</th>
                             <th style="padding:1rem; text-align:left">Rol</th>
                             <th style="padding:1rem; text-align:left">Nivel</th>
                             <th style="padding:1rem; text-align:left">Confirmacion</th>
+                            <th style="padding:1rem; text-align:left">Ludiones</th>
                             <th style="padding:1rem; text-align:right">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="user-table-body"></tbody>
                 </table>
             </div>
+
+            <div id="user-admin-manage-modal" class="modal">
+                <div class="modal-content" style="width: 450px;">
+                    <h2 id="admin-user-title">Administrar Recursos</h2>
+                    <p id="admin-user-subtitle" style="color: var(--text-muted); margin-top: -1rem; margin-bottom: 1.5rem;"></p>
+                    
+                    <form id="admin-user-form" onsubmit="saveUserResources(event)">
+                        <input type="hidden" id="admin-user-id">
+                        
+                        <div style="display: grid; grid-template-columns: 1fr; gap: 1.2rem;">
+                            <div>
+                                <label style="display:block; margin-bottom:0.4rem; font-weight:600;">Ludiones</label>
+                                <input type="number" id="admin-user-ludiones" required
+                                    style="width:100%; box-sizing:border-box; padding:0.6rem; border:1px solid var(--border); border-radius:8px;">
+                            </div>
+
+                            <div>
+                                <label style="display:block; margin-bottom:0.4rem; font-weight:600;">Experiencia (XP)</label>
+                                <div style="display:flex; gap:8px;">
+                                    <input type="number" id="admin-user-xp" required
+                                        style="flex:1; box-sizing:border-box; padding:0.6rem; border:1px solid var(--border); border-radius:8px;">
+                                    <button type="button" class="btn" style="background:var(--sidebar); color:white;" onclick="updateLevelPreview()">
+                                        Calcular Nivel
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="user-level-preview" style="background: #f1f5f9; padding: 1rem; border-radius: 12px; border: 1px solid var(--primary); display:none;">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <span style="font-weight:600; color:var(--sidebar);">Nivel Actual:</span>
+                                    <span id="user-display-level" style="font-size:1.2rem; font-weight:bold; color:var(--primary);">1</span>
+                                </div>
+                                <div style="margin-top:8px; font-size:0.85rem; color:var(--text-muted);">
+                                    Siguiente nivel: <span id="user-display-remaining">0</span> XP restantes
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                            <button type="button" class="btn" onclick="closeAdminUserModal()" style="background:#e2e8f0">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Actualizar Datos</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <div id="user-modal" class="modal">
                 <div class="modal-content" style="width: 500px;">
                     <h2 id="user-modal-title">Nuevo Usuario</h2>
@@ -399,7 +469,7 @@
 
                         <div>
                             <h3>Invitaciones Activas</h3>
-                            <button class="btn btn-primary" style="margin-bottom:10px;" onclick="generateInvite()">+ Generar Nueva</button>
+                            <button class="btn btn-primary" style="margin-bottom:10px;" onclick="generateInvite()">+ Generar Invitacion</button>
                             <div id="invites-list" class="grid" style="grid-template-columns: 1fr;"></div>
                         </div>
                     </div>
@@ -433,7 +503,7 @@
 
                         <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Descripción</label>
                         <textarea id="group-desc"
-                            style="width:100%; padding:0.6rem; border:1px solid var(--border); border-radius:8px; min-height:80px; margin-bottom:1rem;"></textarea>
+                            style="width:100%; padding:0.6rem; border:1px solid var(--border); border-radius:8px; min-height:80px; margin-bottom:1rem; font-family: 'Inter', sans-serif;"></textarea>
 
                         <div style="display: flex; gap: 1rem; justify-content: flex-end;">
                             <button type="button" class="btn" onclick="closeGroupModal()"
@@ -473,7 +543,8 @@
             EXTENSIVE_GROUP_DATA: API_URL + '/admin/groups/moredata',
             INVITE_URL_GROUP: API_URL + '/groups/invites',
             CREATE_USER: API_URL + '/admin/user/create',
-            DELETE_USER: API_URL + '/admin/user/delete'
+            DELETE_USER: API_URL + '/admin/user/delete',
+            UPDATE_USER: API_URL + '/admin/user/editUserResources'
         };
 
         function logout() {
@@ -490,6 +561,9 @@
             if (id === 'groups-view') fetchGroups();
         }
 
+        //console.log(calcularXPFromNV(2))
+        //console.log(calcularNVFromXP(90))
+
         async function fetchUsers() {
             const tbody = document.getElementById('user-table-body');
             try {
@@ -499,11 +573,14 @@
                     console.log(users)
                     tbody.innerHTML = users.map(u => `
                         <tr>
+                            <td style="padding:1rem; border-top:1px solid var(--border)">${u.id}</td>
                             <td style="padding:1rem; border-top:1px solid var(--border)">${u.nombre}</td>
                             <td style="padding:1rem; border-top:1px solid var(--border)">${u.rol}</td>
                             <td style="padding:1rem; border-top:1px solid var(--border)">${u.nivel}</td>
                             <td style="padding:1rem; border-top:1px solid var(--border)">${u.confirmed ? "Confirmado" : "Sin confirmar"}</td>
+                            <td style="padding:1rem; border-top:1px solid var(--border)">${u.ludiones || 0}</td>
                             <td style="padding:1rem; border-top:1px solid var(--border); text-align:right">
+                                <button class="btn" style="background:#6366f1; color:white; margin-right:5px;" onclick='openAdminUserModal(${JSON.stringify(u)})'>Admin</button>
                                 <button class="btn btn-danger" onclick="deleteUser(${u.id})">Borrar</button>
                             </td>
                         </tr>`).join('');
@@ -521,6 +598,42 @@
 
         function closeUserModal() {
             document.getElementById('user-modal').style.display = 'none';
+        }
+
+        function openAdminUserModal(user) {
+            document.getElementById('admin-user-id').value = user.id;
+            document.getElementById('admin-user-title').innerText = `Usuario: ${user.nombre}`;
+            document.getElementById('admin-user-subtitle').innerText = `ID: ${user.id} | Rol: ${user.rol || 'Usuario'}`;
+            
+            // Rellenamos con los datos actuales del usuario
+            document.getElementById('admin-user-ludiones').value = user.ludiones || 0;
+            document.getElementById('admin-user-xp').value = user.xp || 0;
+            
+            document.getElementById('user-admin-manage-modal').style.display = 'flex';
+            document.getElementById('user-level-preview').style.display = 'none';
+        }
+
+        function closeAdminUserModal() {
+            document.getElementById('user-admin-manage-modal').style.display = 'none';
+        }
+
+        function updateLevelPreview(){
+            const xpSet = document.getElementById('admin-user-xp').value || 0;
+            const newlv = calcularNVFromXP(xpSet);
+            const untilLv = (calcularXPFromNV(newlv+1)-xpSet);
+            
+            const previewCard = document.getElementById('user-level-preview');
+            const displayLevel = document.getElementById('user-display-level');
+            const displayRemaining = document.getElementById('user-display-remaining');
+
+            displayLevel.innerText = newlv;
+            displayRemaining.innerText = untilLv;
+            
+            previewCard.style.display = 'block';
+
+            console.log("Nuevo nivel: " + newlv);
+            console.log("XP total: " + xpSet);
+            console.log("Hasta siguiente nivel: " + untilLv);
         }
 
         async function saveUser(e) {
@@ -553,6 +666,35 @@
             } catch (error) {
                 console.error(error);
                 alert("Error de red");
+            }
+        }
+
+        async function saveUserResources(e) {
+            e.preventDefault();
+
+            const payload = {
+                uid: document.getElementById('admin-user-id').value,
+                ludions: parseInt(document.getElementById('admin-user-ludiones').value) ?? -1,
+                xp: parseInt(document.getElementById('admin-user-xp').value) ?? -1
+            };
+            console.log(payload);
+
+            try {
+                const res = await requestServerProtected(API.UPDATE_USER, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    alert("Usuario actualizado!");
+                    closeAdminUserModal();
+                    fetchUsers();
+                } else {
+                    alert((await res.text()));
+                }
+            } catch (error) {
+                alert("Error al guardar: " + error);
             }
         }
 
@@ -657,6 +799,9 @@
         function openManageGroupModal(data) {
             document.getElementById('group-admin-panel').style.display = 'flex';
             document.getElementById('admin-group-name').innerText = `Administrando: ${data.nombre}`;
+            document.getElementById('members-list').innerHTML = "";
+            document.getElementById('invites-list').innerHTML = "";
+            document.getElementById('audit-log').innerHTML = "";
             currentAdminGroupId = data.id;
 
             fetchGroupDetails(data.id);
@@ -708,27 +853,40 @@
                 }).join('')
 
                 document.getElementById('invites-list').innerHTML = data.activeInvites.map(inv => {
-                    const expiryDate = new Date(inv.expiresAt).toLocaleDateString(undefined, {
+                    /*const expiryDate = new Date(inv.expiresAt).toLocaleDateString(undefined, {
                         day: '2-digit', month: 'short'
-                    });
+                    });*/
+                    console.log(inv);
+                    if (inv.revokedAt != undefined){
+                        return `
+                        <div class="invite-card" style="background: #f1f5f9">
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <span class="invite-code">${inv.code}</span>
+                                </div>
+                                <div style="font-size: 0.75rem; color: #64748b; border-top: 1px solid #f1f5f9;">
+                                    <span style="margin-left: 2px;">Invitacion invalida</span>
+                                </div>
+                            </div>
+                        </div>`;
+                    }
 
                     return `
                     <div class="invite-card">
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <span class="invite-code">${inv.code}</span>
-                <button class="btn btn-danger" 
-                        style="padding: 4px 8px; font-size: 0.75rem; margin-left: 8px;" 
-                        onclick="revokeInvite('${inv.code}')">
-                    Revocar
-                </button>
-            </div>
-            <div style="font-size: 0.75rem; color: #64748b; border-top: 1px solid #f1f5f9; pt: 4px;">
-                <span>Expira: ${expiryDate}</span>
-                <span style="margin-left: 8px;">Usos: ${inv.usesCount || 0}/${inv.maxUses || 'Muchos'}</span>
-            </div>
-        </div>
-    </div>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <span class="invite-code">${inv.code}</span>
+                                <button class="btn btn-danger" 
+                                        style="padding: 4px 8px; font-size: 0.75rem; margin-left: 8px;" 
+                                        onclick="revokeInvite('${inv.code}')">
+                                    Revocar
+                                </button>
+                            </div>
+                            <div style="font-size: 0.75rem; color: #64748b; border-top: 1px solid #f1f5f9; pt: 4px;">
+                                <span style="margin-left: 8px;">Usos: ${inv.usesCount || 0}/${inv.maxUses || 'Muchos'}</span>
+                            </div>
+                        </div>
+                    </div>
                 `}).join('');
 
                 const auditLog = document.getElementById('audit-log');
@@ -1088,6 +1246,7 @@
                 closeGroupModal();
                 closeUserModal(); // Añadir esta línea
                 closeManageGroupModal();
+                closeAdminUserModal();
             }
         }
 

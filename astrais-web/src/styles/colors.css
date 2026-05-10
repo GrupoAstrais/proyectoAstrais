@@ -56,10 +56,11 @@ body {
   background:
     linear-gradient(
       160deg,
-      color-mix(in srgb, var(--astrais-background) 88%, var(--astrais-background-alt) 12%),
-      color-mix(in srgb, var(--astrais-primary) 30%, transparent),
-      color-mix(in srgb, var(--astrais-background-alt) 86%, var(--astrais-secondary) 14%)
+      color-mix(in srgb, var(--astrais-background) 76%, var(--astrais-background-alt) 24%),
+      color-mix(in srgb, var(--astrais-primary) 42%, transparent),
+      color-mix(in srgb, var(--astrais-background-alt) 74%, var(--astrais-secondary) 26%)
     );
+    border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .astrais-secondary-panel-bg {
