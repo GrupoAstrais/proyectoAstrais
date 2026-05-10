@@ -201,14 +201,14 @@ export default function Achivs() {
               </article>
 
               <article className="panel-glow rounded-[22px] border border-white/15 bg-[color-mix(in_srgb,var(--astrais-background)_82%,transparent)] p-3 shadow-[0_18px_40px_color-mix(in_srgb,var(--astrais-background)_40%,transparent)]">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex flex-wrap gap-2">
+                <div className="flex flex-col gap-3 min-[760px]:flex-row min-[760px]:items-center min-[760px]:justify-between">
+                  <div className="tabs-scroll w-full pb-1 min-[760px]:w-auto">
                     {filters.map((filter) => (
                       <button
                         key={filter.key}
                         type="button"
                         onClick={() => setActiveFilter(filter.key)}
-                        className={`rounded-full border px-4 py-2 text-[0.76rem] font-semibold transition xl:text-[0.82rem] ${
+                        className={`min-h-10 shrink-0 whitespace-nowrap rounded-full border px-4 py-2 text-[0.76rem] font-semibold transition xl:text-[0.82rem] ${
                           activeFilter === filter.key
                             ? 'border-0 [background:var(--astrais-cta-bg)] text-white shadow-[0_10px_24px_color-mix(in_srgb,var(--astrais-rarity-epic)_24%,transparent)]'
                             : 'border-white/15 bg-white/6 text-slate-200 hover:bg-white/10'
@@ -219,7 +219,7 @@ export default function Achivs() {
                     ))}
                   </div>
 
-                  <div className="rounded-full border border-accent-mint-300/25 bg-accent-mint-300/8 px-4 py-2 text-[0.76rem] text-accent-mint-300 xl:text-[0.82rem]">
+                  <div className="shrink-0 rounded-full border border-accent-mint-300/25 bg-accent-mint-300/8 px-4 py-2 text-[0.76rem] text-accent-mint-300 xl:text-[0.82rem]">
                     Progreso global {totalCompletion}%
                   </div>
                 </div>

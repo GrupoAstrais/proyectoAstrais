@@ -63,9 +63,9 @@ export default function Calendar({ className = '', selectedDate, onSelectDate }:
   }
 
   return (
-    <div>
+    <div className='mb-5'>
       <div className="relative flex flex-row p-5">
-        <img src={astra} alt="Mascota Astrais" className="absolute -bottom-3 left-20 z-50 w-2/3 sm:left-0" />
+        <img src={astra} alt="Mascota Astrais" className="absolute -bottom-3 left-20 z-50 w-2/5 sm:left-0" />
       </div>
 
       <div className={`relative overflow-hidden rounded-xl border border-white/15 font-['Space_Grotesk'] ${className}`}>

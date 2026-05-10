@@ -310,15 +310,6 @@ export default function Tasks() {
     </>
   );
 
-  // ---------------------------------------------------------------------------
-  // JSX
-  // ---------------------------------------------------------------------------
-
-
-
-
-
-
   return (
     <div
       className="relative flex overflow-hidden h-screen w-screen flex-col gap-4 font-['Space_Grotesk'] text-white"
@@ -340,27 +331,27 @@ export default function Tasks() {
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-6 px-2">
+      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden px-2">
         <button
           onClick={() => { setInitialDataModal(null); setIsOpen(true); }}
-          className="ml-auto w-full rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm md:w-1/5"
+          className="shrink-0 ml-auto w-full rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm md:w-1/5"
         >
           <span className="text-2xl font-bold">+ Anadir tarea</span>
         </button>
 
         {error && <p className="px-10 text-center text-sm text-red-200">{error}</p>}
 
-        <div className="grid grid-cols-1 gap-4 px-10 pt-5 sm:grid-cols-2 md:flex md:flex-row">
+        <div className="task-scroll grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto px-10 pt-5 sm:grid-cols-4 md:flex md:flex-row md:overflow-hidden">
 
           {/* Diarias */}
-          <div className="astrais-primary-panel-bg rounded-2xl border border-white/15 p-4 pb-2 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)] md:w-1/3">
+          <div className="astrais-primary-panel-bg rounded-2xl border border-white/15 p-4 pb-2 mb-5 sm:col-span-2 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)] md:w-1/3">
             <h1 className="pb-5 text-3xl">Diarias</h1>
             <div className="flex flex-col justify-center gap-2">
               <div className="flex flex-col gap-2.5">
-                <div className="flex flex-row justify-center gap-2.5">
+                <div className="tabs-scroll w-full justify-start pb-1 sm:justify-center">
                   {renderTimeFilters(activeDiarias, handleTimeFilter(setActiveDiarias))}
                 </div>
-                <div className="flex flex-row justify-center gap-2.5">
+                <div className="tabs-scroll w-full justify-start pb-1 sm:justify-center">
                   {renderCompletedFilters(diariasCompletedFilters, toggleCompletedFilter(setDiariasCompletedFilters))}
                 </div>
                 <div className="flex flex-col task-scroll min-h-0 max-h-150 max-[1537px]:max-h-96 overflow-y-auto gap-2">
@@ -386,14 +377,14 @@ export default function Tasks() {
           </div>
 
           {/* Habitos */}
-          <div className="astrais-primary-panel-bg rounded-2xl border border-white/15 p-4 pb-2 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)] md:w-1/3">
+          <div className="astrais-primary-panel-bg rounded-2xl border border-white/15 p-4 pb-2 mb-5 sm:col-span-2 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)] md:w-1/3">
             <h1 className="pb-5 text-3xl">Habitos</h1>
             <div className="flex flex-col justify-center gap-2">
               <div className="flex flex-col gap-2.5">
-                <div className="flex flex-row justify-center gap-2.5">
+                <div className="tabs-scroll w-full justify-start pb-1 sm:justify-center">
                   {renderTimeFilters(activeHabitos, handleTimeFilter(setActiveHabitos))}
                 </div>
-                <div className="flex flex-row justify-center gap-2.5">
+                <div className="tabs-scroll w-full justify-start pb-1 sm:justify-center">
                   {renderCompletedFilters(habitosCompletedFilters, toggleCompletedFilter(setHabitosCompletedFilters))}
                 </div>
               </div>
@@ -420,7 +411,7 @@ export default function Tasks() {
           </div>
 
           {/* Calendar */}
-          <div className="flex flex-col md:w-1/3 2xl:my-auto">
+          <div className="flex flex-col md:w-1/3 2xl:my-auto sm:col-span-2 sm:col-start-2">
             <Calendar className="shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]" selectedDate={selectedDate} onSelectDate={setSelectedDate} />
           </div>
 

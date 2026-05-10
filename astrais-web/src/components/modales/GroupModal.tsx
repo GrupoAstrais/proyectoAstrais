@@ -15,12 +15,12 @@ interface GroupModalProps {
 export default function GroupModal({ data, groupName, activeCompleted, activePending, handleActiveFilter, handleToggleComplete, handleToggleSubtask }: GroupModalProps) {
     return (
         <div className="font-['Space_Grotesk'] flex flex-col gap-2 mx-2">
-            <div className="flex flex-row gap-2 items-center">
-                <div className="bg-accent-beige-300/35 rounded-md px-4 py-2 font-bold font-['Press_Start_2P']">
+            <div className="tabs-scroll items-center pb-1">
+                <div className="shrink-0 bg-accent-beige-300/35 rounded-md px-4 py-2 font-bold font-['Press_Start_2P']">
                     <h2>{groupName}</h2>
                 </div>
 
-                <div className="rounded-full px-2 border border-white bg-black">
+                <div className="shrink-0 rounded-full px-2 border border-white/15 bg-[color-mix(in_srgb,var(--astrais-background)_72%,transparent)]">
                     <p className="text-white">Filtrar:</p>
                 </div>
 
@@ -30,7 +30,7 @@ export default function GroupModal({ data, groupName, activeCompleted, activePen
 
             <div className="flex flex-col gap-2">
                 {data.length === 0 ? (
-                    <p className="text-gray-400 italic text-center py-4">No hay tareas</p>
+                    <p className="text-white/55 italic text-center py-4">No hay tareas</p>
                 ) : (
                     data.map((t, i) => (
                         <Task key={t.id ?? i} data={t} onComplete={handleToggleComplete} onToggleSubtask={handleToggleSubtask} />

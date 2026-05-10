@@ -35,7 +35,7 @@ const pads = [
   {
     label: 'Oeste',
     shortLabel: 'O',
-    className: 'border-[color-mix(in_srgb,var(--astrais-rarity-epic)_50%,transparent)] bg-[color-mix(in_srgb,var(--astrais-rarity-epic)_14%,transparent)] text-[var(--astrais-rarity-epic)]',
+    className: 'border-[color-mix(in_srgb,var(--astrais-rarity-epic)_50%,transparent)] bg-[color-mix(in_srgb,var(--astrais-rarity-epic)_14%,transparent)] text-(--astrais-text-default)',
     activeClassName: 'border-[var(--astrais-rarity-epic)] bg-[color-mix(in_srgb,var(--astrais-rarity-epic)_42%,transparent)] shadow-[0_0_34px_color-mix(in_srgb,var(--astrais-rarity-epic)_34%,transparent)]',
   },
 ]
@@ -167,7 +167,7 @@ export default function AstraMemoryGame({ gameId }: AstraMemoryGameProps) {
       <section className="relative z-10 grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-3">
         <header className="grid grid-cols-[minmax(0,1fr)_18rem] gap-3">
           <div>
-            <p className="inline-flex rounded-full border border-[color-mix(in_srgb,var(--astrais-rarity-epic)_35%,transparent)] bg-[color-mix(in_srgb,var(--astrais-rarity-epic)_12%,transparent)] px-3 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.24em] text-[var(--astrais-rarity-epic)]">
+            <p className="inline-flex rounded-full border border-[color-mix(in_srgb,var(--astrais-rarity-epic)_35%,transparent)] bg-[color-mix(in_srgb,var(--astrais-rarity-epic)_12%,transparent)] px-3 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.24em] text-(--astrais-text-default)">
               Secuencia astral
             </p>
             <h1 className="mt-3 font-['Press_Start_2P'] text-[clamp(1rem,2vw,1.35rem)] leading-tight">Astra Memory</h1>
@@ -187,7 +187,7 @@ export default function AstraMemoryGame({ gameId }: AstraMemoryGameProps) {
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/24 p-3">
               <p className="text-[0.55rem] uppercase tracking-[0.18em] text-slate-400">Fallos</p>
-              <p className="mt-2 text-[1rem] font-semibold text-[var(--astrais-rarity-epic)]">{mistakes}/{MAX_MISTAKES}</p>
+              <p className="mt-2 text-[1rem] font-semibold text-(--astrais-text-default)">{mistakes}/{MAX_MISTAKES}</p>
             </div>
           </div>
         </header>

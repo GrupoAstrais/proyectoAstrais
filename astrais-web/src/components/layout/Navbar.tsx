@@ -13,7 +13,7 @@ const links = [
 export default function Navbar() {
   return (
     <nav
-      className="relative z-20 mb-1 flex w-full items-center justify-between border-b border-primary-500/40 bg-primary-500/35 px-3 py-2 text-white font-['Press_Start_2P'] backdrop-blur-sm min-[1400px]:px-4 min-[1400px]:py-2.5"
+      className="relative z-20 mb-1 flex w-full items-center justify-between border-b border-(--astrais-primary)/30 bg-(--astrais-primary)/15 px-3 py-2 text-white font-['Press_Start_2P'] backdrop-blur-sm min-[1400px]:px-4 min-[1400px]:py-2.5"
       aria-label="Navegacion principal"
     >
       <div className="flex min-w-0 flex-1 items-center gap-3 min-[1400px]:gap-4">
@@ -21,13 +21,13 @@ export default function Navbar() {
           <img className="h-14 w-14 min-[1400px]:h-16 min-[1400px]:w-16" src={logo} alt="Astrais logo" />
         </div>
 
-        <div className="relative z-20 grid min-w-0 flex-1 grid-cols-6 gap-1.5 min-[1400px]:gap-2">
+        <div className="tabs-scroll relative z-20 min-w-0 flex-1 gap-1.5 min-[1400px]:gap-2">
           {links.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
               className={({ isActive }) =>
-                `inline-flex min-h-10 items-center justify-center rounded-[0.9rem] px-2 py-2 text-left text-[0.5rem] uppercase tracking-widest text-(--astrais-tab-text) no-underline transition duration-200 hover:translate-y-px hover:bg-(--astrais-tab-hover) min-[1400px]:min-h-11 min-[1400px]:px-3 min-[1400px]:py-2.5 min-[1400px]:text-[0.8rem] ${
+                `inline-flex min-h-10 min-w-[5.75rem] shrink-0 items-center justify-center whitespace-nowrap rounded-[0.9rem] px-2 py-2 text-center text-[0.5rem] uppercase tracking-widest text-(--astrais-tab-text) no-underline transition duration-200 hover:translate-y-px hover:bg-(--astrais-tab-hover) min-[1200px]:flex-1 min-[1400px]:min-h-11 min-[1400px]:px-3 min-[1400px]:py-2.5 min-[1400px]:text-[0.8rem] ${
                   isActive
                     ? 'border border-(--astrais-tab-active-border) [background:var(--astrais-tab-active-bg)] shadow-[0_10px_24px_color-mix(in_srgb,var(--astrais-background)_36%,transparent)] transition duration-200 text-[1rem] min-[1400px]:text-[0.9rem]'
                     : 'border border-transparent'

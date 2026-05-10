@@ -12,6 +12,7 @@
   --astrais-text-soft: color-mix(in srgb, var(--astrais-text) 78%, var(--astrais-background) 22%);
   --astrais-text-muted: color-mix(in srgb, var(--astrais-text) 58%, var(--astrais-background) 42%);
   --astrais-text-faint: color-mix(in srgb, var(--astrais-text) 36%, var(--astrais-background) 64%);
+  --astrais-text-default: #9FA8DA;
   --astrais-border: color-mix(in srgb, var(--astrais-text) 15%, transparent);
   --astrais-border-strong: color-mix(in srgb, var(--astrais-text) 28%, transparent);
   --astrais-overlay: color-mix(in srgb, var(--astrais-background) 72%, transparent);
@@ -69,6 +70,81 @@ body {
       color-mix(in srgb, var(--astrais-secondary) 32%, transparent),
       color-mix(in srgb, var(--astrais-background-alt) 88%, var(--astrais-primary) 12%)
     );
+}
+
+.astrais-modal-overlay {
+  background: color-mix(in srgb, var(--astrais-background) 76%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.astrais-modal-surface {
+  background: var(--astrais-panel-bg);
+  border: 1px solid var(--astrais-border);
+  box-shadow: 0 22px 60px color-mix(in srgb, var(--astrais-background) 70%, transparent);
+}
+
+.astrais-modal-soft-surface {
+  background: color-mix(in srgb, var(--astrais-background) 62%, transparent);
+  border: 1px solid var(--astrais-border);
+}
+
+.astrais-modal-control {
+  background: color-mix(in srgb, var(--astrais-background) 72%, transparent);
+  border: 1px solid var(--astrais-border);
+  color: var(--astrais-text);
+}
+
+.astrais-modal-control:focus {
+  border-color: color-mix(in srgb, var(--astrais-secondary) 70%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--astrais-secondary) 28%, transparent);
+  outline: none;
+}
+
+.astrais-profile-modal-overlay {
+  background:
+    radial-gradient(
+      circle at top,
+      color-mix(in srgb, var(--astrais-secondary) 10%, transparent),
+      transparent 34%
+    ),
+    color-mix(in srgb, var(--astrais-background) 82%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.astrais-profile-modal-surface {
+  background:
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--astrais-secondary) 16%, transparent),
+      transparent 36%
+    ),
+    linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--astrais-background-alt) 90%, var(--astrais-secondary) 10%),
+      color-mix(in srgb, var(--astrais-surface) 78%, var(--astrais-primary) 22%),
+      color-mix(in srgb, var(--astrais-background) 90%, var(--astrais-tertiary) 10%)
+    );
+  border: 1px solid var(--astrais-border);
+  box-shadow: 0 24px 64px color-mix(in srgb, var(--astrais-background) 74%, transparent);
+}
+
+.astrais-profile-modal-band {
+  background: color-mix(in srgb, var(--astrais-background) 30%, transparent);
+}
+
+.tabs-scroll {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  white-space: nowrap;
+}
+
+.tabs-scroll::-webkit-scrollbar {
+  display: none;
 }
 
  @theme {

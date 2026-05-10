@@ -332,7 +332,7 @@ export default function Home() {
           <img className="absolute -bottom-7 -right-56 z-0 w-9/10" src={astra} alt="Astra" />
         </article>
 
-        <div className="grid w-full home-scroll min-h-0 max-[1537px]:max-h-80 overflow-y-auto grid-cols-1 gap-4 lg:grid-cols-3"> 
+        <div className="grid w-full home-scroll min-h-0 max-[1537px]:max-h-80 [@media_(max-width:1537px)_and_(min-height:729.6px)]:max-h-140 overflow-y-auto grid-cols-1 gap-4 lg:grid-cols-3"> 
           {/*Tareas Pendientes*/}
           <article className="astrais-primary-panel-bg flex h-80 lg:h-full min-h-0 flex-col rounded-2xl border border-white/15 p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
             <header className="mb-3">

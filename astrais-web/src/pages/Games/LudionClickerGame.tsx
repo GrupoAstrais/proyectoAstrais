@@ -145,7 +145,7 @@ export default function LudionClickerGame({ gameId }: LudionClickerGameProps) {
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/8 px-3 py-3">
             <p className="text-[0.58rem] uppercase tracking-[0.2em] text-slate-300">Rango</p>
-            <p className="mt-2 text-[0.9rem] font-semibold text-[var(--astrais-rarity-epic)]">{roundRank}</p>
+            <p className="mt-2 text-[0.9rem] font-semibold text-(--astrais-text-default)">{roundRank}</p>
           </div>
         </div>
 

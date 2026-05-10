@@ -143,7 +143,7 @@ const profileFriends: FriendCardData[] = [
 ];
 
 const surfaceCardClassName =
-  "rounded-2xl border border-white/15 bg-[var(--astrais-panel-bg)] p-5 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)] backdrop-blur-sm";
+  "rounded-2xl border border-white/15 bg-linear-to-br from-(--astrais-primary)/20 via-(--astrais-secondary)/20 to-(--astrais-primary)/35 p-5 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)] backdrop-blur-sm";
 
 const visibilityText: Record<VisibilitySetting, string> = {
   public: "Perfil publico",
@@ -213,14 +213,14 @@ function ProfileModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[color-mix(in_srgb,var(--astrais-background)_80%,transparent)] px-4 py-6 backdrop-blur-sm"
+      className="astrais-profile-modal-overlay fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
       onClick={onClose}
     >
       <section
-        className="w-full max-w-3xl overflow-hidden rounded-3xl border border-white/15 bg-(--astrais-panel-bg) shadow-[0_22px_60px_color-mix(in_srgb,var(--astrais-background)_70%,transparent)]"
+        className="astrais-profile-modal-surface w-full max-w-3xl overflow-hidden rounded-3xl"
         onClick={(event) => event.stopPropagation()}
       >
-        <header className="flex items-start justify-between gap-4 border-b border-white/10 px-6 py-5">
+        <header className="astrais-profile-modal-band flex items-start justify-between gap-4 border-b border-white/10 px-6 py-5">
           <div>
             <p className="pb-2 text-[0.78rem] uppercase tracking-[0.08em] text-(--astrais-rarity-epic)">
               Perfil
@@ -233,7 +233,7 @@ function ProfileModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full border border-white/15 bg-white/10 p-3 transition-colors duration-200 hover:bg-white/15"
+            className="rounded-full border border-white/15 bg-[color-mix(in_srgb,var(--astrais-secondary)_16%,transparent)] p-3 transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--astrais-secondary)_24%,transparent)]"
             aria-label="Cerrar modal"
           >
             <svg
@@ -252,10 +252,10 @@ function ProfileModal({
           </button>
         </header>
 
-        <div className="max-h-[70vh] overflow-y-auto px-6 py-5">{children}</div>
+        <div className="profile-scroll max-h-[70vh] overflow-y-auto px-6 py-5">{children}</div>
 
         {footer ? (
-          <div className="border-t border-white/10 px-6 py-4">{footer}</div>
+          <div className="astrais-profile-modal-band border-t border-white/10 px-6 py-4">{footer}</div>
         ) : null}
       </section>
     </div>
@@ -581,11 +581,11 @@ export default function Profile() {
     >
       <Navbar />
 
-      <section className="grid gap-4 px-4 py-6">
+      <section className="grid gap-4 px-4 py-6 profile-scroll min-h-0 max-h-210 max-[1537px]:max-h-210 overflow-y-auto">
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-5">
           <article
             className={`${surfaceCardClassName} relative col-span-3 overflow-hidden px-6 py-6`}>
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,color-mix(in_srgb,var(--astrais-tertiary)_20%,transparent),transparent_36%),radial-gradient(circle_at_bottom_left,color-mix(in_srgb,var(--astrais-text)_15%,transparent),transparent_28%)]" />
+            <div className="pointer-events-none absolute inset-0 bg-(--astrais-panel-bg)" />
             <img
               src={astraAvatar}
               alt="Mascota Astrais"
