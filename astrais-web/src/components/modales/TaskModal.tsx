@@ -104,7 +104,7 @@ export default function Modal({
             habitFrequency: value
           }))
         }
-        className={`rounded border py-2 ${
+        className={`min-h-10 shrink-0 whitespace-nowrap rounded border px-3 py-2 ${
           isActive
             ? "border-primary-900 bg-primary-500 text-white"
             : "border-primary-900 bg-white text-primary-900"
@@ -116,10 +116,10 @@ export default function Modal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4">
+    <div className="astrais-modal-overlay fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4">
       <form
         onSubmit={handleSubmit}
-        className="flex h-auto w-full max-w-2xl flex-col gap-3 rounded-md border border-white/15 bg-[linear-gradient(150deg,#8B5CF6bf,#1E4A6360)] p-4 font-['Space_Grotesk']"
+        className="astrais-modal-surface flex h-auto w-full max-w-2xl flex-col gap-3 rounded-md p-4 font-['Space_Grotesk']"
       >
         <h1 className="text-center font-['Press_Start_2P'] text-xl">
           {initialData ? "Editar tarea" : "Anadir tarea"}
@@ -172,14 +172,14 @@ export default function Modal({
         )}
 
 
-        <div className="flex flex-row justify-around rounded-md border border-white/15 bg-accent-beige-300/80 px-2 py-4">
+        <div className="tabs-scroll justify-start rounded-md border border-white/15 bg-accent-beige-300/80 px-2 py-4">
           <DifficultyModal difficulty={0} selectedDifficulty={formData.difficulty} onSelect={setDifficulty} />
           <DifficultyModal difficulty={1} selectedDifficulty={formData.difficulty} onSelect={setDifficulty} />
           <DifficultyModal difficulty={2} selectedDifficulty={formData.difficulty} onSelect={setDifficulty} />
         </div>
 
         {!initialData &&
-          <div className="flex flex-row justify-around rounded-md border border-white/15 bg-accent-beige-300/80 px-2 py-4">
+          <div className="tabs-scroll justify-start rounded-md border border-white/15 bg-accent-beige-300/80 px-2 py-4">
             <DiaryHabit
                 handleActive={() => setTaskType("HABITO")}
                 titulo="Habito"
@@ -227,7 +227,7 @@ export default function Modal({
         {formData.taskType === "HABITO"  && !initialData && (
           <div className="rounded-md bg-accent-beige-300 p-3">
             <h3 className="mb-2 font-bold text-primary-900">Frecuencia</h3>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="tabs-scroll pb-1">
               {renderFrequencyButton("daily", "Cada dia")}
               {renderFrequencyButton("weekly", "Cada semana")}
               {renderFrequencyButton("monthly", "Cada mes")}
@@ -240,7 +240,7 @@ export default function Modal({
             <button
               type="button"
               onClick={() => void onDelete()}
-              className="min-w-25 rounded-md border border-primary-900 bg-state-error p-2 font-bold text-[#460018]"
+              className="min-w-25 rounded-md border border-primary-900 bg-state-error p-2 font-bold text-primary-900"
             >
               Borrar tarea
             </button>
@@ -251,7 +251,7 @@ export default function Modal({
           <div className="flex flex-row gap-3">
             <button
               type="submit"
-              className="min-w-25 rounded-md border border-primary-900 bg-state-success p-2 font-bold text-[#00371A]"
+              className="min-w-25 rounded-md border border-primary-900 bg-state-success p-2 font-bold text-primary-900"
             >
               {initialData ? "Guardar cambios" : "Confirmar"}
             </button>

@@ -23,7 +23,7 @@ export default function ButtonComplete({title, active, handleActive} : ButtonCom
 
     return (
         <>
-        <button onClick={changeState} className={` ${currentActive ? 'bg-secondary-700 shadow-none translate-y-1' : title == "Completadas" ? 'bg-state-success' : 'bg-state-warning'} shadow-[4px_4px_0px_0px_var(--astrais-primary)]  rounded-md px-4 mb-2`}><span className={`${currentActive ? 'text-white' : 'text-primary-900 ' } text-primary-900 font-bold`}>{title}</span></button>
+        <button onClick={changeState} className={`min-h-10 shrink-0 whitespace-nowrap ${currentActive ? 'bg-secondary-700 shadow-none translate-y-1' : title == "Completadas" ? 'bg-state-success' : 'bg-state-warning'} shadow-[4px_4px_0px_0px_var(--astrais-primary)] rounded-md px-4 mb-2`}><span className={`${currentActive ? 'text-white' : 'text-primary-900 ' } text-primary-900 font-bold`}>{title}</span></button>
         </>
   )
 }

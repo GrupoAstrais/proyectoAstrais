@@ -324,13 +324,13 @@ export default function Shop() {
 
               <div className="relative z-10 mt-4 min-h-0 rounded-3xl border border-white/10 bg-black/18 p-3">
                 <p className="text-center text-xs uppercase tracking-[0.18em] text-slate-400">Categorias</p>
-                <div className="mt-2 grid grid-cols-1 gap-2 overflow-y-scroll">
+                <div className="tabs-scroll mt-2 flex-row pb-1 min-[1200px]:flex-col">
                   {SHOP_CATEGORIES.map((category) => (
                     <button
                       key={category}
                       type="button"
                       onClick={() => setActiveCategory(category)}
-                      className={`rounded-2xl border px-3 py-2.5 text-left text-[0.76rem] font-semibold xl:text-[0.82rem] ${
+                      className={`min-h-10 shrink-0 whitespace-nowrap rounded-2xl border px-3 py-2.5 text-center text-[0.76rem] font-semibold min-[1200px]:w-full min-[1200px]:text-left xl:text-[0.82rem] ${
                         activeCategory === category
                           ? 'border-0 [background:var(--astrais-cta-bg)] text-white shadow-[0_10px_24px_color-mix(in_srgb,var(--astrais-rarity-epic)_24%,transparent)]'
                           : 'border-white/12 bg-white/6 text-slate-200 hover:bg-white/10'

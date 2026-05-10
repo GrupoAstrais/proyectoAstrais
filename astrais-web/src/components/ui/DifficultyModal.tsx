@@ -20,7 +20,7 @@ export default function DifficultyModal({ difficulty, selectedDifficulty, onSele
     <button
       onClick={() => onSelect(normalizedDifficulty)}
       type="button"
-      className={`mb-2 rounded-xs px-2 font-['Space_Grotesk'] shadow-xs shadow-primary-900 ${
+      className={`min-h-10 shrink-0 whitespace-nowrap rounded-xs px-3 font-['Space_Grotesk'] shadow-xs shadow-primary-900 ${
         isActive ? "translate-y-1 bg-secondary-700 text-white shadow-none" : `${baseColor} text-primary-900`
       }`}
     >

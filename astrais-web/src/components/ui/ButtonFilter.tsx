@@ -32,7 +32,7 @@ export default function ButtonFilter({handleActive, titulo, esOtroActivo, active
 
     return (
         <>
-            <button onClick={changeState} className={`rounded-full px-4 ${currentActive ?  'bg-white text-black' : 'bg-black text-white' }`}><span className="font-bold">{titulo}</span></button>
+            <button onClick={changeState} className={`min-h-10 shrink-0 whitespace-nowrap rounded-full px-4 ${currentActive ?  'bg-white text-black' : 'bg-black text-white' }`}><span className="font-bold">{titulo}</span></button>
         </>
   )
 }

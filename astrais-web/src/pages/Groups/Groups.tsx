@@ -1082,21 +1082,21 @@ export default function Groups() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-2 px-5 md:flex md:flex-row md:justify-center">
-        <div className="flex w-full flex-col gap-2 md:w-1/3">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 overflow-hidden px-5 md:flex md:flex-row md:justify-center">
+        <div className="flex min-h-0 w-full flex-col gap-2 md:w-1/3 pb-5">
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="w-full rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full shrink-0 rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60"
           >
             <span className="text-2xl font-bold">Crear grupo</span>
           </button>
           <button
             onClick={() => setIsJoinModalOpen(true)}
-            className="w-full rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full shrink-0 rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60"
           >
             <span className="text-2xl font-bold">Unir al grupo</span>
           </button>
-          <div className="flex flex-col groups-scroll min-h-0 max-h-176 max-[1537px]:max-h-118 overflow-y-auto gap-2">
+          <div className="groups-scroll flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
             {loadingGroups ? (
             <p className="py-4 text-center italic text-gray-300">
               Cargando grupos...
@@ -1117,16 +1117,16 @@ export default function Groups() {
         </div>
 
         <div className={`${isOpen ? "" : "hidden"} flex w-full flex-col gap-2 md:w-1/2`}>
-          <div className="flex w-full flex-row justify-between">
-            <button disabled={!activeGroupData || !canManageGroup} onClick={() => setIsSettingsModalOpen(true)} className="rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
+          <div className="tabs-scroll w-full items-center justify-start pb-1">
+            <button disabled={!activeGroupData || !canManageGroup} onClick={() => setIsSettingsModalOpen(true)} className="shrink-0 whitespace-nowrap rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
               <span className="text-2xl font-bold">Configuracion</span>
             </button>
-            <div className="flex flex-row gap-2">
-              <button disabled={!activeGroupData || loadingAudit || !canViewAudit} onClick={() => { void openAuditModal(); }} className="ml-2 rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
+            <div className="contents">
+              <button disabled={!activeGroupData || loadingAudit || !canViewAudit} onClick={() => { void openAuditModal(); }} className="shrink-0 whitespace-nowrap rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
                 <span className="text-2xl font-bold">Historial</span>
               </button>
               <button disabled={!activeGroupData || !canManageTasks} onClick={() => {setInitialDataModal(null); setIsOpenModal(true);}}
-                className="ml-auto rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
+                className="shrink-0 whitespace-nowrap rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
                   <span className="text-2xl font-bold">+ Añadir tarea</span>
               </button>
             </div>
@@ -1135,12 +1135,12 @@ export default function Groups() {
           {error && <p className="px-2 text-sm text-red-200">{error}</p>}
 
           <div className="mx-2 flex flex-col gap-2 font-['Space_Grotesk']">
-            <div className="flex flex-row items-center gap-2">
-              <div className="rounded-md bg-accent-beige-300/35 px-4 py-2 font-['Press_Start_2P'] font-bold">
+            <div className="tabs-scroll items-center pb-1">
+              <div className="shrink-0 rounded-md bg-accent-beige-300/35 px-4 py-2 font-['Press_Start_2P'] font-bold">
                 <h2>{activeGroupData?.name ?? "Grupo"}</h2>
               </div>
 
-              <div className="rounded-full border border-white bg-black px-2">
+              <div className="shrink-0 rounded-full border border-white bg-black px-2">
                 <p className="text-white">Filtrar:</p>
               </div>
 
@@ -1217,37 +1217,37 @@ export default function Groups() {
       )}
 
       {isAuditModalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 font-['Space_Grotesk']">
-          <div className="astrais-primary-panel-bg  rounded-lg shadow-xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between p-5 border-b border-gray-700">
+        <div className="astrais-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 font-['Space_Grotesk']">
+          <div className="astrais-modal-surface rounded-lg w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-white/10">
               <h2 className="text-xl font-bold text-white">
                 Historial de auditoria
               </h2>
               <button
                 onClick={() => setIsAuditModalOpen(false)}
-                className="text-gray-300 hover:text-white text-2xl"
+                className="text-white/60 hover:text-white text-2xl"
               >
                 &times;
               </button>
             </div>
             <div className="p-5 overflow-y-auto">
               {auditEvents.length === 0 ? (
-                <p className="text-gray-300">No hay eventos para mostrar.</p>
+                <p className="text-white/70">No hay eventos para mostrar.</p>
               ) : (
                 <div className="space-y-2">
                   {auditEvents.map((event) => (
-                    <div key={event.id} className="rounded-md border border-gray-700 bg-gray-900/45 p-3">
+                    <div key={event.id} className="astrais-modal-soft-surface rounded-md p-3">
                       <p className="text-sm text-white">{getAuditEventLabel(event.eventType)}</p>
-                      <p className="text-xs text-gray-300">{new Date(event.createdAt).toLocaleString()}</p>
+                      <p className="text-xs text-white/70">{new Date(event.createdAt).toLocaleString()}</p>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-            <div className="border-t border-gray-700 p-4 flex justify-end">
+            <div className="border-t border-white/10 p-4 flex justify-end">
               <button
                 onClick={() => setIsAuditModalOpen(false)}
-                className="px-6 py-2 border border-gray-600 rounded-md text-white hover:bg-gray-700 transition-colors"
+                className="px-6 py-2 border border-white/15 rounded-md text-white hover:bg-white/10 transition-colors"
               >
                 Cerrar
               </button>
@@ -1263,12 +1263,12 @@ export default function Groups() {
       />
 
       {isJoinModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 font-['Space_Grotesk']">
-          <div className="astrais-primary-panel-bg rounded-lg shadow-xl w-full max-w-xl p-6">
+        <div className="astrais-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 font-['Space_Grotesk']">
+          <div className="astrais-modal-surface rounded-lg w-full max-w-xl p-6">
             <h2 className="text-2xl font-bold text-white mb-3">
               Unir al grupo
             </h2>
-            <p className="text-sm text-gray-300 mb-3">
+            <p className="text-sm text-white/70 mb-3">
               Introduce un codigo o un enlace de invitacion.
             </p>
             <input
@@ -1276,7 +1276,7 @@ export default function Groups() {
               value={joinGroupInput}
               onChange={(e) => setJoinGroupInput(e.target.value)}
               placeholder="Codigo o enlace"
-              className="w-full bg-gray-800 border border-gray-700 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-accent-beige-300"
+              className="astrais-modal-control w-full rounded-md px-4 py-2"
             />
             {joinGroupError && (
               <p className="mt-2 text-sm text-red-300">{joinGroupError}</p>
@@ -1288,14 +1288,14 @@ export default function Groups() {
                   setJoinGroupInput("");
                   setJoinGroupError(null);
                 }}
-                className="px-6 py-2 border border-gray-600 rounded-md text-white hover:bg-gray-700 transition-colors"
+                className="px-6 py-2 border border-white/15 rounded-md text-white hover:bg-white/10 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleJoinGroupFromModal}
                 disabled={joinGroupLoading}
-                className="px-6 py-2 bg-accent-beige-300 text-black rounded-md font-medium hover:bg-accent-beige-400 transition-colors disabled:opacity-60"
+                className="px-6 py-2 rounded-md font-medium text-white [background:var(--astrais-cta-bg)] transition-colors hover:brightness-110 disabled:opacity-60"
               >
                 Aceptar
               </button>

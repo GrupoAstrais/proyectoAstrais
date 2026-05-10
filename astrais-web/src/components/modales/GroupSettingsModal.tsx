@@ -169,14 +169,14 @@ export default function GroupSettingsModal({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 font-['Space_Grotesk']">
-            <div className="astrais-primary-panel-bg  rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="astrais-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 font-['Space_Grotesk']">
+            <div className="astrais-modal-surface rounded-lg w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
                 <div className="overflow-y-auto grow p-6">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-2xl font-bold text-white">Configuracion del Grupo</h2>
                         <button
                             onClick={onClose}
-                            className="text-gray-400 hover:text-white text-2xl"
+                            className="text-white/60 hover:text-white text-2xl"
                         >
                             &times;
                         </button>
@@ -184,22 +184,22 @@ export default function GroupSettingsModal({
 
                     <div className="space-y-6">
                         <div>
-                            <label className="block text-gray-300 mb-2">Nombre del grupo</label>
+                            <label className="block text-white/75 mb-2">Nombre del grupo</label>
                             <input
                                 type="text"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="w-full bg-gray-800 border border-gray-700 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-accent-beige-300"
+                                className="astrais-modal-control w-full rounded-md px-4 py-2"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-gray-300 mb-2">Descripcion</label>
+                            <label className="block text-white/75 mb-2">Descripcion</label>
                             <textarea
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                                 rows={3}
-                                className="w-full bg-gray-800 border border-gray-700 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-accent-beige-300"
+                                className="astrais-modal-control w-full rounded-md px-4 py-2"
                             />
                         </div>
 
@@ -212,17 +212,17 @@ export default function GroupSettingsModal({
                                     const safeRole = Number.isFinite(member.role) ? member.role : 0;
 
                                     return (
-                                    <div key={safeUid} className="flex items-center gap-3 p-2 bg-gray-800 rounded">
-                                        <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
+                                    <div key={safeUid} className="astrais-modal-soft-surface flex items-center gap-3 rounded p-2">
+                                        <div className="w-8 h-8 rounded-full bg-[color-mix(in_srgb,var(--astrais-primary)_42%,var(--astrais-background)_58%)] flex items-center justify-center">
                                             <span className="text-xs">{safeName.charAt(0).toUpperCase()}</span>
                                         </div>
                                         <div className="flex grow items-center justify-between gap-3">
                                             <div className="flex flex-col">
                                                 <span className="text-white">{safeName}</span>
-                                                <span className="text-xs text-gray-400">UID: {safeUid}</span>
+                                                <span className="text-xs text-white/55">UID: {safeUid}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-xs rounded bg-black/40 px-2 py-1">{roleLabel(safeRole)}</span>
+                                                <span className="text-xs rounded bg-[color-mix(in_srgb,var(--astrais-background)_58%,transparent)] px-2 py-1">{roleLabel(safeRole)}</span>
                                                 {canManageRoles && safeRole !== 2 && (
                                                     <select
                                                         value={safeRole === 1 ? 1 : 0}
@@ -231,7 +231,7 @@ export default function GroupSettingsModal({
                                                                 await onSetMemberRole(gid, safeUid, Number(e.target.value));
                                                             });
                                                         }}
-                                                        className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-white"
+                                                        className="astrais-modal-control rounded px-2 py-1 text-sm"
                                                     >
                                                         <option value={0}>Miembro</option>
                                                         <option value={1}>Moderador</option>
@@ -277,13 +277,13 @@ export default function GroupSettingsModal({
                                     value={memberUidInput}
                                     onChange={(e) => setMemberUidInput(e.target.value)}
                                     placeholder="UID de usuario"
-                                    className="grow bg-gray-800 border border-gray-700 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-accent-beige-300"
+                                    className="astrais-modal-control grow rounded-md px-4 py-2"
                                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void handleAddMemberByUid())}
                                 />
                                 <button
                                     onClick={() => void handleAddMemberByUid()}
                                     disabled={!canManageMembers || isSubmittingAction}
-                                    className="bg-accent-beige-300 text-black px-4 py-2 rounded-md font-medium hover:bg-accent-beige-400 transition-colors disabled:opacity-60"
+                                    className="px-4 py-2 rounded-md font-medium text-white [background:var(--astrais-cta-bg)] transition-colors hover:brightness-110 disabled:opacity-60"
                                 >
                                     Anadir
                                 </button>
@@ -294,21 +294,21 @@ export default function GroupSettingsModal({
                                     <button
                                         onClick={() => void handleGenerateInviteCode()}
                                         disabled={!canManageMembers || isSubmittingAction}
-                                        className="bg-accent-beige-300 text-black px-4 py-2 rounded-md font-medium hover:bg-accent-beige-400 transition-colors disabled:opacity-60"
+                                        className="px-4 py-2 rounded-md font-medium text-white [background:var(--astrais-cta-bg)] transition-colors hover:brightness-110 disabled:opacity-60"
                                     >
                                         Generar codigo
                                     </button>
                                     <button
                                         onClick={() => void handleGenerateInviteLink()}
                                         disabled={!canManageMembers || isSubmittingAction}
-                                        className="bg-accent-beige-300 text-black px-4 py-2 rounded-md font-medium hover:bg-accent-beige-400 transition-colors disabled:opacity-60"
+                                        className="px-4 py-2 rounded-md font-medium text-white [background:var(--astrais-cta-bg)] transition-colors hover:brightness-110 disabled:opacity-60"
                                     >
                                         Generar enlace
                                     </button>
                                     <button
                                         onClick={() => void loadInvites()}
                                         disabled={!canManageMembers || isSubmittingAction}
-                                        className="bg-gray-700 text-white px-4 py-2 rounded-md font-medium hover:bg-gray-600 transition-colors disabled:opacity-60"
+                                        className="bg-[color-mix(in_srgb,var(--astrais-text)_10%,transparent)] text-white px-4 py-2 rounded-md font-medium hover:bg-[color-mix(in_srgb,var(--astrais-text)_16%,transparent)] transition-colors disabled:opacity-60"
                                     >
                                         Recargar invitaciones
                                     </button>
@@ -316,14 +316,14 @@ export default function GroupSettingsModal({
                             </div>
 
                             {(latestInviteCode || latestInviteLink || latestLegacyRedirectLink) && (
-                                <div className="mt-3 grid grid-cols-1 gap-2 rounded-md border border-gray-700 bg-gray-900/60 p-3">
-                                    <p className="text-sm text-gray-300">Ultima invitacion generada</p>
+                                <div className="astrais-modal-soft-surface mt-3 grid grid-cols-1 gap-2 rounded-md p-3">
+                                    <p className="text-sm text-white/75">Ultima invitacion generada</p>
                                     {latestInviteCode ? (
                                         <input
                                             type="text"
                                             value={`${latestInviteCode}`}
                                             readOnly
-                                            className="w-full bg-gray-800 border border-gray-700 rounded-md px-4 py-2 text-white"
+                                            className="astrais-modal-control w-full rounded-md px-4 py-2"
                                         />
                                     ) : null}
                                     {latestInviteLink ? (
@@ -331,17 +331,17 @@ export default function GroupSettingsModal({
                                             type="text"
                                             value={latestInviteLink}
                                             readOnly
-                                            className="w-full bg-gray-800 border border-gray-700 rounded-md px-4 py-2 text-white"
+                                            className="astrais-modal-control w-full rounded-md px-4 py-2"
                                         />
                                     ) : null}
                                 </div>
                             )}
 
                             {canManageMembers && (
-                                <div className="mt-3 max-h-56 overflow-y-auto rounded-md border border-gray-700 bg-gray-900/45 p-3">
+                                <div className="astrais-modal-soft-surface mt-3 max-h-56 overflow-y-auto rounded-md p-3">
                                     <p className="mb-2 text-sm font-semibold text-white">Invitaciones del grupo</p>
                                     {invites.length === 0 ? (
-                                        <p className="text-sm text-gray-400">No hay invitaciones registradas.</p>
+                                        <p className="text-sm text-white/55">No hay invitaciones registradas.</p>
                                     ) : (
                                         <div className="space-y-2">
                                             {invites.map((invite) => {
@@ -349,17 +349,17 @@ export default function GroupSettingsModal({
                                                 const canRevoke = status === 'Activa';
 
                                                 return (
-                                                    <div key={`${invite.code}-${invite.inviteUrl}`} className="rounded border border-gray-700 bg-gray-800/70 p-2">
+                                                    <div key={`${invite.code}-${invite.inviteUrl}`} className="astrais-modal-soft-surface rounded p-2">
                                                         <p className="text-sm text-white">Codigo: {invite.code}</p>
-                                                        <p className="text-xs text-gray-300 break-all">{invite.inviteUrl}</p>
-                                                        <p className="text-xs text-gray-400">
+                                                        <p className="text-xs text-white/70 break-all">{invite.inviteUrl}</p>
+                                                        <p className="text-xs text-white/55">
                                                             Estado: {status} · Usos: {invite.usesCount}/{invite.maxUses}
                                                         </p>
-                                                        <p className="text-xs text-gray-400">
+                                                        <p className="text-xs text-white/55">
                                                             Expira: {invite.expiresAt ? new Date(invite.expiresAt).toLocaleString() : 'Sin caducidad'}
                                                         </p>
                                                         {invite.code ? (
-                                                            <p className="text-xs text-gray-400 break-all">
+                                                            <p className="text-xs text-white/55 break-all">
                                                                 Redireccion legado: {buildLegacyRedirectUrl(invite.code)}
                                                             </p>
                                                         ) : null}
@@ -390,14 +390,14 @@ export default function GroupSettingsModal({
                     </div>
                 </div>
 
-                <div className="border-t border-gray-700 p-4 flex justify-between gap-3">
+                <div className="border-t border-white/10 p-4 flex justify-between gap-3">
                     <div className='flex justify-start w-1/3 gap-3'>
-                        <button disabled={!canDeleteGroup} onClick={() => onDelete({gid, role})} className="px-6 py-2 border border-gray-600 rounded-md text-white bg-red-500/60 disabled:opacity-50 disabled:cursor-not-allowed font-medium hover:bg-state-error/50 transition-colors">Eliminar grupo </button>
-                        <button onClick={() => onLeave(gid)} className="px-6 py-2 border border-gray-600 rounded-md text-white bg-red-500/40  font-medium hover:bg-state-error/50 transition-colors">Abandonar grupo </button>
+                        <button disabled={!canDeleteGroup} onClick={() => onDelete({gid, role})} className="px-6 py-2 border border-[color-mix(in_srgb,var(--astrais-error)_50%,transparent)] rounded-md text-white bg-[color-mix(in_srgb,var(--astrais-error)_58%,transparent)] disabled:opacity-50 disabled:cursor-not-allowed font-medium hover:bg-[color-mix(in_srgb,var(--astrais-error)_72%,transparent)] transition-colors">Eliminar grupo </button>
+                        <button onClick={() => onLeave(gid)} className="px-6 py-2 border border-[color-mix(in_srgb,var(--astrais-error)_42%,transparent)] rounded-md text-white bg-[color-mix(in_srgb,var(--astrais-error)_42%,transparent)] font-medium hover:bg-[color-mix(in_srgb,var(--astrais-error)_58%,transparent)] transition-colors">Abandonar grupo </button>
                     </div>
                     <div className='flex justify-end w-1/2 gap-3'>
-                        <button onClick={onClose} className="px-6 py-2 border border-gray-600 rounded-md text-white hover:bg-gray-700 transition-colors" >Cancelar</button>
-                        <button onClick={handleSubmit}  className="px-6 py-2 bg-accent-beige-300 text-black rounded-md font-medium hover:bg-accent-beige-400 transition-colors" >Guardar</button>
+                        <button onClick={onClose} className="px-6 py-2 border border-white/15 rounded-md text-white hover:bg-white/10 transition-colors" >Cancelar</button>
+                        <button onClick={handleSubmit}  className="px-6 py-2 rounded-md font-medium text-white [background:var(--astrais-cta-bg)] transition-colors hover:brightness-110" >Guardar</button>
                     </div>
                 </div>
             </div>
