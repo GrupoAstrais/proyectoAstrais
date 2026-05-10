@@ -757,19 +757,19 @@ Los iconos siguen una línea consistente de trazo fino y estilo outlined, manten
 
 Se documentaron los componentes usando el estilo Glassmorphism.
 
-![Libro de estilos - Paleta y componentes](images/screenshots/web/paletaDeColores.png)
+![Libro de estilos - Paleta y componentes](images/screenshots/web/paletaDeColores.jpg)
 
 ### 10.3. Diseño del prototipado de la interfaz con Figma
 
 
-![Prototipo Figma - Pantallas Android](images/screenshots/app/prototipadoMovil.png)
+![Prototipo Figma - Pantallas Android](images/screenshots/app/prototipadoMovil.jpg)
 
-![Prototipo Figma - Pantallas Web](images/screenshots/web/prototipadoWeb.png)
+![Prototipo Figma - Pantallas Web](images/screenshots/web/prototipadoWeb.jpg)
 
 ### 10.4. Mapa de navegación 
 
-![Mapa de navegación - App Web](images/screenshots/web/mpaNavegacionWeb.png)
-![Mapa de navegación - App Android](images/screenshots/app/mpaNavegacionAndroid.png)
+![Mapa de navegación - App Web](images/screenshots/web/mpaNavegacionWeb.jpg)
+![Mapa de navegación - App Android](images/screenshots/app/mpaNavegacionAndroid.jpg)
 
 ---
 
