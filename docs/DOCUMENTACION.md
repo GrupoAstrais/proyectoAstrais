@@ -82,7 +82,7 @@ Astraïs convierte la productividad en un **"progreso de personaje"**. Más all�
 
 **Contras:** interfaz visual sobrecargada con curva de aprendizaje pronunciada para nuevos usuarios; estética retro (puede ser poco atractiva para personas no acostumbradas); personalización estática sin evolución (cosméticos planos, sin mascotas interactivas ni sistema de colección con rareza); más enfocada en gamificación que en utilidad pura.
 
-**Oportunidad para Astraïs:** experiencia visual limpia y moderna (Jetpack Compose / Tailwind CSS), minijuegos que no comprometen la productividad, mascotas y cosméticos coleccionables con niveles de rareza, y una interfaz declarativa reactiva que reduce la curva de aprendizaje.
+**Oportunidad para Astraïs:** experiencia visual limpia y moderna (Jetpack Compose / Tailwind CSS), s que no comprometen la productividad, mascotas y cosméticos coleccionables con niveles de rareza, y una interfaz declarativa reactiva que reduce la curva de aprendizaje.
 
 ### 2.2. Skillion / Motion / Eterya (apps de motivación gamificada)
 
@@ -90,7 +90,7 @@ Astraïs convierte la productividad en un **"progreso de personaje"**. Más all�
 
 **Contras:** economía virtual superficial, interacción social limitada a compartir logros sin colaboración real, experiencia repetitiva tras las primeras semanas, más enfocadas en gamificación que en utilidad real de gestión.
 
-**Oportunidad para Astraïs:** ser un híbrido entre productividad funcional y juego social. Se conserva la elegancia visual de estas apps, pero se añade profundidad mediante economía interna (Ludiones + tienda + transacciones), colaboración en equipos con roles definidos, minijuegos breves y un backend propio que garantiza control total sobre la evolución del sistema.
+**Oportunidad para Astraïs:** ser un híbrido entre productividad funcional y juego social. Se conserva la elegancia visual de estas apps, pero se añade profundidad mediante economía interna (Ludiones + tienda + transacciones), colaboración en equipos con roles definidos, s breves y un backend propio que garantiza control total sobre la evolución del sistema.
 
 
 ---
@@ -173,7 +173,7 @@ Desarrollar una solución multiplataforma (app móvil Android + web) que mejore 
 3. Implementar niveles, logros y tienda con cosméticos coleccionables (avatar, mascota, temas).
 4. Implementar perfiles con avatar y mascota equipables.
 5. Gestionar grupos (hasta 10 miembros), enviar invitaciones y asignar tareas compartidas con notificaciones.
-6. Implementar minijuegos conectados a progresión.
+6. Implementar s conectados a progresión.
 7. Garantizar autenticación segura con roles diferenciados (admin / usuario / invitado).
 8. Proveer un backend desplegable con Docker.
 
@@ -228,14 +228,14 @@ Desarrollar una solución multiplataforma (app móvil Android + web) que mejore 
 | RF-40 | Envío, aceptación y rechazo de solicitudes de amistad con notificaciones | Pendiente | No implementado |
 | RF-41 | Creación de grupos, invitación de miembros y gestión de roles internos | Cumplido | Roles: Owner, Moderador, Miembro. Invitaciones seguras con SHA-256, expiración y límite de usos |
 | RF-42 | Chat en grupo | Pendiente | Excluido del alcance inicial |
-| RF-43 | Invitación a minijuegos mediante sistema de eventos o solicitudes directas | Pendiente | No implementado |
+| RF-43 | Invitación a s mediante sistema de eventos o solicitudes directas | Pendiente | No implementado |
 
-#### Minijuegos
+#### s
 
 | ID | Requisito | Estado | Observaciones técnicas |
 |---|---|---|---|
-| RF-50 | Acceso a lista de minijuegos | Cumplido | Catálogo básico en web |
-| RF-51 | Sesión de minijuego vinculada a recompensa | Parcial | Base inicial implementada; falta integración completa con recompensas |
+| RF-50 | Acceso a lista de s | Cumplido | Catálogo básico en web |
+| RF-51 | Sesión de  vinculada a recompensa | Parcial | Base inicial implementada; falta integración completa con recompensas |
 | RF-52 | Registro de resultados y estadísticas básicas | Pendiente | No implementado |
 
 #### Administración
@@ -295,6 +295,7 @@ Desarrollar una solución multiplataforma (app móvil Android + web) que mejore 
 - **A3: Acceso como invitado.** Usuario elige "Continuar sin cuenta". Sistema crea perfil temporal con funcionalidades limitadas y persistencia local (Room).
 
 ![Diagrama de secuencia UML - Flujo de autenticación](diagrams/flujo_auth.png)
+![Inicio de sesión Web](images/screenshots/web/login.jpg)
 
 ### UC-02: Creación y gestión de tareas
 
@@ -318,6 +319,9 @@ Desarrollar una solución multiplataforma (app móvil Android + web) que mejore 
 
 **Flujos alternativos:**
 - **A1: Sin conexión (Android).** La tarea se guarda en Room (`TareaEntity`) y se encola en `PendingAction`. El `SyncWorker` la sincroniza cuando recupera conectividad.
+
+- ![Creación de tarea web](images/screenshots/web/crearTarea.jpg)
+- ![Creación de tarea web](images/screenshots/web/crearTarea2.jpg)
 
 ### UC-03: Completar tarea y obtener recompensas
 
@@ -343,6 +347,7 @@ Desarrollar una solución multiplataforma (app móvil Android + web) que mejore 
 - **A2: Completar tarea grupal.** Cualquier miembro del grupo puede completarla. La recompensa es individual (por ahora).
 
 ![Diálogo de creación de tarea Hábito](images/screenshots/app/task.jpeg)
+![Completado de tarea](images/screenshots/web/completarTarea.jpg)
 
 ### UC-04: Comprar cosmético en tienda virtual
 
@@ -364,7 +369,7 @@ Desarrollar una solución multiplataforma (app móvil Android + web) que mejore 
 **Flujos alternativos:**
 - **A1: Artículos con descuento temporal / eventos.** Previsto para fases futuras; el esquema de `Cosmetic` y el panel admin permiten su implementación.
 
-![Tienda web - Catálogo de cosméticos](images/screenshots/web/store.png)
+![Tienda web - Catálogo de cosméticos](images/screenshots/web/tienda.jpg)
 
 ### UC-05: Crear grupo e invitar miembros
 
@@ -390,6 +395,7 @@ Desarrollar una solución multiplataforma (app móvil Android + web) que mejore 
 - **A2: Gestión de roles.** El Owner puede ascender miembros a Moderador (`setMemberRole`) o revocar dicho rol. Los Moderadores pueden crear/editar/eliminar tareas e invitar miembros, pero no transferir la propiedad.
 
 ![Detalle de grupo en Android](images/screenshots/app/group.jpeg)
+![Creación de tarea web](images/screenshots/web/grupos.jpg)
 
 ### UC-06: Jugar minijuego y obtener recompensas
 
@@ -751,18 +757,19 @@ Los iconos siguen una línea consistente de trazo fino y estilo outlined, manten
 
 Se documentaron los componentes usando el estilo Glassmorphism.
 
-![Libro de estilos - Paleta y componentes](images/screenshots/style-guide.png)
+![Libro de estilos - Paleta y componentes](images/screenshots/web/paletaDeColores.png)
 
 ### 10.3. Diseño del prototipado de la interfaz con Figma
 
 
-![Prototipo Figma - Pantallas Android](images/screenshots/app/figma-screens.png)
+![Prototipo Figma - Pantallas Android](images/screenshots/app/prototipadoMovil.png)
 
-![Prototipo Figma - Pantallas Web](images/screenshots/web/figma-screens.png)
+![Prototipo Figma - Pantallas Web](images/screenshots/web/prototipadoWeb.png)
 
 ### 10.4. Mapa de navegación 
 
-![Mapa de navegación - App Android](diagrams/navigation-map.html)
+![Mapa de navegación - App Web](images/screenshots/web/mpaNavegacionWeb.png)
+![Mapa de navegación - App Android](images/screenshots/app/mpaNavegacionAndroid.png)
 
 ---
 
