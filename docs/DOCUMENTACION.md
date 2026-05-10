@@ -1029,7 +1029,7 @@ Verificar que el sistema detecta credenciales inválidas y muestra mensajes de e
 El sistema bloquea el acceso correctamente mostrando el mensaje de error.
 
 #### Web
-![Credenciales incorrectas Web](images/screenshots/pruebas/web_credencialesIncorrectos.png)
+![Credenciales incorrectas Web](images/screenshots/pruebas/web_credencialesIncorrestos.png)
 
 #### Android
 ![Validación incorrecta Android](images/screenshots/pruebas/android_validacion_incorrecta.jpg)
