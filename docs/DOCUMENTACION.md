@@ -1171,6 +1171,8 @@ La compra de cosméticos funciona correctamente y el inventario se actualiza.
 #### Android
 ![Compra cosméticos Android](images/screenshots/pruebas/android_compra_cosmeticos.jpg)
 
+--
+
 ## 15. Futuras implementaciones
 
 
