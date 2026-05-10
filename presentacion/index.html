@@ -1007,6 +1007,145 @@
             </div>
         </section>
 
+        <!-- LOGIN CON JWT - WEB -->
+    <section class="slide">
+        <div class="slide-inner">
+            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">1</div>
+                <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Login con JWT - Web</div>
+            </div>
+
+            <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+
+                <!-- FRONT LOGIN -->
+                <div class="code-block" style="margin:0;">
+                    <div class="code-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">Login.tsx</span>
+                    </div>
+    <pre><code><span class="code-keyword">const</span> onSubmit = <span class="code-keyword">async</span> (event) =&gt; {
+        event.preventDefault()
+
+        <span class="code-keyword">if</span> (!email.trim() || !password.trim()) {
+            setError(<span class="code-string">"Complete user/email and password"</span>)
+            <span class="code-keyword">return</span>
+        }
+
+        <span class="code-keyword">await</span> performLogin({
+            email: email,
+            passwd: password
+        })
+        .then(() =&gt; {
+            navigate(<span class="code-string">"/home"</span>)
+        })
+        .catch(() =&gt; {
+            setError(<span class="code-string">"Usuario o contraseña no existen"</span>)
+        })
+    }</code></pre>
+                </div>
+
+                <!-- API LOGIN -->
+                <div class="code-block" style="margin:0;">
+                    <div class="code-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">Api.ts</span>
+                    </div>
+    <pre><code><span class="code-keyword">export async function</span> <span class="code-func">performLogin</span>(req) {
+        <span class="code-keyword">const</span> data = <span class="code-keyword">await</span> instance.post(
+            <span class="code-string">"/auth/login"</span>, req
+        )
+
+        jwtToken = data.data[<span class="code-string">"jwtAccessToken"</span>]
+        jwtRefreshToken = data.data[<span class="code-string">"jwtRefreshToken"</span>]
+
+        localStorage.setItem(
+            <span class="code-string">"jwtToken"</span>,
+            jwtToken
+        )
+
+        localStorage.setItem(
+            <span class="code-string">"jwtRefreshToken"</span>,
+            jwtRefreshToken
+        )
+    }</code></pre>
+                </div>
+            </div>
+
+            <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                El frontend recibe los tokens JWT y los guarda en localStorage para autenticar futuras peticiones.
+            </p>
+        </div>
+    </section>
+
+    <!-- REFRESH TOKEN AUTOMATICO - WEB -->
+    <section class="slide">
+        <div class="slide-inner">
+            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">2</div>
+                <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Refresh Token automático</div>
+            </div>
+
+            <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+
+                <!-- INTERCEPTOR -->
+                <div class="code-block" style="margin:0;">
+                    <div class="code-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">Axios Interceptor</span>
+                    </div>
+    <pre><code>instance.interceptors.request.use(config =&gt; {
+        <span class="code-keyword">if</span> (
+            localStorage.getItem(<span class="code-string">"jwtToken"</span>)
+        ) {
+            config.headers.Authorization =
+                <span class="code-string">`Bearer ${localStorage.getItem("jwtToken")}`</span>
+        }
+
+        <span class="code-keyword">return</span> config
+    })</code></pre>
+                </div>
+
+                <!-- REFRESH -->
+                <div class="code-block" style="margin:0;">
+                    <div class="code-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">Regenerar Access Token</span>
+                    </div>
+    <pre><code><span class="code-keyword">const</span> res = <span class="code-keyword">await</span> refreshInstance.post(
+        <span class="code-string">"/auth/regenAccess"</span>,
+        {},
+        {
+            headers: {
+                Authorization:
+                    <span class="code-string">`Bearer ${refreshToken}`</span>
+            }
+        }
+    )
+
+    <span class="code-keyword">const</span> newToken =
+        res.data.newAccessToken
+
+    localStorage.setItem(
+        <span class="code-string">"jwtToken"</span>,
+        newToken
+    )</code></pre>
+                </div>
+            </div>
+
+            <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                Cuando el access token expira, el frontend usa automáticamente el refresh token para obtener uno nuevo.
+            </p>
+        </div>
+    </section>
+
         <!-- CASO 1 - Paso 2: Crear grupo -->
         <section class="slide">
             <div class="slide-inner">
@@ -1063,6 +1202,73 @@
                 </p>
             </div>
         </section>
+
+        <!-- CREAR GRUPO Y ASIGNAR ROLES - WEB -->
+    <section class="slide">
+        <div class="slide-inner">
+            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">2</div>
+                <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Crear grupo y asignar roles - Web</div>
+            </div>
+
+            <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+
+                <!-- MODAL FRONT -->
+                <div class="code-block" style="margin:0;">
+                    <div class="code-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">CreateGroupModal.tsx</span>
+                    </div>
+    <pre><code><span class="code-keyword">const</span> handleSubmit = () =&gt; {
+        onSave({
+            name: name,
+            description: description,
+            photo,
+            members: [],
+            tasks: [],
+            role: <span class="code-number">2</span>
+        })
+
+        cleanModal()
+    }
+
+    &lt;button
+        onClick={handleSubmit}
+    &gt;
+        Guardar cambios
+    &lt;/button&gt;</code></pre>
+                </div>
+
+                <!-- ROLES -->
+                <div class="code-block" style="margin:0;">
+                    <div class="code-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">GroupSettingsModal.tsx</span>
+                    </div>
+    <pre><code><span class="code-keyword">const</span> roleLabel = (roleId) =&gt; {
+        <span class="code-keyword">if</span> (roleId === <span class="code-number">2</span>) 
+            <span class="code-keyword">return</span> <span class="code-string">'Owner'</span>
+
+        <span class="code-keyword">if</span> (roleId === <span class="code-number">1</span>) 
+            <span class="code-keyword">return</span> <span class="code-string">'Moderador'</span>
+
+        <span class="code-keyword">return</span> <span class="code-string">'Miembro'</span>
+    }
+
+    <span class="code-keyword">const</span> canManageMembers = role &gt;= <span class="code-number">1</span>
+    <span class="code-keyword">const</span> canManageRoles = role === <span class="code-number">2</span></code></pre>
+                </div>
+            </div>
+
+            <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                El frontend permite crear grupos y controla permisos según el rol del usuario.
+            </p>
+        </div>
+    </section>
 
         <!-- CASO 1 - Paso 3: Generar código -->
         <section class="slide">
@@ -1126,6 +1332,76 @@
                 </p>
             </div>
         </section>
+
+        <!-- GENERAR INVITACION - WEB -->
+    <section class="slide">
+        <div class="slide-inner">
+            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">3</div>
+                <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Generar invitación - Web</div>
+            </div>
+
+            <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+
+                <!-- GENERATE INVITE -->
+                <div class="code-block" style="margin:0;">
+                    <div class="code-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">GroupSettingsModal.tsx</span>
+                    </div>
+    <pre><code><span class="code-keyword">const</span> handleGenerateInviteLink = 
+        <span class="code-keyword">async</span> () =&gt; {
+
+        <span class="code-keyword">const</span> newInvite =
+            <span class="code-keyword">await</span> onGenerateInviteLink(gid)
+
+        setLatestInviteLink(
+            newInvite.inviteUrl ?? <span class="code-string">''</span>
+        )
+
+        setLatestInviteCode(
+            newInvite.code ?? <span class="code-string">''</span>
+        )
+    }</code></pre>
+                </div>
+
+                <!-- SHOW INVITES -->
+                <div class="code-block" style="margin:0;">
+                    <div class="code-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">Invitaciones activas</span>
+                    </div>
+    <pre><code>{invites.map((invite) =&gt; {
+        <span class="code-keyword">return</span> (
+            &lt;div&gt;
+                &lt;p&gt;
+                    Codigo: {invite.code}
+                &lt;/p&gt;
+
+                &lt;p&gt;
+                    Estado: {status}
+                &lt;/p&gt;
+
+                &lt;p&gt;
+                    Usos:
+                    {invite.usesCount}/
+                    {invite.maxUses}
+                &lt;/p&gt;
+            &lt;/div&gt;
+        )
+    })}</code></pre>
+                </div>
+            </div>
+
+            <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                El frontend permite generar enlaces de invitación y visualizar invitaciones activas del grupo.
+            </p>
+        </div>
+    </section>
 
         <!-- CASO 1 - Paso 4: Unirse por código -->
         <section class="slide">
@@ -1193,6 +1469,91 @@
             </div>
         </section>
 
+        <!-- CASO 1 - Paso 4: Unirse por código (WEB) -->
+    <section class="slide">
+        <div class="slide-inner">
+            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">4</div>
+                <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Unirse por código — Web</div>
+            </div>
+
+            <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+
+                <!-- FRONTEND -->
+                <div class="code-block" style="margin:0;">
+                    <div class="code-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">GroupSettingsModal.tsx</span>
+                    </div>
+
+    <pre><code><span class="code-keyword">const</span> handleGenerateInviteCode = 
+        <span class="code-keyword">async</span> () =&gt; {
+
+        <span class="code-keyword">const</span> newInvite = 
+            <span class="code-keyword">await</span> onGenerateInviteLink(gid);
+
+        setLatestInviteCode(
+            newInvite.code ?? <span class="code-string">""</span>
+        );
+
+        setLatestInviteLink(
+            newInvite.inviteUrl ?? <span class="code-string">""</span>
+        );
+    };
+
+    &lt;button
+        onClick={() =&gt; 
+            void handleGenerateInviteCode()
+        }&gt;
+        Generar código
+    &lt;/button&gt;</code></pre>
+                </div>
+
+                <!-- API -->
+                <div class="code-block" style="margin:0;">
+                    <div class="code-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">Api.ts</span>
+                    </div>
+
+    <pre><code><span class="code-keyword">export async function</span> 
+    <span class="code-func">joinByCode</span>(code: String) {
+
+        <span class="code-keyword">return await</span> instance.post(
+            <span class="code-string">"/groups/joinByCode"</span>,
+            { code }
+        );
+    }
+
+    <span class="code-comment">// JWT automático en requests</span>
+    instance.interceptors.request.use(config =&gt; {
+        <span class="code-keyword">if</span> (
+            localStorage.getItem(
+                <span class="code-string">'jwtToken'</span>
+            )
+        ) {
+            config.headers.Authorization =
+                <span class="code-string">`Bearer ${localStorage.getItem(
+                    'jwtToken'
+                )}`</span>
+        }
+
+        <span class="code-keyword">return</span> config
+    })</code></pre>
+                </div>
+            </div>
+
+            <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                El frontend genera el enlace/código de invitación y usa JWT automáticamente para autenticarse al unirse al grupo.
+            </p>
+        </div>
+    </section>
+
+
         <!-- ==================== CASO 2: TAREAS Y TIENDA ==================== -->
 
 <section class="slide">
@@ -1210,7 +1571,7 @@
             <div class="slide-inner">
                 <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
                     <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-secondary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">1</div>
-                    <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Crear tarea — Recompensas automáticas</div>
+                    <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Crear tarea — Recompensas automáticas </div>
                 </div>
 
                 <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
@@ -1260,6 +1621,78 @@
 
                 <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
                     Al crear una tarea el backend calcula automáticamente XP y Ludiones según tipo, prioridad y frecuencia.
+                </p>
+            </div>
+        </section>
+
+        <!-- CASO 2 - Paso 1: Crear tarea (WEB) -->
+        <section class="slide">
+            <div class="slide-inner">
+                <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                    <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-secondary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">1</div>
+                    <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Crear tarea — Web</div>
+                </div>
+
+                <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+
+                    <!-- FRONTEND -->
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">TaskModal.tsx</span>
+                        </div>
+
+        <pre><code><span class="code-keyword">const</span> handleSubmit = () =&gt; {
+            onSave({
+                title,
+                description,
+                priority,
+                frequency,
+                type
+            });
+        };
+
+        &lt;button
+            onClick={handleSubmit}
+            className=<span class="code-string">"bg-accent-beige-300"</span>
+        &gt;
+            Crear tarea
+        &lt;/button&gt;</code></pre>
+                    </div>
+
+                    <!-- API -->
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">Api.ts</span>
+                        </div>
+
+        <pre><code><span class="code-keyword">export async function</span> 
+        <span class="code-func">createTask</span>(req: CreateTaskRequest) {
+
+            <span class="code-keyword">const</span> data =
+                <span class="code-keyword">await</span> instance.post(
+                    <span class="code-string">"/tasks"</span>,
+                    req
+                );
+
+            <span class="code-keyword">return</span> data.data;
+        }
+
+        <span class="code-comment">// Access token automático</span>
+        config.headers.Authorization =
+            <span class="code-string">`Bearer ${localStorage.getItem(
+                'jwtToken'
+            )}`</span></code></pre>
+                    </div>
+                </div>
+
+                <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                    El frontend envía la tarea al backend y el servidor calcula automáticamente XP y recompensas.
                 </p>
             </div>
         </section>
@@ -1323,6 +1756,92 @@
                 </p>
             </div>
         </section>
+
+        <!-- CASO 2 - Paso 2: Completar tarea (WEB) -->
+    <section class="slide">
+        <div class="slide-inner">
+            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-secondary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">2</div>
+                <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Completar tarea — Web</div>
+            </div>
+
+            <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+
+                <!-- FRONTEND -->
+                <div class="code-block" style="margin:0;">
+                    <div class="code-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">TaskCard.tsx</span>
+                    </div>
+
+    <pre><code><span class="code-keyword">const</span> handleCompleteTask = 
+        <span class="code-keyword">async</span> (tid: number) =&gt; {
+
+        <span class="code-keyword">await</span> completeTask(tid);
+
+        setTasks(prev =&gt;
+            prev.map(task =&gt;
+                task.id === tid
+                    ? { ...task, completed: true }
+                    : task
+            )
+        );
+    };
+
+    &lt;button
+        onClick={() =&gt;
+            void handleCompleteTask(task.id)
+        }&gt;
+        Completar
+    &lt;/button&gt;</code></pre>
+                </div>
+
+                <!-- API -->
+                <div class="code-block" style="margin:0;">
+                    <div class="code-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">Api.ts</span>
+                    </div>
+
+    <pre><code><span class="code-keyword">export async function</span> 
+    <span class="code-func">completeTask</span>(tid: number) {
+
+        <span class="code-keyword">return await</span> instance.patch(
+            <span class="code-string">`/tasks/${tid}/complete`</span>
+        );
+    }
+
+    <span class="code-comment">// Si expira el access token</span>
+    <span class="code-comment">// se genera uno nuevo automáticamente</span>
+
+    <span class="code-keyword">const</span> res = 
+        <span class="code-keyword">await</span> refreshInstance.post(
+            <span class="code-string">"/auth/regenAccess"</span>,
+            {},
+            {
+                headers: {
+                    Authorization:
+                        <span class="code-string">`Bearer ${refreshToken}`</span>
+                }
+            }
+        );
+
+    localStorage.setItem(
+        <span class="code-string">'jwtToken'</span>,
+        res.data.newAccessToken
+    )</code></pre>
+                </div>
+            </div>
+
+            <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                El frontend marca la tarea como completada y el sistema refresca automáticamente el JWT si expira.
+            </p>
+        </div>
+    </section>
 
         <!-- CASO 2 - Paso 3: Tienda -->
         <section class="slide">
@@ -1389,6 +1908,81 @@
                 </p>
             </div>
         </section>
+
+        <!-- CASO 2 - Paso 3: Tienda -->
+    <section class="slide">
+        <div class="slide-inner">
+            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-secondary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">3</div>
+                <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Tienda — Comprar y equipar cosméticos</div>
+            </div>
+
+            <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+                <div class="code-block" style="margin:0;">
+                    <div class="code-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">Frontend → Comprar objeto</span>
+                    </div>
+    <pre><code><span class="code-keyword">const</span> <span class="code-func">handleBuySelected</span> = <span class="code-keyword">async</span> () =&gt; {
+        <span class="code-keyword">if</span> (!selectedItem || isOwned)
+            <span class="code-keyword">return</span>
+
+        <span class="code-keyword">try</span> {
+            setMutationItemId(selectedItem.id)
+
+            <span class="code-comment">// POST /store/buy/{id}</span>
+            <span class="code-keyword">await</span> buyStoreItem(selectedItem.id)
+
+            <span class="code-comment">// Recarga saldo e inventario</span>
+            <span class="code-keyword">await</span> refreshAfterMutation()
+
+        } <span class="code-keyword">catch</span> {
+            setError(
+                <span class="code-string">"No se pudo completar la compra."</span>
+            )
+        } <span class="code-keyword">finally</span> {
+            setMutationItemId(<span class="code-keyword">null</span>)
+        }
+    }</code></pre>
+                </div>
+
+                <div class="code-block" style="margin:0;">
+                    <div class="code-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">Backend → Validación</span>
+                    </div>
+    <pre><code><span class="code-keyword">override fun</span> <span class="code-func">buyCosmetic</span>(uid, cid) {
+        <span class="code-keyword">val</span> user = Users.findById(uid)
+        <span class="code-keyword">val</span> cosmetic = Cosmetic.findById(cid)
+
+        <span class="code-comment">// ¿Saldo suficiente?</span>
+        <span class="code-keyword">if</span> (user.ludions &lt; cosmetic.price)
+            <span class="code-keyword">return</span> INSUFICIENT_CURRENCY
+
+        <span class="code-comment">// ¿Ya comprado?</span>
+        <span class="code-keyword">if</span> (Inventory.exists(uid, cid))
+            <span class="code-keyword">return</span> ALREADY_HAS_OBJECT
+
+        <span class="code-comment">// Descuenta Ludiones</span>
+        user.ludions -= cosmetic.price
+
+        <span class="code-comment">// Añade al inventario</span>
+        Inventory.new(uid, cid)
+
+        <span class="code-keyword">return</span> OKAY
+    }</code></pre>
+                </div>
+            </div>
+
+            <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                El frontend sincroniza la tienda con el backend: compra, actualiza saldo y equipa cosméticos en tiempo real.
+            </p>
+        </div>
+    </section>
 
         <!-- 5. STACK TECNOLÓGICO -->
         <section class="slide">
