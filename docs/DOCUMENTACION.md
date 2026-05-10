@@ -817,8 +817,26 @@ La app Android implementa un patrón **offline-first** mediante:
 
 ## 12. Estructura del Proyecto 
 
-
-![Árbol de directorios del repositorio](diagrams/project-structure.png)
+```text
+proyectoAstrais/
+├── backend/
+├── astrais-web/
+├── AstraisAndroid/
+├── docker/
+├── HojaDeEstilos/
+├── docs/
+│   ├── README.md
+│   ├── DOCUMENTACION.md
+│   ├── MANUAL_DE_USUARIO_ASTRAIS.md
+│   ├── PLAN_DE_PRUEBAS_ANDROID.md
+│   ├── PRUEBAS_ANDROID_ISSUES.md
+│   ├── API.md
+│   ├── images/
+│   ├── diagrams/
+│   └── taiga/
+├── docker-compose.yml
+└── README.md
+```
 
 ---
 
