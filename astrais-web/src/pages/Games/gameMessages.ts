@@ -1,5 +1,6 @@
 export const GAME_ROUND_COMPLETED_MESSAGE = 'astrais:game-round-completed'
 
+// Contrato de mensajes enviados desde los iframes de minijuegos.
 export interface GameRoundCompletedMessage {
   type: typeof GAME_ROUND_COMPLETED_MESSAGE
   gameId: string
@@ -8,6 +9,7 @@ export interface GameRoundCompletedMessage {
 }
 
 export function isGameRoundCompletedMessage(value: unknown): value is GameRoundCompletedMessage {
+  // Valida origen de datos antes de actualizar estadisticas persistidas.
   if (typeof value !== 'object' || value === null) {
     return false
   }

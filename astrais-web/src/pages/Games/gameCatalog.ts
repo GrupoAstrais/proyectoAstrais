@@ -1,5 +1,6 @@
 import { ASTRA_MEMORY_GAME_ID, NEBULA_DASH_GAME_ID, PRIMARY_CLICKER_GAME_ID } from './gameStorage'
 
+// Catalogo unico para listar y abrir minijuegos.
 export type GameAvailability = 'available' | 'upcoming'
 
 export interface ArcadeGameDefinition {
@@ -48,6 +49,7 @@ export const gameCatalog: ArcadeGameDefinition[] = [
   },
 ]
 
+// Oculta juegos preparados internamente pero no publicados en la UI.
 export const visibleGameCatalog = gameCatalog.filter((game) => game.visibleInCatalog !== false)
 
 export function getGameById(gameId: string) {

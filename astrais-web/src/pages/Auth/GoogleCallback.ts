@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { handleGoogleCallback } from '../../data/Api'
 
+// Pantalla puente para guardar tokens recibidos desde Google OAuth.
 export default function GoogleCallback() {
   const navigate = useNavigate()
 
@@ -12,6 +13,7 @@ export default function GoogleCallback() {
     const uidParam = params.get('uid')
     const hadToRegister = params.get('hadToRegister')
 
+    // El callback acepta nombres nuevos y antiguos de parametros.
     console.log('GoogleCallback params:', { uidParam, accessToken: !!accessToken, refreshToken: !!refreshToken, hadToRegister })
 
     if (!accessToken || !refreshToken || hadToRegister === null) {

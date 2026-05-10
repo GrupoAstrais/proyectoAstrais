@@ -18,6 +18,7 @@ interface LastRoundSummary {
   durationSeconds: number
 }
 
+// Vista principal del arcade con catalogo, visor iframe y estadisticas.
 export default function Games() {
   const [selectedGameId, setSelectedGameId] = React.useState(() => visibleGameCatalog[0]?.id ?? '')
   const [arcadeStats, setArcadeStats] = React.useState(() => readArcadeStats())
@@ -35,6 +36,7 @@ export default function Games() {
   }, [arcadeStats])
 
   React.useEffect(() => {
+    // Escucha resultados enviados por el minijuego cargado en el iframe.
     const handleRoundMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin || !isGameRoundCompletedMessage(event.data)) {
         return
@@ -47,6 +49,7 @@ export default function Games() {
       }
 
       const { stats, reward } = buildArcadeStatsAfterRound(arcadeStatsRef.current, event.data)
+      // Se guarda en localStorage para conservar progreso entre sesiones.
       arcadeStatsRef.current = stats
       writeArcadeStats(stats)
       setArcadeStats(stats)
@@ -74,7 +77,9 @@ export default function Games() {
         <Navbar />
 
         <main className="flex min-h-0 flex-1 px-3 pb-3 pt-1 md:px-4 md:pb-4 xl:px-6 xl:pb-5">
+          {/* Layout principal del arcade */}
           <section className="games-stage mx-auto hidden h-full w-full gap-3 lg:grid lg:grid-cols-[minmax(17rem,0.52fr)_minmax(0,1.28fr)_minmax(18rem,0.72fr)] min-[1400px]:gap-4 min-[1400px]:grid-cols-[minmax(20rem,0.5fr)_minmax(0,1.44fr)_minmax(22rem,0.78fr)]">
+            {/* Catalogo de cabinas */}
             <aside className="panel-glow relative grid min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--astrais-background)_88%,transparent),color-mix(in_srgb,var(--astrais-primary)_48%,transparent))] p-3.5 shadow-[0_20px_54px_color-mix(in_srgb,var(--astrais-background)_48%,transparent)] min-[1400px]:p-4">
               <div className="pointer-events-none absolute -left-16 top-8 h-40 w-40 rounded-full bg-secondary-500/18 blur-3xl" />
               <header className="relative z-10">
@@ -88,6 +93,7 @@ export default function Games() {
               </header>
 
               <div className="relative z-10 mt-4 min-h-0 space-y-2 overflow-y-auto pr-1 astrais-scroll">
+                {/* Cabinas: el map crea una tarjeta por juego y muestra sus estadisticas */}
                 {visibleGameCatalog.map((game, index) => {
                   const isSelected = selectedGame?.id === game.id
                   const gameStats = getGameStats(arcadeStats, game.id)
@@ -141,6 +147,7 @@ export default function Games() {
               </div>
             </aside>
 
+            {/* Visor del juego seleccionado */}
             <article className="panel-glow relative grid min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-[28px] border border-white/15 bg-[linear-gradient(150deg,color-mix(in_srgb,var(--astrais-background)_90%,transparent),color-mix(in_srgb,var(--astrais-secondary)_30%,var(--astrais-surface)_70%))] p-3.5 shadow-[0_22px_60px_color-mix(in_srgb,var(--astrais-background)_54%,transparent)] min-[1400px]:p-4">
               <div className="retro-grid pointer-events-none absolute inset-0 opacity-28" />
               <div className="pointer-events-none absolute bottom-0 right-0 h-56 w-56 rounded-full bg-primary-500/18 blur-3xl" />
@@ -184,6 +191,7 @@ export default function Games() {
               </div>
             </article>
 
+            {/* Panel de estadisticas del arcade */}
             <aside className="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-3 min-[1400px]:gap-4">
               <article className="panel-glow relative overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(160deg,color-mix(in_srgb,var(--astrais-background)_88%,transparent),color-mix(in_srgb,var(--astrais-secondary)_28%,var(--astrais-surface)_72%))] p-3.5 shadow-[0_18px_44px_color-mix(in_srgb,var(--astrais-background)_46%,transparent)] min-[1400px]:p-4">
                 <div className="flex items-start justify-between gap-4">

@@ -7,6 +7,7 @@ import {
   performLogin,
 } from "../../data/Api";
 
+// Pantalla de inicio de sesion por email o Google.
 export default function Login() {
   const navigate = useNavigate();
 
@@ -18,6 +19,7 @@ export default function Login() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    // Tambien procesa tokens OAuth si Google vuelve a esta ruta.
     const params = new URLSearchParams(window.location.search);
     const uid = params.get("uid");
     const hadToRegister = params.get("hadToRegister");
@@ -50,6 +52,7 @@ export default function Login() {
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    // Evita enviar credenciales vacias al backend.
     if (!email.trim() || !password.trim()) {
       setError("Complete user/email and password to continue.");
       return;
@@ -68,6 +71,7 @@ export default function Login() {
     <section className="relative grid min-h-screen place-items-center overflow-hidden px-6 max-[480px]:px-4">
       <div className="pointer-events-none absolute inset-0" />
 
+      {/* Tarjeta principal de inicio de sesion */}
       <article
         aria-labelledby="login-title"
         className="relative z-10 w-full max-w-105 -translate-y-[3vh] rounded-[22px] border border-white/15 bg-purple-950/20 px-8 py-10 text-(--astrais-text) shadow-[0_30px_60px_color-mix(in_srgb,var(--astrais-background)_74%,transparent)] backdrop-blur-sm max-[480px]:-translate-y-[1.5vh] max-[480px]:p-5.5"
@@ -88,6 +92,7 @@ export default function Login() {
         </header>
 
         <form className="grid gap-4" onSubmit={onSubmit} noValidate>
+          {/* Credenciales por email */}
           <div className="grid gap-2">
             <label htmlFor="email" className="text-[0.95rem]">
               Email
@@ -151,6 +156,7 @@ export default function Login() {
             </p>
           ) : null}
 
+          {/* Acciones de autenticacion */}
           <button
             className="cursor-pointer rounded-xl border-0 bg-linear-to-r from-purple-800/80 via-pink-500/80 to-purple-600/80 p-3 text-base font-semibold text-white shadow-[0_10px_30px_color-mix(in_srgb,var(--astrais-primary)_45%,transparent)] transition duration-150 ease-in hover:-translate-y-px"
             type="submit"

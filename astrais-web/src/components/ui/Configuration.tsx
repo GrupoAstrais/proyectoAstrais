@@ -4,6 +4,7 @@ interface ConfigProps {
     title: string
 }
 
+// Fila de configuracion con icono, titulo y acceso.
 export default function Configuration({title} : ConfigProps) {
     return (
     <div className="flex flex-row gap-2 items-center justify-center">

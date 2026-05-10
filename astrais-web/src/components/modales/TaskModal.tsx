@@ -28,6 +28,7 @@ const getDefaultFormData = (): ITaskFormData => ({
   taskDate: formatTaskDate(new Date())
 });
 
+// Modal de alta y edicion de tareas.
 export default function Modal({
   onSubmit,
   onCancel,
@@ -40,6 +41,7 @@ export default function Modal({
 
   useEffect(() => {
     if (!initialData) {
+      // Sin tarea inicial, el formulario vuelve al estado de creacion.
       setFormData(getDefaultFormData());
       setObjetivo(undefined);
       return;
@@ -68,6 +70,7 @@ export default function Modal({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    // Valida en cliente antes de delegar la mutacion al contenedor.
     if (!formData.name.trim()) {
       alert("El nombre es obligatorio.");
       return;
@@ -94,6 +97,7 @@ export default function Modal({
   const renderFrequencyButton = (value: THabitFrequency, label: string) => {
     const isActive = formData.habitFrequency === value;
 
+    // Cada frecuencia reutiliza el mismo estilo y actualiza solo el valor activo.
     return (
       <button
         key={value}
@@ -121,10 +125,12 @@ export default function Modal({
         onSubmit={handleSubmit}
         className="astrais-modal-surface flex h-auto w-full max-w-2xl flex-col gap-3 rounded-md p-4 font-['Space_Grotesk']"
       >
+        {/* Titulo del formulario segun modo */}
         <h1 className="text-center font-['Press_Start_2P'] text-xl">
           {initialData ? "Editar tarea" : "Añadir tarea"}
         </h1>
 
+        {/* Campo de nombre de la tarea */}
         <div className="rounded-md border border-white/15 bg-accent-beige-300/80 px-2 py-4">
           <input
             type="text"
@@ -141,6 +147,7 @@ export default function Modal({
           />
         </div>
 
+        {/* Campo de descripcion */}
         <div className="rounded-md border border-white/15 bg-accent-beige-300/80 px-2 py-4">
           <textarea
             value={formData.description}
@@ -156,6 +163,7 @@ export default function Modal({
         </div>
 
         {formData.taskType === "UNICO" && !initialData && (
+          /* Fecha limite para tareas diarias/unicas */
           <div className="rounded-md border border-white/15 bg-accent-beige-300/80 px-2 py-4">
             <input
               type="date"
@@ -172,6 +180,7 @@ export default function Modal({
         )}
 
 
+        {/* Selector de dificultad */}
         <div className="tabs-scroll justify-start rounded-md border border-white/15 bg-accent-beige-300/80 px-2 py-4">
           <DifficultyModal difficulty={0} selectedDifficulty={formData.difficulty} onSelect={setDifficulty} />
           <DifficultyModal difficulty={1} selectedDifficulty={formData.difficulty} onSelect={setDifficulty} />
@@ -179,6 +188,7 @@ export default function Modal({
         </div>
 
         {!initialData &&
+          /* Selector de tipo: cambia los campos visibles del formulario */
           <div className="tabs-scroll justify-start rounded-md border border-white/15 bg-accent-beige-300/80 px-2 py-4">
             <DiaryHabit
                 handleActive={() => setTaskType("HABITO")}
@@ -201,6 +211,7 @@ export default function Modal({
           </div>}
 
         {formData.taskType == "UNICO" && !initialData && (
+          /* Objetivos disponibles: el map crea las opciones del desplegable */
           <div className="rounded-md bg-accent-beige-300 p-3">
             <h3 className="mb-2 font-bold text-primary-900">Elegir objetivo</h3>
             <div className="mb-3 flex gap-2">
@@ -225,6 +236,7 @@ export default function Modal({
         )}
 
         {formData.taskType === "HABITO"  && !initialData && (
+          /* Frecuencia del habito */
           <div className="rounded-md bg-accent-beige-300 p-3">
             <h3 className="mb-2 font-bold text-primary-900">Frecuencia</h3>
             <div className="tabs-scroll pb-1">
@@ -235,6 +247,7 @@ export default function Modal({
           </div>
         )}
 
+        {/* Acciones finales del modal */}
         <div className="flex flex-row flex-wrap justify-between gap-3 pt-2">
           {initialData && onDelete ? (
             <button

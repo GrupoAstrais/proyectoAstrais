@@ -1,5 +1,4 @@
-
-
+// Icono circular usado como marcador de logro.
 export default function Logro() {
   return (
     <div className="bg-secondary-900/50 backdrop-blur-sm border-2 border-white/15 flex justify-center items-center rounded-full p-4 h-15 w-15">

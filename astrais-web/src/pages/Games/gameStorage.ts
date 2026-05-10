@@ -1,3 +1,4 @@
+// Persistencia local de estadisticas del arcade.
 export type GameStatus = 'idle' | 'playing' | 'finished'
 
 export interface ArcadeGameStats {
@@ -51,6 +52,7 @@ function sanitizeNumber(value: unknown, fallback: number) {
 }
 
 function sanitizeGameStats(value: unknown): ArcadeGameStats {
+  // Convierte datos antiguos o corruptos a una forma segura.
   const stats = typeof value === 'object' && value !== null ? (value as Partial<ArcadeGameStats>) : {}
 
   return {
@@ -72,6 +74,7 @@ function normalizeArcadeStats(value: unknown): ArcadeStats {
   }, {})
 
   const gameValues = Object.values(games)
+  // Recalcula totales si el almacenamiento antiguo no los traia completos.
   const derivedGamesPlayed = gameValues.reduce((total, stats) => total + stats.gamesPlayed, 0)
   const derivedBestScore = gameValues.reduce((bestScore, stats) => Math.max(bestScore, stats.bestScore), 0)
   const derivedTotalScore = gameValues.reduce((total, stats) => total + stats.totalScore, 0)
@@ -106,6 +109,7 @@ function readStoredJson(storageKey: string) {
 }
 
 function readLegacyClickerStats(): ArcadeStats | null {
+  // Migra estadisticas antiguas del clicker al formato multi-juego.
   const legacyStats = readStoredJson(CLICKER_STATS_STORAGE_KEY) as Partial<ClickerStats> | null
 
   if (!legacyStats) {
@@ -159,6 +163,7 @@ export function writeArcadeStats(stats: ArcadeStats) {
 }
 
 export function buildArcadeStatsAfterRound(currentStats: ArcadeStats, round: CompletedGameRound) {
+  // Actualiza totales globales y del juego que acaba de finalizar.
   const score = Math.max(0, sanitizeNumber(round.score, 0))
   const reward = getLudionReward(score)
   const previousGameStats = getGameStats(currentStats, round.gameId)
@@ -222,6 +227,7 @@ export function writeClickerStats(stats: ClickerStats) {
 }
 
 export function getLudionReward(score: number) {
+  // La recompensa crece linealmente para que cada punto importe.
   if (score <= 0) {
     return 0
   }

@@ -3,6 +3,8 @@ import { NavLink } from 'react-router'
 import Navbar from '../../components/layout/Navbar'
 import iconLogro from '../../assets/iconLogro.png'
 import AstraisMascot from '../../components/ui/AstraisMascot'
+import { addLocalLudiones } from '../../data/localShopStorage'
+import { useVisualPreferences } from '../../context/VisualPreferencesContext'
 import {
   buildAchievements,
   matchesAchievementFilter,
@@ -15,6 +17,7 @@ import { readArcadeStats } from '../Games/gameStorage'
 const CLAIMED_ACHIEVEMENTS_STORAGE_KEY = 'astrais.achievements.claimed'
 const SELECTED_ACHIEVEMENT_STORAGE_KEY = 'astrais.achievements.selected'
 
+// Filtros disponibles en la vitrina de logros.
 const filters: Array<{ key: AchievementFilter; label: string }> = [
   { key: 'all', label: 'Todos' },
   { key: 'unlocked', label: 'Desbloqueados' },
@@ -37,6 +40,7 @@ function readClaimedAchievements() {
     const parsedClaimed = JSON.parse(rawClaimed)
     return Array.isArray(parsedClaimed) ? parsedClaimed.filter((item): item is string => typeof item === 'string') : []
   } catch {
+    // Si el dato guardado no es valido, la vitrina arranca sin logros reclamados.
     return []
   }
 }
@@ -50,6 +54,7 @@ function readSelectedAchievement() {
 }
 
 function glyphForCategory(category: AchievementCategory) {
+  // Cada categoria usa un icono ligero inline para no cargar mas assets.
   if (category === 'Minijuegos') {
     return (
       <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="1.8">
@@ -99,12 +104,16 @@ function rarityClasses(rarity: AchievementRarity) {
 }
 
 export default function Achivs() {
+  const { userData } = useVisualPreferences()
   const [activeFilter, setActiveFilter] = React.useState<AchievementFilter>('all')
   const [claimedIds, setClaimedIds] = React.useState<string[]>(() => readClaimedAchievements())
   const [selectedId, setSelectedId] = React.useState(() => readSelectedAchievement())
   const [gameStats] = React.useState(() => readArcadeStats())
+  const [claimingId, setClaimingId] = React.useState<string | null>(null)
+  const [claimError, setClaimError] = React.useState<string | null>(null)
 
   const achievements = buildAchievements(gameStats, claimedIds)
+  // La seleccion se mantiene estable aunque cambie el filtro activo.
   const filteredAchievements = achievements.filter((achievement) => matchesAchievementFilter(achievement, activeFilter))
   const selectedAchievement =
     achievements.find((achievement) => achievement.id === selectedId) ??
@@ -119,6 +128,7 @@ export default function Achivs() {
   const totalCompletion = Math.round(
     achievements.reduce((progressSum, achievement) => progressSum + achievement.percent, 0) / achievements.length,
   )
+  const isClaimingSelected = selectedAchievement ? claimingId === selectedAchievement.id : false
 
   React.useEffect(() => {
     if (!filteredAchievements.length) {
@@ -127,6 +137,7 @@ export default function Achivs() {
 
     const selectedIsVisible = filteredAchievements.some((achievement) => achievement.id === selectedId)
 
+    // Si el logro seleccionado queda fuera del filtro, se selecciona el primero visible.
     if (!selectedIsVisible) {
       setSelectedId(filteredAchievements[0].id)
     }
@@ -148,12 +159,35 @@ export default function Achivs() {
     window.localStorage.setItem(SELECTED_ACHIEVEMENT_STORAGE_KEY, selectedId)
   }, [selectedId])
 
-  const handleClaimReward = () => {
-    if (!selectedAchievement || !selectedAchievement.unlocked || selectedAchievement.claimed) {
+  React.useEffect(() => {
+    setClaimError(null)
+  }, [selectedId])
+
+  const handleClaimReward = async () => {
+    if (!selectedAchievement || !selectedAchievement.unlocked || selectedAchievement.claimed || claimingId !== null) {
       return
     }
 
-    setClaimedIds((currentClaimedIds) => [...currentClaimedIds, selectedAchievement.id])
+    if (!userData) {
+      setClaimError('No se pudieron cargar los datos del usuario.')
+      return
+    }
+
+    try {
+      setClaimingId(selectedAchievement.id)
+      setClaimError(null)
+      // La recompensa se guarda localmente para que la tienda la vea al instante.
+      addLocalLudiones(userData.id, selectedAchievement.reward, userData.ludiones)
+      setClaimedIds((currentClaimedIds) => (
+        currentClaimedIds.includes(selectedAchievement.id)
+          ? currentClaimedIds
+          : [...currentClaimedIds, selectedAchievement.id]
+      ))
+    } catch {
+      setClaimError('No se pudo reclamar la recompensa.')
+    } finally {
+      setClaimingId(null)
+    }
   }
 
   return (
@@ -168,9 +202,11 @@ export default function Achivs() {
         <Navbar />
 
         <main className="flex min-h-0 flex-1 px-3 pb-3 pt-1 md:px-4 md:pb-4 xl:px-6 xl:pb-5">
+          {/* Layout principal de logros */}
           <section className="mx-auto hidden h-full w-full gap-3 lg:grid lg:grid-cols-[minmax(0,1.08fr)_minmax(19rem,0.88fr)] min-[1400px]:gap-4 min-[1400px]:grid-cols-[minmax(0,1.24fr)_minmax(24rem,0.92fr)]">
             <div className="grid min-h-0 grid-rows-[auto_auto_minmax(0,1fr)] gap-3 min-[1400px]:gap-4">
-              <article className="panel-glow relative rounded-[26px] border border-white/15 bg-[var(--astrais-panel-bg)] p-3.5 shadow-[0_20px_58px_color-mix(in_srgb,var(--astrais-background)_52%,transparent)] min-[1400px]:p-4">
+              {/* Resumen de progreso global */}
+              <article className="panel-glow relative rounded-[26px] border border-white/15 bg-(--astrais-panel-bg) p-3.5 shadow-[0_20px_58px_color-mix(in_srgb,var(--astrais-background)_52%,transparent)] min-[1400px]:p-4">
                 <div className="pointer-events-none absolute -right-10 top-0 h-40 w-40 rounded-full bg-secondary-500/18 blur-3xl" />
                 <div className="grid grid-cols-[minmax(0,1fr)_15rem] items-start gap-3 min-[1400px]:grid-cols-[minmax(0,1fr)_18rem] min-[1400px]:gap-4">
                   <div>
@@ -194,15 +230,17 @@ export default function Achivs() {
                     </div>
                     <div className="rounded-2xl border border-white/10 bg-black/18 p-3">
                       <p className="text-[0.58rem] uppercase tracking-[0.22em] text-slate-400">Pendiente</p>
-                      <p className="mt-2 text-[1rem] font-semibold text-[var(--astrais-reward)] xl:text-[1.14rem]">{pendingRewards}</p>
+                      <p className="mt-2 text-[1rem] font-semibold text-(--astrais-reward) xl:text-[1.14rem]">{pendingRewards}</p>
                     </div>
                   </div>
                 </div>
               </article>
 
+              {/* Filtros de logros */}
               <article className="panel-glow rounded-[22px] border border-white/15 bg-[color-mix(in_srgb,var(--astrais-background)_82%,transparent)] p-3 shadow-[0_18px_40px_color-mix(in_srgb,var(--astrais-background)_40%,transparent)]">
                 <div className="flex flex-col gap-3 min-[760px]:flex-row min-[760px]:items-center min-[760px]:justify-between">
                   <div className="tabs-scroll w-full pb-1 min-[760px]:w-auto">
+                    {/* Filtros: el map crea un boton por estado posible del logro */}
                     {filters.map((filter) => (
                       <button
                         key={filter.key}
@@ -225,8 +263,10 @@ export default function Achivs() {
                 </div>
               </article>
 
+              {/* Listado de logros */}
               <section className="astrais-scroll min-h-0 overflow-y-auto pr-1">
                 <div className="grid auto-rows-[minmax(10.75rem,auto)] grid-cols-2 gap-3 min-[1400px]:grid-cols-3 min-[1400px]:gap-4">
+                  {/* Tarjetas de logro: se mapea la lista filtrada para mantener seleccion y progreso */}
                   {filteredAchievements.map((achievement) => (
                     <button
                       key={achievement.id}
@@ -279,7 +319,7 @@ export default function Achivs() {
                               achievement.claimed
                                 ? 'bg-linear-to-r from-accent-mint-300 to-accent-mint-500'
                                 : achievement.unlocked
-                                  ? 'bg-linear-to-r from-[var(--astrais-rarity-legendary)] to-[var(--astrais-rarity-epic)]'
+                                  ? 'bg-linear-to-r from-(--astrais-rarity-legendary) to-(--astrais-rarity-epic)'
                                   : 'bg-linear-to-r from-secondary-500 to-primary-500'
                             }`}
                             style={{ width: `${achievement.percent}%` }}
@@ -288,7 +328,7 @@ export default function Achivs() {
                       </div>
 
                       <div className="mt-auto flex items-center justify-between pt-3">
-                        <span className="text-[0.72rem] font-semibold text-[var(--astrais-reward)] min-[1400px]:text-[0.82rem]">+{achievement.reward} ludiones</span>
+                        <span className="text-[0.72rem] font-semibold text-(--astrais-reward) min-[1400px]:text-[0.82rem]">+{achievement.reward} ludiones</span>
                         <span className="text-[0.58rem] uppercase tracking-[0.16em] text-slate-400">{achievement.percent}%</span>
                       </div>
                     </button>
@@ -297,6 +337,7 @@ export default function Achivs() {
               </section>
             </div>
 
+            {/* Detalle del logro seleccionado */}
             <aside className="grid min-h-0 grid-rows-[minmax(0,1fr)_auto] gap-3 min-[1400px]:gap-4">
               {selectedAchievement ? (
                 <>
@@ -305,7 +346,7 @@ export default function Achivs() {
                     <AstraisMascot
                       fallback="secondary"
                       alt="Mascota Astrais"
-                      className="pointer-events-none absolute bottom-0 right-0 hidden h-[clamp(6rem,13vh,8rem)] opacity-75 drop-shadow-[0_14px_28px_color-mix(in_srgb,var(--astrais-background)_58%,transparent)] min-[1400px]:block"
+                      className="pointer-events-none absolute bottom-0 left-88 hidden h-[clamp(6rem,13vh,8rem)] opacity-75 drop-shadow-[0_14px_28px_color-mix(in_srgb,var(--astrais-background)_58%,transparent)] min-[1400px]:block"
                     />
 
                     <div className="relative z-10 grid h-full min-h-0 grid-rows-[auto_auto_auto_auto_auto]">
@@ -340,7 +381,7 @@ export default function Achivs() {
                         </div>
                         <div className="rounded-2xl border border-white/10 bg-black/18 p-3">
                           <p className="text-[0.56rem] uppercase tracking-[0.18em] text-slate-400">Premio</p>
-                          <p className="mt-2 text-[0.84rem] font-semibold text-[var(--astrais-reward)] min-[1400px]:text-[1rem]">{selectedAchievement.reward}</p>
+                          <p className="mt-2 text-[0.84rem] font-semibold text-(--astrais-reward) min-[1400px]:text-[1rem]">{selectedAchievement.reward}</p>
                         </div>
                         <div className="rounded-2xl border border-white/10 bg-black/18 p-3">
                           <p className="text-[0.56rem] uppercase tracking-[0.18em] text-slate-400">Estado</p>
@@ -365,7 +406,7 @@ export default function Achivs() {
                               selectedAchievement.claimed
                                 ? 'bg-linear-to-r from-accent-mint-300 to-accent-mint-500'
                                 : selectedAchievement.unlocked
-                                  ? 'bg-linear-to-r from-[var(--astrais-rarity-legendary)] to-[var(--astrais-rarity-epic)]'
+                                  ? 'bg-linear-to-r from-(--astrais-rarity-legendary) to-(--astrais-rarity-epic)'
                                   : 'bg-linear-to-r from-secondary-500 to-primary-500'
                             }`}
                             style={{ width: `${selectedAchievement.percent}%` }}
@@ -378,20 +419,26 @@ export default function Achivs() {
                         <p className="mt-2 text-[0.72rem] leading-5 text-slate-200 min-[1400px]:text-[0.82rem] min-[1400px]:leading-6">{selectedAchievement.hint}</p>
                       </div>
 
+                      {claimError ? (
+                        <p className="mt-3 rounded-2xl border border-(--astrais-error)/30 bg-(--astrais-error)/10 px-4 py-3 text-[0.72rem] text-(--astrais-error) min-[1400px]:text-[0.82rem]">
+                          {claimError}
+                        </p>
+                      ) : null}
+
                       <div className="mt-4 flex items-center justify-between gap-3">
                         <button
                           type="button"
-                          onClick={handleClaimReward}
-                          disabled={!selectedAchievement.unlocked || selectedAchievement.claimed}
+                          onClick={() => { void handleClaimReward() }}
+                          disabled={!selectedAchievement.unlocked || selectedAchievement.claimed || isClaimingSelected || !userData}
                           className={`rounded-2xl px-4 py-3 text-[0.72rem] font-semibold min-[1400px]:text-[0.82rem] ${
                             selectedAchievement.claimed
                               ? 'cursor-default border border-accent-mint-300/25 bg-accent-mint-300/12 text-accent-mint-300'
-                              : selectedAchievement.unlocked
+                              : selectedAchievement.unlocked && !isClaimingSelected
                                 ? 'border-0 [background:var(--astrais-cta-bg)] text-white shadow-[0_14px_28px_color-mix(in_srgb,var(--astrais-rarity-epic)_24%,transparent)] hover:-translate-y-0.5'
                                 : 'cursor-not-allowed border border-white/10 bg-white/8 text-slate-400'
                           }`}
                         >
-                          {selectedAchievement.claimed ? 'Recompensa guardada' : 'Reclamar recompensa'}
+                          {isClaimingSelected ? 'Reclamando...' : selectedAchievement.claimed ? 'Recompensa guardada' : 'Reclamar recompensa'}
                         </button>
 
                         <NavLink

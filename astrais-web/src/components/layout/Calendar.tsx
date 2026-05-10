@@ -7,6 +7,7 @@ interface CalendarProps {
   onSelectDate?: (date: Date) => void
 }
 
+// Situa cualquier fecha en el primer dia de su mes para evitar desfases al navegar entre meses
 function getMonthStart(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), 1)
 }
@@ -14,6 +15,8 @@ function getMonthStart(date: Date) {
 export default function Calendar({ className = '', selectedDate, onSelectDate }: CalendarProps) {
   const [currentDate, setCurrentDate] = useState<Date>(() => getMonthStart(selectedDate ?? new Date()))
   const [localSelectedDate, setLocalSelectedDate] = useState<Date | null>(null)
+
+  // Permite usar el calendario como componente controlado o con estado propio
   const activeSelectedDate = selectedDate ?? localSelectedDate
 
   const monthNames = [
@@ -34,6 +37,7 @@ export default function Calendar({ className = '', selectedDate, onSelectDate }:
 
   const emptyCellsBefore = getAdjustedDayIndex(startDayOfWeek)
 
+  // Rellena los huecos iniciales para que la semana empiece en lunes
   const days: (number | null)[] = Array(emptyCellsBefore).fill(null)
   for (let day = 1; day <= daysInMonth; day++) {
     days.push(day)
@@ -52,6 +56,7 @@ export default function Calendar({ className = '', selectedDate, onSelectDate }:
       return
     }
 
+    // La fecha se construye con el mes visible para evitar desfases al navegar
     const newSelectedDate = new Date(year, month, day)
 
     if (onSelectDate) {
@@ -64,10 +69,12 @@ export default function Calendar({ className = '', selectedDate, onSelectDate }:
 
   return (
     <div className='mb-5'>
+      {/* Mascota decorativa del calendario */}
       <div className="relative flex flex-row p-5">
         <AstraisMascot alt="Mascota Astrais" className="absolute -top-20 sm:-top-12 md:-top-5 lg:-top-14 xl:-top-32 left-20 z-50 w-2/5 sm:left-0" />
       </div>
 
+      {/* Panel principal del mes */}
       <div className={`relative overflow-hidden rounded-xl border border-white/15 font-['Space_Grotesk'] ${className}`}>
         <div className="astrais-secondary-panel-bg absolute inset-0" />
 
@@ -79,6 +86,7 @@ export default function Calendar({ className = '', selectedDate, onSelectDate }:
           </div>
 
           <div className="mb-2 grid grid-cols-7 gap-1 border-b border-white">
+            {/* Cabecera de dias: se mapea para mantener el orden semanal en un unico array */}
             {dayNames.map((day) => (
               <div
                 key={day}
@@ -90,6 +98,7 @@ export default function Calendar({ className = '', selectedDate, onSelectDate }:
           </div>
 
           <div className="grid grid-cols-7 gap-1">
+            {/* Dias del mes: incluye celdas vacias para cuadrar el calendario visual */}
             {days.map((day, index) => (
               <button
                 key={index}
@@ -115,6 +124,7 @@ export default function Calendar({ className = '', selectedDate, onSelectDate }:
         </div>
       </div>
 
+      {/* Navegacion entre meses */}
       <div className="flex justify-between gap-2 pt-2">
         <button
           onClick={goToPreviousMonth}

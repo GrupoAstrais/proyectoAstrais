@@ -1,4 +1,5 @@
 (() => {
+  // Dibuja el fondo orbital animado sobre el canvas global.
   const canvas = document.getElementById("orbital-background");
   if (!canvas) return;
 
@@ -71,6 +72,7 @@
   }
 
   function drawStars(time) {
+    // Parpadeo suave para que el fondo tenga movimiento sin distraer.
     ctx.save();
     ctx.globalCompositeOperation = "source-over";
 
@@ -112,10 +114,10 @@
 
     // Halo exterior.
     const glow = ctx.createRadialGradient(x, y, 0, x, y, glowRadius);
-    glow.addColorStop(0, `rgba(${orb.core}, 0.17)`);
-    glow.addColorStop(0.18, `rgba(${orb.color}, 0.075)`);
-    glow.addColorStop(0.55, `rgba(${orb.color}, 0.045)`);
-    glow.addColorStop(1, `rgba(${orb.color}, 0.005)`);
+    glow.addColorStop(0, `rgba(${orb.core}, 0.4)`);
+    glow.addColorStop(0.18, `rgba(${orb.color}, 0.095)`);
+    glow.addColorStop(0.55, `rgba(${orb.color}, 0.059)`);
+    glow.addColorStop(1, `rgba(${orb.color}, 0.007)`);
     ctx.fillStyle = glow;
     ctx.beginPath();
     ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
@@ -151,6 +153,7 @@
   }
 
   resize();
+  // Mantiene el canvas alineado con el tamano de la ventana.
   window.addEventListener("resize", resize);
   requestAnimationFrame(draw);
 })();

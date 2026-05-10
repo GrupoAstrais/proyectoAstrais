@@ -1,3 +1,4 @@
+// Modelos base compartidos entre tareas, grupos y componentes.
 export interface ITarea {
   id: number,
   gid: number;
@@ -5,11 +6,11 @@ export interface ITarea {
   titulo: string;
   descripcion: string;
   tipo: 'UNICO' | 'HABITO' | 'OBJETIVO';
-  prioridad: number; //dificultad
+  prioridad: number; // dificultad numerica recibida del backend
   extraUnico?: {
-    fechaLimite: string, // Formato ISO (date.toISOString())
+    fechaLimite: string, // fecha limite en formato ISO
   } | [
-    fechaLimite: string, // Compatibilidad con tareas locales antiguas
+    fechaLimite: string, // compatibilidad con tareas locales antiguas
   ]
   extraHabito?: {
     numeroFrecuencia: number;

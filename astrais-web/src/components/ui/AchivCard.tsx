@@ -1,5 +1,6 @@
 import { LiquidGlass } from "@liquidglass/react"
 
+// Tarjeta visual de logro con ranuras de progreso.
 export default function AchivCard() {
   return (
     <div className="bg-linear-to-b from-secondary-700/60 to-secondary-600/50 rounded-xl p-5 border border-secondary-600/50 shadow-lg backdrop-blur-sm">

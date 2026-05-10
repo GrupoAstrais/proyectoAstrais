@@ -4,6 +4,7 @@ import AstraisMascot from '../../components/ui/AstraisMascot'
 import { GAME_ROUND_COMPLETED_MESSAGE } from './gameMessages'
 import { GAME_ROUND_SECONDS, getArenaRank, getLudionReward, type GameStatus } from './gameStorage'
 
+// Minijuego de clics rapidos para generar estadisticas y ludiones.
 interface LudionClickerGameProps {
   gameId: string
 }
@@ -21,6 +22,7 @@ export default function LudionClickerGame({ gameId }: LudionClickerGameProps) {
   const roundRank = getArenaRank(score)
 
   const startRound = () => {
+    // Reinicia la ronda completa y habilita el contador.
     roundReportedRef.current = false
     setStatus('playing')
     setScore(0)
@@ -44,6 +46,7 @@ export default function LudionClickerGame({ gameId }: LudionClickerGameProps) {
     setScorePulse(true)
 
     if (status === 'idle') {
+      // El primer click empieza la partida y ya suma un punto.
       roundReportedRef.current = false
       setStatus('playing')
       setTimeLeft(GAME_ROUND_SECONDS)
@@ -81,6 +84,7 @@ export default function LudionClickerGame({ gameId }: LudionClickerGameProps) {
       return
     }
 
+    // Al llegar a cero se comunica el resultado al catalogo padre.
     roundReportedRef.current = true
     setRoundReward(getLudionReward(score))
     setStatus('finished')
@@ -102,10 +106,11 @@ export default function LudionClickerGame({ gameId }: LudionClickerGameProps) {
       <div className="scanlines pointer-events-none absolute inset-0 opacity-20" />
       <AstraisMascot
         alt="Mascota Astrais"
-        className="pointer-events-none absolute bottom-1 right-4 h-28 opacity-70 drop-shadow-[0_14px_28px_color-mix(in_srgb,var(--astrais-background)_58%,transparent)]"
+        className="pointer-events-none absolute bottom-10 h-28 opacity-70 drop-shadow-[0_14px_28px_color-mix(in_srgb,var(--astrais-background)_58%,transparent)]"
       />
 
       <section className="relative z-10 grid h-full min-h-0 grid-rows-[auto_auto_minmax(0,1fr)_auto] gap-3">
+        {/* Cabecera de ronda */}
         <header className="grid grid-cols-[minmax(0,1fr)_15rem] gap-3">
           <div>
             <p className="inline-flex items-center rounded-full border border-accent-beige-300/30 bg-white/8 px-3 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.24em] text-accent-beige-300">
@@ -133,6 +138,7 @@ export default function LudionClickerGame({ gameId }: LudionClickerGameProps) {
           </div>
         </header>
 
+        {/* Estadisticas instantaneas */}
         <div className="grid grid-cols-3 gap-2.5">
           <div className="rounded-2xl border border-white/10 bg-white/8 px-3 py-3">
             <p className="text-[0.58rem] uppercase tracking-[0.2em] text-slate-300">Puntuacion</p>
@@ -148,6 +154,7 @@ export default function LudionClickerGame({ gameId }: LudionClickerGameProps) {
           </div>
         </div>
 
+        {/* Arena principal de pulsacion */}
         <div className="relative flex min-h-0 items-center justify-center">
           <div className="pointer-events-none absolute bottom-8 left-1/2 h-16 w-64 -translate-x-1/2 rounded-full bg-secondary-500/20 blur-3xl" />
           <button

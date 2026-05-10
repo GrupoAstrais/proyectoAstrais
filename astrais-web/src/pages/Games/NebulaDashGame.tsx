@@ -1,6 +1,7 @@
 import React from 'react'
 import { GAME_ROUND_COMPLETED_MESSAGE } from './gameMessages'
 
+// Juego de esquiva por carriles dentro del visor arcade.
 type DashStatus = 'idle' | 'playing' | 'finished'
 type FallingItemKind = 'meteor' | 'fragment'
 
@@ -23,6 +24,7 @@ const PLAYER_ROW = 82
 const HIT_ZONE = 9
 
 function clampLane(lane: number) {
+  // Limita el movimiento a los carriles existentes.
   return Math.max(0, Math.min(LANES - 1, lane))
 }
 
@@ -38,6 +40,7 @@ export default function NebulaDashGame({ gameId }: NebulaDashGameProps) {
   const reportedRound = React.useRef(false)
 
   const finishRound = React.useCallback((finalScore: number) => {
+    // La ronda solo se reporta una vez aunque coincidan timer e impactos.
     if (reportedRound.current) {
       return
     }
@@ -89,6 +92,7 @@ export default function NebulaDashGame({ gameId }: NebulaDashGameProps) {
       }
     }
 
+    // Vincula teclado solo mientras la carrera esta activa.
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [moveLane, status])
@@ -118,6 +122,7 @@ export default function NebulaDashGame({ gameId }: NebulaDashGameProps) {
       return
     }
 
+    // Genera obstaculos y recompensas en carriles aleatorios.
     const spawner = window.setInterval(() => {
       setItems((currentItems) => [
         ...currentItems,
@@ -150,6 +155,7 @@ export default function NebulaDashGame({ gameId }: NebulaDashGameProps) {
           const movedItem = { ...item, top: item.top + ITEM_SPEED }
           const inHitZone = Math.abs(movedItem.top - PLAYER_ROW) <= HIT_ZONE
 
+          // Colisiona solo si el objeto cruza la zona del jugador en su carril.
           if (inHitZone && movedItem.lane === lane) {
             if (movedItem.kind === 'fragment') {
               scoreDelta += 8
@@ -235,20 +241,22 @@ export default function NebulaDashGame({ gameId }: NebulaDashGameProps) {
 
         <div className="relative min-h-0 overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--astrais-background)_80%,transparent),color-mix(in_srgb,var(--astrais-secondary)_24%,var(--astrais-surface)_76%))]">
           <div className="absolute inset-x-5 top-0 bottom-0 grid grid-cols-5 gap-2">
+            {/* Carriles: se generan a partir del numero total para alinear el tablero */}
             {Array.from({ length: LANES }).map((_, laneIndex) => (
-              <div key={laneIndex} className="relative border-x border-white/8 bg-white/[0.025]">
+              <div key={laneIndex} className="relative border-x border-white/8 bg-white/2.5">
                 <div className="absolute inset-x-0 top-[82%] h-px bg-accent-mint-300/35" />
               </div>
             ))}
           </div>
 
+          {/* Objetos en caida: cada item del estado se pinta en su carril actual */}
           {items.map((item) => (
             <div
               key={item.id}
               className={`absolute flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border text-lg shadow-[0_0_18px_color-mix(in_srgb,var(--astrais-text)_16%,transparent)] ${
                 item.kind === 'fragment'
                   ? 'border-accent-mint-300/55 bg-accent-mint-300/18 text-accent-mint-300'
-                  : 'border-[color-mix(in_srgb,var(--astrais-rarity-legendary)_45%,transparent)] bg-[color-mix(in_srgb,var(--astrais-rarity-legendary)_16%,transparent)] text-[var(--astrais-rarity-legendary)]'
+                  : 'border-[color-mix(in_srgb,var(--astrais-rarity-legendary)_45%,transparent)] bg-[color-mix(in_srgb,var(--astrais-rarity-legendary)_16%,transparent)] text-(--astrais-rarity-legendary)'
               }`}
               style={{ left: `${10 + item.lane * 20}%`, top: `${item.top}%` }}
             >
@@ -264,6 +272,7 @@ export default function NebulaDashGame({ gameId }: NebulaDashGameProps) {
           </div>
 
           {status !== 'playing' ? (
+            /* Capa de inicio o final de carrera */
             <div className="absolute inset-0 grid place-items-center bg-black/32 backdrop-blur-[1px]">
               <div className="max-w-md rounded-[26px] border border-white/15 bg-slate-950/82 p-6 text-center shadow-[0_20px_50px_color-mix(in_srgb,var(--astrais-background)_42%,transparent)]">
                 <p className="text-[0.64rem] uppercase tracking-[0.24em] text-accent-beige-300">

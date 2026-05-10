@@ -7,6 +7,7 @@ interface ButtonProps {
     active?: boolean
 }
 
+// Boton generico para filtros excluyentes.
 export default function ButtonFilter({handleActive, titulo, esOtroActivo, active: activeProp} : ButtonProps) {
 
     const [active, setIsActive] = React.useState<boolean>(false);
@@ -25,6 +26,7 @@ export default function ButtonFilter({handleActive, titulo, esOtroActivo, active
             return;
         }
 
+        // Si otro filtro se activa, este vuelve a su estado inactivo.
         if(esOtroActivo !== titulo) {
             setIsActive(false)
         }

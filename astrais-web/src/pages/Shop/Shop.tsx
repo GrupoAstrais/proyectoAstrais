@@ -3,21 +3,27 @@ import { NavLink } from 'react-router'
 import Navbar from '../../components/layout/Navbar'
 import logo from '../../assets/logo_w.svg'
 import {
-  buyStoreItem,
-  equipStoreItem,
   getStoreItems,
   getUserData,
   resolveStoreAssetUrl,
   type StoreItemResponse,
 } from '../../data/Api'
+import {
+  buyLocalStoreItem,
+  equipLocalStoreItem,
+  getLocalEquippedThemeColors,
+  mergeLocalStoreItems,
+  readLocalBalance,
+  readLocalSpent,
+} from '../../data/localShopStorage'
 import { applyThemeColors, parseThemeConfig } from '../../styles/theme'
 import AstraisMascot from '../../components/ui/AstraisMascot'
-import { useVisualPreferences } from '../../context/VisualPreferencesContext'
 
+// Numero de articulos visibles por pagina en la tienda.
 const PAGE_SIZE = 4
 
 type ShopCategory = 'Todos' | 'Eventos' | 'Temas' | 'Mascotas' | 'Especiales'
-type ShopSlot = 'theme' | 'companion' | 'aura'
+type ShopSlot = 'theme' | 'companion' | 'avatar'
 type ShopRarity = 'Comun' | 'Raro' | 'Epico' | 'Legendario'
 
 interface ShopDisplayItem extends StoreItemResponse {
@@ -35,6 +41,7 @@ interface ShopDisplayItem extends StoreItemResponse {
 const SHOP_CATEGORIES: ShopCategory[] = ['Todos', 'Eventos', 'Temas', 'Mascotas', 'Especiales']
 
 function normalizeRarity(rarity?: string): ShopRarity {
+  // Acepta nombres de rareza tanto en ingles como en espanol.
   switch (rarity?.toUpperCase()) {
     case 'RARO':
     case 'RARE':
@@ -67,6 +74,7 @@ function getRarityClasses(rarity: ShopRarity) {
 }
 
 function getItemCategory(item: StoreItemResponse): Exclude<ShopCategory, 'Todos'> {
+  // La categoria visible se deriva del tipo que entrega el backend.
   if (item.type === 'APP_THEME') {
     return 'Temas'
   }
@@ -91,10 +99,11 @@ function getItemSlot(item: StoreItemResponse): ShopSlot {
     return 'companion'
   }
 
-  return 'aura'
+  return 'avatar'
 }
 
 function getItemAccent(item: StoreItemResponse) {
+  // Los temas usan sus propios colores; el resto usa acentos de la marca.
   if (item.type === 'APP_THEME') {
     const theme = parseThemeConfig(item.theme)
     return { accentFrom: theme.primary, accentTo: theme.secondary }
@@ -110,6 +119,7 @@ function getItemAccent(item: StoreItemResponse) {
 function toDisplayItem(item: StoreItemResponse): ShopDisplayItem {
   const { accentFrom, accentTo } = getItemAccent(item)
 
+  // Enriquecemos el item de API con datos listos para pintar.
   return {
     ...item,
     category: getItemCategory(item),
@@ -119,6 +129,8 @@ function toDisplayItem(item: StoreItemResponse): ShopDisplayItem {
     detail: item.desc,
     perk: item.type === 'APP_THEME'
       ? 'Tema visual equipado desde tu cuenta para sincronizar colores entre web y app.'
+      : item.type === 'AVATAR_PART'
+        ? 'Especial de perfil: al comprarlo se activa como foto de perfil en la web.'
       : `Cosmetico de la coleccion ${item.coleccion || 'DEFAULT'}.`,
     accentFrom,
     accentTo,
@@ -131,6 +143,7 @@ function getSoftGradient(from: string, to: string, fromWeight = '20%', toWeight 
 }
 
 function ShopItemVisual({ item, className = '' }: { item: ShopDisplayItem; className?: string }) {
+  // Cada tipo de articulo necesita una vista previa distinta.
   if (item.type === 'APP_THEME') {
     const theme = parseThemeConfig(item.theme)
 
@@ -142,6 +155,7 @@ function ShopItemVisual({ item, className = '' }: { item: ShopDisplayItem; class
         }}
       >
         <div className="grid h-full w-full grid-cols-2 gap-1 rounded-xl bg-black/18 p-1">
+          {/* Muestras de color: se mapean los colores principales del tema */}
           {[theme.primary, theme.secondary, theme.tertiary, theme.backgroundAlt].map((color) => (
             <span key={color} className="rounded-lg border border-white/15" style={{ backgroundColor: color }} />
           ))}
@@ -169,9 +183,10 @@ function ShopItemVisual({ item, className = '' }: { item: ShopDisplayItem; class
 }
 
 export default function Shop() {
-  const { refreshVisualPreferences } = useVisualPreferences()
   const [items, setItems] = React.useState<ShopDisplayItem[]>([])
   const [availableBalance, setAvailableBalance] = React.useState(0)
+  const [spentLudions, setSpentLudions] = React.useState(0)
+  const [shopUserId, setShopUserId] = React.useState<number | null>(null)
   const [activeCategory, setActiveCategory] = React.useState<ShopCategory>('Todos')
   const [currentPage, setCurrentPage] = React.useState(0)
   const [selectedItemId, setSelectedItemId] = React.useState<number | null>(null)
@@ -180,11 +195,15 @@ export default function Shop() {
   const [mutationItemId, setMutationItemId] = React.useState<number | null>(null)
 
   const loadShopData = React.useCallback(async () => {
+    // Usuario y catalogo se cargan juntos para sincronizar saldo y compras.
     const [userData, storeItems] = await Promise.all([getUserData(), getStoreItems()])
+    const localStoreItems = mergeLocalStoreItems(userData.id, storeItems)
 
-    applyThemeColors(userData.themeColors, storeItems)
-    setAvailableBalance(userData.ludiones)
-    setItems(storeItems.map(toDisplayItem))
+    applyThemeColors(getLocalEquippedThemeColors(userData.id, storeItems, userData.themeColors), storeItems)
+    setShopUserId(userData.id)
+    setAvailableBalance(readLocalBalance(userData.id, userData.ludiones))
+    setSpentLudions(readLocalSpent(userData.id))
+    setItems(localStoreItems.map(toDisplayItem))
   }, [])
 
   React.useEffect(() => {
@@ -223,10 +242,6 @@ export default function Shop() {
     filteredItems[0] ??
     null
 
-  const spentLudions = React.useMemo(
-    () => items.reduce((total, item) => total + (item.owned ? item.price : 0), 0),
-    [items],
-  )
   const ownedCount = items.filter((item) => item.owned).length
   const isOwned = selectedItem?.owned ?? false
   const isEquipped = selectedItem?.equipped ?? false
@@ -234,7 +249,7 @@ export default function Shop() {
 
   const equippedTheme = items.find((item) => item.slot === 'theme' && item.equipped)
   const equippedCompanion = items.find((item) => item.slot === 'companion' && item.equipped)
-  const equippedAura = items.find((item) => item.slot === 'aura' && item.equipped)
+  const equippedAvatar = items.find((item) => item.slot === 'avatar' && item.equipped)
 
   React.useEffect(() => {
     setCurrentPage(0)
@@ -259,21 +274,35 @@ export default function Shop() {
     }
   }, [selectedItemId, visibleItems])
 
-  const refreshAfterMutation = async () => {
-    await loadShopData()
-    await refreshVisualPreferences()
-    setError(null)
-  }
-
   const handleBuySelected = async () => {
-    if (!selectedItem || isOwned || availableBalance < selectedItem.price || mutationItemId !== null) {
+    if (!selectedItem || shopUserId === null || isOwned || availableBalance < selectedItem.price || mutationItemId !== null) {
       return
     }
 
     try {
       setMutationItemId(selectedItem.id)
-      await buyStoreItem(selectedItem.id)
-      await refreshAfterMutation()
+      const purchaseResult = buyLocalStoreItem(shopUserId, selectedItem, availableBalance)
+
+      if (!purchaseResult.ok) {
+        setError('Saldo insuficiente para completar la compra.')
+        return
+      }
+
+      setAvailableBalance(purchaseResult.balance)
+      setSpentLudions(purchaseResult.spent)
+      setItems((currentItems) => (
+        currentItems.map((item) => (
+          item.slot === selectedItem.slot
+            ? { ...item, owned: item.id === selectedItem.id ? true : item.owned, equipped: selectedItem.slot === 'avatar' ? item.id === selectedItem.id : item.equipped }
+            : item.id === selectedItem.id
+              ? { ...item, owned: true }
+              : item
+        ))
+      ))
+      if (selectedItem.slot === 'avatar') {
+        equipLocalStoreItem(shopUserId, { ...selectedItem, owned: true })
+      }
+      setError(null)
     } catch {
       setError('No se pudo completar la compra.')
     } finally {
@@ -282,19 +311,30 @@ export default function Shop() {
   }
 
   const handleEquipSelected = async () => {
-    if (!selectedItem || !isOwned || isEquipped || mutationItemId !== null) {
+    if (!selectedItem || shopUserId === null || !isOwned || isEquipped || mutationItemId !== null) {
       return
     }
 
     try {
       setMutationItemId(selectedItem.id)
-      await equipStoreItem(selectedItem.id)
+      const didEquip = equipLocalStoreItem(shopUserId, selectedItem)
+
+      if (!didEquip) {
+        setError('Compra el cosmetico antes de equiparlo.')
+        return
+      }
+
+      setItems((currentItems) => (
+        currentItems.map((item) => (
+          item.slot === selectedItem.slot ? { ...item, equipped: item.id === selectedItem.id } : item
+        ))
+      ))
 
       if (selectedItem.type === 'APP_THEME') {
         applyThemeColors(selectedItem.theme)
       }
 
-      await refreshAfterMutation()
+      setError(null)
     } catch {
       setError('No se pudo equipar el cosmetico.')
     } finally {
@@ -317,7 +357,9 @@ export default function Shop() {
         <Navbar />
 
         <main className="flex min-h-0 flex-1 px-3 pb-3 pt-1 md:px-4 md:pb-4 xl:px-6 xl:pb-5">
+          {/* Layout principal de la tienda */}
           <section className="mx-auto hidden h-full w-full gap-3 lg:grid lg:grid-cols-12 min-[1400px]:grid-cols-[15.75rem_minmax(0,1.24fr)_20.25rem] min-[1400px]:gap-4">
+            {/* Panel lateral con saldo, conexion y categorias */}
             <aside className="panel-glow relative col-span-2 grid min-h-0 grid-rows-[auto_auto_auto_minmax(0,1fr)] overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(170deg,color-mix(in_srgb,var(--astrais-background)_90%,var(--astrais-background-alt)_10%),color-mix(in_srgb,var(--astrais-background-alt)_82%,var(--astrais-secondary)_18%))] p-3.5 shadow-[0_20px_56px_color-mix(in_srgb,var(--astrais-background)_50%,transparent)] min-[1400px]:p-5">
               <div className="pointer-events-none absolute -left-12 top-3 h-36 w-36 rounded-full bg-secondary-500/16 blur-3xl" />
               <div className="relative z-10 flex items-start justify-between gap-3">
@@ -340,7 +382,7 @@ export default function Shop() {
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-black/18 p-3">
                   <p className="text-[0.56rem] uppercase tracking-[0.18em] text-slate-400">Gastado</p>
-                  <p className="mt-2 text-[1rem] font-semibold text-[var(--astrais-reward)] xl:text-[1.12rem]">{spentLudions}</p>
+                  <p className="mt-2 text-[1rem] font-semibold text-(--astrais-reward) xl:text-[1.12rem]">{spentLudions}</p>
                 </div>
               </div>
 
@@ -370,6 +412,7 @@ export default function Shop() {
               <div className="relative z-10 mt-4 min-h-0 rounded-3xl border border-white/10 bg-black/18 p-3">
                 <p className="text-center text-xs uppercase tracking-[0.18em] text-slate-400">Categorias</p>
                 <div className="tabs-scroll mt-2 flex-row pb-1 min-[1200px]:flex-col">
+                  {/* Categorias: el map genera los botones y evita repetir estilos */}
                   {SHOP_CATEGORIES.map((category) => (
                     <button
                       key={category}
@@ -388,6 +431,7 @@ export default function Shop() {
               </div>
             </aside>
 
+            {/* Catalogo de articulos */}
             <section className="panel-glow relative col-span-7 grid min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-[28px] border border-white/15 bg-[linear-gradient(160deg,color-mix(in_srgb,var(--astrais-background)_88%,var(--astrais-background-alt)_12%),color-mix(in_srgb,var(--astrais-primary)_42%,transparent),color-mix(in_srgb,var(--astrais-background-alt)_82%,var(--astrais-secondary)_18%))] p-3.5 shadow-[0_20px_58px_color-mix(in_srgb,var(--astrais-background)_52%,transparent)] min-[1400px]:p-5">
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,color-mix(in_srgb,var(--astrais-text)_10%,transparent),transparent_25%)]" />
               <header className="relative z-10 flex items-start justify-between gap-3 min-[1400px]:gap-4">
@@ -440,6 +484,7 @@ export default function Shop() {
                     No hay cosmeticos disponibles en esta categoria.
                   </div>
                 ) : visibleItems.map((item) => {
+                  // Articulos visibles: cada vuelta crea una tarjeta de tienda con estado de compra.
                   return (
                     <article
                       key={item.id}
@@ -486,6 +531,7 @@ export default function Shop() {
             </section>
 
             {selectedItem ? (
+              /* Detalle y acciones del articulo seleccionado */
               <aside className="panel-glow astrais-scroll relative col-span-3 grid min-h-0 grid-rows-[minmax(0,1fr)_auto] overflow-y-auto rounded-[26px] border border-white/15 bg-[linear-gradient(170deg,color-mix(in_srgb,var(--astrais-background)_90%,var(--astrais-background-alt)_10%),color-mix(in_srgb,var(--astrais-background-alt)_82%,var(--astrais-secondary)_18%))] p-3.5 shadow-[0_20px_56px_color-mix(in_srgb,var(--astrais-background)_50%,transparent)] min-[1400px]:p-5">
                 <div className="pointer-events-none absolute -right-10 top-6 h-36 w-36 rounded-full bg-secondary-500/18 blur-3xl" />
                 <div
@@ -510,18 +556,18 @@ export default function Shop() {
                     <p className="mt-4 text-[0.74rem] leading-5 text-slate-200 min-[1400px]:text-[0.86rem] min-[1400px]:leading-6">{selectedItem.detail}</p>
 
                     <div className="mt-4 flex items-center justify-center rounded-[22px] border border-white/10 bg-black/18 p-4">
-                      <ShopItemVisual item={selectedItem} className="h-24 w-24 opacity-95 min-[1400px]:h-30 min-[1400px]:w-30" />
+                      <ShopItemVisual item={selectedItem} className="h-50 w-50 opacity-95 min-[1400px]:h-30 min-[1400px]:w-30" />
                     </div>
 
                     <div className="mt-4 grid grid-cols-2 gap-3">
                       <div className="rounded-2xl border border-white/10 bg-black/18 p-3">
                         <p className="text-[0.56rem] uppercase tracking-[0.16em] text-slate-400">Precio</p>
-                        <p className="mt-2 text-[0.86rem] font-semibold text-[var(--astrais-reward)] min-[1400px]:text-[1.04rem]">{selectedItem.price} L</p>
+                        <p className="mt-2 text-[0.86rem] font-semibold text-(--astrais-reward) min-[1400px]:text-[1.04rem]">{selectedItem.price} L</p>
                       </div>
                       <div className="rounded-2xl border border-white/10 bg-black/18 p-3">
                         <p className="text-[0.56rem] uppercase tracking-[0.16em] text-slate-400">Slot</p>
                         <p className="mt-4 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-white min-[1400px]:text-[9px]">
-                          {selectedItem.slot}
+                          {selectedItem.slot === 'avatar' ? 'perfil' : selectedItem.slot}
                         </p>
                       </div>
                     </div>
@@ -541,8 +587,8 @@ export default function Shop() {
                         <p className="mt-2 text-[0.64rem] leading-5 text-white min-[1400px]:text-[0.74rem]">{equippedCompanion?.name ?? 'Ninguna'}</p>
                       </div>
                       <div className="rounded-2xl border border-white/10 bg-black/18 p-3">
-                        <p className="text-[0.54rem] uppercase tracking-[0.16em] text-slate-400">Aura</p>
-                        <p className="mt-2 text-[0.64rem] leading-5 text-white min-[1400px]:text-[0.74rem]">{equippedAura?.name ?? 'Ninguna'}</p>
+                        <p className="text-[0.54rem] uppercase tracking-[0.16em] text-slate-400">Perfil</p>
+                        <p className="mt-2 text-[0.64rem] leading-5 text-white min-[1400px]:text-[0.74rem]">{equippedAvatar?.name ?? 'Ninguna'}</p>
                       </div>
                     </div>
 

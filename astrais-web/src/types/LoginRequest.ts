@@ -1,5 +1,6 @@
 import type { ITarea } from "./Interfaces";
 
+// Contratos de peticiones y respuestas usados por la capa API.
 export interface LoginRequest {
   email: string,
   passwd: string
@@ -14,8 +15,8 @@ export interface RegisterRequest {
   name: string,
   email: string,
   passwd: string,
-  lang: string, //en-EN
-  utcOffset?: number // optional with default 0
+  lang: string, // idioma solicitado por el usuario
+  utcOffset?: number // desplazamiento horario opcional
 }
 
 export interface UserData {
@@ -103,7 +104,7 @@ export interface MembersResponse {
   uid: number,
   name: string,
   role: number,
-  joinedAt: string // "ISO 8601 | null"
+  joinedAt: string // fecha de entrada en formato ISO cuando existe
 }
 
 export interface SetMemberRole {

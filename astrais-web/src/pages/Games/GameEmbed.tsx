@@ -5,6 +5,7 @@ import NebulaDashGame from './NebulaDashGame'
 import { getGameById } from './gameCatalog'
 import { ASTRA_MEMORY_GAME_ID, NEBULA_DASH_GAME_ID, PRIMARY_CLICKER_GAME_ID } from './gameStorage'
 
+// Fallback visual para juegos registrados pero no jugables.
 function ComingSoonGame({ title, description }: { title: string; description: string }) {
   return (
     <main className="grid h-screen min-h-112 place-items-center overflow-hidden bg-transparent p-6 font-['Space_Grotesk'] text-white">
@@ -21,6 +22,7 @@ export default function GameEmbed() {
   const { gameId = '' } = useParams()
   const game = getGameById(gameId)
 
+  // Selecciona el componente real segun el id publicado en el catalogo.
   if (game?.id === PRIMARY_CLICKER_GAME_ID) {
     return <LudionClickerGame gameId={game.id} />
   }
@@ -33,6 +35,7 @@ export default function GameEmbed() {
     return <AstraMemoryGame gameId={game.id} />
   }
 
+  // Seleccion de fallback para juegos no disponibles.
   return (
     <ComingSoonGame
       title={game?.title ?? 'Cabina no encontrada'}

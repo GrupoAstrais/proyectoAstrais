@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+/* Variables principales del tema Astrais. */
 :root {
   --astrais-primary: #8B5CF6;
   --astrais-secondary: #38BDF8;
@@ -53,6 +54,7 @@ body {
 }
 
 .astrais-primary-panel-bg {
+  /* Panel oscuro con mezcla de colores del tema activo. */
   background:
     linear-gradient(
       160deg,
@@ -74,6 +76,7 @@ body {
 }
 
 .astrais-modal-overlay {
+  /* Capa comun para modales con desenfoque de fondo. */
   background: color-mix(in srgb, var(--astrais-background) 76%, transparent);
   backdrop-filter: blur(6px);
 }

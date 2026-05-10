@@ -32,6 +32,7 @@ import {
   type ITaskFormData
 } from "../../data/Api";
 
+// Normaliza ids de objetivo antes de construir peticiones.
 const normalizeObjectiveId = (idObjetivo?: number | null): number | undefined => {
   return typeof idObjetivo === "number" && idObjetivo >= 0 ? idObjetivo : undefined;
 };
@@ -41,6 +42,7 @@ const normalizeTaskFormData = (data: ITaskFormData, fallbackObjetivoId?: number 
   idObjetivo: normalizeObjectiveId(data.idObjetivo) ?? normalizeObjectiveId(fallbackObjetivoId)
 });
 
+// Muestra un resumen corto priorizando logros desbloqueados y avanzados.
 const buildHomeAchievements = () =>
   buildAchievements(readArcadeStats(), [])
     .sort((leftAchievement, rightAchievement) => Number(rightAchievement.unlocked) - Number(leftAchievement.unlocked) || rightAchievement.percent - leftAchievement.percent)
@@ -53,6 +55,7 @@ const hasTaskBeenCompletedOnce = (task: ITarea): boolean => {
 const getRewardedTaskStorageKey = (task: ITarea): string => `rewarded-task:${task.gid}:${task.id}`;
 
 const wasTaskRewardedBefore = (task: ITarea): boolean => {
+  // Evita dar recompensas duplicadas si la tarea ya se completo antes.
   if (hasTaskBeenCompletedOnce(task)) return true;
   return localStorage.getItem(getRewardedTaskStorageKey(task)) === "1";
 };
@@ -72,6 +75,7 @@ export default function Home() {
   const [initialDataModal, setInitialDataModal] = useState<ITarea | null>(null);
   const [rewardNotification, setRewardNotification] = useState<{ xp: number; ludiones: number } | null>(null);
   const showRewardNotification = (xp: number, ludiones: number) => {
+    // Fuerza un nuevo render aunque se repita la misma recompensa.
     setRewardNotification(null);
     window.setTimeout(() => setRewardNotification({ xp, ludiones }), 0);
   };
@@ -83,6 +87,7 @@ export default function Home() {
         setError(null);
 
         const userData = await getUserData();
+        // El dashboard trabaja sobre el grupo personal del usuario.
         setPersonalGroupId(userData.personalGid);
 
         const serverTasks = await getTasksFromGroup(userData.personalGid);
@@ -116,6 +121,7 @@ export default function Home() {
     }
 
     const normalizedData = normalizeTaskFormData(data);
+    // Primero se crea en servidor y luego se refleja localmente con el id real.
     const createdTaskId = await createTask(buildCreateTaskRequest(personalGroupId, normalizedData));
 
     setTasks((prevTasks) => [
@@ -294,6 +300,7 @@ export default function Home() {
 
       <Navbar />
       {rewardNotification ? (
+        /* Notificacion flotante de recompensa */
         <div className="fixed bottom-4 right-4 z-60">
           <NotificationModal xp={rewardNotification.xp} ludiones={rewardNotification.ludiones} />
         </div>
@@ -301,6 +308,7 @@ export default function Home() {
 
       
       <section className="mx-auto overflow-hidden flex-1 flex max-w-7xl flex-col items-center justify-center gap-4 px-4">
+        {/* Hero de bienvenida y accesos rapidos */}
         <article className="astrais-primary-panel-bg relative flex w-full max-w-2xl mt-5 flex-col gap-6 rounded-2xl border border-white/15 p-6 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
           <header>
             <p className="pb-2 text-[0.78rem] uppercase tracking-[0.08em] text-indigo-200 font-bold">Bienvenido de vuelta</p>
@@ -331,7 +339,7 @@ export default function Home() {
         </article>
 
         <div className="grid w-full astrais-scroll min-h-0 max-[1537px]:max-h-80 [@media_(max-width:1537px)_and_(min-height:729.6px)]:max-h-140 overflow-y-auto grid-cols-1 gap-4 lg:grid-cols-3"> 
-          {/*Tareas Pendientes*/}
+          {/* Tareas pendientes */}
           <article className="astrais-primary-panel-bg flex h-80 lg:h-full min-h-0 flex-col rounded-2xl border border-white/15 p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
             <header className="mb-3">
               <NavLink to="/tasks">
@@ -346,6 +354,7 @@ export default function Home() {
                 ) : dashboardTasks.length === 0 ? (
                   <p className="py-4 text-center italic text-gray-400">No hay tareas</p>
                 ) : (
+                  /* Lista de tareas: se mapea cada tarea visible y se le adjuntan sus subtareas */
                   dashboardTasks.map((task) => (
                     <Task
                       key={task.id}
@@ -363,7 +372,7 @@ export default function Home() {
 
           <div className="flex flex-col gap-4 lg:col-span-2">            
             <div className="grid grid-cols-1 h-full gap-4 md:grid-cols-2">
-              {/*Tienda*/}
+              {/* Tienda */}
               <NavLink to="/shop">
                 <article className="astrais-primary-panel-bg h-full rounded-2xl border border-white/15 p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
                   <header className="mb-3">
@@ -376,6 +385,7 @@ export default function Home() {
               </NavLink>
 
               <div className="flex flex-col gap-4">
+                {/* Notificaciones */}
                 <article className="astrais-primary-panel-bg rounded-2xl h-20 border border-white/15 p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
                   <header className="mb-3">
                     <button className="flex items-center gap-2">
@@ -385,7 +395,7 @@ export default function Home() {
                   </header>
                 </article>
 
-                {/*Logros*/}
+                {/* Logros */}
                 
                   <article className="astrais-primary-panel-bg flex flex-1 flex-col gap-4 rounded-2xl border border-white/15 p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
                     <header className="mb-3">
@@ -394,6 +404,7 @@ export default function Home() {
                     <section className="astrais-scroll min-h-0 max-h-48 overflow-y-auto pr-1">
                       <NavLink to="/achievements">
                       <div className="flex flex-col gap-3">
+                        {/* Logros resumidos: el map pinta una tarjeta compacta por logro destacado */}
                         {homeAchievements.map((achievement) => (
                           <div
                             key={achievement.id}
@@ -422,6 +433,7 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Minijuegos */}
             <article className="astrais-primary-panel-bg rounded-2xl  border border-white/15 p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
               <header className="mb-3">
                 <h2 className="font-['Press_Start_2P'] text-lg">Minijuegos</h2>

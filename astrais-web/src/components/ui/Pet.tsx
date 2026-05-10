@@ -3,6 +3,8 @@ import AstraisMascot from './AstraisMascot'
 interface PetProps {
     url?: string;
 }
+
+// Adaptador pequeno para renderizar la mascota equipada.
 export default function Pet({url} : PetProps) {
     return (
         <div>

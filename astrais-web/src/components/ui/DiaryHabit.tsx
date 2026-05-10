@@ -7,6 +7,7 @@ interface ButtonProps {
     active?: boolean
 }
 
+// Selector de tipo de tarea dentro del modal.
 export default function ButtonFilter({handleActive, titulo, esOtroActivo, active: activeProp} : ButtonProps) {
 
     const [active, setIsActive] = React.useState<boolean>(false);
@@ -25,6 +26,7 @@ export default function ButtonFilter({handleActive, titulo, esOtroActivo, active
             return;
         }
 
+        // Mantiene un unico tipo activo cuando no hay control externo.
         if(esOtroActivo !== titulo) {
             setIsActive(false)
         }

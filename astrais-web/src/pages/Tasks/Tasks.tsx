@@ -34,7 +34,7 @@ import {
 } from "../../data/Api";
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Ayudantes
 // ---------------------------------------------------------------------------
 
 const normalizeObjectiveId = (id?: number | null): number | undefined =>
@@ -52,6 +52,7 @@ const hasTaskBeenCompletedOnce = (task: ITarea): boolean => {
 const getRewardedTaskStorageKey = (task: ITarea): string => `rewarded-task:${task.gid}:${task.id}`;
 
 const wasTaskRewardedBefore = (task: ITarea): boolean => {
+  // Evita premiar dos veces una tarea completada previamente.
   if (hasTaskBeenCompletedOnce(task)) return true;
   return localStorage.getItem(getRewardedTaskStorageKey(task)) === "1";
 };
@@ -62,7 +63,7 @@ const markTaskAsRewarded = (task: ITarea): void => {
 
 
 // ---------------------------------------------------------------------------
-// Component
+// Componente
 // ---------------------------------------------------------------------------
 
 export default function Tasks() {
@@ -79,6 +80,7 @@ export default function Tasks() {
   const [initialDataModal, setInitialDataModal] = useState<ITarea | null>(null);
   const [rewardNotification, setRewardNotification] = useState<{ xp: number; ludiones: number } | null>(null);
   const showRewardNotification = (xp: number, ludiones: number) => {
+    // Reinicia la notificacion para que se vea aunque los valores sean iguales.
     setRewardNotification(null);
     window.setTimeout(() => setRewardNotification({ xp, ludiones }), 0);
   };
@@ -90,6 +92,7 @@ export default function Tasks() {
         setError(null);
 
         const userData = await getUserData();
+        // Las tareas individuales viven en el grupo personal.
         setPersonalGroupId(userData.personalGid);
         setTasks(await getTasksFromGroup(userData.personalGid));
       } catch {
@@ -126,13 +129,13 @@ export default function Tasks() {
   };
 
   // ---------------------------------------------------------------------------
-  // Task mutations
+  // Mutaciones de tareas
   // ---------------------------------------------------------------------------
 
   const handleCreate = async (data: ITaskFormData) => {
     const id = await createTask(buildCreateTaskRequest(personalGroupId!, data));
     const localTask = createLocalTask(data, { gid: personalGroupId!, id, idObjetivo: data.idObjetivo });
-    console.log("Created local task:", localTask); // ← добавь это
+    console.log("Tarea local creada:", localTask);
     setTasks((prev) => [...prev, localTask]);
   };
 
@@ -283,13 +286,14 @@ export default function Tasks() {
   console.log(tasks);
 
   // ---------------------------------------------------------------------------
-  // Render helpers
+  // Ayudantes de renderizado
   // ---------------------------------------------------------------------------
 
   const renderTimeFilters = (
     active: TTaskTimeFilter,
     handler: (v: string) => void
   ) =>
+    // Filtros de tiempo: el map crea los tres botones con el mismo componente.
     (["Today", "Tomorrow", "All"] as TTaskTimeFilter[]).map((titulo) => (
       <ButtonFilter
         key={titulo}
@@ -315,6 +319,7 @@ export default function Tasks() {
       className="relative flex overflow-hidden h-screen w-screen flex-col gap-4 font-['Space_Grotesk'] text-white"
     >
       <div className={`${isOpen ? "" : "hidden"} fixed inset-0 z-50 flex items-center justify-center`}>
+        {/* Modal de creacion o edicion de tareas */}
         <Modal
           onSubmit={handleModalSubmit}
           onCancel={closeModal}
@@ -326,12 +331,14 @@ export default function Tasks() {
 
       <Navbar />
       {rewardNotification ? (
+        /* Notificacion flotante al completar tareas */
         <div className="fixed bottom-4 right-4 z-60">
           <NotificationModal xp={rewardNotification.xp} ludiones={rewardNotification.ludiones} />
         </div>
       ) : null}
 
       <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden px-2">
+        {/* Accion principal de alta */}
         <button
           onClick={() => { setInitialDataModal(null); setIsOpen(true); }}
           className="shrink-0 ml-auto w-full rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm md:w-1/5"
@@ -349,9 +356,11 @@ export default function Tasks() {
             <div className="flex flex-col justify-center gap-2">
               <div className="flex flex-col gap-2.5">
                 <div className="tabs-scroll w-full justify-start pb-1 sm:justify-center">
+                  {/* Botones de tiempo generados desde renderTimeFilters */}
                   {renderTimeFilters(activeDiarias, handleTimeFilter(setActiveDiarias))}
                 </div>
                 <div className="tabs-scroll w-full justify-start pb-1 sm:justify-center">
+                  {/* Filtros de completadas y pendientes */}
                   {renderCompletedFilters(diariasCompletedFilters, toggleCompletedFilter(setDiariasCompletedFilters))}
                 </div>
                 <div className="flex flex-col astrais-scroll min-h-0 max-h-150 max-[1537px]:max-h-96 overflow-y-auto gap-2">
@@ -360,6 +369,7 @@ export default function Tasks() {
                   ) : filteredDiariasTasks.length === 0 ? (
                     <p className="py-4 text-center italic text-gray-400">No hay tareas diarias</p>
                   ) : (
+                    /* Tareas diarias: cada elemento se renderiza con sus subtareas asociadas */
                     filteredDiariasTasks.map((task) => (
                       <Task
                         key={task.id}
@@ -382,9 +392,11 @@ export default function Tasks() {
             <div className="flex flex-col justify-center gap-2">
               <div className="flex flex-col gap-2.5">
                 <div className="tabs-scroll w-full justify-start pb-1 sm:justify-center">
+                  {/* Botones de tiempo generados desde renderTimeFilters */}
                   {renderTimeFilters(activeHabitos, handleTimeFilter(setActiveHabitos))}
                 </div>
                 <div className="tabs-scroll w-full justify-start pb-1 sm:justify-center">
+                  {/* Filtros de completadas y pendientes */}
                   {renderCompletedFilters(habitosCompletedFilters, toggleCompletedFilter(setHabitosCompletedFilters))}
                 </div>
               </div>
@@ -395,6 +407,7 @@ export default function Tasks() {
                 ) : filteredHabitosTasks.length === 0 ? (
                   <p className="py-4 text-center italic text-gray-400">No hay habitos</p>
                 ) : (
+                  /* Habitos: el map crea una tarjeta por habito filtrado */
                   filteredHabitosTasks.map((task) => (
                     <Task
                       key={task.id}

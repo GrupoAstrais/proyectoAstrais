@@ -59,6 +59,7 @@ const compareGroupsAlphabetically = (
   firstGroup: IGroup,
   secondGroup: IGroup,
 ): number => {
+  // Ordena con reglas de idioma espanol para nombres de grupos.
   return firstGroup.name.localeCompare(secondGroup.name, "es", {
     sensitivity: "base",
   });
@@ -72,6 +73,7 @@ const mapUserGroupToLocalGroup = (group: {
   description: string;
   role: number;
 }): IGroup => {
+  // Adapta la respuesta del backend al modelo usado por la vista.
   return {
     gid: group.gid ?? group.id ?? -1,
     name: group.name ?? group.nombre ?? "Grupo",
@@ -83,6 +85,7 @@ const mapUserGroupToLocalGroup = (group: {
 };
 
 const getSortedGroups = (groups: IGroup[], activeGroup: number): IGroup[] => {
+  // El grupo activo se mantiene primero para que no se pierda al ordenar.
   return [...groups].sort((firstGroup, secondGroup) => {
     const firstGroupIsActive = firstGroup.gid === activeGroup;
     const secondGroupIsActive = secondGroup.gid === activeGroup;
@@ -119,6 +122,7 @@ const hasTaskBeenCompletedOnce = (task: ITarea): boolean => {
 const getRewardedTaskStorageKey = (task: ITarea): string => `rewarded-task:${task.gid}:${task.id}`;
 
 const wasTaskRewardedBefore = (task: ITarea): boolean => {
+  // Comprueba tanto historial del servidor como marca local.
   if (hasTaskBeenCompletedOnce(task)) return true;
   return localStorage.getItem(getRewardedTaskStorageKey(task)) === "1";
 };
@@ -128,6 +132,7 @@ const markTaskAsRewarded = (task: ITarea): void => {
 };
 
 const normalizeAuditEvents = (eventsLike: unknown): EventosGrupos[] => {
+  // Acepta varias formas de respuesta para tolerar cambios del backend.
   const normalizeEvent = (eventLike: unknown): EventosGrupos | null => {
     if (!eventLike || typeof eventLike !== "object") {
       return null;
@@ -270,10 +275,12 @@ export default function Groups() {
   const [auditEvents, setAuditEvents] = useState<EventosGrupos[]>([]);
   const [loadingAudit, setLoadingAudit] = useState<boolean>(false);
   const showRewardNotification = (xp: number, ludiones: number) => {
+    // Reinicia la notificacion para mostrar recompensas consecutivas.
     setRewardNotification(null);
     window.setTimeout(() => setRewardNotification({ xp, ludiones }), 0);
   };
 
+  // El grupo personal se oculta aqui porque esta cubierto por Tareas/Home.
   const toRenderableGroups = (
     userGroups: Array<{
       gid?: number;
@@ -291,6 +298,7 @@ export default function Groups() {
   const preloadMembersForGroups = async (
     baseGroups: IGroup[],
   ): Promise<IGroup[]> => {
+    // Precarga miembros para que las tarjetas ya muestren datos utiles.
     const entries = await Promise.all(
       baseGroups.map(async (group) => {
         try {
@@ -334,6 +342,7 @@ export default function Groups() {
           getUserGroup(),
           getUserData(),
         ]);
+        // PersonalGid permite separar grupos colaborativos del grupo privado.
         setCurrentUserId(userData.id);
         setPersonalGroupId(userData.personalGid);
         const baseGroups = userGroups
@@ -368,6 +377,7 @@ export default function Groups() {
       return;
     }
 
+    // El borrado se dispara al confirmar desde el modal de ajustes.
     const deleteSelectedGroup = async () => {
       try {
         await deleteGroup(groupToDelete.gid, groupToDelete.role);
@@ -401,6 +411,7 @@ export default function Groups() {
       return;
     }
 
+    // Carga perezosa: las tareas del grupo se piden solo al abrirlo.
     const loadGroupTasks = async () => {
       try {
         setLoadingTasks(true);
@@ -495,6 +506,7 @@ export default function Groups() {
   const availableObjectives = (activeGroupData?.tasks ?? []).filter((task) => task.tipo === "OBJETIVO");
 
   const updateActiveGroupTasks = (updater: (tasks: ITarea[]) => ITarea[]) => {
+    // Aplica cambios solo sobre el grupo seleccionado.
     setGroups((prevGroups) =>
       prevGroups.map((group) =>
         group.gid === activeGroup
@@ -508,6 +520,7 @@ export default function Groups() {
   };
 
   const handleActiveGroup = (nextActiveGroup: number) => {
+    // Click repetido en el mismo grupo lo cierra.
     if (!isOpen || nextActiveGroup !== activeGroup) {
       setIsOpen(true);
       setActiveGroup(nextActiveGroup);
@@ -529,6 +542,7 @@ export default function Groups() {
     }
 
     const normalizedData = normalizeTaskFormData(data);
+    // El id definitivo viene del servidor antes de insertar la copia local.
     const createdTaskId = await createTask(
       buildCreateTaskRequest(activeGroup, normalizedData),
     );
@@ -708,6 +722,7 @@ export default function Groups() {
     const willComplete = !isTaskCompleted(task);
     const wasCompletedBefore = wasTaskRewardedBefore(task);
 
+    // Mantiene sincronizados backend y estado local al completar una tarea.
     try {
       if (willComplete) {
         await Promise.all(
@@ -1074,6 +1089,7 @@ export default function Groups() {
     >
       <Navbar />
       {rewardNotification ? (
+        /* Notificacion flotante de recompensa */
         <div className="fixed bottom-4 right-4 z-60">
           <NotificationModal
             xp={rewardNotification.xp}
@@ -1082,8 +1098,10 @@ export default function Groups() {
         </div>
       ) : null}
 
+      {/* Layout principal de grupos */}
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 overflow-hidden px-5 md:flex md:flex-row md:justify-center">
         <div className="flex min-h-0 w-full flex-col gap-2 md:w-1/3 pb-5">
+          {/* Acciones de grupo */}
           <button
             onClick={() => setIsCreateModalOpen(true)}
             className="w-full shrink-0 rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60"
@@ -1097,6 +1115,7 @@ export default function Groups() {
             <span className="text-2xl font-bold">Unir al grupo</span>
           </button>
           <div className="astrais-scroll flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
+            {/* Grupos: el map crea una tarjeta por grupo colaborativo ordenado */}
             {loadingGroups ? (
             <p className="py-4 text-center italic text-gray-300">
               Cargando grupos...
@@ -1116,6 +1135,7 @@ export default function Groups() {
           
         </div>
 
+        {/* Panel de tareas del grupo activo */}
         <div className={`${isOpen ? "" : "hidden"} flex w-full flex-col gap-2 md:w-1/2`}>
           <div className="tabs-scroll w-full items-center justify-start pb-1">
             <button disabled={!activeGroupData || !canManageGroup} onClick={() => setIsSettingsModalOpen(true)} className="shrink-0 whitespace-nowrap rounded-md border border-[#F4E9E9]/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-60">
@@ -1157,6 +1177,7 @@ export default function Groups() {
             </div>
 
             <div className="flex flex-col gap-2">
+              {/* Tareas del grupo: se mapean con sus subtareas para mantener la jerarquia */}
               {loadingTasks ? (
                 <p className="py-4 text-center italic text-gray-300">
                   Cargando tareas...
@@ -1188,6 +1209,7 @@ export default function Groups() {
       <div
         className={`${isOpenModal ? "" : "hidden"} fixed inset-0 z-50 flex items-center justify-center`}
       >
+        {/* Modal de tarea del grupo */}
         <Modal
           onSubmit={handleModalSubmit}
           onCancel={closeTaskModalHandle}
@@ -1198,6 +1220,7 @@ export default function Groups() {
       </div>
 
       {activeGroupData && canManageGroup && (
+        /* Modal de configuracion del grupo seleccionado */
         <GroupSettingsModal
           isOpen={isSettingsModalOpen}
           onClose={() => setIsSettingsModalOpen(false)}
@@ -1217,6 +1240,7 @@ export default function Groups() {
       )}
 
       {isAuditModalOpen ? (
+        /* Modal de historial de auditoria */
         <div className="astrais-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 font-['Space_Grotesk']">
           <div className="astrais-modal-surface rounded-lg w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between p-5 border-b border-white/10">
@@ -1235,6 +1259,7 @@ export default function Groups() {
                 <p className="text-white/70">No hay eventos para mostrar.</p>
               ) : (
                 <div className="space-y-2">
+                  {/* Eventos de auditoria: cada registro se transforma en una fila legible */}
                   {auditEvents.map((event) => (
                     <div key={event.id} className="astrais-modal-soft-surface rounded-md p-3">
                       <p className="text-sm text-white">{getAuditEventLabel(event.eventType)}</p>

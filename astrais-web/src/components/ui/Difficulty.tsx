@@ -4,6 +4,7 @@ interface DifProps {
   dificultad: number;
 }
 
+// Etiqueta visual para la dificultad normalizada de una tarea.
 export default function Dificultad({ dificultad }: DifProps) {
   const normalizedDifficulty = normalizeTaskPriority(dificultad);
   const label = getTaskPriorityLabel(normalizedDifficulty);

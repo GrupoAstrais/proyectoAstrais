@@ -1,3 +1,4 @@
+/* Fondo global y capas fijas de ambiente. */
 :root {
   color-scheme: dark;
   --astrais-wallpaper-base: #05070f;
@@ -5,6 +6,7 @@
 
 html,
 body {
+  /* Combina color base y brillos suaves para que no dependa de imagenes. */
   min-height: 100%;
   margin: 0;
   background:
@@ -27,6 +29,7 @@ body {
 
 .orbital-background,
 .astrais-wallpaper-vignette {
+  /* Estas capas no capturan clicks porque solo decoran el fondo. */
   position: fixed;
   inset: 0;
   z-index: 0;

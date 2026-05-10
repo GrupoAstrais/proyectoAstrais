@@ -7,6 +7,7 @@ interface CompactDeviceNoticeProps extends HTMLAttributes<HTMLElement> {
   as?: 'article' | 'section' | 'aside' | 'div'
 }
 
+// Aviso reutilizable para vistas que no estan optimizadas en pantallas compactas.
 export default function CompactDeviceNotice({
   eyebrow,
   title,
@@ -16,6 +17,7 @@ export default function CompactDeviceNotice({
   children,
   ...props
 }: CompactDeviceNoticeProps) {
+  // El elemento contenedor se puede cambiar sin duplicar el diseno.
   const Component = as
 
   return (

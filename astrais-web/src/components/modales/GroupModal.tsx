@@ -12,9 +12,11 @@ interface GroupModalProps {
     handleToggleSubtask: (taskId: number, subtaskId: number) => void | Promise<void>
 }
 
+// Presenta las tareas de un grupo junto a sus filtros de estado.
 export default function GroupModal({ data, groupName, activeCompleted, activePending, handleActiveFilter, handleToggleComplete, handleToggleSubtask }: GroupModalProps) {
     return (
         <div className="font-['Space_Grotesk'] flex flex-col gap-2 mx-2">
+            {/* Barra de filtros del grupo */}
             <div className="tabs-scroll items-center pb-1">
                 <div className="shrink-0 bg-accent-beige-300/35 rounded-md px-4 py-2 font-bold font-['Press_Start_2P']">
                     <h2>{groupName}</h2>
@@ -29,6 +31,7 @@ export default function GroupModal({ data, groupName, activeCompleted, activePen
             </div>
 
             <div className="flex flex-col gap-2">
+                {/* Tareas del grupo: cada tarea viene del array filtrado por el padre */}
                 {data.length === 0 ? (
                     <p className="text-white/55 italic text-center py-4">No hay tareas</p>
                 ) : (

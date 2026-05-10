@@ -1,5 +1,6 @@
 import AstraisMascot from './AstraisMascot'
 
+// Tarjeta simple de amigo con accion de invitacion.
 export default function FriendCard() {
     return (
         <div className="p-2 flex bg-secondary-500 rounded-md justify-between items-center">

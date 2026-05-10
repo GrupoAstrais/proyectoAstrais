@@ -2,6 +2,7 @@ interface OptionProps {
     isDisable : boolean
 }
 
+// Representa una opcion bloqueada o disponible del editor.
 export default function Option ({isDisable} : OptionProps) {
     return (
         <>

@@ -5,14 +5,17 @@ interface CustomProps {
     confirmCustom: (confirm: boolean) => void
 }
 
+// Muestra las opciones de personalizacion del perfil.
 export default function CustomPerfilModal({confirmCustom} : CustomProps) {
 
     const handleClose = () => {
+        // Confirma el cierre al componente padre.
         confirmCustom(true);
     }
   
     return (
     <div className="astrais-modal-surface flex flex-col overflow-hidden rounded-md">
+        {/* Cabecera de confirmacion del editor */}
         <div className="flex flex-row justify-between items-center py-2 px-4">
             <h1 className="font-['Press_Start_2P'] text-2xl" >Editar</h1>
             <button onClick={handleClose} className='rounded-full bg-[color-mix(in_srgb,var(--astrais-text)_88%,var(--astrais-primary)_12%)] p-2'>
@@ -23,6 +26,7 @@ export default function CustomPerfilModal({confirmCustom} : CustomProps) {
             <AstraisMascot className='w-2/3' /> 
         </div>
         <div className='astrais-modal-soft-surface rounded-b-md'>
+            {/* Opciones destacadas del editor de perfil */}
             <div className='tabs-scroll bg-[color-mix(in_srgb,var(--astrais-secondary)_62%,transparent)] p-2 m-2 rounded-md'>
                 <Option isDisable={false} />
                 <Option isDisable={true} />
@@ -31,6 +35,7 @@ export default function CustomPerfilModal({confirmCustom} : CustomProps) {
                 <Option isDisable={true} />
                 <Option isDisable={true} />
             </div>
+            {/* Grid de piezas desbloqueables o disponibles */}
             <div className='grid grid-cols-4 justify-items-center gap-2 p-2'>
                 <Option isDisable={false} />
                 <Option isDisable={true} />

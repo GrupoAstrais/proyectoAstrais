@@ -6,6 +6,7 @@ interface DifProps {
   onSelect: (difficulty: TTaskPriority) => void;
 }
 
+// Opcion seleccionable de dificultad para formularios.
 export default function DifficultyModal({ difficulty, selectedDifficulty, onSelect }: DifProps) {
   const normalizedDifficulty = normalizeTaskPriority(difficulty);
   const isActive = selectedDifficulty === normalizedDifficulty;

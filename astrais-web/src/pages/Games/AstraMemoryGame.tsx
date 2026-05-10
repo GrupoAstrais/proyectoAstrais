@@ -1,6 +1,7 @@
 import React from 'react'
 import { GAME_ROUND_COMPLETED_MESSAGE } from './gameMessages'
 
+// Juego de memoria basado en secuencias de pads.
 type MemoryStatus = 'idle' | 'showing' | 'input' | 'finished'
 
 interface AstraMemoryGameProps {
@@ -41,6 +42,7 @@ const pads = [
 ]
 
 function randomPad() {
+  // Selecciona un pad valido dentro del tablero.
   return Math.floor(Math.random() * PAD_COUNT)
 }
 
@@ -63,6 +65,7 @@ export default function AstraMemoryGame({ gameId }: AstraMemoryGameProps) {
   const reportedRound = React.useRef(false)
 
   const finishRound = React.useCallback((finalScore: number) => {
+    // Evita enviar dos veces la misma ronda al contenedor.
     if (reportedRound.current) {
       return
     }
@@ -90,6 +93,7 @@ export default function AstraMemoryGame({ gameId }: AstraMemoryGameProps) {
 
     await wait(300)
 
+    // El token cancela animaciones antiguas si empieza otra ronda.
     for (const padIndex of nextSequence) {
       if (runToken.current !== token) {
         return
@@ -125,6 +129,7 @@ export default function AstraMemoryGame({ gameId }: AstraMemoryGameProps) {
       return
     }
 
+    // Cada pulsacion se compara con la posicion esperada de la secuencia.
     setActivePad(padIndex)
     window.setTimeout(() => setActivePad(null), 150)
 
@@ -193,7 +198,8 @@ export default function AstraMemoryGame({ gameId }: AstraMemoryGameProps) {
         </header>
 
         <div className="relative grid min-h-0 place-items-center overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(160deg,color-mix(in_srgb,var(--astrais-background)_78%,transparent),color-mix(in_srgb,var(--astrais-primary)_38%,var(--astrais-surface)_62%))] p-6">
-          <div className="grid aspect-square h-full max-h-[21rem] grid-cols-2 gap-4">
+          <div className="grid aspect-square h-full max-h-84 grid-cols-2 gap-4">
+            {/* Pads de memoria: el map genera los botones que forman la secuencia */}
             {pads.map((pad, padIndex) => (
               <button
                 key={pad.label}
@@ -211,6 +217,7 @@ export default function AstraMemoryGame({ gameId }: AstraMemoryGameProps) {
           </div>
 
           {status === 'idle' || status === 'finished' ? (
+            /* Capa de inicio o resultado final */
             <div className="absolute inset-0 grid place-items-center bg-black/34 backdrop-blur-[1px]">
               <div className="max-w-md rounded-[26px] border border-white/15 bg-slate-950/84 p-6 text-center shadow-[0_20px_50px_color-mix(in_srgb,var(--astrais-background)_42%,transparent)]">
                 <p className="text-[0.64rem] uppercase tracking-[0.24em] text-accent-beige-300">

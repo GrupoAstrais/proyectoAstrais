@@ -1,3 +1,4 @@
+// Utilidades para leer, validar y aplicar temas visuales.
 export interface ThemeConfig {
   primary: string
   secondary: string
@@ -33,6 +34,7 @@ const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/
 const DEFAULT_THEME_NAMES = new Set(['default', 'por defecto'])
 
 function normalizeColor(value: unknown, fallback: string) {
+  // Solo acepta colores HEX completos para evitar valores CSS inesperados.
   if (typeof value !== 'string') {
     return fallback
   }
@@ -49,6 +51,7 @@ export function parseThemeConfig(themeColors?: string | null): ThemeConfig {
   try {
     const parsedTheme = JSON.parse(themeColors) as Partial<ThemeConfig>
 
+    // Cada color se valida por separado para mantener fallbacks parciales.
     return {
       primary: normalizeColor(parsedTheme.primary, DEFAULT_THEME_CONFIG.primary),
       secondary: normalizeColor(parsedTheme.secondary, DEFAULT_THEME_CONFIG.secondary),
@@ -77,6 +80,7 @@ function normalizeText(value?: string | null) {
 }
 
 export function getDefaultThemeColorsFromStoreItems(items: StoreThemeSource[] = []) {
+  // Busca el tema por defecto siguiendo varias senales del catalogo.
   const appThemes = items.filter((item) => isAppTheme(item) && typeof item.theme === 'string' && item.theme.trim())
 
   if (!appThemes.length) {
@@ -104,6 +108,7 @@ export function applyThemeColors(themeColors?: string | null, storeItems?: Store
   const theme = parseThemeConfig(resolveThemeColors(themeColors, storeItems))
   const root = document.documentElement
 
+  // Expone el tema como CSS custom properties para todo el frontend.
   root.style.setProperty('--astrais-primary', theme.primary)
   root.style.setProperty('--astrais-secondary', theme.secondary)
   root.style.setProperty('--astrais-tertiary', theme.tertiary)

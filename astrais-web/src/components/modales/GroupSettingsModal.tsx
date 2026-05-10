@@ -33,6 +33,7 @@ interface GroupSettingsModalProps {
     onPassOwnership: (gid: number, newOwnerUserId: number) => Promise<void>;
 }
 
+// Modal centralizado para editar datos, miembros e invitaciones del grupo.
 export default function GroupSettingsModal({
     isOpen,
     onClose,
@@ -60,11 +61,13 @@ export default function GroupSettingsModal({
     const [invites, setInvites] = useState<GroupInvitacionRespuesta[]>([]);
     const [isSubmittingAction, setIsSubmittingAction] = useState<boolean>(false);
     const [actionError, setActionError] = useState<string | null>(null);
+    // El rol inicial decide que acciones sensibles se muestran al usuario.
     const role = initialData.role;
 
     useEffect(() => {
         if (!isOpen) return;
 
+        // Reinicia el estado local cada vez que se abre con otro grupo.
         setName(initialData.name);
         setDescription(initialData.description);
         setPhoto(null);
@@ -86,6 +89,7 @@ export default function GroupSettingsModal({
     const canManageRoles = role === 2;
     const canDeleteGroup = role === 2;
 
+    // Evita duplicar try/catch en acciones administrativas del modal.
     const withActionGuard = useCallback(async (action: () => Promise<void>) => {
         try {
             setActionError(null);
@@ -124,6 +128,7 @@ export default function GroupSettingsModal({
         if (!code.trim()) {
             return '';
         }
+        // Mantiene compatibilidad con enlaces antiguos basados solo en codigo.
         return `${API_BASE_URL}/groups/redirectInvite?code=${encodeURIComponent(code.trim())}`;
     };
 
@@ -152,6 +157,7 @@ export default function GroupSettingsModal({
     };
 
     const loadInvites = useCallback(async () => {
+        // Carga defensiva: si el backend devuelve algo raro, la UI usa lista vacia.
         await withActionGuard(async () => {
             const list = await onLoadInvites(gid);
             setInvites(Array.isArray(list) ? list : []);
@@ -172,6 +178,7 @@ export default function GroupSettingsModal({
         <div className="astrais-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 font-['Space_Grotesk']">
             <div className="astrais-modal-surface rounded-lg w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
                 <div className="overflow-y-auto grow p-6">
+                    {/* Cabecera y cierre del modal */}
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-2xl font-bold text-white">Configuracion del Grupo</h2>
                         <button
@@ -183,6 +190,7 @@ export default function GroupSettingsModal({
                     </div>
 
                     <div className="space-y-6">
+                        {/* Datos basicos del grupo */}
                         <div>
                             <label className="block text-white/75 mb-2">Nombre del grupo</label>
                             <input
@@ -206,6 +214,7 @@ export default function GroupSettingsModal({
                         <div>
                             <h3 className="text-lg font-semibold text-white mb-2">Miembros actuales</h3>
                             <div className="space-y-2 max-h-44 overflow-y-auto pr-2">
+                                {/* Miembros: el map normaliza cada registro antes de pintarlo */}
                                 {(Array.isArray(members) ? members : []).filter(Boolean).map((member) => {
                                     const safeUid = Number.isFinite(member.uid) ? member.uid : -1;
                                     const safeName = (member.name ?? '').trim() || `Usuario ${member.uid}`;
@@ -271,6 +280,7 @@ export default function GroupSettingsModal({
 
                         <div>
                             <h3 className="text-lg font-semibold text-white mb-2">Invitar o añadir miembros</h3>
+                            {/* Alta directa por UID */}
                             <div className="flex gap-2">
                                 <input
                                     type="text"
@@ -344,6 +354,7 @@ export default function GroupSettingsModal({
                                         <p className="text-sm text-white/55">No hay invitaciones registradas.</p>
                                     ) : (
                                         <div className="space-y-2">
+                                            {/* Invitaciones: el map crea una fila con estado y acciones por codigo */}
                                             {invites.map((invite) => {
                                                 const status = getInviteStatus(invite);
                                                 const canRevoke = status === 'Activa';
@@ -390,6 +401,7 @@ export default function GroupSettingsModal({
                     </div>
                 </div>
 
+                {/* Acciones finales segun permisos del usuario */}
                 <div className="border-t border-white/10 p-4 flex justify-between gap-3">
                     <div className='flex justify-start w-1/3 gap-3'>
                         <button disabled={!canDeleteGroup} onClick={() => onDelete({gid, role})} className="px-6 py-2 border border-[color-mix(in_srgb,var(--astrais-error)_50%,transparent)] rounded-md text-white bg-[color-mix(in_srgb,var(--astrais-error)_58%,transparent)] disabled:opacity-50 disabled:cursor-not-allowed font-medium hover:bg-[color-mix(in_srgb,var(--astrais-error)_72%,transparent)] transition-colors">Eliminar grupo </button>

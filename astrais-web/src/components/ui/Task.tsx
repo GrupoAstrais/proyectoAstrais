@@ -12,8 +12,10 @@ interface TareaProps {
   onToggleConfig?: (id: number) => void;
 }
 
+// Tarjeta de tarea con soporte para subtareas y acciones rapidas.
 export default function Task({ onToggleConfig, data, subtasks = [], onComplete, onToggleSubtask }: TareaProps) {
   const hasSubtasks = subtasks.length > 0;
+  // Una tarea compuesta queda completada cuando todas sus subtareas lo estan.
   const allSubtasksCompleted = hasSubtasks && subtasks.every((subtask) => isTaskCompleted(subtask));
   const taskChecked = hasSubtasks ? allSubtasksCompleted : isTaskCompleted(data);
 
@@ -27,6 +29,7 @@ export default function Task({ onToggleConfig, data, subtasks = [], onComplete, 
   };
 
   const subtaskHandle = (subtaskId: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    // Evita que marcar una subtarea active tambien el click de la tarjeta.
     e.stopPropagation();
     void onToggleSubtask?.(data.id, subtaskId);
   };
@@ -46,6 +49,7 @@ export default function Task({ onToggleConfig, data, subtasks = [], onComplete, 
       }`}
     >
       {onToggleConfig && (
+        /* Menu de configuracion de la tarea */
         <button type="button" onClick={configHandle} className="absolute top-1 right-1 z-20">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <circle cx="12" cy="6" r="2" fill="currentColor" />
@@ -56,6 +60,7 @@ export default function Task({ onToggleConfig, data, subtasks = [], onComplete, 
       )}
 
       {hasSubtasks ? (
+        /* Vista de tarea compuesta con subtareas */
         <div className="flex w-full flex-col gap-3">
           <div className="flex flex-row items-start justify-between gap-3 border-b border-white/20 pb-2 pr-8">
             <div className="flex flex-col gap-1">
@@ -70,6 +75,7 @@ export default function Task({ onToggleConfig, data, subtasks = [], onComplete, 
           </div>
 
           <div className="flex flex-col gap-2">
+            {/* Subtareas: cada checkbox se genera desde la lista hija de la tarea */}
             {subtasks.map((subtask) => (
               <label onClick={(e) => e.stopPropagation()} key={subtask.id} className="flex flex-row items-center justify-between gap-3">
                 <span  className={`${!isTaskCompleted(subtask) ? '' : 'text-white/50 line-through decoration-primary-700'}`}>{subtask.titulo}</span>
@@ -86,6 +92,7 @@ export default function Task({ onToggleConfig, data, subtasks = [], onComplete, 
           </div>
         </div>
       ) : (
+        /* Vista de tarea simple */
         <>
           <div className="flex flex-col gap-2 pr-8">
             <h3>{data.titulo}</h3>

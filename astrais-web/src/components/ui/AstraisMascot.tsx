@@ -12,6 +12,7 @@ interface AstraisMascotProps {
   className?: string
 }
 
+// Resuelve la mascota entre recurso equipado, recurso recibido y fallback local.
 export default function AstraisMascot({
   assetUrl,
   fallback = 'primary',
@@ -23,6 +24,7 @@ export default function AstraisMascot({
   const resolvedAssetUrl = assetUrl ?? mascotAssetUrl
   const [animationData, setAnimationData] = React.useState<Record<string, unknown> | null>(null)
   const [hasFailed, setHasFailed] = React.useState(false)
+  // Solo intenta Lottie si el recurso termina en JSON y no ha fallado antes.
   const shouldRenderLottie = isLottieAssetUrl(resolvedAssetUrl) && !hasFailed
 
   React.useEffect(() => {
@@ -35,6 +37,7 @@ export default function AstraisMascot({
 
     const controller = new AbortController()
 
+    // Se cancela la descarga si cambia la mascota o se desmonta el componente.
     const loadAnimation = async () => {
       try {
         const response = await fetch(resolvedAssetUrl!, { signal: controller.signal })
@@ -60,22 +63,24 @@ export default function AstraisMascot({
 
   if (shouldRenderLottie) {
     return (
-      <div className={`aspect-square ${className}`} role="img" aria-label={alt}>
+      <div className={`grid aspect-square place-items-center ${className}`} role="img" aria-label={alt}>
         {animationData ? (
-          <Lottie animationData={animationData} loop autoplay className="h-full w-full" />
+          <Lottie animationData={animationData} loop autoplay className="h-5/6 w-5/6 object-contain" />
         ) : null}
       </div>
     )
   }
 
   return (
-    <img
-      src={hasFailed || !resolvedAssetUrl ? fallbackAsset : resolvedAssetUrl}
-      alt={alt}
-      className={className}
-      onError={(event) => {
-        event.currentTarget.src = fallbackAsset
-      }}
-    />
+    <span className={`grid aspect-square place-items-center ${className}`}>
+      <img
+        src={hasFailed || !resolvedAssetUrl ? fallbackAsset : resolvedAssetUrl}
+        alt={alt}
+        className="h-full w-full object-contain"
+        onError={(event) => {
+          event.currentTarget.src = fallbackAsset
+        }}
+      />
+    </span>
   )
 }

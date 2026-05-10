@@ -11,7 +11,9 @@ import {
   getUserData,
   setEmailLogin,
 } from "../../data/Api";
+import { useVisualPreferences } from "../../context/VisualPreferencesContext";
 
+// Estados de modales y preferencias propias del perfil.
 type ModalType = "edit" | "settings" | "friends" | "share" | null;
 type VisibilitySetting = "public" | "friends" | "private";
 type FriendStatus = "En linea" | "Estudiando" | "Descansando";
@@ -83,6 +85,7 @@ interface ToggleRowProps {
 }
 
 const initialProfile: ProfileState = {
+  // Valores de respaldo mientras se cargan los datos reales del usuario.
   uid: 103944384,
   name: "Astra",
   username: "astra",
@@ -162,6 +165,7 @@ function SurfaceCard({
   children,
   className = "",
 }: SurfaceCardProps) {
+  // Contenedor visual comun para bloques de perfil.
   return (
     <article className={`${surfaceCardClassName} ${className}`}>
       <header className="mb-4">
@@ -210,6 +214,7 @@ function ProfileModal({
 }: ProfileModalProps) {
   if (!isOpen) return null;
 
+  // El click exterior cierra el modal y el interior detiene la propagacion.
   return (
     <div
       className="astrais-profile-modal-overlay fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
@@ -290,6 +295,7 @@ function ToggleRow({ title, description, checked, onToggle }: ToggleRowProps) {
 }
 
 const getFriendStatusClassName = (status: FriendStatus) => {
+  // Traduce el estado textual a una clase de color.
   if (status === "En linea") return "bg-state-success/20 text-state-success";
   if (status === "Estudiando") return "bg-state-warning/20 text-state-warning";
   return "bg-state-info/20 text-state-info";
@@ -297,6 +303,7 @@ const getFriendStatusClassName = (status: FriendStatus) => {
 
 export default function Profile() {
   const navigate = useNavigate();
+  const { avatarAssetUrl } = useVisualPreferences();
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [profile, setProfile] = useState<ProfileState>(initialProfile);
   const [isProfileLoading, setIsProfileLoading] = useState<boolean>(true);
@@ -316,6 +323,7 @@ export default function Profile() {
         setIsProfileLoading(true);
         const user = await getUserData();
         const rawUser = user as unknown as Record<string, unknown>;
+        // Acepta campos nuevos y legacy del backend para el mismo perfil.
         const rawName =
           typeof rawUser.nombre === 'string'
             ? rawUser.nombre
@@ -358,6 +366,7 @@ export default function Profile() {
   useEffect(() => {
     if (!activeModal) return;
 
+    // Bloquea el scroll de fondo y permite cerrar con Escape.
     const previousOverflow = document.body.style.overflow;
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -389,6 +398,7 @@ export default function Profile() {
   }, [shareFeedback]);
 
   const openModal = (modal: Exclude<ModalType, null>) => {
+    // Las ediciones se hacen sobre borradores para poder cancelar sin tocar estado real.
     if (modal === "edit") {
       setDraftProfile(profile);
     }
@@ -415,6 +425,7 @@ export default function Profile() {
   const handleSaveProfile = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    // Normaliza el username antes de enviarlo y guardarlo en pantalla.
     const cleanedName = draftProfile.name.trim();
     const cleanedUsername = draftProfile.username
       .trim()
@@ -463,6 +474,7 @@ export default function Profile() {
     event.preventDefault();
     void (async () => {
       try {
+        // Solo actualiza login por email si el usuario edito esos campos.
         if (authDraftDirty && (emailDraft.trim() || passwordDraft.trim())) {
           if (!emailDraft.trim() || !passwordDraft.trim()) {
             setStatusMessage(
@@ -511,6 +523,7 @@ export default function Profile() {
     }
   };
 
+  // En SSR o tests sin window se conserva una URL relativa.
   const profileUrl =
     typeof window === "undefined"
       ? `/profile?user=${profile.username}`
@@ -540,6 +553,7 @@ export default function Profile() {
 
   const handleNativeShare = async () => {
     if (!navigator.share) {
+      // Si el navegador no soporta compartir, se copia el enlace.
       await handleCopyLink();
       return;
     }
@@ -581,7 +595,9 @@ export default function Profile() {
       <Navbar />
 
       <section className="grid gap-4 px-4 py-6 astrais-scroll min-h-0 max-h-210 max-[1537px]:max-h-210 overflow-y-auto">
+        {/* Layout principal del perfil */}
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-5">
+          {/* Cabecera de perfil */}
           <article
             className={`${surfaceCardClassName} relative col-span-3 overflow-hidden px-6 py-6`}>
             <div className="pointer-events-none absolute inset-0 bg-(--astrais-panel-bg)" />
@@ -625,12 +641,20 @@ export default function Profile() {
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-[auto_1fr]">
                 <div className="flex flex-col items-center gap-3">
                   <div className="rounded-full border border-white/15 bg-accent-beige-300/20 p-3 shadow-[0_10px_24px_color-mix(in_srgb,var(--astrais-background)_30%,transparent)]">
-                    <div className="rounded-full bg-white/95 p-2">
-                      <AstraisMascot
-                        fallback="secondary"
-                        alt="Avatar de Astra"
-                        className="w-28 sm:w-34"
-                      />
+                    <div className="grid h-32 w-32 place-items-center overflow-hidden rounded-full bg-white/95 p-2 sm:h-38 sm:w-38">
+                      {avatarAssetUrl ? (
+                        <img
+                          src={avatarAssetUrl}
+                          alt="Foto de perfil"
+                          className="h-full w-full rounded-full object-cover"
+                        />
+                      ) : (
+                        <AstraisMascot
+                          fallback="secondary"
+                          alt="Avatar de Astra"
+                          className="w-28 sm:w-34"
+                        />
+                      )}
                     </div>
                   </div>
                   <div className="rounded-full border border-white/15 bg-black/25 px-3 py-1 text-sm text-white/80">
@@ -911,6 +935,7 @@ export default function Profile() {
 
           <SurfaceCard eyebrow="Comunidad" title="Tu circulo activo">
             <div className="space-y-3">
+              {/* Amigos destacados: se muestran solo los tres primeros del listado */}
               {profileFriends.slice(0, 3).map((friend) => (
                 <div
                   key={friend.id}
@@ -968,6 +993,7 @@ export default function Profile() {
           </div>
         }
       >
+        {/* Formulario de edicion del perfil */}
         <form
           id="profile-edit-form"
           className="grid grid-cols-1 gap-4 lg:grid-cols-2"
@@ -1090,6 +1116,7 @@ export default function Profile() {
           </div>
         }
       >
+        {/* Formulario de ajustes y privacidad */}
         <form
           id="profile-settings-form"
           className="space-y-5"
@@ -1100,6 +1127,7 @@ export default function Profile() {
               Privacidad
             </p>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              {/* Opciones de visibilidad: el map crea las tres tarjetas de privacidad */}
               {(["public", "friends", "private"] as VisibilitySetting[]).map(
                 (option) => (
                   <button
@@ -1306,6 +1334,7 @@ export default function Profile() {
         onClose={closeModal}
       >
         <div className="space-y-3">
+          {/* Lista completa de amigos: el map convierte cada contacto en una fila de estado */}
           {profileFriends.map((friend) => (
             <div
               key={friend.id}

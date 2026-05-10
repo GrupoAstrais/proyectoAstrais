@@ -1,6 +1,8 @@
 import { NavLink } from 'react-router'
 import logo from '../../assets/logo_w.svg'
+import { useVisualPreferences } from '../../context/VisualPreferencesContext'
 
+// Rutas visibles en la navegacion principal.
 const links = [
   { to: '/home', label: 'Inicio' },
   { to: '/tasks', label: 'Tareas' },
@@ -11,23 +13,30 @@ const links = [
 ]
 
 export default function Navbar() {
+  const { avatarAssetUrl } = useVisualPreferences()
+
+  // El avatar equipado se lee desde las preferencias visuales globales.
   return (
     <nav
       className="relative z-20 mb-1 flex w-full items-center justify-between border-b border-(--astrais-primary)/30 bg-(--astrais-primary)/15 px-3 py-2 text-white font-['Press_Start_2P'] backdrop-blur-sm min-[1400px]:px-4 min-[1400px]:py-2.5"
       aria-label="Navegacion principal"
     >
       <div className="flex min-w-0 flex-1 items-center gap-3 min-[1400px]:gap-4">
+        {/* Logo de acceso al inicio */}
         <div className="flex shrink-0 items-center justify-center">
-          <img className="h-14 w-14 min-[1400px]:h-16 min-[1400px]:w-16" src={logo} alt="Astrais logo" />
+          <NavLink to="/home" className="flex items-center justify-center">
+            <img className="h-14 w-14 min-[1400px]:h-16 min-[1400px]:w-16" src={logo} alt="Astrais logo" />
+          </NavLink>
         </div>
 
         <div className="tabs-scroll relative z-20 min-w-0 flex-1 gap-1.5 min-[1400px]:gap-2">
+          {/* Enlaces principales: se generan desde el array para evitar repetir NavLink */}
           {links.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
               className={({ isActive }) =>
-                `inline-flex min-h-10 min-w-[5.75rem] shrink-0 items-center justify-center whitespace-nowrap rounded-[0.9rem] px-2 py-2 text-center text-[0.5rem] uppercase tracking-widest text-(--astrais-tab-text) no-underline transition duration-200 hover:translate-y-px hover:bg-(--astrais-tab-hover) min-[1200px]:flex-1 min-[1400px]:min-h-11 min-[1400px]:px-3 min-[1400px]:py-2.5 min-[1400px]:text-[0.8rem] ${
+                `inline-flex min-h-10 min-w-23 shrink-0 items-center justify-center whitespace-nowrap rounded-[0.9rem] px-2 py-2 text-center text-[0.5rem] uppercase tracking-widest text-(--astrais-tab-text) no-underline transition duration-200 hover:translate-y-px hover:bg-(--astrais-tab-hover) min-[1200px]:flex-1 min-[1400px]:min-h-11 min-[1400px]:px-3 min-[1400px]:py-2.5 min-[1400px]:text-[0.8rem] ${
                   isActive
                     ? 'border border-(--astrais-tab-active-border) [background:var(--astrais-tab-active-bg)] shadow-[0_10px_24px_color-mix(in_srgb,var(--astrais-background)_36%,transparent)] transition duration-200 text-[1rem] min-[1400px]:text-[0.9rem]'
                     : 'border border-transparent'
@@ -40,9 +49,14 @@ export default function Navbar() {
         </div>
       </div>
 
+      {/* Acceso rapido al perfil del usuario */}
       <NavLink to="/profile" className="ml-3 shrink-0 min-[1400px]:ml-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/55 min-[1400px]:h-11 min-[1400px]:w-11">
-          <p className="pl-1 text-lg text-white min-[1400px]:text-xl">P</p>
+        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-black/55 min-[1400px]:h-11 min-[1400px]:w-11">
+          {avatarAssetUrl ? (
+            <img src={avatarAssetUrl} alt="Foto de perfil" className="h-full w-full object-cover" />
+          ) : (
+            <p className="pl-1 text-lg text-white min-[1400px]:text-xl">P</p>
+          )}
         </div>
       </NavLink>
     </nav>

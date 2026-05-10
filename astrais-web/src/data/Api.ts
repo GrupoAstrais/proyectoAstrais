@@ -6,11 +6,12 @@ import type { IGroup, ITarea } from '../types/Interfaces';
 //export const API_BASE_URL = 'http://192.168.3.148:5684' //url desde las practicas
 // export const API_BASE_URL = 'http://192.168.56.1:5684' //url desde casa
 
-export const API_BASE_URL = `http://${window.location.hostname}:5684`; //'http://127.0.0.1:5684' //variable de entorno para la url, con fallback a localhost
+// Usa el mismo host del frontend para apuntar al backend local.
+export const API_BASE_URL = `http://${window.location.hostname}:5684`;
 
 
 
-// TOKENS
+// Gestion de tokens HTTP.
 
 let jwtToken: string | null = null
 
@@ -31,7 +32,8 @@ const refreshInstance = axios.create({
 
 instance.interceptors.request.use(config => {
     if (localStorage.getItem('jwtToken') && !config.url?.includes('/auth/regenAccess')) {
-        config.headers.Authorization = `Bearer ${localStorage.getItem('jwtToken')}` // 
+        // Anade el token salvo en la llamada que lo regenera.
+        config.headers.Authorization = `Bearer ${localStorage.getItem('jwtToken')}`
     }
     return config
 })
@@ -43,6 +45,7 @@ let failedQueue: Array<{
 }> = [];
 
 const processQueue = (error: unknown, token: string | null = null) => {
+    // Reintenta peticiones que esperaban mientras se renovaba el access token.
     failedQueue.forEach(({ resolve, reject }) => {
         if (error) reject(error);
         else resolve(token!);
@@ -78,6 +81,7 @@ export function resolveStoreAssetUrl(type: string, assetRef?: string | null): st
     const normalizedAssetRef = trimmedAssetRef.replace(/^\/+/, "");
     const normalizedType = type.toUpperCase();
     const hasDirectory = normalizedAssetRef.includes("/");
+    // El backend separa mascotas y piezas de avatar en carpetas distintas.
     const assetPath =
         normalizedType === "PET" && !hasDirectory
             ? `pets/${normalizedAssetRef}`
@@ -115,8 +119,9 @@ instance.interceptors.response.use(
             return Promise.reject(error);
         }
 
+        // Mientras se renueva el token, las demas peticiones quedan en cola.
         if (isRefreshing) {
-            // Ставим в очередь, ждём пока первый обновит токен
+            // Espera a que la primera peticion renueve el token.
             return new Promise((resolve, reject) => {
                 failedQueue.push({ resolve, reject });
             }).then(token => {
@@ -156,7 +161,7 @@ instance.interceptors.response.use(
 );
 
 
-//AUTH DE USUARIO 
+// Autenticacion de usuario.
 
 export async function performLogin(req: LoginRequest) : Promise<void> {
     try {
@@ -404,6 +409,7 @@ export async function getStoreItems() : Promise<StoreItemResponse[]> {
     }
 }
 
+// Tienda: compra y equipamiento de cosmeticos.
 export async function buyStoreItem(id: number) : Promise<void> {
     try {
         const data = await instance.post("/store/buy/" + id);
@@ -444,7 +450,7 @@ export async function equipStoreItem(id: number) : Promise<void> {
     }
 }
 
-// GRUPOS
+// Grupos y gestion de miembros.
 
 export async function getUserGroup() : Promise<UserGroups[]> {
     try {
@@ -754,6 +760,7 @@ export async function groupInvitacion(req: GroupInvitacion) : Promise<GroupInvit
         if (data.status >= 200 && data.status < 300) {
             const payload = data.data as unknown;
 
+            // Normaliza respuestas parciales para que el modal no rompa.
             if (payload && typeof payload === "object") {
                 const obj = payload as Partial<GroupInvitacionRespuesta>;
                 return {
@@ -795,6 +802,7 @@ export async function groupInvitacionLista(gid: number) : Promise<GroupInvitacio
         if (data.status >= 200 && data.status < 300) {
             const payload = data.data as unknown;
 
+            // El backend puede devolver array directo o dentro de una propiedad.
             const mapInvite = (item: unknown): GroupInvitacionRespuesta => {
                 const invite = (item && typeof item === "object" ? item : {}) as Partial<GroupInvitacionRespuesta>;
                 return {
@@ -858,7 +866,7 @@ export async function revokeGroupInvit(req: RevokeGroupInvit) : Promise<void> {
     }
 }
 
-//sinceramente no entendi que es lo que hace, revisar
+// Envia una redireccion de invitacion al backend legacy.
 export async function redirectInvite(req: RevokeGroupInvit) : Promise<void> {
     try {
         const data = await instance.post("/groups/redirectInvite", req);
@@ -1036,6 +1044,7 @@ export async function deleteTask(tid: number) : Promise<void> {
 }
 
 
+// Tipos y utilidades compartidas para tareas.
 export type TTaskTimeFilter = "Today" | "Tomorrow" | "All";
 export type TTaskPriority = 0 | 1 | 2;
 export type TTaskFormType = "HABITO" | "UNICO" | "OBJETIVO";
@@ -1085,6 +1094,7 @@ export const normalizeTaskPriority = (priority: unknown): TTaskPriority => {
         return parsedPriority;
     }
 
+    // Cualquier valor desconocido cae en dificultad media.
     return DEFAULT_TASK_PRIORITY;
 }
 
@@ -1157,6 +1167,7 @@ export const normalizeTaskDateString = (date?: string): string => {
 
     const parsedDate = new Date(date);
 
+    // Se normaliza a YYYY-MM-DD para comparar fechas sin horas.
     if (!Number.isNaN(parsedDate.getTime())) {
         return formatTaskDate(parsedDate);
     }
@@ -1204,7 +1215,7 @@ export const getTaskDate = (task: ITarea): string => {
         return normalizeTaskDateString(task.extraUnico.fechaLimite);
     }
 
-    // Берём реальную дату создания хабита как базу для подсчёта дней
+    // En habitos, la fecha de creacion marca el inicio del ciclo.
     if (task.tipo === "HABITO" && task.fecha_creacion) {
         return normalizeTaskDateString(task.fecha_creacion);
     }
@@ -1225,12 +1236,12 @@ export const getTaskHabitFrequency = (task: ITarea): THabitFrequency | null => {
         return task.tipo === "HABITO" ? "daily" : null;
     }
 
-    // С сервера приходит объект, не массив
+    // Del servidor llega un objeto con la frecuencia del habito.
     if (!Array.isArray(task.extraHabito)) {
         return mapServerFrequencyToUi(task.extraHabito.frequency);
     }
 
-    // Локально созданная задача — массив [numeroFrecuencia, frequency]
+    // Las tareas locales antiguas guardaban la frecuencia como array.
     if (typeof task.extraHabito[1] === "string") {
         const localFrequency = task.extraHabito[1].toLowerCase();
         if (localFrequency === "daily" || localFrequency === "weekly" || localFrequency === "monthly" || localFrequency === "hourly" || localFrequency === "yearly") {
@@ -1249,6 +1260,7 @@ export const isTaskCompleted = (task: ITarea): boolean => {
 export const isTaskVisibleInDefaultList = (task: ITarea, referenceDate: Date = new Date()): boolean => {
     const today = normalizeDate(referenceDate);
 
+    // Oculta tareas unicas vencidas para que el listado por defecto no se llene.
     if (task.tipo === "UNICO" && parseTaskDate(getTaskDate(task)) < today) {
         return false;
     }
@@ -1295,7 +1307,7 @@ export const buildTaskFormData = (task: ITarea): ITaskFormData => {
 }
 
 export const buildCreateTaskRequest = (gid: number, data: ITaskFormData, parentTaskId?: number): CreateTask => {
-    const resolvedParentId = parentTaskId ?? data.idObjetivo; // ← добавь это
+    const resolvedParentId = parentTaskId ?? data.idObjetivo;
 
     const taskType: 'UNICO' | 'HABITO' | 'OBJETIVO' =
         data.taskType === "HABITO"
@@ -1322,7 +1334,7 @@ export const buildCreateTaskRequest = (gid: number, data: ITaskFormData, parentT
     }
 
     if (typeof resolvedParentId === "number") {
-        request.idObjetivo = resolvedParentId; // ← теперь отправляется
+        request.idObjetivo = resolvedParentId;
     }
 
     return request;
@@ -1408,6 +1420,7 @@ export const toggleTaskCompleted = (tasks: ITarea[], taskId: string): ITarea[] =
     }
 
     const taskSubtasks = getTaskSubtasks(tasks, taskIdAsNumber);
+    // Una tarea con subtareas cambia el estado de todo el bloque.
     const shouldComplete =
         taskSubtasks.length > 0
             ? !taskSubtasks.every((subtask) => isTaskCompleted(subtask))
@@ -1450,6 +1463,7 @@ export const toggleSubtaskCompleted = (tasks: ITarea[], taskId: string, subtaskI
 
     const subtasks = getTaskSubtasks(toggledTasks, taskIdAsNumber);
 
+    // El padre refleja si todas sus subtareas quedaron completadas.
     return toggledTasks.map((task) => {
         if (task.id !== taskIdAsNumber) {
             return task;
@@ -1522,6 +1536,7 @@ export const isTaskAvailableOnDate = (task: ITarea, date: Date): boolean => {
     const habitFrequency = getTaskHabitFrequency(task);
 
     if (habitFrequency === "weekly") {
+        // Semanal: solo aparece cada siete dias desde la fecha base.
         return getDiffInDays(selectedDate, taskBaseDate) % 7 === 0;
     }
 

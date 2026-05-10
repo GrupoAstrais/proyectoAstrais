@@ -6,11 +6,13 @@ interface ButtonComplProps {
     handleActive?: (title: string) => void
 }
 
+// Boton de filtro para alternar tareas completadas o pendientes.
 export default function ButtonComplete({title, active, handleActive} : ButtonComplProps) {
 
     const [isActive, setIsActive] = React.useState<boolean>(false);
     const currentActive = active ?? isActive;
 
+    // Usa estado interno solo cuando el padre no controla el valor.
     const changeState = () => {
         if(active === undefined) {
             setIsActive(!isActive)

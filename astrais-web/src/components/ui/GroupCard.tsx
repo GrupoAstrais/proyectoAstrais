@@ -10,10 +10,12 @@ interface GroupCardProps {
     }
 }
 
+// Tarjeta seleccionable con resumen de grupo.
 export default function GroupCard({ onClick, id, activeId, data }: GroupCardProps) {
     const active = Number.isFinite(id) && activeId === id;
 
     const changeState = () => {
+        // Ignora ids invalidos antes de avisar al padre.
         if (!Number.isFinite(id)) return;
         onClick(id);
     };

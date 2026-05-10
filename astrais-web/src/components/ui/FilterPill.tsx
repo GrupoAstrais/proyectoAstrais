@@ -4,6 +4,7 @@ interface FilterPillProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   active?: boolean
 }
 
+// Pildora reutilizable para filtros con estado activo.
 export default function FilterPill({ active = false, className = '', children, ...props }: FilterPillProps) {
   return (
     <button

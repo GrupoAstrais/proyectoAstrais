@@ -1,4 +1,4 @@
-// components/modales/GroupSettingsModal.tsx
+// Modal de creacion de grupos.
 import { useState } from 'react';
 
 interface CreateGroupFormData {
@@ -27,6 +27,7 @@ export default function CreateGroupModal({
 
 
     const handleSubmit = () => {
+        // Envia solo los campos editables y despues limpia el formulario.
         onSave({
             name: name,
             description: description,
@@ -36,6 +37,7 @@ export default function CreateGroupModal({
     };
 
     const handleClose = () => {
+        // Al cancelar se descartan los datos locales para abrir limpio despues.
         cleanModal();
         onClose();
     }
@@ -50,6 +52,7 @@ export default function CreateGroupModal({
         <div className="astrais-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 font-['Space_Grotesk']">
             <div className="astrais-modal-surface flex w-full max-w-2xl flex-col overflow-hidden rounded-lg max-h-[90vh]">
                 <div className="overflow-y-auto grow p-6">
+                    {/* Cabecera del modal de creacion */}
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-2xl font-bold text-white">Crear grupo</h2>
                         <button
@@ -62,6 +65,7 @@ export default function CreateGroupModal({
 
                     <div className="space-y-6">
 
+                        {/* Campos principales del grupo */}
                         <div>
                             <label className="block text-white/75 mb-2">Nombre del grupo</label>
                             <input
@@ -85,6 +89,7 @@ export default function CreateGroupModal({
                     </div>
                 </div>
 
+                {/* Acciones de guardado o cancelacion */}
                 <div className="border-t border-white/10 p-4 flex justify-end gap-3">
                     <button
                         onClick={handleClose}

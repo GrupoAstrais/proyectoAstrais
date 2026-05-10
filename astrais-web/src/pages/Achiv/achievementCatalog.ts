@@ -6,6 +6,7 @@ import {
   type ArcadeStats,
 } from '../Games/gameStorage'
 
+// Catalogo declarativo de logros y sus reglas de progreso.
 export type AchievementCategory = 'Minijuegos' | 'Exploracion' | 'Constancia' | 'Coleccion'
 export type AchievementRarity = 'Comun' | 'Raro' | 'Epico' | 'Legendario'
 export type AchievementFilter = 'all' | 'unlocked' | 'progress' | 'locked'
@@ -195,6 +196,7 @@ const achievementCatalog: AchievementDefinition[] = [
 ]
 
 export function buildAchievements(stats: ArcadeStats, claimedIds: string[]): AchievementViewModel[] {
+  // Calcula progreso y estado visible a partir de estadisticas persistidas.
   return achievementCatalog.map((achievement) => {
     const rawProgress = achievement.getProgress(stats)
     const progress = Math.max(0, Math.min(rawProgress, achievement.goal))
@@ -212,6 +214,7 @@ export function buildAchievements(stats: ArcadeStats, claimedIds: string[]): Ach
 }
 
 export function matchesAchievementFilter(achievement: AchievementViewModel, filter: AchievementFilter) {
+  // Centraliza los filtros para que la vista no repita condiciones.
   if (filter === 'unlocked') {
     return achievement.unlocked
   }

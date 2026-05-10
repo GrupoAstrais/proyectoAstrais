@@ -3,6 +3,7 @@ interface TTProps {
     active?: boolean
 }
 
+// Alterna si la tarea se tratara como compuesta.
 export default function TaskType({active, handleActive} : TTProps) {
     return (
         <>

@@ -3,8 +3,10 @@ import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { confirmRegister, createUser, handleGoogleCallback, loginWithGoogle } from '../../data/Api'
 
+// Politica minima de seguridad para altas por email.
 const PASSWORD_SECURITY_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{12,}$/
 
+// Pantalla de registro con verificacion por codigo.
 export default function Register() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
@@ -18,6 +20,7 @@ export default function Register() {
   const isPasswordSecure = (value: string) => PASSWORD_SECURITY_PATTERN.test(value)
 
   useEffect(() => {
+    // Permite completar registros iniciados por OAuth.
     const params = new URLSearchParams(window.location.search)
     const uid = params.get('uid')
     const hadToRegister = params.get('hadToRegister')
@@ -41,6 +44,7 @@ export default function Register() {
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
+    // Primera fase: crea la cuenta y solicita el codigo de confirmacion.
     if(!codeSent) {
       if (!email.trim() || !password.trim() || !passwordVer.trim()) {
         setError('Complete email and password to create you account.')
@@ -62,6 +66,7 @@ export default function Register() {
         }
       }
     } else {
+      // Segunda fase: confirma el codigo recibido por email.
       if (confirmation.trim() === '') {
         setError('Tienes que introducir el codigo de confirmacion para continuar.')
         return
@@ -83,6 +88,7 @@ export default function Register() {
     >
       <div className="pointer-events-none absolute inset-0" />
 
+      {/* Tarjeta principal de registro */}
       <article
         aria-labelledby="login-title"
         className="relative z-10 w-full max-w-105 -translate-y-[3vh] rounded-[22px] border border-white/15 bg-purple-950/20 px-8 py-10 text-(--astrais-text) shadow-[0_30px_60px_color-mix(in_srgb,var(--astrais-background)_74%,transparent)] backdrop-blur-sm max-[480px]:-translate-y-[1.5vh] max-[480px]:p-5.5"
@@ -94,6 +100,7 @@ export default function Register() {
         </header>
 
         <form className="grid gap-4" onSubmit={onSubmit} noValidate>
+          {/* Datos de nueva cuenta */}
           <div className="grid gap-2">
             <label htmlFor="name" className="text-[0.95rem]">Name</label>
             <input
@@ -156,6 +163,7 @@ export default function Register() {
             />
           </div>
 
+          {/* Codigo de confirmacion mostrado tras crear la cuenta */}
           <div className={`grid gap-2 ${!codeSent && 'hidden'}`}>
             <label htmlFor="passwordVer" className="text-[0.95rem]">Introduce your confirmation code</label>
             <input
@@ -176,6 +184,7 @@ export default function Register() {
             </p>
           ) : null}
 
+          {/* Acciones de registro y OAuth */}
           <button
             className="cursor-pointer rounded-xl border-0 bg-linear-to-r from-purple-800/80 via-pink-500/80 to-purple-600/80 p-3 text-base font-semibold text-white shadow-[0_10px_30px_color-mix(in_srgb,var(--astrais-primary)_45%,transparent)] transition duration-150 ease-in hover:-translate-y-px"
             type="submit"
