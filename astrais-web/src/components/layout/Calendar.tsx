@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import astra from '../../assets/astra.png'
+import AstraisMascot from '../ui/AstraisMascot'
 
 interface CalendarProps {
   className?: string
@@ -65,7 +65,7 @@ export default function Calendar({ className = '', selectedDate, onSelectDate }:
   return (
     <div className='mb-5'>
       <div className="relative flex flex-row p-5">
-        <img src={astra} alt="Mascota Astrais" className="absolute -bottom-3 left-20 z-50 w-2/5 sm:left-0" />
+        <AstraisMascot alt="Mascota Astrais" className="absolute -top-20 sm:-top-12 md:-top-5 lg:-top-14 xl:-top-32 left-20 z-50 w-2/5 sm:left-0" />
       </div>
 
       <div className={`relative overflow-hidden rounded-xl border border-white/15 font-['Space_Grotesk'] ${className}`}>

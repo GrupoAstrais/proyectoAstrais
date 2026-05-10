@@ -197,11 +197,6 @@ export default function Games() {
                       {playableGames} cabina jugable de {visibleGameCatalog.length} registradas.
                     </p>
                   </div>
-                  <img
-                    src={gamePreview}
-                    alt="Vista previa del arcade"
-                    className="h-16 w-16 rounded-2xl border border-white/5 object-cover pl-3 shadow-[0_14px_24px_color-mix(in_srgb,var(--astrais-background)_28%,transparent)] min-[1400px]:h-24 min-[1400px]:w-40"
-                  />
                 </div>
 
                 <div className="mt-4 grid grid-cols-3 gap-2.5">

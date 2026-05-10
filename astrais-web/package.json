@@ -15,6 +15,7 @@
     "@tailwindcss/vite": "^4.2.1",
     "axios": "^1.13.6",
     "draggabilly": "^3.0.0",
+    "lottie-react": "^2.4.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router": "^7.13.0",

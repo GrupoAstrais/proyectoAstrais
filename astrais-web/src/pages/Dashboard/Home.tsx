@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router";
 import Navbar from "../../components/layout/Navbar";
-import astra from "../../assets/astra.png";
 import game from "../../assets/game.png";
 import type { ITarea } from "../../types/Interfaces";
 import Task from "../../components/ui/Task";
 import Achiv from "../../components/ui/Achiv";
 import Modal from "../../components/modales/TaskModal";
-import Pet from "../../components/ui/Pet";
+import AstraisMascot from "../../components/ui/AstraisMascot";
 import NotificationModal from "../../components/modales/NotificationModal";
 import { buildAchievements } from "../Achiv/achievementCatalog";
 import { readArcadeStats } from "../Games/gameStorage";
@@ -329,7 +328,7 @@ export default function Home() {
               <button>Cambiar la mascota</button>
             </NavLink>
           </div>
-          <img className="absolute -bottom-7 -right-56 z-0 w-9/10" src={astra} alt="Astra" />
+          <AstraisMascot className="absolute -right-32 sm:-right-36 sm:-top-44 sm: md:-right-48 md:-top-48 z-0 w-9/10" alt="Astra" />
         </article>
 
         <div className="grid w-full home-scroll min-h-0 max-[1537px]:max-h-80 [@media_(max-width:1537px)_and_(min-height:729.6px)]:max-h-140 overflow-y-auto grid-cols-1 gap-4 lg:grid-cols-3"> 
@@ -364,15 +363,15 @@ export default function Home() {
           </article>
 
           <div className="flex flex-col gap-4 lg:col-span-2">            
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 h-full gap-4 md:grid-cols-2">
               {/*Tienda*/}
               <NavLink to="/shop">
-                <article className="astrais-primary-panel-bg h-80 rounded-2xl border border-white/15 p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
+                <article className="astrais-primary-panel-bg h-full rounded-2xl border border-white/15 p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
                   <header className="mb-3">
                     <h2 className="font-['Press_Start_2P'] text-lg">Tienda</h2>
                   </header>
                   <button className="flex w-full flex-row justify-center">
-                    <Pet url={astra} />
+                    <AstraisMascot className="h-5/6 w-5/6 object-contain" />
                   </button>
                 </article>
               </NavLink>
@@ -388,12 +387,13 @@ export default function Home() {
                 </article>
 
                 {/*Logros*/}
-                <NavLink to="/achievements">
-                  <article className="astrais-primary-panel-bg flex h-56 flex-col gap-4 rounded-2xl border border-white/15 p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
+                
+                  <article className="astrais-primary-panel-bg flex flex-1 flex-col gap-4 rounded-2xl border border-white/15 p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
                     <header className="mb-3">
                       <h2 className="font-['Press_Start_2P'] text-lg">Logros</h2>
                     </header>
-                    <section className="home-scroll min-h-0 max-h-44 overflow-y-auto pr-1">
+                    <section className="home-scroll min-h-0 max-h-48 overflow-y-auto pr-1">
+                      <NavLink to="/achievements">
                       <div className="flex flex-col gap-3">
                         {homeAchievements.map((achievement) => (
                           <div
@@ -417,18 +417,17 @@ export default function Home() {
                           </div>
                         ))}
                       </div>
+                      </NavLink>
                     </section>
-                  </article>
-                </NavLink>
+                  </article>                
               </div>
             </div>
 
-            <article className="astrais-primary-panel-bg rounded-2xl border border-white/15 p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
+            <article className="astrais-primary-panel-bg rounded-2xl  border border-white/15 p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
               <header className="mb-3">
                 <h2 className="font-['Press_Start_2P'] text-lg">Minijuegos</h2>
               </header>
               <div className="flex flex-col items-center gap-4">
-                <img src={game} className="h-auto w-1/2 max-w-30 rounded-lg" alt="Juego" />
                 <NavLink to="/games">
                   <button className="w-full max-w-xs cursor-pointer rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-white transition-colors duration-200 hover:bg-white/20">
                     Jugar ahora

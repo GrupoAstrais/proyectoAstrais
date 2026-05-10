@@ -1,8 +1,8 @@
 import React from 'react'
 import { NavLink } from 'react-router'
 import Navbar from '../../components/layout/Navbar'
-import astra from '../../assets/astra2.png'
 import iconLogro from '../../assets/iconLogro.png'
+import AstraisMascot from '../../components/ui/AstraisMascot'
 import {
   buildAchievements,
   matchesAchievementFilter,
@@ -302,8 +302,8 @@ export default function Achivs() {
                 <>
                   <article className="panel-glow relative min-h-0 overflow-hidden rounded-[26px] border border-white/15 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--astrais-background)_90%,transparent),color-mix(in_srgb,var(--astrais-secondary)_30%,var(--astrais-surface)_70%))] p-3.5 shadow-[0_22px_56px_color-mix(in_srgb,var(--astrais-background)_50%,transparent)] min-[1400px]:p-5">
                     <div className="pointer-events-none absolute -right-8 top-6 h-36 w-36 rounded-full bg-secondary-500/18 blur-3xl" />
-                    <img
-                      src={astra}
+                    <AstraisMascot
+                      fallback="secondary"
                       alt="Mascota Astrais"
                       className="pointer-events-none absolute bottom-0 right-0 hidden h-[clamp(6rem,13vh,8rem)] opacity-75 drop-shadow-[0_14px_28px_color-mix(in_srgb,var(--astrais-background)_58%,transparent)] min-[1400px]:block"
                     />

@@ -4,8 +4,7 @@ import { useNavigate } from "react-router";
 import Navbar from "../../components/layout/Navbar";
 import Achiv from "../../components/ui/Achiv";
 import ProgressBar from "../../components/ui/Reward";
-import astra from "../../assets/astra2.png";
-import astraAvatar from "../../assets/astra.png";
+import AstraisMascot from "../../components/ui/AstraisMascot";
 import {
   deleteUser,
   editUser,
@@ -586,8 +585,7 @@ export default function Profile() {
           <article
             className={`${surfaceCardClassName} relative col-span-3 overflow-hidden px-6 py-6`}>
             <div className="pointer-events-none absolute inset-0 bg-(--astrais-panel-bg)" />
-            <img
-              src={astraAvatar}
+            <AstraisMascot
               alt="Mascota Astrais"
               className="pointer-events-none absolute -right-10 -top-2 hidden h-42 opacity-90 lg:block"
             />
@@ -628,8 +626,8 @@ export default function Profile() {
                 <div className="flex flex-col items-center gap-3">
                   <div className="rounded-full border border-white/15 bg-accent-beige-300/20 p-3 shadow-[0_10px_24px_color-mix(in_srgb,var(--astrais-background)_30%,transparent)]">
                     <div className="rounded-full bg-white/95 p-2">
-                      <img
-                        src={astra}
+                      <AstraisMascot
+                        fallback="secondary"
                         alt="Avatar de Astra"
                         className="w-28 sm:w-34"
                       />

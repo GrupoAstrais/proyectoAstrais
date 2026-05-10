@@ -1,4 +1,4 @@
-import astra from '../../assets/astra.png'
+import AstraisMascot from '../ui/AstraisMascot'
 import Option from '../ui/Options'
 
 interface CustomProps {
@@ -20,7 +20,7 @@ export default function CustomPerfilModal({confirmCustom} : CustomProps) {
             </button>
         </div>
         <div className="h-1/2 bg-[color-mix(in_srgb,var(--astrais-secondary)_68%,transparent)] rounded-t-md flex items-center justify-center">
-            <img src={astra} className='w-2/3 '/> 
+            <AstraisMascot className='w-2/3' /> 
         </div>
         <div className='astrais-modal-soft-surface rounded-b-md'>
             <div className='tabs-scroll bg-[color-mix(in_srgb,var(--astrais-secondary)_62%,transparent)] p-2 m-2 rounded-md'>

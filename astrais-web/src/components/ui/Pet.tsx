@@ -1,10 +1,12 @@
+import AstraisMascot from './AstraisMascot'
+
 interface PetProps {
-    url: string;
+    url?: string;
 }
 export default function Pet({url} : PetProps) {
     return (
         <div>
-            <img src={url} alt="Pet" className="w-20 h-20  object-cover" />
+            <AstraisMascot assetUrl={url} alt="Pet" className="h-20 w-20 object-cover" />
         </div>
   )
 }

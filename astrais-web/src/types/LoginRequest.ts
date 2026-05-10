@@ -27,6 +27,7 @@ export interface UserData {
   ludiones: number;
   personalGid: number;
   equippedPetRef: string | null;
+  equippedAvatarRef: string | null;
   themeColors: string | null;
   isAdmin: boolean;
 }

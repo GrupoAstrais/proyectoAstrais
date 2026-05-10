@@ -64,6 +64,43 @@ export interface StoreItemResponse {
     equipped: boolean;
 }
 
+export function resolveStoreAssetUrl(type: string, assetRef?: string | null): string | null {
+    const trimmedAssetRef = assetRef?.trim();
+
+    if (!trimmedAssetRef) {
+        return null;
+    }
+
+    if (/^https?:\/\//i.test(trimmedAssetRef)) {
+        return trimmedAssetRef;
+    }
+
+    const normalizedAssetRef = trimmedAssetRef.replace(/^\/+/, "");
+    const normalizedType = type.toUpperCase();
+    const hasDirectory = normalizedAssetRef.includes("/");
+    const assetPath =
+        normalizedType === "PET" && !hasDirectory
+            ? `pets/${normalizedAssetRef}`
+            : normalizedType === "AVATAR_PART" && !hasDirectory
+                ? `avatar/${normalizedAssetRef}`
+                : normalizedAssetRef;
+    const encodedAssetPath = assetPath.split("/").map(encodeURIComponent).join("/");
+
+    return `${API_BASE_URL}/assets/${encodedAssetPath}`;
+}
+
+export function resolvePetAssetUrl(assetRef?: string | null): string | null {
+    return resolveStoreAssetUrl("PET", assetRef);
+}
+
+export function isLottieAssetUrl(assetUrl?: string | null): boolean {
+    if (!assetUrl) {
+        return false;
+    }
+
+    return assetUrl.split("?")[0].toLowerCase().endsWith(".json");
+}
+
 instance.interceptors.response.use(
     response => response,
     async error => {
@@ -385,18 +422,11 @@ export async function getStoreItems() : Promise<StoreItemResponse[]> {
     }
 }
 
-export async function buyStoreItem(id: number) : Promise<UserData> {
+export async function buyStoreItem(id: number) : Promise<void> {
     try {
         const data = await instance.post("/store/buy/" + id);
         if (data.status >= 200 && data.status < 300) {
-            /*return Promise.resolve();*/
-
-            console.error("Successful user data retrieval! ");
-            const result = data.data as UserData;
-
-            console.log(data);
-            return result;
-            
+            return Promise.resolve();
         } else {
             console.error("Error en la compra! " + data.data["error"]);
             return Promise.reject();

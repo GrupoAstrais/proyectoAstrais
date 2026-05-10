@@ -25,6 +25,12 @@ class DatabaseDAOImpl : DatabaseDAO {
     private fun nowUtc(): LocalDateTime =
         Clock.System.now().toLocalDateTime(TimeZone.UTC)
 
+    private fun EntidadCosmetico.isDefaultAppTheme(): Boolean =
+        tipo == CosmeticType.APP_THEME && coleccion.equals("DEFAULT", ignoreCase = true)
+
+    private fun EntidadCosmetico.isOwnedByUser(inventarioUsuario: Collection<Int>): Boolean =
+        inventarioUsuario.contains(id.value) || isDefaultAppTheme()
+
     override suspend fun createUser(
             nombreusu: String,
             emailusu: String,
@@ -646,6 +652,10 @@ class DatabaseDAOImpl : DatabaseDAO {
             val usuario = EntidadUsuario.findById(uid) ?: return@suspendTransaction BuyCosmeticResponse.USER_NOT_FOUND
             val cosmetico = EntidadCosmetico.findById(cosmeticId) ?: return@suspendTransaction BuyCosmeticResponse.COSMETIC_NOT_FOUND
 
+            if (cosmetico.isDefaultAppTheme()) {
+                return@suspendTransaction BuyCosmeticResponse.OKAY
+            }
+
             val yaLoTiene =
                     EntidadInventario.find {
                         (TablaInventario.id_usuario eq uid) and (TablaInventario.id_cosmetico eq cosmeticId)
@@ -674,7 +684,7 @@ class DatabaseDAOImpl : DatabaseDAO {
             val inventarioUsuario =
                     EntidadInventario.find { TablaInventario.id_usuario eq uid }.map {
                         it.id_cosmetico.value
-                    }
+                    }.toSet()
             val usuario = EntidadUsuario.findById(uid)
 
             EntidadCosmetico.all().map { cosmetico ->
@@ -682,7 +692,7 @@ class DatabaseDAOImpl : DatabaseDAO {
                         if (cosmetico.tipo == CosmeticType.PET) {
                             usuario?.id_mascota_equipada?.value == cosmetico.id.value
                         } else if (cosmetico.tipo == CosmeticType.APP_THEME) {
-                            usuario?.themeColors == cosmetico.tema
+                            (cosmetico.isDefaultAppTheme() && usuario != null && usuario.themeColors == null) || usuario?.themeColors == cosmetico.tema
                         } else if (cosmetico.tipo == CosmeticType.AVATAR_PART) {
                             usuario?.id_avatar_equipado?.value == cosmetico.id.value
                         } else {
@@ -717,7 +727,7 @@ class DatabaseDAOImpl : DatabaseDAO {
                         theme = cosmetico.tema,
                         coleccion = cosmetico.coleccion, 
                         rarity = cosmetico.rareza.name,
-                        owned = inventarioUsuario.contains(cosmetico.id.value),
+                        owned = cosmetico.isOwnedByUser(inventarioUsuario),
                         equipped = isEquipped
                 )
             }
@@ -730,6 +740,8 @@ class DatabaseDAOImpl : DatabaseDAO {
 
             if (cosmeticId == 0) return@suspendTransaction BuyCosmeticResponse.COSMETIC_NOT_FOUND
 
+            val cosmetico = EntidadCosmetico.findById(cosmeticId) ?: return@suspendTransaction BuyCosmeticResponse.COSMETIC_NOT_FOUND
+
             val loTiene =
                     EntidadInventario.find {
                         (TablaInventario.id_usuario eq uid) and (TablaInventario.id_cosmetico eq cosmeticId)
@@ -737,9 +749,7 @@ class DatabaseDAOImpl : DatabaseDAO {
                     .empty()
                     .not()
 
-            if (loTiene) {
-                val cosmetico = EntidadCosmetico.findById(cosmeticId) ?: return@suspendTransaction BuyCosmeticResponse.COSMETIC_NOT_FOUND
-
+            if (loTiene || cosmetico.isDefaultAppTheme()) {
                 if (cosmetico.tipo == CosmeticType.PET) {
                     if (usuario.id_mascota_equipada?.value == cosmeticId) {
                         usuario.id_mascota_equipada = null
@@ -747,11 +757,7 @@ class DatabaseDAOImpl : DatabaseDAO {
                         usuario.id_mascota_equipada = EntityID(cosmeticId, TablaCosmetico)
                     }
                 } else if (cosmetico.tipo == CosmeticType.APP_THEME) {
-                    if (usuario.themeColors == cosmetico.tema) {
-                        usuario.themeColors = null
-                    } else {
-                        usuario.themeColors = cosmetico.tema
-                    }
+                    usuario.themeColors = if (cosmetico.isDefaultAppTheme()) null else cosmetico.tema
                 } else if (cosmetico.tipo == CosmeticType.AVATAR_PART) {
                     if (usuario.id_avatar_equipado?.value == cosmeticId) {
                         usuario.id_avatar_equipado = null

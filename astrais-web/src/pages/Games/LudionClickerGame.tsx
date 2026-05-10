@@ -1,6 +1,6 @@
 import React from 'react'
-import astra from '../../assets/astra.png'
 import logo from '../../assets/logo_w.svg'
+import AstraisMascot from '../../components/ui/AstraisMascot'
 import { GAME_ROUND_COMPLETED_MESSAGE } from './gameMessages'
 import { GAME_ROUND_SECONDS, getArenaRank, getLudionReward, type GameStatus } from './gameStorage'
 
@@ -100,8 +100,7 @@ export default function LudionClickerGame({ gameId }: LudionClickerGameProps) {
     <main className="relative h-screen min-h-128 overflow-hidden bg-transparent p-4 font-['Space_Grotesk'] text-white">
       <div className="retro-grid pointer-events-none absolute inset-0 opacity-30" />
       <div className="scanlines pointer-events-none absolute inset-0 opacity-20" />
-      <img
-        src={astra}
+      <AstraisMascot
         alt="Mascota Astrais"
         className="pointer-events-none absolute bottom-1 right-4 h-28 opacity-70 drop-shadow-[0_14px_28px_color-mix(in_srgb,var(--astrais-background)_58%,transparent)]"
       />

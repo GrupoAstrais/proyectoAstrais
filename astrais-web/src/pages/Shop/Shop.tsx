@@ -7,9 +7,12 @@ import {
   equipStoreItem,
   getStoreItems,
   getUserData,
+  resolveStoreAssetUrl,
   type StoreItemResponse,
 } from '../../data/Api'
 import { applyThemeColors, parseThemeConfig } from '../../styles/theme'
+import AstraisMascot from '../../components/ui/AstraisMascot'
+import { useVisualPreferences } from '../../context/VisualPreferencesContext'
 
 const PAGE_SIZE = 4
 
@@ -26,6 +29,7 @@ interface ShopDisplayItem extends StoreItemResponse {
   perk: string
   accentFrom: string
   accentTo: string
+  assetUrl: string | null
 }
 
 const SHOP_CATEGORIES: ShopCategory[] = ['Todos', 'Eventos', 'Temas', 'Mascotas', 'Especiales']
@@ -118,6 +122,7 @@ function toDisplayItem(item: StoreItemResponse): ShopDisplayItem {
       : `Cosmetico de la coleccion ${item.coleccion || 'DEFAULT'}.`,
     accentFrom,
     accentTo,
+    assetUrl: resolveStoreAssetUrl(item.type, item.assetRef),
   }
 }
 
@@ -125,7 +130,46 @@ function getSoftGradient(from: string, to: string, fromWeight = '20%', toWeight 
   return `linear-gradient(145deg, color-mix(in srgb, ${from} ${fromWeight}, transparent), color-mix(in srgb, ${to} ${toWeight}, transparent))`
 }
 
+function ShopItemVisual({ item, className = '' }: { item: ShopDisplayItem; className?: string }) {
+  if (item.type === 'APP_THEME') {
+    const theme = parseThemeConfig(item.theme)
+
+    return (
+      <div
+        className={`grid place-items-center rounded-2xl border border-white/12 p-1 ${className}`}
+        style={{
+          background: `linear-gradient(145deg, ${theme.primary}, ${theme.secondary}, ${theme.tertiary})`,
+        }}
+      >
+        <div className="grid h-full w-full grid-cols-2 gap-1 rounded-xl bg-black/18 p-1">
+          {[theme.primary, theme.secondary, theme.tertiary, theme.backgroundAlt].map((color) => (
+            <span key={color} className="rounded-lg border border-white/15" style={{ backgroundColor: color }} />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (item.type === 'PET') {
+    return (
+      <AstraisMascot
+        assetUrl={item.assetUrl}
+        fallback="primary"
+        alt={item.name}
+        className={`object-contain ${className}`}
+      />
+    )
+  }
+
+  if (item.assetUrl) {
+    return <img src={item.assetUrl} alt={item.name} className={`object-contain ${className}`} />
+  }
+
+  return <img src={logo} alt="Astrais logo" className={`object-contain ${className}`} />
+}
+
 export default function Shop() {
+  const { refreshVisualPreferences } = useVisualPreferences()
   const [items, setItems] = React.useState<ShopDisplayItem[]>([])
   const [availableBalance, setAvailableBalance] = React.useState(0)
   const [activeCategory, setActiveCategory] = React.useState<ShopCategory>('Todos')
@@ -217,6 +261,7 @@ export default function Shop() {
 
   const refreshAfterMutation = async () => {
     await loadShopData()
+    await refreshVisualPreferences()
     setError(null)
   }
 
@@ -406,12 +451,12 @@ export default function Shop() {
                       }`}
                     >
                       <div
-                        className="relative overflow-hidden rounded-[20px] border border-white/10 px-3 py-3"
+                        className="relative overflow-hidden h-full rounded-[20px] border border-white/10 px-3 py-3"
                         style={{ background: getSoftGradient(item.accentFrom, item.accentTo) }}
                       >
                         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,color-mix(in_srgb,var(--astrais-text)_16%,transparent),transparent_34%)]" />
                         <div className="relative flex items-start justify-between gap-3">
-                          <div className="min-w-0">
+                          <div>
                             <p className="text-[0.58rem] uppercase tracking-[0.18em] text-slate-300">{item.category}</p>
                             <h3 className="mt-2 truncate text-[0.82rem] font-semibold text-white min-[1400px]:text-[0.94rem]">{item.name}</h3>
                           </div>
@@ -420,8 +465,8 @@ export default function Shop() {
                           </span>
                         </div>
 
-                        <div className="relative mt-10 flex items-end justify-between gap-3">
-                          <img src={logo} alt="Astrais logo" className="h-8 w-8 opacity-85 min-[1400px]:h-11 min-[1400px]:w-11" />
+                        <div className="relative flex h-5/6 place-items-center justify-center gap-3">
+                          <ShopItemVisual item={item} className="h-5/6 w-5/6 opacity-85" />
                           <p className="max-w-48 text-right text-[0.66rem] leading-5 text-slate-200 min-[1400px]:text-[0.76rem]">
                             {item.shortDescription}
                           </p>
@@ -429,7 +474,7 @@ export default function Shop() {
                       </div>
 
                       <div className="mt-3 flex items-center justify-between">
-                        <span className="text-[0.8rem] font-semibold text-[var(--astrais-reward)] min-[1400px]:text-[0.9rem]">{item.price} L</span>
+                        <span className="text-[0.8rem] font-semibold text-(--astrais-reward) min-[1400px]:text-[0.9rem]">{item.price} L</span>
                         <span className="rounded-full border border-white/12 bg-white/6 px-2 py-1 text-[0.54rem] uppercase tracking-[0.14em] text-slate-300">
                           {item.equipped ? 'Equipado' : item.owned ? 'Comprado' : 'Disponible'}
                         </span>
@@ -449,7 +494,7 @@ export default function Shop() {
                 >
                   <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,color-mix(in_srgb,var(--astrais-text)_16%,transparent),transparent_34%)]" />
 
-                  <div className="relative z-10 grid h-full min-h-0 grid-rows-[auto_auto_auto_auto_auto_auto]">
+                  <div className="relative z-10 grid h-full min-h-0 grid-rows-[auto_auto_auto_auto_auto_auto_auto]">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-[0.58rem] uppercase tracking-[0.18em] text-slate-300">{selectedItem.category}</p>
@@ -463,6 +508,10 @@ export default function Shop() {
                     </div>
 
                     <p className="mt-4 text-[0.74rem] leading-5 text-slate-200 min-[1400px]:text-[0.86rem] min-[1400px]:leading-6">{selectedItem.detail}</p>
+
+                    <div className="mt-4 flex items-center justify-center rounded-[22px] border border-white/10 bg-black/18 p-4">
+                      <ShopItemVisual item={selectedItem} className="h-24 w-24 opacity-95 min-[1400px]:h-30 min-[1400px]:w-30" />
+                    </div>
 
                     <div className="mt-4 grid grid-cols-2 gap-3">
                       <div className="rounded-2xl border border-white/10 bg-black/18 p-3">

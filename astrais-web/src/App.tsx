@@ -10,7 +10,7 @@ import Group from './pages/Groups/Groups'
 import Shop from './pages/Shop/Shop'
 import Tasks from './pages/Tasks/Tasks'
 import Profile from './pages/User/Profile'
-import { getStoreItems, getUserData } from './data/Api'
+import { VisualPreferencesProvider } from './context/VisualPreferencesContext'
 import './styles/colors.css'
 import { applyThemeColors } from './styles/theme'
 import GoogleCallback from './pages/Auth/GoogleCallback'
@@ -29,7 +29,11 @@ function RequireAuth() {
   }
 
   const token = window.localStorage.getItem('jwtToken')
-  return token ? <Outlet /> : <Navigate to="/login" replace />
+  return token ? (
+    <VisualPreferencesProvider>
+      <Outlet />
+    </VisualPreferencesProvider>
+  ) : <Navigate to="/login" replace />
 }
 
 function RequireGuest() {
@@ -52,40 +56,6 @@ export default function App() {
 
     if (typeof window === 'undefined' || !window.localStorage.getItem('jwtToken')) {
       applyThemeColors()
-      return
-    }
-
-    let isMounted = true
-
-    const loadCurrentTheme = async () => {
-      try {
-        const userData = await getUserData()
-
-        if (!isMounted) {
-          return
-        }
-
-        if (userData.themeColors) {
-          applyThemeColors(userData.themeColors)
-          return
-        }
-
-        const storeItems = await getStoreItems()
-
-        if (isMounted) {
-          applyThemeColors(null, storeItems)
-        }
-      } catch {
-        if (isMounted) {
-          applyThemeColors()
-        }
-      }
-    }
-
-    void loadCurrentTheme()
-
-    return () => {
-      isMounted = false
     }
   }, [location.pathname])
 
