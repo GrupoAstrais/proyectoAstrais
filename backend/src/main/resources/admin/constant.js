@@ -1,4 +1,4 @@
-const API_URL = window.location.origin;
+const API_URL = window.location.origin; //"http://172.22.238.162:5684";
 const STORAGE_ACCESS = 'astrais_access';
 const STORAGE_REFRESH = 'astrais_refresh';
 
