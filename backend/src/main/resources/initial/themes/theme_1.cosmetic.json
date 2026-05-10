@@ -7,7 +7,7 @@
     },
     "desc" : "",
     "collection" : "DEFAULT",
-    "price" : 0,
+    "price" : 1,
     "rarity" : "COMUN",
     "colors" : {
         "primary": "#8B5CF6",
