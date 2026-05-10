@@ -1020,7 +1020,7 @@ Verificar que el sistema detecta credenciales inválidas y muestra mensajes de e
 El sistema bloquea el acceso correctamente mostrando el mensaje de error.
 
 #### Web
-![Credenciales incorrectas Web](images/screenshots/pruebas/web_credencialesIncorrectos.png)
+![Credenciales incorrectas Web](images/screenshots/pruebas/we_credencialesIncorrectos.png)
 
 #### Android
 ![Validación incorrecta Android](images/screenshots/pruebas/android_validacion_incorrecta.jpg)
@@ -1035,7 +1035,7 @@ Las tareas personales se crean correctamente y aparecen reflejadas en el listado
 #### Web
 ![Creación tarea Web 1](images/screenshots/pruebas/web_creacionTarea.png)
 
-![Creación tarea Web 2](images/screenshots/pruebas/web_creacionTarea2.png)
+![Creación tarea Web 2](images/screenshots/pruebas/web_creacionTarea3.png)
 
 #### Android
 ![Tareas personales Android](images/screenshots/pruebas/android_tareas_personales.jpg)
@@ -1085,16 +1085,7 @@ Los cambios del grupo se actualizan correctamente para todos los usuarios.
 
 ---
 
-### 14.7. Eliminación de tareas
-
-**Resultado obtenido:**  
-Las tareas se eliminan correctamente sin afectar al resto del sistema.
-
-*(Si tienes capturas aquí, las puedes añadir igual que arriba si existen en tu carpeta)*
-
----
-
-### 14.8. Completar tareas y obtener recompensas
+### 14.7. Completar tareas y obtener recompensas
 
 **Resultado obtenido:**  
 El sistema asigna correctamente XP y Ludiones al completar tareas.
@@ -1107,7 +1098,7 @@ El sistema asigna correctamente XP y Ludiones al completar tareas.
 
 ---
 
-### 14.9. Compra de cosméticos en la tienda virtual
+### 14.8. Compra de cosméticos en la tienda virtual
 
 **Resultado obtenido:**  
 La compra de cosméticos funciona correctamente y el inventario se actualiza.
@@ -1119,7 +1110,6 @@ La compra de cosméticos funciona correctamente y el inventario se actualiza.
 
 #### Android
 ![Compra cosméticos Android](images/screenshots/pruebas/android_compra_cosmeticos.jpg)
-```
 
 ## 15. Futuras implementaciones
 
