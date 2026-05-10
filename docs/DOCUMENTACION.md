@@ -989,7 +989,137 @@ El JAR resultante se ubicará en `backend/build/libs/`.
 
 ## 14. Pruebas
 
+## 14. Pruebas
+
 ---
+
+### 14.1. Inicio de sesión de usuario
+
+**Objetivo:**  
+Comprobar que un usuario registrado puede iniciar sesión correctamente y acceder a su cuenta.
+
+**Resultado obtenido:**  
+La autenticación se realizó correctamente tanto en la aplicación web como en Android, redirigiendo al dashboard principal sin errores.
+
+#### Web
+![Login Web](images/screenshots/pruebas/web_login.png)
+
+![Inicio de sesión Web](images/screenshots/pruebas/web_inicioSesion.png)
+
+#### Android
+![Login Android](images/screenshots/pruebas/android_inicio_sesion.jpg)
+
+---
+
+### 14.2. Validación de credenciales incorrectas
+
+**Objetivo:**  
+Verificar que el sistema detecta credenciales inválidas y muestra mensajes de error adecuados.
+
+**Resultado obtenido:**  
+El sistema bloquea el acceso correctamente mostrando el mensaje de error.
+
+#### Web
+![Credenciales incorrectas Web](images/screenshots/pruebas/web_credencialesIncorrectos.png)
+
+#### Android
+![Validación incorrecta Android](images/screenshots/pruebas/android_validacion_incorrecta.jpg)
+
+---
+
+### 14.3. Creación de tareas personales
+
+**Resultado obtenido:**  
+Las tareas personales se crean correctamente y aparecen reflejadas en el listado.
+
+#### Web
+![Creación tarea Web 1](images/screenshots/pruebas/web_creacionTarea.png)
+
+![Creación tarea Web 2](images/screenshots/pruebas/web_creacionTarea2.png)
+
+#### Android
+![Tareas personales Android](images/screenshots/pruebas/android_tareas_personales.jpg)
+
+---
+
+### 14.4. Creación de tareas grupales
+
+**Resultado obtenido:**  
+Las tareas grupales se crean correctamente y se sincronizan con todos los miembros.
+
+#### Web
+![Creación tarea grupo Web](images/screenshots/pruebas/web_creacionTareaGrupo.png)
+
+#### Android
+![Tareas grupales Android](images/screenshots/pruebas/android_tareas_grupales.jpg)
+
+---
+
+### 14.5. Edición de tareas
+
+**Resultado obtenido:**  
+Las tareas pueden modificarse correctamente y los cambios se reflejan al instante.
+
+#### Web
+![Editar tarea Web](images/screenshots/pruebas/web_editarTarea.png)
+
+![Editar tarea Web 2](images/screenshots/pruebas/web_editarTarea2.png)
+
+#### Android
+![Editar tarea Android](images/screenshots/pruebas/android_tarea_editadas.jpg)
+
+---
+
+### 14.6. Edición de grupo
+
+**Resultado obtenido:**  
+Los cambios del grupo se actualizan correctamente para todos los usuarios.
+
+#### Web
+![Editar grupo Web](images/screenshots/pruebas/web_editarGrupo.png)
+
+![Editar grupo Web 2](images/screenshots/pruebas/web_editarGrupo2.png)
+
+#### Android
+![Grupo editado Android](images/screenshots/pruebas/android_grupo_editado.jpg)
+
+---
+
+### 14.7. Eliminación de tareas
+
+**Resultado obtenido:**  
+Las tareas se eliminan correctamente sin afectar al resto del sistema.
+
+*(Si tienes capturas aquí, las puedes añadir igual que arriba si existen en tu carpeta)*
+
+---
+
+### 14.8. Completar tareas y obtener recompensas
+
+**Resultado obtenido:**  
+El sistema asigna correctamente XP y Ludiones al completar tareas.
+
+#### Web
+![Completar tarea Web](images/screenshots/pruebas/web_completarTareaRecompensa.png)
+
+#### Android
+![Completar tarea Android](images/screenshots/pruebas/android_completar_tarea.jpg)
+
+---
+
+### 14.9. Compra de cosméticos en la tienda virtual
+
+**Resultado obtenido:**  
+La compra de cosméticos funciona correctamente y el inventario se actualiza.
+
+#### Web
+![Tienda Web](images/screenshots/pruebas/web_tienda.png)
+
+![Compra tienda Web](images/screenshots/pruebas/web_tiendaCompra.png)
+
+#### Android
+![Compra cosméticos Android](images/screenshots/pruebas/android_compra_cosmeticos.jpg)
+```
 
 ## 15. Futuras implementaciones
 
