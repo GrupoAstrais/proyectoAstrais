@@ -122,7 +122,7 @@ export default function Modal({
         className="astrais-modal-surface flex h-auto w-full max-w-2xl flex-col gap-3 rounded-md p-4 font-['Space_Grotesk']"
       >
         <h1 className="text-center font-['Press_Start_2P'] text-xl">
-          {initialData ? "Editar tarea" : "Anadir tarea"}
+          {initialData ? "Editar tarea" : "Añadir tarea"}
         </h1>
 
         <div className="rounded-md border border-white/15 bg-accent-beige-300/80 px-2 py-4">

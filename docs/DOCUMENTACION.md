@@ -817,8 +817,26 @@ La app Android implementa un patrón **offline-first** mediante:
 
 ## 12. Estructura del Proyecto 
 
-
-![Árbol de directorios del repositorio](diagrams/project-structure.png)
+```text
+proyectoAstrais/
+├── backend/
+├── astrais-web/
+├── AstraisAndroid/
+├── docker/
+├── HojaDeEstilos/
+├── docs/
+│   ├── README.md
+│   ├── DOCUMENTACION.md
+│   ├── MANUAL_DE_USUARIO_ASTRAIS.md
+│   ├── PLAN_DE_PRUEBAS_ANDROID.md
+│   ├── PRUEBAS_ANDROID_ISSUES.md
+│   ├── API.md
+│   ├── images/
+│   ├── diagrams/
+│   └── taiga/
+├── docker-compose.yml
+└── README.md
+```
 
 ---
 
@@ -970,6 +988,188 @@ El JAR resultante se ubicará en `backend/build/libs/`.
 ---
 
 ## 14. Pruebas
+
+---
+
+### 14.1. Inicio de sesión de usuario
+
+**Objetivo:**  
+Comprobar que un usuario registrado puede iniciar sesión correctamente y acceder a su cuenta.
+
+**Pasos realizados:**
+1. Abrir la aplicación.
+2. Introducir correo y contraseña válidos.
+3. Pulsar el botón de iniciar sesión.
+4. Verificar la redirección al dashboard principal.
+
+**Resultado obtenido:**  
+La autenticación se realizó correctamente tanto en la aplicación web como en Android, redirigiendo al dashboard principal sin errores.
+
+#### Web
+![Login Web](images/screenshots/pruebas/web_login.png)
+
+![Inicio de sesión Web](images/screenshots/pruebas/web_inicioSesion.png)
+
+#### Android
+![Login Android](images/screenshots/pruebas/android_inicio_sesion.jpg)
+
+---
+
+### 14.2. Validación de credenciales incorrectas
+
+**Objetivo:**  
+Verificar que el sistema detecta credenciales inválidas y muestra mensajes de error adecuados.
+
+**Pasos realizados:**
+1. Introducir un correo válido.
+2. Introducir una contraseña incorrecta.
+3. Intentar iniciar sesión.
+
+**Resultado obtenido:**  
+El sistema bloquea el acceso correctamente mostrando el mensaje de error.
+
+#### Web
+![Credenciales incorrectas Web](images/screenshots/pruebas/web_credencialesIncorrestos.png)
+
+#### Android
+![Validación incorrecta Android](images/screenshots/pruebas/android_validacion_incorrecta.jpg)
+
+---
+
+### 14.3. Creación de tareas personales
+
+**Objetivo:**  
+Verificar que el sistema detecta credenciales inválidas y muestra mensajes de error adecuados.
+
+**Pasos realizados:**
+1. Acceder al apartado de tareas.
+2. Pulsar en “Añadir tarea”.
+3. Introducir título, descripción(opcional), prioridad y tipo.
+4. Guardar la tarea.
+
+**Resultado obtenido:**  
+Las tareas personales se crean correctamente y aparecen reflejadas en el listado.
+
+#### Web
+![Creación tarea Web 1](images/screenshots/pruebas/web_creacionTarea.png)
+
+![Creación tarea Web 2](images/screenshots/pruebas/web_creacionTarea3.png)
+
+#### Android
+![Tareas personales Android](images/screenshots/pruebas/android_tareas_personales.jpg)
+
+---
+
+### 14.4. Creación de tareas grupales
+
+**Pasos realizados:**
+1. Acceder al apartado de grupos.
+2. Pulsar en “Añadir tarea”.
+3. Introducir título, descripción(opcional), prioridad y tipo.
+4. Guardar la tarea.
+
+**Resultado esperado:**  
+La tarea aparece en la lista de tareas grupales.
+
+**Resultado obtenido:**  
+Las tareas grupales se crean correctamente y se sincronizan con todos los miembros.
+
+#### Web
+![Creación tarea grupo Web](images/screenshots/pruebas/web_creacionTareaGrupo.png)
+
+#### Android
+![Tareas grupales Android](images/screenshots/pruebas/android_tareas_grupales.jpg)
+
+---
+
+### 14.5. Edición de tareas
+
+**Objetivo:**  
+Comprobar que las tareas existentes pueden modificarse correctamente.
+
+**Pasos realizados:**
+1. Seleccionar una tarea ya creada.
+2. Modificar título, descripción o prioridad.
+3. Guardar cambios.
+
+**Resultado obtenido:**  
+Las tareas pueden modificarse correctamente y los cambios se reflejan al instante.
+
+#### Web
+![Editar tarea Web](images/screenshots/pruebas/web_editarTarea.png)
+
+![Editar tarea Web 2](images/screenshots/pruebas/web_editarTarea2.png)
+
+#### Android
+![Editar tarea Android](images/screenshots/pruebas/android_tarea_editadas.jpg)
+
+---
+
+### 14.6. Edición de grupo
+
+**Objetivo:**  
+Validar la modificación de información y configuración de grupos.
+
+**Pasos realizados:**
+1. Acceder a la configuración del grupo.
+2. Cambiar nombre o descripción.
+3. Guardar los cambios.
+
+**Resultado obtenido:**  
+Los cambios del grupo se actualizan correctamente para todos los usuarios.
+
+#### Web
+![Editar grupo Web](images/screenshots/pruebas/web_editarGrupo.png)
+
+![Editar grupo Web 2](images/screenshots/pruebas/web_editarGrupo2.png)
+
+#### Android
+![Grupo editado Android](images/screenshots/pruebas/android_grupo_editado.jpg)
+
+---
+
+### 14.7. Completar tareas y obtener recompensas
+
+**Objetivo:**  
+Validar el sistema de recompensas basado en XP y Ludiones.
+
+**Pasos realizados:**
+1. Seleccionar una tarea pendiente.
+2. Marcarla como completada.
+3. Verificar aumento de XP y Ludiones.
+
+**Resultado obtenido:**  
+El sistema asigna correctamente XP y Ludiones al completar tareas.
+
+#### Web
+![Completar tarea Web](images/screenshots/pruebas/web_completarTareaRecompensa.png)
+
+#### Android
+![Completar tarea Android](images/screenshots/pruebas/android_completar_tarea.jpg)
+
+---
+
+### 14.8. Compra de cosméticos en la tienda virtual
+
+**Objetivo:**  
+Verificar el funcionamiento de la tienda y el sistema de inventario.
+
+**Pasos realizados:**
+1. Acceder a la tienda virtual.
+2. Seleccionar un cosmético.
+3. Confirmar la compra con Ludiones.
+4. Revisar el inventario del usuario.
+
+**Resultado obtenido:**  
+La compra de cosméticos funciona correctamente y el inventario se actualiza.
+
+#### Web
+![Tienda Web](images/screenshots/pruebas/web_tienda.png)
+
+![Compra tienda Web](images/screenshots/pruebas/web_tiendaCompra.png)
+
+#### Android
+![Compra cosméticos Android](images/screenshots/pruebas/android_compra_cosmeticos.jpg)
 
 ---
 

@@ -700,7 +700,7 @@ export default function Profile() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4 ">
                     <ActionButton
                       title="Editar perfil"
                       onClick={() => openModal("edit")}
@@ -950,7 +950,7 @@ export default function Profile() {
         isOpen={activeModal === "edit"}
         onClose={closeModal}
         footer={
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end ">
             <button
               type="button"
               onClick={closeModal}
@@ -973,7 +973,7 @@ export default function Profile() {
           className="grid grid-cols-1 gap-4 lg:grid-cols-2"
           onSubmit={handleSaveProfile}
         >
-          <label className="flex flex-col gap-2">
+          <label className="flex flex-col gap-2 ">
             <span className="text-sm font-semibold text-white">
               Nombre visible
             </span>

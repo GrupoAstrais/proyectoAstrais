@@ -336,7 +336,7 @@ export default function Tasks() {
           onClick={() => { setInitialDataModal(null); setIsOpen(true); }}
           className="shrink-0 ml-auto w-full rounded-md border border-white/15 bg-accent-beige-300/25 px-4 py-2 backdrop-blur-sm md:w-1/5"
         >
-          <span className="text-2xl font-bold">+ Anadir tarea</span>
+          <span className="text-2xl font-bold">+ Añadir tarea</span>
         </button>
 
         {error && <p className="px-10 text-center text-sm text-red-200">{error}</p>}
