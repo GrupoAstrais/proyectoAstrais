@@ -2149,6 +2149,120 @@
         </section>
 
 
+    <!-- RETOS WEB -->
+    <section class="slide">
+        <div class="slide-inner">
+            <h2 class="slide-title-main">Web</h2>
+
+            <div style="display:flex; flex-direction:column; gap:3rem; align-items:center; margin-top:0.5rem;">
+
+                <!-- === RETO 1 === -->
+                <div style="width:100%;">
+                    <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.25rem;">
+                        <div style="width:44px; height:44px; border-radius:50%; background:var(--astrais-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1.1rem; flex-shrink:0;">1</div>
+                        <div style="font-weight:700; font-size:1.3rem; color:#e2e8f0;">OAuth + JWT</div>
+                    </div>
+
+                    <div style="display:flex; align-items:center; justify-content:center; gap:0; padding-left:3.5rem;">
+                        <div style="background:var(--astrais-surface); border:1px solid rgba(139,92,246,0.3); border-radius:12px; padding:1.2rem 1.5rem; text-align:center; min-width:180px;">
+                            <div style="font-weight:600; font-size:1.05rem; color:var(--astrais-primary);">Usuario</div>
+                            <div style="font-size:0.85rem; color:rgba(248,250,252,0.45); margin-top:0.3rem;">Login Google</div>
+                        </div>
+
+                        <div style="width:48px; height:2px; background:rgba(139,92,246,0.4); position:relative;">
+                            <div style="position:absolute; right:-1px; top:-4px; width:0; height:0; border-top:5px solid transparent; border-bottom:5px solid transparent; border-left:8px solid rgba(139,92,246,0.5);"></div>
+                        </div>
+
+                        <div style="background:var(--astrais-surface); border:1px solid rgba(56,189,248,0.3); border-radius:12px; padding:1.2rem 1.5rem; text-align:center; min-width:180px;">
+                            <div style="font-weight:600; font-size:1.05rem; color:var(--astrais-secondary);">Frontend</div>
+                            <div style="font-size:0.85rem; color:rgba(248,250,252,0.45); margin-top:0.3rem;">OAuth callback</div>
+                        </div>
+
+                        <div style="width:48px; height:2px; background:rgba(56,189,248,0.4); position:relative;">
+                            <div style="position:absolute; right:-1px; top:-4px; width:0; height:0; border-top:5px solid transparent; border-bottom:5px solid transparent; border-left:8px solid rgba(56,189,248,0.5);"></div>
+                        </div>
+
+                        <div style="background:var(--astrais-surface); border:1px solid rgba(16,185,129,0.3); border-radius:12px; padding:1.2rem 1.5rem; text-align:center; min-width:180px;">
+                            <div style="font-weight:600; font-size:1.05rem; color:var(--astrais-tertiary);">Backend</div>
+                            <div style="font-size:0.85rem; color:rgba(248,250,252,0.45); margin-top:0.3rem;">valida token Google</div>
+                        </div>
+
+                        <div style="width:48px; height:2px; background:rgba(16,185,129,0.4); position:relative;">
+                            <div style="position:absolute; right:-1px; top:-4px; width:0; height:0; border-top:5px solid transparent; border-bottom:5px solid transparent; border-left:8px solid rgba(16,185,129,0.5);"></div>
+                        </div>
+
+                        <div style="background:var(--astrais-surface); border:1px solid rgba(255,217,61,0.3); border-radius:12px; padding:1.2rem 1.5rem; text-align:center; min-width:180px;">
+                            <div style="font-weight:600; font-size:1.05rem; color:var(--astrais-warning);">JWT Astrais</div>
+                            <div style="font-size:0.85rem; color:rgba(248,250,252,0.45); margin-top:0.3rem;">sesión persistente</div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:center; gap:2.5rem; margin-top:1rem; padding-left:3.5rem;">
+                        <span style="font-size:0.9rem; color:rgba(248,250,252,0.45);">
+                            <span style="color:var(--astrais-error); font-weight:600;">401</span> relogin
+                        </span>
+
+                        <span style="font-size:0.9rem; color:rgba(248,250,252,0.45);">
+                            <span style="color:var(--astrais-warning); font-weight:600;">JWT expirado</span> refresh
+                        </span>
+
+                        <span style="font-size:0.9rem; color:rgba(248,250,252,0.45);">
+                            <span style="color:var(--astrais-tertiary); font-weight:600;">localStorage</span> persistencia
+                        </span>
+                    </div>
+                </div>
+
+                <!-- === RETO 2 === -->
+                <div style="width:100%;">
+                    <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.25rem;">
+                        <div style="width:44px; height:44px; border-radius:50%; background:var(--astrais-secondary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1.1rem; flex-shrink:0;">2</div>
+                        <div style="font-weight:700; font-size:1.3rem; color:#e2e8f0;">Axios + carga desde backend</div>
+                    </div>
+
+                    <div style="display:flex; align-items:stretch; justify-content:center; gap:1.5rem; padding-left:3.5rem;">
+
+                        <div style="flex:1; background:var(--astrais-surface); border:1px solid rgba(56,189,248,0.25); border-radius:12px; padding:1.3rem 1.6rem;">
+                            <div style="font-weight:600; font-size:1.05rem; color:var(--astrais-secondary); margin-bottom:0.5rem;">
+                                Axios Instance
+                            </div>
+
+                            <div style="font-size:0.9rem; color:rgba(248,250,252,0.5); line-height:1.6;">
+                                Cliente HTTP centralizado con interceptores JWT, manejo global de errores y rutas protegidas.
+                            </div>
+                        </div>
+
+                        <div style="flex:1; background:var(--astrais-surface); border:1px solid rgba(16,185,129,0.25); border-radius:12px; padding:1.3rem 1.6rem;">
+                            <div style="font-weight:600; font-size:1.05rem; color:var(--astrais-tertiary); margin-bottom:0.5rem;">
+                                React Query / useEffect
+                            </div>
+
+                            <div style="font-size:0.9rem; color:rgba(248,250,252,0.5); line-height:1.6;">
+                                La tienda, tareas y perfil cargan datos reales desde el backend y sincronizan estado tras cada mutación.
+                            </div>
+                        </div>
+
+                        <div style="flex:1; background:var(--astrais-surface); border:1px solid rgba(244,63,94,0.25); border-radius:12px; padding:1.3rem 1.6rem;">
+                            <div style="font-weight:600; font-size:1.05rem; color:var(--astrais-error); margin-bottom:0.5rem;">
+                                Estados UI
+                            </div>
+
+                            <div style="font-size:0.9rem; color:rgba(248,250,252,0.5); line-height:1.6;">
+                                Loading, retry, errores y actualización optimista para mantener la interfaz fluida.
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+
+
+
+
+
         <!-- 7. AMPLIACIONES Y MEJORAS -->
 
         <section class="slide">

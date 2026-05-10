@@ -1217,8 +1217,8 @@ export default function Groups() {
       )}
 
       {isAuditModalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 font-['Space_Grotesk']">
-          <div className="bg-(--astrais-panel-bg) rounded-lg shadow-xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 font-['Space_Grotesk']">
+          <div className="astrais-primary-panel-bg  rounded-lg shadow-xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between p-5 border-b border-gray-700">
               <h2 className="text-xl font-bold text-white">
                 Historial de auditoria
@@ -1263,8 +1263,8 @@ export default function Groups() {
       />
 
       {isJoinModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 font-['Space_Grotesk']">
-          <div className="bg-(--astrais-panel-bg) rounded-lg shadow-xl w-full max-w-xl p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 font-['Space_Grotesk']">
+          <div className="astrais-primary-panel-bg rounded-lg shadow-xl w-full max-w-xl p-6">
             <h2 className="text-2xl font-bold text-white mb-3">
               Unir al grupo
             </h2>
