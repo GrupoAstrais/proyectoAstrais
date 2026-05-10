@@ -225,7 +225,7 @@ export default function Achivs() {
                 </div>
               </article>
 
-              <section className="achievements-scroll min-h-0 overflow-y-auto pr-1">
+              <section className="astrais-scroll min-h-0 overflow-y-auto pr-1">
                 <div className="grid auto-rows-[minmax(10.75rem,auto)] grid-cols-2 gap-3 min-[1400px]:grid-cols-3 min-[1400px]:gap-4">
                   {filteredAchievements.map((achievement) => (
                     <button
@@ -454,37 +454,8 @@ export default function Achivs() {
       </div>
 
       <style>{`
-        .scanlines {
-          background-image: repeating-linear-gradient(
-            180deg,
-            color-mix(in srgb, var(--astrais-text) 6%, transparent) 0,
-            color-mix(in srgb, var(--astrais-text) 6%, transparent) 1px,
-            transparent 1px,
-            transparent 4px
-          );
-        }
-
-        .panel-glow::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          box-shadow: inset 0 1px 0 color-mix(in srgb, var(--astrais-text) 10%, transparent);
-          pointer-events: none;
-        }
-
         .achievement-card {
           box-shadow: 0 14px 30px color-mix(in srgb, var(--astrais-background) 28%, transparent);
-        }
-
-        .achievements-scroll {
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-          overscroll-behavior: contain;
-        }
-
-        .achievements-scroll::-webkit-scrollbar {
-          display: none;
         }
       `}</style>
     </div>

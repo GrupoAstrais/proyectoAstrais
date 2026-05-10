@@ -212,16 +212,6 @@ export default function LudionClickerGame({ gameId }: LudionClickerGameProps) {
           mask-image: linear-gradient(to bottom, color-mix(in srgb, var(--astrais-background) 80%, transparent), transparent);
         }
 
-        .scanlines {
-          background-image: repeating-linear-gradient(
-            180deg,
-            color-mix(in srgb, var(--astrais-text) 6%, transparent) 0,
-            color-mix(in srgb, var(--astrais-text) 6%, transparent) 1px,
-            transparent 1px,
-            transparent 4px
-          );
-        }
-
         .arena-ring {
           box-shadow:
             0 0 0 1px color-mix(in srgb, var(--astrais-text) 8%, transparent),

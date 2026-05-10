@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router";
 import Navbar from "../../components/layout/Navbar";
-import game from "../../assets/game.png";
 import type { ITarea } from "../../types/Interfaces";
 import Task from "../../components/ui/Task";
 import Achiv from "../../components/ui/Achiv";
@@ -331,7 +330,7 @@ export default function Home() {
           <AstraisMascot className="absolute -right-32 sm:-right-36 sm:-top-44 sm: md:-right-48 md:-top-48 z-0 w-9/10" alt="Astra" />
         </article>
 
-        <div className="grid w-full home-scroll min-h-0 max-[1537px]:max-h-80 [@media_(max-width:1537px)_and_(min-height:729.6px)]:max-h-140 overflow-y-auto grid-cols-1 gap-4 lg:grid-cols-3"> 
+        <div className="grid w-full astrais-scroll min-h-0 max-[1537px]:max-h-80 [@media_(max-width:1537px)_and_(min-height:729.6px)]:max-h-140 overflow-y-auto grid-cols-1 gap-4 lg:grid-cols-3"> 
           {/*Tareas Pendientes*/}
           <article className="astrais-primary-panel-bg flex h-80 lg:h-full min-h-0 flex-col rounded-2xl border border-white/15 p-4 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)]">
             <header className="mb-3">
@@ -340,7 +339,7 @@ export default function Home() {
               </NavLink>
             </header>
             {error && <p className="pb-3 text-sm text-red-200">{error}</p>}
-            <section className="home-scroll min-h-0 max-h-114 overflow-y-auto pr-1">
+            <section className="astrais-scroll min-h-0 max-h-114 overflow-y-auto pr-1">
               <div className="flex flex-col gap-3">
                 {loading ? (
                   <p className="py-4 text-center italic text-gray-300">Cargando tareas...</p>
@@ -392,7 +391,7 @@ export default function Home() {
                     <header className="mb-3">
                       <h2 className="font-['Press_Start_2P'] text-lg">Logros</h2>
                     </header>
-                    <section className="home-scroll min-h-0 max-h-48 overflow-y-auto pr-1">
+                    <section className="astrais-scroll min-h-0 max-h-48 overflow-y-auto pr-1">
                       <NavLink to="/achievements">
                       <div className="flex flex-col gap-3">
                         {homeAchievements.map((achievement) => (
@@ -439,17 +438,6 @@ export default function Home() {
         </div>
       </section>
       
-      <style>{`
-        .home-scroll {
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-          overscroll-behavior: contain;
-        }
-
-        .home-scroll::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
     </main>
   );
 }

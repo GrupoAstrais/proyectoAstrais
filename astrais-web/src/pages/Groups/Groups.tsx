@@ -1096,7 +1096,7 @@ export default function Groups() {
           >
             <span className="text-2xl font-bold">Unir al grupo</span>
           </button>
-          <div className="groups-scroll flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
+          <div className="astrais-scroll flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
             {loadingGroups ? (
             <p className="py-4 text-center italic text-gray-300">
               Cargando grupos...
@@ -1304,17 +1304,6 @@ export default function Groups() {
         </div>
       )}
 
-    <style>{`
-      .groups-scroll {
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-        overscroll-behavior: contain;
-      }
-
-      .groups-scroll::-webkit-scrollbar {
-        display: none;
-      }
-    `}</style>
     </div>
   );
 }

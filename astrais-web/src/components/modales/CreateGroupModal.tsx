@@ -1,10 +1,16 @@
 // components/modales/GroupSettingsModal.tsx
 import { useState } from 'react';
 
+interface CreateGroupFormData {
+    name: string;
+    description: string;
+    photo?: File | null;
+}
+
 interface CreateGroupModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (data: any) => void;
+    onSave: (data: CreateGroupFormData) => void | Promise<void>;
 }
 
 export default function CreateGroupModal({
@@ -24,10 +30,7 @@ export default function CreateGroupModal({
         onSave({
             name: name,
             description: description,
-            photo,
-            members: [],
-            tasks: [],
-            role: 2
+            photo
         });
         cleanModal();
     };

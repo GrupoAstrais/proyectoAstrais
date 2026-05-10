@@ -341,7 +341,7 @@ export default function Tasks() {
 
         {error && <p className="px-10 text-center text-sm text-red-200">{error}</p>}
 
-        <div className="task-scroll grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto px-10 pt-5 sm:grid-cols-4 md:flex md:flex-row md:overflow-hidden">
+        <div className="astrais-scroll grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto px-10 pt-5 sm:grid-cols-4 md:flex md:flex-row md:overflow-hidden">
 
           {/* Diarias */}
           <div className="astrais-primary-panel-bg rounded-2xl border border-white/15 p-4 pb-2 mb-5 sm:col-span-2 shadow-[0_15px_32px_color-mix(in_srgb,var(--astrais-background)_45%,transparent)] md:w-1/3">
@@ -354,7 +354,7 @@ export default function Tasks() {
                 <div className="tabs-scroll w-full justify-start pb-1 sm:justify-center">
                   {renderCompletedFilters(diariasCompletedFilters, toggleCompletedFilter(setDiariasCompletedFilters))}
                 </div>
-                <div className="flex flex-col task-scroll min-h-0 max-h-150 max-[1537px]:max-h-96 overflow-y-auto gap-2">
+                <div className="flex flex-col astrais-scroll min-h-0 max-h-150 max-[1537px]:max-h-96 overflow-y-auto gap-2">
                   {loading ? (
                   <p className="py-4 text-center italic text-gray-300">Cargando tareas...</p>
                   ) : filteredDiariasTasks.length === 0 ? (
@@ -389,7 +389,7 @@ export default function Tasks() {
                 </div>
               </div>
 
-              <div className="flex flex-col task-scroll min-h-0 max-h-150 max-[1537px]:max-h-96 overflow-y-auto gap-2">
+              <div className="flex flex-col astrais-scroll min-h-0 max-h-150 max-[1537px]:max-h-96 overflow-y-auto gap-2">
                 {loading ? (
                   <p className="py-4 text-center italic text-gray-300">Cargando habitos...</p>
                 ) : filteredHabitosTasks.length === 0 ? (
@@ -417,17 +417,6 @@ export default function Tasks() {
 
         </div>
       </div>
-      <style>{`
-        .task-scroll {
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-          overscroll-behavior: contain;
-        }
-
-        .task-scroll::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
     </div>
   );
 }

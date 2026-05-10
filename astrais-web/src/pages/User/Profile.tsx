@@ -251,7 +251,7 @@ function ProfileModal({
           </button>
         </header>
 
-        <div className="profile-scroll max-h-[70vh] overflow-y-auto px-6 py-5">{children}</div>
+        <div className="astrais-scroll max-h-[70vh] overflow-y-auto px-6 py-5">{children}</div>
 
         {footer ? (
           <div className="astrais-profile-modal-band border-t border-white/10 px-6 py-4">{footer}</div>
@@ -580,7 +580,7 @@ export default function Profile() {
     >
       <Navbar />
 
-      <section className="grid gap-4 px-4 py-6 profile-scroll min-h-0 max-h-210 max-[1537px]:max-h-210 overflow-y-auto">
+      <section className="grid gap-4 px-4 py-6 astrais-scroll min-h-0 max-h-210 max-[1537px]:max-h-210 overflow-y-auto">
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-5">
           <article
             className={`${surfaceCardClassName} relative col-span-3 overflow-hidden px-6 py-6`}>
@@ -1330,17 +1330,6 @@ export default function Profile() {
           ))}
         </div>
       </ProfileModal>
-      <style>{`
-        .profile-scroll {
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-          overscroll-behavior: contain;
-        }
-
-        .profile-scroll::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
     </main>
   );
 }

@@ -1,7 +1,6 @@
 import React from 'react'
 import { NavLink } from 'react-router'
 import Navbar from '../../components/layout/Navbar'
-import gamePreview from '../../assets/game.png'
 import { getGameById, visibleGameCatalog } from './gameCatalog'
 import { isGameRoundCompletedMessage } from './gameMessages'
 import {
@@ -65,7 +64,7 @@ export default function Games() {
 
   return (
     <div
-      className="relative h-screen w-screen overflow-hidden font-['Space_Grotesk'] text-white"
+      className="relative h-screen w-screen overflow-hidden font-['Space_Grotesk'] text-white [--astrais-panel-glow-alpha:12%]"
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,color-mix(in_srgb,var(--astrais-primary)_28%,transparent),transparent_36%),radial-gradient(circle_at_bottom_right,color-mix(in_srgb,var(--astrais-tertiary)_16%,transparent),transparent_38%)]" />
       <div className="pointer-events-none absolute inset-0 bg-black/38" />
@@ -88,7 +87,7 @@ export default function Games() {
                 </p>
               </header>
 
-              <div className="relative z-10 mt-4 min-h-0 space-y-2 overflow-y-auto pr-1 catalog-scroll">
+              <div className="relative z-10 mt-4 min-h-0 space-y-2 overflow-y-auto pr-1 astrais-scroll">
                 {visibleGameCatalog.map((game, index) => {
                   const isSelected = selectedGame?.id === game.id
                   const gameStats = getGameStats(arcadeStats, game.id)
@@ -233,7 +232,7 @@ export default function Games() {
                           </div>
                           <div>
                             <p className="text-[0.54rem] uppercase tracking-[0.16em] text-slate-500">Premio</p>
-                            <p className="mt-1 text-[0.92rem] font-semibold text-[var(--astrais-reward)]">{lastRound.reward}</p>
+                            <p className="mt-1 text-[0.92rem] font-semibold text-(--astrais-reward)">{lastRound.reward}</p>
                           </div>
                           <div>
                             <p className="text-[0.54rem] uppercase tracking-[0.16em] text-slate-500">Tiempo</p>
@@ -263,7 +262,7 @@ export default function Games() {
                       </div>
                       <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
                         <div
-                          className="h-full rounded-full bg-linear-to-r from-accent-mint-300 via-[var(--astrais-rarity-legendary)] to-[var(--astrais-rarity-epic)] transition-all duration-300"
+                          className="h-full rounded-full bg-linear-to-r from-accent-mint-300 via-(--astrais-rarity-legendary) to-(--astrais-rarity-epic) transition-all duration-300"
                           style={{ width: `${Math.min(100, Math.round((arcadeStats.totalScore / 220) * 100))}%` }}
                         />
                       </div>
@@ -309,33 +308,6 @@ export default function Games() {
           mask-image: linear-gradient(to bottom, color-mix(in srgb, var(--astrais-background) 80%, transparent), transparent);
         }
 
-        .scanlines {
-          background-image: repeating-linear-gradient(
-            180deg,
-            color-mix(in srgb, var(--astrais-text) 6%, transparent) 0,
-            color-mix(in srgb, var(--astrais-text) 6%, transparent) 1px,
-            transparent 1px,
-            transparent 4px
-          );
-        }
-
-        .panel-glow::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          box-shadow: inset 0 1px 0 color-mix(in srgb, var(--astrais-text) 12%, transparent);
-          pointer-events: none;
-        }
-
-        .catalog-scroll {
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-        }
-
-        .catalog-scroll::-webkit-scrollbar {
-          display: none;
-        }
       `}</style>
     </div>
   )

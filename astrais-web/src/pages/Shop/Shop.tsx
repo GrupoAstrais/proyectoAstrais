@@ -486,7 +486,7 @@ export default function Shop() {
             </section>
 
             {selectedItem ? (
-              <aside className="panel-glow relative col-span-3 grid min-h-0 grid-rows-[minmax(0,1fr)_auto] overflow-y-scroll rounded-[26px] border border-white/15 bg-[linear-gradient(170deg,color-mix(in_srgb,var(--astrais-background)_90%,var(--astrais-background-alt)_10%),color-mix(in_srgb,var(--astrais-background-alt)_82%,var(--astrais-secondary)_18%))] p-3.5 shadow-[0_20px_56px_color-mix(in_srgb,var(--astrais-background)_50%,transparent)] min-[1400px]:p-5">
+              <aside className="panel-glow astrais-scroll relative col-span-3 grid min-h-0 grid-rows-[minmax(0,1fr)_auto] overflow-y-auto rounded-[26px] border border-white/15 bg-[linear-gradient(170deg,color-mix(in_srgb,var(--astrais-background)_90%,var(--astrais-background-alt)_10%),color-mix(in_srgb,var(--astrais-background-alt)_82%,var(--astrais-secondary)_18%))] p-3.5 shadow-[0_20px_56px_color-mix(in_srgb,var(--astrais-background)_50%,transparent)] min-[1400px]:p-5">
                 <div className="pointer-events-none absolute -right-10 top-6 h-36 w-36 rounded-full bg-secondary-500/18 blur-3xl" />
                 <div
                   className="relative min-h-0 overflow-hidden rounded-3xl border border-white/10 p-4"
@@ -608,31 +608,8 @@ export default function Shop() {
       </div>
 
       <style>{`
-        .scanlines {
-          background-image: repeating-linear-gradient(
-            180deg,
-            color-mix(in srgb, var(--astrais-text) 6%, transparent) 0,
-            color-mix(in srgb, var(--astrais-text) 6%, transparent) 1px,
-            transparent 1px,
-            transparent 4px
-          );
-        }
-
-        .panel-glow::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          box-shadow: inset 0 1px 0 color-mix(in srgb, var(--astrais-text) 10%, transparent);
-          pointer-events: none;
-        }
-
         .catalog-card {
           box-shadow: 0 14px 32px color-mix(in srgb, var(--astrais-background) 28%, transparent);
-        }
-
-        ::-webkit-scrollbar {
-          display: none;
         }
       `}</style>
     </div>

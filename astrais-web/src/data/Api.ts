@@ -171,10 +171,7 @@ export async function performLogin(req: LoginRequest) : Promise<void> {
             }
 
             
-            console.log("TOKEN: "+jwtToken);
-            console.log("REFRESH TOKEN: "+jwtRefreshToken);
             
-            console.error("Successful login! ");
             return Promise.resolve();
         } else {
             console.error("Error en el log! " + data.data["error"]);
@@ -193,11 +190,9 @@ export async function performLogin(req: LoginRequest) : Promise<void> {
 
 export async function createUser(req: RegisterRequest) : Promise<void> {
     try {
-        console.log("VERIFY PAYLOAD:", req);
         const data = await instance.post("/auth/register", req);
         if (data.status >= 200 && data.status < 300) {
             
-            console.error("Successful user profile set up! ");
             return Promise.resolve();
         } else {
             console.error("Error en el log! " + data.data["error"]);
@@ -216,11 +211,9 @@ export async function createUser(req: RegisterRequest) : Promise<void> {
 
 export async function confirmRegister(req: VerifyRequest) : Promise<void> {
     try {
-        console.log("VERIFY PAYLOAD VERIFY:", req);
         const data = await instance.post("/auth/verify", req);
         if (data.status >= 200 && data.status < 300) {
             
-            console.error("Successful confirmation! ");
             return Promise.resolve();
         } else {
             console.error("Error en el log! " + data.data["error"]);
@@ -254,9 +247,6 @@ export async function handleGoogleCallback(_uid: number, hadToRegister: boolean,
 
     window.history.replaceState({}, document.title, window.location.pathname)
 
-    console.log("TOKEN: " + jwtToken);
-    console.log("REFRESH TOKEN: " + jwtRefreshToken);
-    console.error("Successful Google login!");
 
     return { hadToRegister };
 }
@@ -267,7 +257,6 @@ export async function setOauth(req: SetOauthRequest): Promise<void> {
     try {
         const data = await instance.post("/auth/setOauth", req);
         if (data.status >= 200 && data.status < 300) {
-            console.error("Successful OAuth link!");
             return Promise.resolve();
         } else {
             console.error("Error en el log! " + data.data["error"]);
@@ -289,7 +278,6 @@ export async function deleteOauth(req: DeleteOauthRequest): Promise<void> {
     try {
         const data = await instance.post("/auth/deleteOauth", req);
         if (data.status >= 200 && data.status < 300) {
-            console.error("Successful OAuth unlink!");
             return Promise.resolve();
         } else {
             console.error("Error en el log! " + data.data["error"]);
@@ -308,11 +296,9 @@ export async function deleteOauth(req: DeleteOauthRequest): Promise<void> {
 
 export async function editUser(req: EditUser) : Promise<void> {
     try {
-        console.log("editUser PAYLOAD:", JSON.stringify(req)); 
         const data = await instance.patch("/auth/editUser", req);
         if (data.status >= 200 && data.status < 300) {
             
-            console.error("Successful user perfil edit! ");
             return Promise.resolve();
         } else {
             console.error("Error en el log! " + data.data["error"]);
@@ -334,7 +320,6 @@ export async function deleteUser() : Promise<void> {
         const data = await instance.delete("/auth/deleteUser");
         if (data.status >= 200 && data.status < 300) {
             
-            console.error("Successful user delete! ");
             return Promise.resolve();
         } else {
             console.error("Error en el log! " + data.data["error"]);
@@ -356,7 +341,6 @@ export async function setEmailLogin(req: SetEmailLogin) : Promise<void> {
         const data = await instance.patch("/auth/setEmailLogin", req);
         if (data.status >= 200 && data.status < 300) {
             
-            console.error("Successful email login edit! ");
             return Promise.resolve();
         } else {
             console.error("Error en el log! " + data.data["error"]);
@@ -376,8 +360,6 @@ export async function setEmailLogin(req: SetEmailLogin) : Promise<void> {
 export async function getUserData() : Promise<UserData> {
     try {
         const response = await instance.get<UserData>("/auth/me");
-        console.error("Successful user data retrieval! ");
-        console.log(response.data);
         const result = response.data;
         return result;
     } catch (err) {
@@ -469,7 +451,6 @@ export async function getUserGroup() : Promise<UserGroups[]> {
 
         const data = await instance.get("/group/userGroups");
         if (data.status >= 200 && data.status < 300) {
-            console.error("Successful user group retrieval! ");
 
             const res = data.data as UserGroupsResponse;
 
@@ -494,7 +475,6 @@ export async function createGroup(req: CreateGroup) : Promise<number> {
 
         const data = await instance.post("/groups/createGroup", req);
         if (data.status >= 200 && data.status < 300) {
-            console.error("Successful group creation! ");
             return data.data["groupId"] as number;
         } else {
             console.error("Error en el log! " + data.data["error"]);
@@ -519,7 +499,6 @@ export async function deleteGroup(gid: number, role: number) : Promise<void> {
             });
 
             if (data.status >= 200 && data.status < 300) {
-                console.error("Successful group deletion! ");
                 return Promise.resolve();
             } else {
                 console.error("Error en el log! " + data.data["error"]);
@@ -545,7 +524,6 @@ export async function editGroup(req: EditGroup) : Promise<void> {
 
         const data = await instance.patch("/groups/editGroup", req);
         if (data.status >= 200 && data.status < 300) {
-            console.error("Successful group edit! ");
             return Promise.resolve();
         } else {
             console.error("Error en el log! " + data.data["error"]);
@@ -571,7 +549,6 @@ export async function addUserToGroup(req: AddUserToGroup) : Promise<void> {
         }));
         if (data.status >= 200 && data.status < 300) {
 
-            console.error("Successful user add to group! ");
             return Promise.resolve();
         } else {
             console.error("Error en el log! " + data.data["error"]);
@@ -593,7 +570,6 @@ export async function userLeaveGroup(uid: number) : Promise<void> {
         const data = await instance.post("/groups/leave",  { gid: uid });
         if (data.status >= 200 && data.status < 300) {
 
-            console.error("Successfuly left group! ");
             return Promise.resolve();
         } else {
             console.error("Error en el log! " + data.data["error"]);
@@ -615,7 +591,6 @@ export async function removeUserFromGroup(req: AddUserToGroup) : Promise<void> {
         const data = await instance.post("/groups/removeUser", req);
         if (data.status >= 200 && data.status < 300) {
 
-            console.error("Successful user remove from group! ");
             return Promise.resolve();
         } else {
             console.error("Error en el log! " + data.data["error"]);
@@ -638,7 +613,6 @@ export async function membersGroups(gid: number) : Promise<MembersResponse[]> {
         if (data.status >= 200 && data.status < 300) {
 
             const res = data.data["members"] as MembersResponse[];
-            console.error("Successful members group array! "+JSON.stringify(res));
 
             return res;
         } else {
@@ -663,7 +637,6 @@ export async function setMemberRole(req: SetMemberRole) : Promise<void> {
 
         if (data.status >= 200 && data.status < 300) {
 
-            console.error("Successful user role assign! ");
             return Promise.resolve();
         } else {
             console.error("Error en el log! " + data.data["error"]);
@@ -686,7 +659,6 @@ export async function eventosGroup(gid: number) : Promise<EventosGrupos[]> {
         if (data.status >= 200 && data.status < 300) {
 
             const res = data.data as EventosGrupos[];
-            console.error("Successful eventos array! ");
 
             return res;
         } else {
@@ -711,7 +683,6 @@ export async function groupInviteLink(req: number) : Promise<string> {
             });
 
         if (data.status >= 200 && data.status < 300) {
-            console.error("Successful inivite link! ");
 
             return data.data["inviteUrl"] as string;
         } else {
@@ -736,7 +707,6 @@ export async function groupJoinByLink(req: string) : Promise<void> {
             });
 
         if (data.status >= 200 && data.status < 300) {
-            console.error("Successful join link! ");
 
             return Promise.resolve();
         } else {
@@ -761,7 +731,6 @@ export async function groupJoinByCode(req: string) : Promise<void> {
             });
 
         if (data.status >= 200 && data.status < 300) {
-            console.error("Successful join code! ");
 
             return Promise.resolve();
         } else {
@@ -783,7 +752,6 @@ export async function groupInvitacion(req: GroupInvitacion) : Promise<GroupInvit
     try {
         const data = await instance.post("/groups/invites", req);
         if (data.status >= 200 && data.status < 300) {
-            console.error("Successful crear invitacion ");
             const payload = data.data as unknown;
 
             if (payload && typeof payload === "object") {
@@ -825,7 +793,6 @@ export async function groupInvitacionLista(gid: number) : Promise<GroupInvitacio
     try {
         const data = await instance.get("/groups/"+gid+"/invites");
         if (data.status >= 200 && data.status < 300) {
-            console.error("Successful lista  invitaciones! ");
             const payload = data.data as unknown;
 
             const mapInvite = (item: unknown): GroupInvitacionRespuesta => {
@@ -874,7 +841,6 @@ export async function revokeGroupInvit(req: RevokeGroupInvit) : Promise<void> {
     try {
         const data = await instance.post("/groups/invites/revoke", req);
         if (data.status >= 200 && data.status < 300) {
-            console.error("Successful lista  invitaciones! ");
 
             return Promise.resolve();
         } else {
@@ -897,7 +863,6 @@ export async function redirectInvite(req: RevokeGroupInvit) : Promise<void> {
     try {
         const data = await instance.post("/groups/redirectInvite", req);
         if (data.status >= 200 && data.status < 300) {
-            console.error("Successful lista  invitaciones! ");
 
             return Promise.resolve();
         } else {
@@ -919,7 +884,6 @@ export async function passOwnershipGroup(req: PassOwnershipGroup) : Promise<void
     try {
         const data = await instance.patch("/groups/passOwnership", req);
         if (data.status >= 200 && data.status < 300) {
-            console.error("Successful ownership pasado! ");
 
             return Promise.resolve();
         } else {
@@ -943,8 +907,6 @@ export async function createTask(req: CreateTask) : Promise<number> {
 
         const data = await instance.post("/tasks", req);
         if (data.status >= 200 && data.status < 300) {
-            console.log("createTask REQUEST:", JSON.stringify(req))
-            console.error("Successful task created! ");
             return data.data["id"] as number;
         } else {
             console.error("Error en el log! " + data.data["error"]);
@@ -966,7 +928,6 @@ export async function getTasksFromGroup(gid: number) : Promise<ITarea[]> {
 
         const data = await instance.post("/tasks/"+gid);
         if (data.status >= 200 && data.status < 300) {
-            console.error("Successful user tasks page retrieval! ");
 
             const res = data.data as UserTasksResponse;
             
@@ -989,10 +950,8 @@ export async function getTasksFromGroup(gid: number) : Promise<ITarea[]> {
 
 export async function editTask(tid: number, req: EditTask) : Promise<void> {
     try {
-        console.log(tid);
         const data = await instance.patch("/tasks/"+tid+"/edit", req);
         if (data.status >= 200 && data.status < 300) {
-            console.error("Successful user task edit! ");
 
             return Promise.resolve();
         } else {
@@ -1015,7 +974,6 @@ export async function completeTask(tid: number) : Promise<void> {
         const data = await instance.patch("/tasks/"+tid+"/complete");
 
         if (data.status >= 200 && data.status < 300) {
-            console.error("Successful user task complete! ");
 
             return Promise.resolve();
         } else {
@@ -1038,7 +996,6 @@ export async function uncompleteTask(tid: number) : Promise<void> {
         const data = await instance.patch("/tasks/"+tid+"/uncomplete");
 
         if (data.status >= 200 && data.status < 300) {
-            console.error("Successful user task uncomplete! ");
 
             return Promise.resolve();
         } else {
@@ -1061,7 +1018,6 @@ export async function deleteTask(tid: number) : Promise<void> {
         const data = await instance.delete("/tasks/"+tid+"/delete");
 
         if (data.status >= 200 && data.status < 300) {
-            console.error("Successful user task delete! ");
 
             return Promise.resolve();
         } else {

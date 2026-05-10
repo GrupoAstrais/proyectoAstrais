@@ -133,6 +133,35 @@ body {
   background: color-mix(in srgb, var(--astrais-background) 30%, transparent);
 }
 
+.astrais-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overscroll-behavior: contain;
+}
+
+.astrais-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.scanlines {
+  background-image: repeating-linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--astrais-text) 6%, transparent) 0,
+    color-mix(in srgb, var(--astrais-text) 6%, transparent) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+}
+
+.panel-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--astrais-text) var(--astrais-panel-glow-alpha, 10%), transparent);
+  pointer-events: none;
+}
+
 .tabs-scroll {
   display: flex;
   gap: 0.5rem;
