@@ -768,8 +768,8 @@ Se documentaron los componentes usando el estilo Glassmorphism.
 
 ### 10.4. Mapa de navegación 
 
-![Mapa de navegación - App Web](images/screenshots/web/mpaNavegacionWeb.jpg)
-![Mapa de navegación - App Android](images/screenshots/app/mpaNavegacionAndroid.jpg)
+![Mapa de navegación - App Web](images/screenshots/web/mapaNavegacionWeb.jpg)
+![Mapa de navegación - App Android](images/screenshots/app/mapaNavegacionAndroid.jpg)
 
 ---
 
