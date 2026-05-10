@@ -989,14 +989,18 @@ El JAR resultante se ubicará en `backend/build/libs/`.
 
 ## 14. Pruebas
 
-## 14. Pruebas
-
 ---
 
 ### 14.1. Inicio de sesión de usuario
 
 **Objetivo:**  
 Comprobar que un usuario registrado puede iniciar sesión correctamente y acceder a su cuenta.
+
+**Pasos realizados:**
+1. Abrir la aplicación.
+2. Introducir correo y contraseña válidos.
+3. Pulsar el botón de iniciar sesión.
+4. Verificar la redirección al dashboard principal.
 
 **Resultado obtenido:**  
 La autenticación se realizó correctamente tanto en la aplicación web como en Android, redirigiendo al dashboard principal sin errores.
@@ -1016,11 +1020,16 @@ La autenticación se realizó correctamente tanto en la aplicación web como en 
 **Objetivo:**  
 Verificar que el sistema detecta credenciales inválidas y muestra mensajes de error adecuados.
 
+**Pasos realizados:**
+1. Introducir un correo válido.
+2. Introducir una contraseña incorrecta.
+3. Intentar iniciar sesión.
+
 **Resultado obtenido:**  
 El sistema bloquea el acceso correctamente mostrando el mensaje de error.
 
 #### Web
-![Credenciales incorrectas Web](images/screenshots/pruebas/we_credencialesIncorrectos.png)
+![Credenciales incorrectas Web](images/screenshots/pruebas/web_credencialesIncorrectos.png)
 
 #### Android
 ![Validación incorrecta Android](images/screenshots/pruebas/android_validacion_incorrecta.jpg)
@@ -1028,6 +1037,15 @@ El sistema bloquea el acceso correctamente mostrando el mensaje de error.
 ---
 
 ### 14.3. Creación de tareas personales
+
+**Objetivo:**  
+Verificar que el sistema detecta credenciales inválidas y muestra mensajes de error adecuados.
+
+**Pasos realizados:**
+1. Acceder al apartado de tareas.
+2. Pulsar en “Añadir tarea”.
+3. Introducir título, descripción(opcional), prioridad y tipo.
+4. Guardar la tarea.
 
 **Resultado obtenido:**  
 Las tareas personales se crean correctamente y aparecen reflejadas en el listado.
@@ -1044,6 +1062,15 @@ Las tareas personales se crean correctamente y aparecen reflejadas en el listado
 
 ### 14.4. Creación de tareas grupales
 
+**Pasos realizados:**
+1. Acceder al apartado de grupos.
+2. Pulsar en “Añadir tarea”.
+3. Introducir título, descripción(opcional), prioridad y tipo.
+4. Guardar la tarea.
+
+**Resultado esperado:**  
+La tarea aparece en la lista de tareas grupales.
+
 **Resultado obtenido:**  
 Las tareas grupales se crean correctamente y se sincronizan con todos los miembros.
 
@@ -1056,6 +1083,14 @@ Las tareas grupales se crean correctamente y se sincronizan con todos los miembr
 ---
 
 ### 14.5. Edición de tareas
+
+**Objetivo:**  
+Comprobar que las tareas existentes pueden modificarse correctamente.
+
+**Pasos realizados:**
+1. Seleccionar una tarea ya creada.
+2. Modificar título, descripción o prioridad.
+3. Guardar cambios.
 
 **Resultado obtenido:**  
 Las tareas pueden modificarse correctamente y los cambios se reflejan al instante.
@@ -1072,6 +1107,14 @@ Las tareas pueden modificarse correctamente y los cambios se reflejan al instant
 
 ### 14.6. Edición de grupo
 
+**Objetivo:**  
+Validar la modificación de información y configuración de grupos.
+
+**Pasos realizados:**
+1. Acceder a la configuración del grupo.
+2. Cambiar nombre o descripción.
+3. Guardar los cambios.
+
 **Resultado obtenido:**  
 Los cambios del grupo se actualizan correctamente para todos los usuarios.
 
@@ -1087,6 +1130,14 @@ Los cambios del grupo se actualizan correctamente para todos los usuarios.
 
 ### 14.7. Completar tareas y obtener recompensas
 
+**Objetivo:**  
+Validar el sistema de recompensas basado en XP y Ludiones.
+
+**Pasos realizados:**
+1. Seleccionar una tarea pendiente.
+2. Marcarla como completada.
+3. Verificar aumento de XP y Ludiones.
+
 **Resultado obtenido:**  
 El sistema asigna correctamente XP y Ludiones al completar tareas.
 
@@ -1099,6 +1150,15 @@ El sistema asigna correctamente XP y Ludiones al completar tareas.
 ---
 
 ### 14.8. Compra de cosméticos en la tienda virtual
+
+**Objetivo:**  
+Verificar el funcionamiento de la tienda y el sistema de inventario.
+
+**Pasos realizados:**
+1. Acceder a la tienda virtual.
+2. Seleccionar un cosmético.
+3. Confirmar la compra con Ludiones.
+4. Revisar el inventario del usuario.
 
 **Resultado obtenido:**  
 La compra de cosméticos funciona correctamente y el inventario se actualiza.
