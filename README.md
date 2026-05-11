@@ -48,14 +48,14 @@ Astraïs resuelve uno de los mayores obstáculos para mantener la productividad 
 ![Dashboard principal](./docs/images/screenshots/app/dashboard.jpg)
 
 ### Gestión de Tareas
-![Tareas](./docs/images/screenshots/app/tasks.png)
+![Tareas](./docs/images/screenshots/app/tareatab.jpg)
 
 ### Sistema de Grupos
-![Grupos](./docs/images/screenshots/app/groups.png)
+![Grupos](./docs/images/screenshots/app/grupotab.jpg)
 
 
 ### Tienda de Cosméticos
-![Tienda](./docs/images/screenshots/app/store.png)
+![Tienda](./docs/images/screenshots/app/storetab.jpg)
 
 
 ## Características Principales
