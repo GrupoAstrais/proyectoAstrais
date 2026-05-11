@@ -1033,10 +1033,7 @@
             <span class="code-keyword">return</span>
         }
 
-        <span class="code-keyword">await</span> performLogin({
-            email: email,
-            passwd: password
-        })
+        <span class="code-keyword">await</span> performLogin({email: email, passwd: password})
         .then(() =&gt; {
             navigate(<span class="code-string">"/home"</span>)
         })
@@ -1203,72 +1200,76 @@
             </div>
         </section>
 
-        <!-- CREAR GRUPO Y ASIGNAR ROLES - WEB -->
-    <section class="slide">
-        <div class="slide-inner">
-            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
-                <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">2</div>
-                <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Crear grupo y asignar roles - Web</div>
-            </div>
-
-            <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
-
-                <!-- MODAL FRONT -->
-                <div class="code-block" style="margin:0;">
-                    <div class="code-header">
-                        <span class="dot red"></span>
-                        <span class="dot yellow"></span>
-                        <span class="dot green"></span>
-                        <span class="filename">CreateGroupModal.tsx</span>
-                    </div>
-    <pre><code><span class="code-keyword">const</span> handleSubmit = () =&gt; {
-        onSave({
-            name: name,
-            description: description,
-            photo,
-            members: [],
-            tasks: [],
-            role: <span class="code-number">2</span>
-        })
-
-        cleanModal()
-    }
-
-    &lt;button
-        onClick={handleSubmit}
-    &gt;
-        Guardar cambios
-    &lt;/button&gt;</code></pre>
+    <!-- CREAR GRUPO Y ASIGNAR ROLES - WEB -->
+        <section class="slide">
+            <div class="slide-inner">
+                <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                    <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">2</div>
+                    <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Crear grupo y asignar roles - Web</div>
                 </div>
 
-                <!-- ROLES -->
-                <div class="code-block" style="margin:0;">
-                    <div class="code-header">
-                        <span class="dot red"></span>
-                        <span class="dot yellow"></span>
-                        <span class="dot green"></span>
-                        <span class="filename">GroupSettingsModal.tsx</span>
+                <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+
+                    <!-- CREAR GRUPO -->
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">GroupsPage.tsx</span>
+                        </div>
+        <pre><code><span class="code-keyword">const</span> handleCreateGroup = <span class="code-keyword">async</span> (data) =&gt; {
+            <span class="code-keyword">try</span> {
+                <span class="code-keyword">const</span> createdGroupId =
+                    <span class="code-keyword">await</span> createGroup({
+                        name: data.name,
+                        desc: data.description,
+                    });
+
+                <span class="code-keyword">const</span> newGroup =
+                    createNewGroup(data, createdGroupId);
+
+                setGroups((prevGroups) =&gt; [
+                    ...prevGroups,
+                    newGroup
+                ]);
+
+                setIsCreateModalOpen(false);
+
+            }</code></pre>
                     </div>
-    <pre><code><span class="code-keyword">const</span> roleLabel = (roleId) =&gt; {
-        <span class="code-keyword">if</span> (roleId === <span class="code-number">2</span>) 
-            <span class="code-keyword">return</span> <span class="code-string">'Owner'</span>
 
-        <span class="code-keyword">if</span> (roleId === <span class="code-number">1</span>) 
-            <span class="code-keyword">return</span> <span class="code-string">'Moderador'</span>
+                    <!-- ASIGNAR ROLES -->
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">GroupSettingsModal.tsx</span>
+                        </div>
+        <pre><code><span class="code-keyword">const</span> setMemberRoleHandler = <span class="code-keyword">async</span> (
+            gid,
+            uid,
+            role,
+        ) =&gt; {
+            <span class="code-keyword">try</span> {
+                <span class="code-keyword">await</span> setMemberRole({
+                    gid,
+                    userId: uid,
+                    role
+                });
 
-        <span class="code-keyword">return</span> <span class="code-string">'Miembro'</span>
-    }
+                <span class="code-keyword">await</span> loadGroupMembers(gid);
 
-    <span class="code-keyword">const</span> canManageMembers = role &gt;= <span class="code-number">1</span>
-    <span class="code-keyword">const</span> canManageRoles = role === <span class="code-number">2</span></code></pre>
+            } </code></pre>
+                    </div>
                 </div>
-            </div>
 
-            <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
-                El frontend permite crear grupos y controla permisos según el rol del usuario.
-            </p>
-        </div>
-    </section>
+                <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                    El frontend permite crear grupos y actualizar roles de miembros mediante llamadas asíncronas al backend.
+                </p>
+            </div>
+        </section>
 
         <!-- CASO 1 - Paso 3: Generar código -->
         <section class="slide">
@@ -1364,36 +1365,7 @@
         setLatestInviteCode(
             newInvite.code ?? <span class="code-string">''</span>
         )
-    }</code></pre>
-                </div>
-
-                <!-- SHOW INVITES -->
-                <div class="code-block" style="margin:0;">
-                    <div class="code-header">
-                        <span class="dot red"></span>
-                        <span class="dot yellow"></span>
-                        <span class="dot green"></span>
-                        <span class="filename">Invitaciones activas</span>
-                    </div>
-    <pre><code>{invites.map((invite) =&gt; {
-        <span class="code-keyword">return</span> (
-            &lt;div&gt;
-                &lt;p&gt;
-                    Codigo: {invite.code}
-                &lt;/p&gt;
-
-                &lt;p&gt;
-                    Estado: {status}
-                &lt;/p&gt;
-
-                &lt;p&gt;
-                    Usos:
-                    {invite.usesCount}/
-                    {invite.maxUses}
-                &lt;/p&gt;
-            &lt;/div&gt;
-        )
-    })}</code></pre>
+    }</code>
                 </div>
             </div>
 
@@ -1471,87 +1443,85 @@
 
         <!-- CASO 1 - Paso 4: Unirse por código (WEB) -->
     <section class="slide">
-        <div class="slide-inner">
-            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
-                <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">4</div>
-                <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Unirse por código — Web</div>
+    <div class="slide-inner">
+        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+            <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">4</div>
+            <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">
+                Unirse por código o enlace — Web
             </div>
+        </div>
 
-            <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+        <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
 
-                <!-- FRONTEND -->
-                <div class="code-block" style="margin:0;">
-                    <div class="code-header">
-                        <span class="dot red"></span>
-                        <span class="dot yellow"></span>
-                        <span class="dot green"></span>
-                        <span class="filename">GroupSettingsModal.tsx</span>
-                    </div>
-
-    <pre><code><span class="code-keyword">const</span> handleGenerateInviteCode = 
-        <span class="code-keyword">async</span> () =&gt; {
-
-        <span class="code-keyword">const</span> newInvite = 
-            <span class="code-keyword">await</span> onGenerateInviteLink(gid);
-
-        setLatestInviteCode(
-            newInvite.code ?? <span class="code-string">""</span>
-        );
-
-        setLatestInviteLink(
-            newInvite.inviteUrl ?? <span class="code-string">""</span>
-        );
-    };
-
-    &lt;button
-        onClick={() =&gt; 
-            void handleGenerateInviteCode()
-        }&gt;
-        Generar código
-    &lt;/button&gt;</code></pre>
+            <!-- FRONTEND -->
+            <div class="code-block" style="margin:0;">
+                <div class="code-header">
+                    <span class="dot red"></span>
+                    <span class="dot yellow"></span>
+                    <span class="dot green"></span>
+                    <span class="filename">Groups.tsx</span>
                 </div>
 
-                <!-- API -->
-                <div class="code-block" style="margin:0;">
-                    <div class="code-header">
-                        <span class="dot red"></span>
-                        <span class="dot yellow"></span>
-                        <span class="dot green"></span>
-                        <span class="filename">Api.ts</span>
-                    </div>
+<pre><code><span class="code-keyword">const</span> handleJoinGroupFromModal = <span class="code-keyword">async</span> () =&gt; {
+    <span class="code-keyword">const</span> value = joinGroupInput.trim();
 
-    <pre><code><span class="code-keyword">export async function</span> 
-    <span class="code-func">joinByCode</span>(code: String) {
-
-        <span class="code-keyword">return await</span> instance.post(
-            <span class="code-string">"/groups/joinByCode"</span>,
-            { code }
-        );
+    <span class="code-keyword">if</span> (!value) {
+        setJoinGroupError(<span class="code-string">"Introduce un codigo o enlace."</span>);
+        <span class="code-keyword">return</span>;
     }
 
-    <span class="code-comment">// JWT automático en requests</span>
-    instance.interceptors.request.use(config =&gt; {
-        <span class="code-keyword">if</span> (
-            localStorage.getItem(
-                <span class="code-string">'jwtToken'</span>
-            )
-        ) {
-            config.headers.Authorization =
-                <span class="code-string">`Bearer ${localStorage.getItem(
-                    'jwtToken'
-                )}`</span>
+    <span class="code-keyword">try</span> {
+        setJoinGroupLoading(<span class="code-keyword">true</span>);
+        setJoinGroupError(<span class="code-keyword">null</span>);
+
+        <span class="code-comment">// Detecta si es link o código</span>
+        <span class="code-keyword">const</span> isLink =
+            value.startsWith(<span class="code-string">"http"</span>) ||
+            value.includes(<span class="code-string">"/"</span>);
+
+        <span class="code-keyword">if</span> (isLink) {
+            <span class="code-keyword">await</span> groupJoinByLink(value);
+        } <span class="code-keyword">else</span> {
+            <span class="code-keyword">await</span> groupJoinByCode(value);
         }
 
-        <span class="code-keyword">return</span> config
-    })</code></pre>
-                </div>
+        window.location.reload();}</code></pre>
             </div>
 
-            <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
-                El frontend genera el enlace/código de invitación y usa JWT automáticamente para autenticarse al unirse al grupo.
-            </p>
+            <!-- API -->
+            <div class="code-block" style="margin:0;">
+                <div class="code-header">
+                    <span class="dot red"></span>
+                    <span class="dot yellow"></span>
+                    <span class="dot green"></span>
+                    <span class="filename">Api.ts</span>
+                </div>
+
+<pre><code><span class="code-keyword">export async function</span> 
+<span class="code-func">groupJoinByCode</span>(code: string) {
+
+    <span class="code-keyword">return await</span> instance.post(
+        <span class="code-string">"/groups/joinByCode"</span>,
+        { code }
+    );
+}
+
+<span class="code-keyword">export async function</span> 
+<span class="code-func">groupJoinByLink</span>(inviteLink: string) {
+
+    <span class="code-keyword">return await</span> instance.post(
+        <span class="code-string">"/groups/joinByLink"</span>,
+        { inviteLink }
+    );
+}</code></pre>
+            </div>
         </div>
-    </section>
+
+        <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+            El usuario puede unirse a un grupo mediante código o enlace de invitación, autenticado automáticamente con JWT.
+        </p>
+    </div>
+</section>
 
 
         <!-- ==================== CASO 2: TAREAS Y TIENDA ==================== -->
@@ -1630,7 +1600,9 @@
             <div class="slide-inner">
                 <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
                     <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-secondary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">1</div>
-                    <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Crear tarea — Web</div>
+                    <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">
+                        Crear tarea — Web
+                    </div>
                 </div>
 
                 <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
@@ -1641,61 +1613,34 @@
                             <span class="dot red"></span>
                             <span class="dot yellow"></span>
                             <span class="dot green"></span>
-                            <span class="filename">TaskModal.tsx</span>
+                            <span class="filename">Tasks.tsx</span>
                         </div>
 
-        <pre><code><span class="code-keyword">const</span> handleSubmit = () =&gt; {
-            onSave({
-                title,
-                description,
-                priority,
-                frequency,
-                type
+        <pre><code><span class="code-keyword">const</span> handleCreate = <span class="code-keyword">async</span> (data: ITaskFormData) =&gt; {
+            <span class="code-keyword">const</span> id = <span class="code-keyword">await</span> createTask(
+                buildCreateTaskRequest(personalGroupId!, data)
+            );
+
+            <span class="code-keyword">const</span> localTask = createLocalTask(data, {
+                gid: personalGroupId!,
+                id,
+                idObjetivo: data.idObjetivo
             });
-        };
 
-        &lt;button
-            onClick={handleSubmit}
-            className=<span class="code-string">"bg-accent-beige-300"</span>
-        &gt;
-            Crear tarea
-        &lt;/button&gt;</code></pre>
+            console.log(<span class="code-string">"Tarea local creada:"</span>, localTask);
+
+            setTasks((prev) =&gt; [...prev, localTask]);
+        };</code></pre>
                     </div>
 
-                    <!-- API -->
-                    <div class="code-block" style="margin:0;">
-                        <div class="code-header">
-                            <span class="dot red"></span>
-                            <span class="dot yellow"></span>
-                            <span class="dot green"></span>
-                            <span class="filename">Api.ts</span>
-                        </div>
-
-        <pre><code><span class="code-keyword">export async function</span> 
-        <span class="code-func">createTask</span>(req: CreateTaskRequest) {
-
-            <span class="code-keyword">const</span> data =
-                <span class="code-keyword">await</span> instance.post(
-                    <span class="code-string">"/tasks"</span>,
-                    req
-                );
-
-            <span class="code-keyword">return</span> data.data;
-        }
-
-        <span class="code-comment">// Access token automático</span>
-        config.headers.Authorization =
-            <span class="code-string">`Bearer ${localStorage.getItem(
-                'jwtToken'
-            )}`</span></code></pre>
-                    </div>
                 </div>
 
                 <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
-                    El frontend envía la tarea al backend y el servidor calcula automáticamente XP y recompensas.
+                    El frontend crea la tarea, la envía al backend y actualiza el estado local.
                 </p>
             </div>
         </section>
+
 
         <!-- CASO 2 - Paso 2: Completar tarea -->
         <section class="slide">
@@ -1758,90 +1703,49 @@
         </section>
 
         <!-- CASO 2 - Paso 2: Completar tarea (WEB) -->
-    <section class="slide">
-        <div class="slide-inner">
-            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
-                <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-secondary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">2</div>
-                <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Completar tarea — Web</div>
-            </div>
-
-            <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
-
-                <!-- FRONTEND -->
-                <div class="code-block" style="margin:0;">
-                    <div class="code-header">
-                        <span class="dot red"></span>
-                        <span class="dot yellow"></span>
-                        <span class="dot green"></span>
-                        <span class="filename">TaskCard.tsx</span>
+        <section class="slide">
+            <div class="slide-inner">
+                <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                    <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-secondary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">2</div>
+                    <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">
+                        Completar tarea — Web
                     </div>
-
-    <pre><code><span class="code-keyword">const</span> handleCompleteTask = 
-        <span class="code-keyword">async</span> (tid: number) =&gt; {
-
-        <span class="code-keyword">await</span> completeTask(tid);
-
-        setTasks(prev =&gt;
-            prev.map(task =&gt;
-                task.id === tid
-                    ? { ...task, completed: true }
-                    : task
-            )
-        );
-    };
-
-    &lt;button
-        onClick={() =&gt;
-            void handleCompleteTask(task.id)
-        }&gt;
-        Completar
-    &lt;/button&gt;</code></pre>
                 </div>
 
-                <!-- API -->
-                <div class="code-block" style="margin:0;">
-                    <div class="code-header">
-                        <span class="dot red"></span>
-                        <span class="dot yellow"></span>
-                        <span class="dot green"></span>
-                        <span class="filename">Api.ts</span>
-                    </div>
+                <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
 
-    <pre><code><span class="code-keyword">export async function</span> 
-    <span class="code-func">completeTask</span>(tid: number) {
+                    <!-- FRONTEND -->
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">Tasks.tsx</span>
+                        </div>
 
-        <span class="code-keyword">return await</span> instance.patch(
-            <span class="code-string">`/tasks/${tid}/complete`</span>
-        );
-    }
+        <pre><code><span class="code-keyword">const</span> handleToggleTask = <span class="code-keyword">async</span> (taskId: number) =&gt; {
+            <span class="code-keyword">const</span> task = tasks.find(t =&gt; t.id === taskId);
+            <span class="code-keyword">if</span> (!task) <span class="code-keyword">return</span>;
 
-    <span class="code-comment">// Si expira el access token</span>
-    <span class="code-comment">// se genera uno nuevo automáticamente</span>
+            <span class="code-keyword">const</span> willComplete = !isTaskCompleted(task);
 
-    <span class="code-keyword">const</span> res = 
-        <span class="code-keyword">await</span> refreshInstance.post(
-            <span class="code-string">"/auth/regenAccess"</span>,
-            {},
-            {
-                headers: {
-                    Authorization:
-                        <span class="code-string">`Bearer ${refreshToken}`</span>
-                }
+            <span class="code-keyword">if</span> (willComplete) {
+                <span class="code-keyword">await</span> completeTask(taskId);
+            } <span class="code-keyword">else</span> {
+                <span class="code-keyword">await</span> uncompleteTask(taskId);
             }
-        );
 
-    localStorage.setItem(
-        <span class="code-string">'jwtToken'</span>,
-        res.data.newAccessToken
-    )</code></pre>
+            setTasks(prev =&gt; toggleTaskCompleted(prev, `${taskId}`));
+        };</code></pre>
+                    </div>
+
                 </div>
-            </div>
 
-            <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
-                El frontend marca la tarea como completada y el sistema refresca automáticamente el JWT si expira.
-            </p>
-        </div>
-    </section>
+                <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                    El frontend marca la tarea como completada o descompletada y actualiza el estado local.
+                </p>
+            </div>
+        </section>
 
         <!-- CASO 2 - Paso 3: Tienda -->
         <section class="slide">
