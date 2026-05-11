@@ -752,7 +752,7 @@
 
     <!-- CONTADOR -->
     <div class="slide-counter">
-        <span id="cur">1</span> /         <span id="tot">31</span>
+        <span id="cur">1</span> /         <span id="tot">53</span>
     </div>
 
     <div class="keyboard-hint">
@@ -1011,8 +1011,8 @@
     <section class="slide">
         <div class="slide-inner">
             <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
-                <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">1</div>
-                <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Login con JWT - Web</div>
+                <div style="width:36px; height:36px; border-radius:50%; background:#61dafb; color:#0D1117; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">W</div>
+                <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Login con JWT — Web</div>
             </div>
 
             <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
@@ -1078,12 +1078,80 @@
         </div>
     </section>
 
+    <!-- LOGIN CON JWT - ANDROID -->
+    <section class="slide">
+        <div class="slide-inner">
+            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-tertiary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">A</div>
+                <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Login con JWT — Android</div>
+            </div>
+
+            <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+                <div class="code-block" style="margin:0;">
+                    <div class="code-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">LoginViewModel.kt</span>
+                    </div>
+    <pre><code><span class="code-keyword">fun</span> <span class="code-func">login</span>(request: LoginRequest) {
+    viewModelScope.launch {
+        _loginState.value = LoginUIState.Loading
+        <span class="code-keyword">try</span> {
+            <span class="code-keyword">val</span> needsOnboarding =
+                repository.login(request)
+            <span class="code-keyword">if</span> (needsOnboarding) {
+                _uiEvent.send(
+                    LoginEvent.NavigateToOnboarding)
+            } <span class="code-keyword">else</span> {
+                _uiEvent.send(
+                    LoginEvent.NavigateToHome)
+            }
+        } <span class="code-keyword">catch</span> (e: Exception) {
+            _loginState.value =
+                LoginUIState.Error(
+                    e.message ?: "Error")
+        }
+    }
+}</code></pre>
+                </div>
+
+                <div class="code-block" style="margin:0;">
+                    <div class="code-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">AuthApi.kt</span>
+                    </div>
+    <pre><code><span class="code-keyword">suspend fun</span> <span class="code-func">performLogin</span>(
+    request: LoginRequest
+): LoginResponse {
+    <span class="code-keyword">val</span> req = client.post(
+        <span class="code-string">"$BASE_URL/auth/login"</span>) {
+        contentType(ContentType.Application.Json)
+        setBody(request)
+    }
+    <span class="code-keyword">if</span> (req.status != HttpStatusCode.OK) {
+        <span class="code-keyword">val</span> err = req.body&lt;ServerErrorResponse&gt;()
+        error(err.errorText ?: "Error")
+    }
+    <span class="code-keyword">return</span> req.body&lt;LoginResponse&gt;()
+}</code></pre>
+                </div>
+            </div>
+
+            <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                El ViewModel expone estados (Idle / Loading / Error) y eventos de navegación vía Channel. La API gestiona errores HTTP con mensajes del servidor.
+            </p>
+        </div>
+    </section>
+
     <!-- REFRESH TOKEN AUTOMATICO - WEB -->
     <section class="slide">
         <div class="slide-inner">
             <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
-                <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">2</div>
-                <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Refresh Token automático</div>
+                <div style="width:36px; height:36px; border-radius:50%; background:#61dafb; color:#0D1117; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">W</div>
+                <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Refresh Token automático — Web</div>
             </div>
 
             <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
@@ -1139,6 +1207,88 @@
 
             <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
                 Cuando el access token expira, el frontend usa automáticamente el refresh token para obtener uno nuevo.
+            </p>
+        </div>
+    </section>
+
+    <!-- REFRESH TOKEN AUTOMATICO - ANDROID -->
+    <section class="slide">
+        <div class="slide-inner">
+            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-tertiary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">A</div>
+                <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Refresh Token automático — Android</div>
+            </div>
+
+            <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+                <div class="code-block" style="margin:0;">
+                    <div class="code-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">KtorClient.kt — Configuración Auth</span>
+                    </div>
+    <pre><code>install(Auth) {
+    bearer {
+        loadTokens {
+            BearerTokens(
+                accessToken =
+                    sessionManager.getAccessToken() ?: "",
+                refreshToken =
+                    sessionManager.getRefreshToken() ?: ""
+            )
+        }
+
+        refreshTokens {
+            <span class="code-keyword">val</span> refresh =
+                sessionManager.getRefreshToken()
+                ?: <span class="code-keyword">return</span>@refreshTokens <span class="code-keyword">null</span>
+            <span class="code-keyword">val</span> response: RegenAccessResponse =
+                client.post(
+                    <span class="code-string">"${BASE_URL}/auth/regenAccess"</span>) {
+                    bearerAuth(refresh)
+                }.body()
+
+            sessionManager.saveTokens(
+                response.newAccessToken, refresh)
+
+            BearerTokens(
+                response.newAccessToken, refresh)
+        }
+    }
+}</code></pre>
+                </div>
+
+                <div class="code-block" style="margin:0;">
+                    <div class="code-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">SessionManager.kt</span>
+                    </div>
+    <pre><code><span class="code-keyword">fun</span> <span class="code-func">saveTokens</span>(
+    access: String,
+    refresh: String
+) {
+    prefs.edit()
+        .putString(KEY_ACCESS, access)
+        .putString(KEY_REFRESH, refresh)
+        .apply()
+}
+
+<span class="code-keyword">fun</span> <span class="code-func">getAccessToken</span>(): String? =
+    prefs.getString(KEY_ACCESS, <span class="code-keyword">null</span>)
+
+<span class="code-keyword">fun</span> <span class="code-func">getRefreshToken</span>(): String? =
+    prefs.getString(KEY_REFRESH, <span class="code-keyword">null</span>)
+
+<span class="code-keyword">fun</span> <span class="code-func">clear</span>() {
+    prefs.edit().clear().apply()
+}</code></pre>
+                </div>
+            </div>
+
+            <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                Ktor maneja automáticamente la renovación del token via el plugin Auth con BearerTokens. Los tokens se almacenan en SharedPreferences cifrado.
             </p>
         </div>
     </section>
@@ -1204,8 +1354,8 @@
         <section class="slide">
             <div class="slide-inner">
                 <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
-                    <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">2</div>
-                    <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Crear grupo y asignar roles - Web</div>
+                    <div style="width:36px; height:36px; border-radius:50%; background:#61dafb; color:#0D1117; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">W</div>
+                    <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Crear grupo y asignar roles — Web</div>
                 </div>
 
                 <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
@@ -1267,6 +1417,70 @@
 
                 <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
                     El frontend permite crear grupos y actualizar roles de miembros mediante llamadas asíncronas al backend.
+                </p>
+            </div>
+        </section>
+
+    <!-- CREAR GRUPO Y ASIGNAR ROLES - ANDROID -->
+        <section class="slide">
+            <div class="slide-inner">
+                <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                    <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-tertiary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">A</div>
+                    <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Crear grupo y asignar roles — Android</div>
+                </div>
+
+                <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">GroupViewModel.kt</span>
+                        </div>
+        <pre><code><span class="code-keyword">fun</span> <span class="code-func">createGroup</span>(name: String, desc: String) {
+    viewModelScope.launch {
+        _state.update { it.copy(isLoading = <span class="code-keyword">true</span>) }
+        <span class="code-keyword">try</span> {
+            repository.createGroup(name, desc)
+            refreshGroupsSuspend()
+            snackbarManager.showMessage(
+                <span class="code-string">"Grupo creado correctamente"</span>)
+        } <span class="code-keyword">catch</span> (e: Exception) {
+            _state.update { it.copy(isLoading = <span class="code-keyword">false</span>) }
+            snackbarManager.showMessage(
+                e.message ?: <span class="code-string">"Error al crear grupo"</span>)
+        }
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">GroupApi.kt</span>
+                        </div>
+        <pre><code><span class="code-keyword">suspend fun</span> <span class="code-func">createGroup</span>(
+    request: CreateGroupRequest
+): Int {
+    <span class="code-keyword">val</span> req = client.post(
+        <span class="code-string">"$BASE_URL/groups/createGroup"</span>) {
+        contentType(ContentType.Application.Json)
+        setBody(request)
+    }
+    <span class="code-keyword">if</span> (req.status != HttpStatusCode.OK
+        && req.status != HttpStatusCode.Created) {
+        <span class="code-keyword">val</span> raw = req.bodyAsText()
+        error(parseError(raw))
+    }
+    <span class="code-keyword">return</span> req.body&lt;CreateGroupResponse&gt;().groupId
+}</code></pre>
+                    </div>
+                </div>
+
+                <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                    El ViewModel gestiona el estado de carga y muestra snackbars. La API encapsula la lógica de errores HTTP con mensajes del servidor.
                 </p>
             </div>
         </section>
@@ -1338,8 +1552,8 @@
     <section class="slide">
         <div class="slide-inner">
             <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
-                <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">3</div>
-                <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Generar invitación - Web</div>
+                <div style="width:36px; height:36px; border-radius:50%; background:#61dafb; color:#0D1117; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">W</div>
+                <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Generar invitación — Web</div>
             </div>
 
             <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
@@ -1371,6 +1585,73 @@
 
             <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
                 El frontend permite generar enlaces de invitación y visualizar invitaciones activas del grupo.
+            </p>
+        </div>
+    </section>
+
+    <!-- GENERAR INVITACION - ANDROID -->
+    <section class="slide">
+        <div class="slide-inner">
+            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-tertiary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">A</div>
+                <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Generar invitación — Android</div>
+            </div>
+
+            <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+                <div class="code-block" style="margin:0;">
+                    <div class="code-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">GroupViewModel.kt</span>
+                    </div>
+    <pre><code><span class="code-keyword">fun</span> <span class="code-func">createInviteUrl</span>(gid: Int) {
+    viewModelScope.launch {
+        _state.update {
+            it.copy(isLoading = <span class="code-keyword">true</span>,
+                generatedInviteUrl = <span class="code-keyword">null</span>) }
+        <span class="code-keyword">try</span> {
+            <span class="code-keyword">val</span> url = repository.createInviteUrl(gid)
+            _state.update { it.copy(
+                isLoading = <span class="code-keyword">false</span>,
+                generatedInviteUrl = url) }
+            snackbarManager.showMessage(
+                <span class="code-string">"URL de invitacion generada"</span>)
+        } <span class="code-keyword">catch</span> (e: Exception) {
+            _state.update { it.copy(isLoading = <span class="code-keyword">false</span>) }
+            snackbarManager.showMessage(
+                e.message ?: <span class="code-string">"Error al generar URL"</span>)
+        }
+    }
+}</code></pre>
+                </div>
+
+                <div class="code-block" style="margin:0;">
+                    <div class="code-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">GroupApi.kt</span>
+                    </div>
+    <pre><code><span class="code-keyword">suspend fun</span> <span class="code-func">createInvite</span>(
+    request: CreateInviteRequest
+): InviteOut {
+    <span class="code-keyword">val</span> req = client.post(
+        <span class="code-string">"$BASE_URL/groups/invites"</span>) {
+        contentType(ContentType.Application.Json)
+        setBody(request)
+    }
+    <span class="code-keyword">if</span> (req.status != HttpStatusCode.OK) {
+        <span class="code-keyword">val</span> raw = req.bodyAsText()
+        error(parseError(raw))
+    }
+    <span class="code-keyword">return</span> req.body()
+}</code></pre>
+                </div>
+            </div>
+
+            <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                La URL generada se expone al UI via StateFlow; el usuario puede compartirla directamente desde la app.
             </p>
         </div>
     </section>
@@ -1445,7 +1726,7 @@
     <section class="slide">
     <div class="slide-inner">
         <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
-            <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">4</div>
+            <div style="width:36px; height:36px; border-radius:50%; background:#61dafb; color:#0D1117; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">W</div>
             <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">
                 Unirse por código o enlace — Web
             </div>
@@ -1523,6 +1804,67 @@
     </div>
 </section>
 
+    <!-- UNIRSE POR CÓDIGO/ENLACE - ANDROID -->
+    <section class="slide">
+        <div class="slide-inner">
+            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-tertiary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">A</div>
+                <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Unirse por código o enlace — Android</div>
+            </div>
+
+            <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+                <div class="code-block" style="margin:0;">
+                    <div class="code-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">GroupViewModel.kt</span>
+                    </div>
+    <pre><code><span class="code-keyword">fun</span> <span class="code-func">joinByUrl</span>(inviteUrl: String) {
+    viewModelScope.launch {
+        _state.update { it.copy(isLoading = <span class="code-keyword">true</span>) }
+        <span class="code-keyword">try</span> {
+            repository.joinByUrl(inviteUrl)
+            snackbarManager.showMessage(
+                <span class="code-string">"Te has unido al grupo"</span>)
+            refreshGroupsSuspend()
+        } <span class="code-keyword">catch</span> (e: Exception) {
+            _state.update { it.copy(isLoading = <span class="code-keyword">false</span>) }
+            snackbarManager.showMessage(
+                e.message ?: <span class="code-string">"Error al unirse"</span>)
+        }
+    }
+}</code></pre>
+                </div>
+
+                <div class="code-block" style="margin:0;">
+                    <div class="code-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">GroupApi.kt</span>
+                    </div>
+    <pre><code><span class="code-keyword">suspend fun</span> <span class="code-func">joinByCode</span>(
+    request: JoinByCodeRequest
+) {
+    <span class="code-keyword">val</span> req = client.post(
+        <span class="code-string">"$BASE_URL/groups/joinByCode"</span>) {
+        contentType(ContentType.Application.Json)
+        setBody(request)
+    }
+    <span class="code-keyword">if</span> (req.status != HttpStatusCode.OK) {
+        <span class="code-keyword">val</span> raw = req.bodyAsText()
+        error(parseError(raw))
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                El usuario pega una URL o código; el ViewModel gestiona el estado de carga y refresca la lista de grupos tras unirse.
+            </p>
+        </div>
+    </section>
 
         <!-- ==================== CASO 2: TAREAS Y TIENDA ==================== -->
 
@@ -1599,7 +1941,7 @@
         <section class="slide">
             <div class="slide-inner">
                 <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
-                    <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-secondary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">1</div>
+                    <div style="width:36px; height:36px; border-radius:50%; background:#61dafb; color:#0D1117; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">W</div>
                     <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">
                         Crear tarea — Web
                     </div>
@@ -1641,6 +1983,79 @@
             </div>
         </section>
 
+    <!-- CREAR TAREA - ANDROID -->
+        <section class="slide">
+            <div class="slide-inner">
+                <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                    <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-tertiary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">A</div>
+                    <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Crear tarea — Android</div>
+                </div>
+
+                <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">TaskViewModel.kt</span>
+                        </div>
+        <pre><code><span class="code-keyword">fun</span> <span class="code-func">crearTarea</span>(
+    gid: Int, titulo: String,
+    descripcion: String, tipo: TaskType,
+    prioridad: TaskPriority
+) {
+    viewModelScope.launch {
+        _state.update { it.copy(isLoading = <span class="code-keyword">true</span>) }
+        <span class="code-keyword">val</span> request = CreateTareaRequest(
+            gid = gid, titulo = titulo,
+            descripcion = descripcion,
+            tipo = tipo.name,
+            prioridad = prioridad.ordinal
+        )
+        <span class="code-keyword">try</span> {
+            repository.createTareaDirect(request)
+            _state.update { it.copy(
+                showCreateDialog = <span class="code-keyword">false</span>,
+                isLoading = <span class="code-keyword">false</span>) }
+            loadTareas(gid)
+        } <span class="code-keyword">catch</span> (e: Exception) {
+            <span class="code-comment">// Offline: guarda temporal</span>
+            scheduleSync(context)
+        }
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">TaskApi.kt</span>
+                        </div>
+        <pre><code><span class="code-keyword">suspend fun</span> <span class="code-func">createTarea</span>(
+    request: CreateTareaRequest
+): Int {
+    <span class="code-keyword">val</span> req = client.post(
+        <span class="code-string">"$BASE_URL/tasks"</span>) {
+        contentType(ContentType.Application.Json)
+        setBody(request)
+    }
+    <span class="code-keyword">if</span> (req.status != HttpStatusCode.OK
+        && req.status != HttpStatusCode.Created) {
+        <span class="code-keyword">val</span> raw = req.bodyAsText()
+        error(parseError(raw))
+    }
+    <span class="code-keyword">return</span> req.body&lt;CreateTaskResponse&gt;().id
+}</code></pre>
+                    </div>
+                </div>
+
+                <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                    En Android se usa un diálogo de creación rápida; si falla la red, la tarea se guarda offline y se sincroniza luego.
+                </p>
+            </div>
+        </section>
 
         <!-- CASO 2 - Paso 2: Completar tarea -->
         <section class="slide">
@@ -1706,7 +2121,7 @@
         <section class="slide">
             <div class="slide-inner">
                 <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
-                    <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-secondary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">2</div>
+                    <div style="width:36px; height:36px; border-radius:50%; background:#61dafb; color:#0D1117; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">W</div>
                     <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">
                         Completar tarea — Web
                     </div>
@@ -1743,6 +2158,73 @@
 
                 <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
                     El frontend marca la tarea como completada o descompletada y actualiza el estado local.
+                </p>
+            </div>
+        </section>
+
+    <!-- COMPLETAR TAREA - ANDROID -->
+        <section class="slide">
+            <div class="slide-inner">
+                <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                    <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-tertiary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">A</div>
+                    <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Completar tarea — Android</div>
+                </div>
+
+                <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">TaskViewModel.kt</span>
+                        </div>
+        <pre><code><span class="code-keyword">fun</span> <span class="code-func">completarTarea</span>(
+    tid: Int, gid: Int
+) {
+    viewModelScope.launch {
+        <span class="code-keyword">val</span> tarea = state.value.allTasksCache
+            .find { it.id == tid } ?: <span class="code-keyword">return</span>@launch
+
+        tareaDao.markAsCompleted(tid)
+        snackbarManager.showMessage(
+            <span class="code-string">"¡Tarea completada! +${tarea.xp} XP"</span>)
+
+        <span class="code-keyword">try</span> {
+            repository.completarTarea(tid)
+        } <span class="code-keyword">catch</span> (e: Exception) {
+            actionDao.addAction(PendingAction(
+                type = <span class="code-string">"COMPLETE_TASK"</span>,
+                targetId = tid
+            ))
+            scheduleSync(context)
+        }
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">TaskApi.kt</span>
+                        </div>
+        <pre><code><span class="code-keyword">suspend fun</span> <span class="code-func">completarTarea</span>(tid: Int) {
+    <span class="code-keyword">val</span> req = client.patch(
+        <span class="code-string">"$BASE_URL/tasks/$tid/complete"</span>) {
+        contentType(ContentType.Application.Json)
+    }
+    <span class="code-keyword">if</span> (req.status != HttpStatusCode.OK
+        && req.status != HttpStatusCode.Created) {
+        <span class="code-keyword">val</span> raw = req.bodyAsText()
+        error(parseError(raw))
+    }
+}</code></pre>
+                    </div>
+                </div>
+
+                <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                    Actualización optimista: Room se actualiza inmediatamente y el servidor se sincroniza después. Si falla, se encola para SyncWorker.
                 </p>
             </div>
         </section>
@@ -1891,7 +2373,7 @@
         <!-- 5. STACK TECNOLÓGICO -->
         <section class="slide">
             <div class="slide-inner section-divider">
-                <div class="section-number">06</div>
+                <div class="section-number">05</div>
                 <div class="section-title">Stack tecnológico</div>
                 <div class="section-subtitle">Tecnologías elegidas y por qué</div>
                 <div class="section-quote">"Kotlin, Ktor, React, y muchas noches sin dormir."</div>
@@ -1902,15 +2384,16 @@
 
                  <section class="slide">
             <div class="slide-inner">
-                <h2 class="slide-title-main">5.1 Stack tecnológico</h2>
                 <div class="grid-3">
                     <div class="card">
-                        <div class="card-title">App</div>
+                        <div class="card-title">Android</div>
                         <ul class="plain">
                             <li>Kotlin</li>
                             <li>Jetpack Compose</li>
-                            <li>Android Studio</li>
-                            <li>MVVM + StateFlow</li>
+                            <li>Ktor Client</li>
+                            <li>Room</li>
+                            <li>Hilt</li>
+                            <li>WorkManager</li>
                         </ul>
                     </div>
                     <div class="card">
@@ -1918,7 +2401,8 @@
                         <ul class="plain">
                             <li>React + TypeScript</li>
                             <li>Vite</li>
-                            <li>Tailwindcss</li>
+                            <li>Tailwind CSS</li>
+                            <li>Axios</li>
                         </ul>
                     </div>
                     <div class="card">
@@ -1926,7 +2410,8 @@
                         <ul class="plain">
                             <li>Ktor (Kotlin)</li>
                             <li>Exposed</li>
-                            <li>Postgres</li>
+                            <li>PostgreSQL</li>
+                            <li>JWT</li>
                             <li>Docker</li>
                         </ul>
                     </div>
