@@ -142,6 +142,25 @@
             z-index: 1;
         }
 
+        .svg-container-transparent {
+            background: transparent;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: visible;
+            padding: 1rem;
+            border-radius: 12px;
+        }
+
+        .svg-container-transparent img {
+            max-width: 100%;
+            max-height: calc(100vh - var(--header-height) - 6rem);
+            width: auto;
+            height: auto;
+            object-fit: contain;
+        }
+
         .slide {
             width: 100%;
             height: 100%;
@@ -2441,6 +2460,14 @@
 
         <!-- ARQUITECTURA WEB + ANDROID -->
 
+        <section class="slide">
+            <div class="slide-inner">
+                <h2 class="slide-title-main">Arquitectura Web</h2>
+                <div class="svg-container-transparent">
+                    <img src="img/arquitectura_web.svg" alt="Arquitectura Web de Astrais"/>
+                </div>
+            </div>
+        </section>
 
 
         <!-- 7. RETOS  -->
