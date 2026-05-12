@@ -2168,79 +2168,83 @@
         </section>
 
         <!-- CASO 2 - Paso 3: Tienda -->
-    <section class="slide">
-        <div class="slide-inner">
-            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
-                <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-secondary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">3</div>
-                <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Tienda — Comprar y equipar cosméticos</div>
-            </div>
+        <section class="slide">
+            <div class="slide-inner">
+                <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                    <div style="width:36px; height:36px; border-radius:50%; background:var(--astrais-secondary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">3</div>
+                    <div style="font-weight:700; font-size:1.1rem; color:#e2e8f0;">Tienda — Comprar y equipar cosméticos</div>
+                </div>
 
-            <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
-                <div class="code-block" style="margin:0;">
-                    <div class="code-header">
-                        <span class="dot red"></span>
-                        <span class="dot yellow"></span>
-                        <span class="dot green"></span>
-                        <span class="filename">Frontend → Comprar objeto</span>
+                <div class="grid-2" style="gap:1rem; max-width:1000px; margin:0 auto;">
+
+                    <!-- FRONTEND -->
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">Frontend → Equipar cosmético</span>
+                        </div>
+
+        <pre><code><span class="code-keyword">const</span> <span class="code-func">handleEquipSelected</span> = <span class="code-keyword">async</span> () =&gt; {
+            <span class="code-keyword">if</span> (!selectedItem || !isOwned || isEquipped)
+                <span class="code-keyword">return</span>
+
+            <span class="code-keyword">try</span> {
+                setMutationItemId(selectedItem.id)
+
+                <span class="code-comment">// POST /store/equip/{id}</span>
+                <span class="code-keyword">await</span> equipStoreItem(selectedItem.id)
+
+                <span class="code-comment">// Actualiza inventario React</span>
+                setItems(updateEquippedState())
+
+                <span class="code-comment">// Aplica tema visual en tiempo real</span>
+                <span class="code-keyword">if</span> (selectedItem.type === <span class="code-string">'APP_THEME'</span>) {
+                    applyThemeColors(selectedItem.theme)
+                }
+
+            } <span class="code-keyword">finally</span> {
+                setMutationItemId(<span class="code-keyword">null</span>)
+            }
+        }</code></pre>
                     </div>
-    <pre><code><span class="code-keyword">const</span> <span class="code-func">handleBuySelected</span> = <span class="code-keyword">async</span> () =&gt; {
-        <span class="code-keyword">if</span> (!selectedItem || isOwned)
-            <span class="code-keyword">return</span>
 
-        <span class="code-keyword">try</span> {
-            setMutationItemId(selectedItem.id)
+                    <!-- BACKEND -->
+                    <div class="code-block" style="margin:0;">
+                        <div class="code-header">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                            <span class="filename">Backend → Equipar cosmético</span>
+                        </div>
 
-            <span class="code-comment">// POST /store/buy/{id}</span>
-            <span class="code-keyword">await</span> buyStoreItem(selectedItem.id)
+        <pre><code><span class="code-keyword">override fun</span> <span class="code-func">equipCosmetic</span>(uid, cid) {
+            <span class="code-keyword">val</span> cosmetic = Cosmetic.findById(cid)
 
-            <span class="code-comment">// Recarga saldo e inventario</span>
-            <span class="code-keyword">await</span> refreshAfterMutation()
+            <span class="code-comment">// Debe estar comprado</span>
+            <span class="code-keyword">if</span> (!Inventory.exists(uid, cid))
+                <span class="code-keyword">return</span> NOT_OWNED
 
-        } <span class="code-keyword">catch</span> {
-            setError(
-                <span class="code-string">"No se pudo completar la compra."</span>
+            <span class="code-comment">// Solo un cosmético por slot</span>
+            Inventory.clearEquippedSlot(
+                uid,
+                cosmetic.slot
             )
-        } <span class="code-keyword">finally</span> {
-            setMutationItemId(<span class="code-keyword">null</span>)
-        }
-    }</code></pre>
-                </div>
 
-                <div class="code-block" style="margin:0;">
-                    <div class="code-header">
-                        <span class="dot red"></span>
-                        <span class="dot yellow"></span>
-                        <span class="dot green"></span>
-                        <span class="filename">Backend → Validación</span>
+            <span class="code-comment">// Marca como equipado</span>
+            Inventory.equip(uid, cid)
+
+            <span class="code-keyword">return</span> OKAY
+        }</code></pre>
                     </div>
-    <pre><code><span class="code-keyword">override fun</span> <span class="code-func">buyCosmetic</span>(uid, cid) {
-        <span class="code-keyword">val</span> user = Users.findById(uid)
-        <span class="code-keyword">val</span> cosmetic = Cosmetic.findById(cid)
-
-        <span class="code-comment">// ¿Saldo suficiente?</span>
-        <span class="code-keyword">if</span> (user.ludions &lt; cosmetic.price)
-            <span class="code-keyword">return</span> INSUFICIENT_CURRENCY
-
-        <span class="code-comment">// ¿Ya comprado?</span>
-        <span class="code-keyword">if</span> (Inventory.exists(uid, cid))
-            <span class="code-keyword">return</span> ALREADY_HAS_OBJECT
-
-        <span class="code-comment">// Descuenta Ludiones</span>
-        user.ludions -= cosmetic.price
-
-        <span class="code-comment">// Añade al inventario</span>
-        Inventory.new(uid, cid)
-
-        <span class="code-keyword">return</span> OKAY
-    }</code></pre>
                 </div>
-            </div>
 
-            <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
-                El frontend sincroniza la tienda con el backend: compra, actualiza saldo y equipa cosméticos en tiempo real.
-            </p>
-        </div>
-    </section>
+                <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:rgba(248,250,252,0.4);">
+                    El frontend sincroniza la tienda con el backend para equipar cosméticos y aplicar cambios visuales en tiempo real.
+                </p>
+            </div>
+        </section>
 
         <!-- 5. STACK TECNOLÓGICO -->
         <section class="slide">
